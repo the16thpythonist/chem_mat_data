@@ -1,0 +1,53 @@
+[build-system]
+requires = ["poetry-core>=1.2.0b2"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "chem_mat_data"
+version = "0.1.0"
+description = "Insert project description here"
+license = "MIT license"
+authors = ["Mohit Singh <usrlj@student.kit.edu>"]
+maintainers = ["Mohit Singh <usrlj@student.kit.edu>"]
+keywords = []
+packages = [
+    { include = "chem_mat_data" },
+]
+include = [
+    "chem_mat_data/VERSION",
+    "chem_mat_data/scripts/*.rst",
+    "chem_mat_data/scripts/*.sh",
+]
+
+# Code dependencies
+# =================
+# this section is used to define all the packages which you depend on. So as soon as you start using 
+# additional packages they should be added here.
+
+[tool.poetry.dependencies]
+python = ">=3.8.0,<4.0"
+
+# Development dependencies
+# ------------------------
+# This is how we can setup development dependencies in such a way that they also work when installing with 
+# ``pip`` package manager. We first have to declare them here in this section as optional dependencies and 
+# then in the "extras" section we define an installation variant called "dev".
+# These dependencies will NOT be installed unless the suffix [dev] is added during the installation.
+
+poetry = { version = ">=1.7.0", optional = true }
+poetry-bumpversion = { version = ">=0.3.0", optional = true }
+pytest = { version = ">=7.4.0", optional = true }
+
+[tool.poetry.extras]
+
+dev = ["poetry", "poetry-bumpversion", "pytest"]
+
+# Bumpversion plugin
+# ==================
+# This section configures the poetry plugin which helps with the versioning.
+
+# With this configuration we tell he plugin that the content of the "VERSION" file should be 
+# automatically changed every time that we change the version through the plugin.
+[tool.poetry_bumpversion.file."chem_mat_data/VERSION"]
+search = "{current_version}"
+replace = "{new_version}"
