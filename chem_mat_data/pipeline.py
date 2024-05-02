@@ -1,4 +1,5 @@
 import os
+import logging
 import requests
 import click
 from chem_mat_data.utils import download_dataset
@@ -13,6 +14,12 @@ from chem_mat_data.datasets import available_datasets
 #The names of the datasets were taken as given in original form.
 # Where the datasets are stored
 base_url = 'https://bwsyncandshare.kit.edu/s/egMpWo6KiBRQGdF/download?path=%2F&files='
+
+@click.group()
+@click.option('--debug/--no-debug', default=False)
+def cli(debug):
+    click.echo(f"Debug mode is {'on' if debug else 'off'}")
+
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.argument('filenames', nargs=-1, type=str, required=False)
@@ -78,6 +85,10 @@ def main(filenames, check, a):
         except Exception as e:
             logging.error(f'Error downloadign dataset: {e}')
             click.echo(f'Failed to download dataset: {e}')
+
+
+cli.add_command(main, name='download')
+
 
 if __name__ == '__main__':
     main()

@@ -13,3 +13,5 @@ def test_get_version():
     # printed in case the assertion fails.
     assert isinstance(version, str), 'the version is not a string!'
     assert version != '', 'the version is an empty string'
+    
+

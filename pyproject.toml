@@ -38,6 +38,10 @@ poetry = { version = ">=1.7.0", optional = true }
 poetry-bumpversion = { version = ">=0.3.0", optional = true }
 pytest = { version = ">=7.4.0", optional = true }
 
+# Poetry installable scripts
+[tool.poetry.scripts]
+chemdata = 'chem_mat_data.pipeline:cli'
+
 [tool.poetry.extras]
 
 dev = ["poetry", "poetry-bumpversion", "pytest"]

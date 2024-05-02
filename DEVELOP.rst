@@ -238,7 +238,7 @@ username and password for your PyPi_ account.
 
 .. code-block:: console
 
-    poetry build --username='{pypi_username}' --password='{pypi_password}'
+    poetry build --username='__token__' --password='{pypi_token}'
 
 =====================
 🕰️ Package Versioning
