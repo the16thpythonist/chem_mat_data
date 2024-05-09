@@ -36,7 +36,7 @@ def main(filenames, check, a):
     if a:
         click.confirm('This will donwload the whole collection of datasets to your current working directory. Are you sure?', abort=True)
         try:
-            download_dataset(base_url, 'Datasets.zip')
+            download_dataset(base_url, 'Graphs.zip')
             click.echo(f'Collection downloaded succesfully')
         except Exception as e:
             logging.error(f'Error downloading collection : {e}')
@@ -44,11 +44,14 @@ def main(filenames, check, a):
         return
     #This will print out the available datasets
     if check:
-        click.echo('Available datasets:')
-        for dataset in available_datasets:
-            click.echo(dataset)
+        response = requests.get(base_url + 'all_datasets.txt')
+        if response.status_code == 200:
+            click.echo('Available datasets:')
+            click.echo(response.text)
+        else:
+            click.echo(f"Failed to fetch available datasets.Status code: {response.status_code}")
         return
-
+  
     #If no argument is provided, it will prompt the user to give one or use an option flag
     if not filenames:
         click.echo('Please provide a dataset name or use the "check" option to see available datasets or use "--help" option.')
@@ -67,7 +70,7 @@ def main(filenames, check, a):
         ### From here on out, the code aims to download the file as specified by the user ####
         
         # Add the ".csv" extension, wich is needed to construct the url
-        file = file if file.endswith('.csv') else f'{file}.json'
+        file = file if file.endswith('.json') else f'{file}.json'
         # Create 'datasets' folder if it doesn't exist. All datasets are stored in that folder
         if not os.path.exists(datasets_folder):
             os.makedirs(datasets_folder)
