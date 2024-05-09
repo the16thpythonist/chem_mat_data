@@ -13,8 +13,8 @@ from chem_mat_data.datasets import available_datasets
 #The .csv can be omitted.
 #The names of the datasets were taken as given in original form.
 # Where the datasets are stored
-base_url = 'https://bwsyncandshare.kit.edu/s/egMpWo6KiBRQGdF/download?path=%2F&files='
-
+#base_url = 'https://bwsyncandshare.kit.edu/s/3XHQNptmyayD6f9/download?path=%2F&files=' # for smiles
+base_url = 'https://bwsyncandshare.kit.edu/s/yqTsaqeXAw5nggs/download?path=&files='  # for json
 @click.group()
 @click.option('--debug/--no-debug', default=False)
 def cli(debug):
@@ -67,7 +67,7 @@ def main(filenames, check, a):
         ### From here on out, the code aims to download the file as specified by the user ####
         
         # Add the ".csv" extension, wich is needed to construct the url
-        file = file if file.endswith('.csv') else f'{file}.csv'
+        file = file if file.endswith('.csv') else f'{file}.json'
         # Create 'datasets' folder if it doesn't exist. All datasets are stored in that folder
         if not os.path.exists(datasets_folder):
             os.makedirs(datasets_folder)
