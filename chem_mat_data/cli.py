@@ -10,13 +10,21 @@ from rich.padding import Padding
 from rich.text import Text
 from rich.syntax import Syntax
 
+from chem_mat_data.utils import download_dataset
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import TEMPLATE_PATH
 from chem_mat_data.utils import RichMixin
 from chem_mat_data.utils import RichHeader
 from chem_mat_data.processing import MoleculeProcessing
 
+from dotenv import load_dotenv
 
+
+# Load environment variables from a .env file if it exits and get the server URL from environment variables
+load_dotenv()
+server_url = os.getenv("url")
+if not server_url:
+    raise ValueError("Server URL not found in environment variables")
 
 class RichLogo(RichMixin):
     
@@ -100,16 +108,34 @@ class CLI(click.RichGroup):
 
     @click.command('download', short_help='Download a dataset form the remote file share server')
     @click.argument('name')
+    @click.option('--full', is_flag=True, help='Download both the original and the processed datasets')
+    @click.option('--path', default=os.getcwd(), type=click.Path(file_okay=False), help='Path to where the files will be downloaded')
     @click.pass_obj
-    def download(self, name: str):
+    # Try with "clintox"
+    def download(self, name: str, full: bool, path: str):
         """
         Starts a new run of the experiment with the string identifier EXPERIMENT.
-        """
-        if self.context.terminal_width is not None:
-            length = self.context.terminal_width
 
+        
+
+       #This gives errors. I dont know why..
+       if self.context.terminal_width is not None:            
+           length = self.context.terminal_width
+        """
         click.secho('Downloading dataset...', bold=True)
         # TODO: Implement downloading the dataset.
+        url = server_url + name
+        if full:
+            click.secho(f'Downloading original and processed dataset!', fg='yellow')
+            destination = os.path.join(path, name + '.csv')
+            download_dataset(url +'.csv', destination)
+            click.secho(f'Dataset downloaded successfully! Location: {os.path.abspath(destination)}', fg='green')
+        
+        destination = os.path.join(path, name + '.json')
+        download_dataset(url + '.json', destination)
+        click.secho(f'Dataset downloaded successfully! Location: {os.path.abspath(destination)}', fg='green')
+
+
         
     @click.command('list', short_help='List the available datasets')
     @click.pass_obj

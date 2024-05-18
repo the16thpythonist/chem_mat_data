@@ -11,6 +11,7 @@ import rdkit.Chem as Chem
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.text import Text
 from rich.style import Style
+from rich.progress import Progress
 
 # GLOBAL VARIABLES
 # ================
@@ -42,14 +43,22 @@ def get_version(path: str = os.path.join(PATH, 'VERSION')) -> str:
 def download_dataset(url, destination):
     # Makes a request to the above specified URL
     response = requests.get(url, stream = True)
+    total_size = int(response.headers.get('content-length',0))
 
     # Open the file..
-    with open(destination, 'wb') as file:
+    with open(destination, 'wb') as file, Progress() as progress:
+        task = progress.add_task('[cyan]', total = total_size)
+        bytes_written = 0
         # .. and iterate over the contents of the file in little chunks.
         for chunk in response.iter_content(chunk_size=1024):
             # We check if it actually contains data and then write it to a file in a destination folder
             if chunk:
                 file.write(chunk)
+                bytes_written += len(chunk)
+                progress.update(task, completed=bytes_written)
+        
+        
+    progress.remove_task(task)
 
 
 def mol_from_smiles(smiles: str
