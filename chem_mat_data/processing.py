@@ -17,8 +17,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.style import Style
 
-import chem_mat_data.typing as tv
-import chem_mat_data.typing as tc
+import chem_mat_data.mytyping as tv
+import chem_mat_data.mytyping as tc
 from chem_mat_data.utils import mol_from_smiles
 from chem_mat_data.utils import RichMixin
 from chem_mat_data.visualization import create_frameless_figure
