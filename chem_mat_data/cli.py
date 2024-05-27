@@ -165,28 +165,38 @@ class CLI(click.RichGroup):
                 table.add_row(name, str(details.get('compounds')), str(details.get('targets')),', '.join(details.get('target type')), ', '.join(details.get('tags')))
         console = Console()
         console.print(table)
-        """
-        click.secho('Available datasets:', bold=True)
-        for dataset in datasets['datasets']:
-            for name, details in dataset.items():
-                click.secho(f" - {name}:", fg = 'green', bold=True)
-                click.secho(f"     Compounds: {details.get('compounds')}")
-                click.secho(f"     Targets: {details.get('targets')}")
-                target_type = details.get('target type')
-                if isinstance(target_type, list):
-                    target_type = ', '.join(target_type)
-                click.secho(f"     Target type: {target_type}")
-                tags = details.get('tags')
-                if isinstance(tags, list):
-                    tags = ', '.join(tags)
-                click.secho(f"     Tags: {tags}")
-    """
-    
+
+        pass
+           
     @click.command('info', short_help='Show detailed information about one of the datasets')
+    @click.argument('name')
     @click.pass_obj
     def info(self, name: str):
         # TODO: Implement a command that shows detailed information about a dataset.
-        print('im here')
+        response = requests.get(server_url + 'datasets.yml')
+        if response.status_code != 200:
+            click.secho(f"failed to fetch list of datasets. Status code: {response.status_code}", fg='red')
+            return
+        
+        found = False
+        datasets = yaml.safe_load(response.text)
+        for dataset in datasets['datasets']:
+            for x, details in dataset.items():
+                if name == x:
+                    found=True;
+                    table = Table(title=name)
+                    table.add_column("Name", justify="left", style="cyan", no_wrap=True)
+                    table.add_column("Compounds",justify="left", style="magenta")
+                    table.add_column("Targets", justify="left", style="green")
+                    table.add_column("Target type", justify="left", style="yellow")
+                    table.add_column("Tags", justify="left", style="cyan")
+                    table.add_column("Description", justify="left")
+                    table.add_row(name, str(details.get('compounds')), str(details.get('targets')),', '.join(details.get('target type')), ', '.join(details.get('tags')), '. '.join(details.get('description')))
+                    console = Console()
+                    console.print(table)
+        
+        if found==False:
+            click.secho(f"Dataset '{name}' not found.", fg='red')
         pass
     
     @click.command('about', short_help='print additional information about the command line interface')
