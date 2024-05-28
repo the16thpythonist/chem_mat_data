@@ -47,7 +47,7 @@ def download_dataset(url, destination):
 
     # Open the file..
     with open(destination, 'wb') as file, Progress() as progress:
-        task = progress.add_task('[cyan]', total = total_size)
+        task = progress.add_task('[cyan]Downloading...', total = total_size)
         bytes_written = 0
         # .. and iterate over the contents of the file in little chunks.
         for chunk in response.iter_content(chunk_size=1024):
@@ -55,10 +55,9 @@ def download_dataset(url, destination):
             if chunk:
                 file.write(chunk)
                 bytes_written += len(chunk)
-                progress.update(task, completed=bytes_written)
+                progress.update(task, advance=len(chunk))
         
         
-    progress.remove_task(task)
 
 
 def mol_from_smiles(smiles: str

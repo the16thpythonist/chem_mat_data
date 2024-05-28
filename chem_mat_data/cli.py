@@ -127,6 +127,7 @@ class CLI(click.RichGroup):
         """
         click.secho('Downloading dataset...', bold=True)
         # TODO: Implement downloading the dataset.
+        
         url = server_url + name
         if full:
             click.secho(f'Downloading original and processed dataset!', fg='yellow')
