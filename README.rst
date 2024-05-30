@@ -70,11 +70,13 @@ To see the available datasets execute the following in the terminal
    chemdata list
 
 Additional information for a specific dataset is obtained by the "info" command. For example for the clintox dataset, execute this
+
 .. code-block:: console 
 
    chemdata info clintox
 
 To download this dataset, one uses the "download" command:
+
 .. code-block:: console
 
    chemdata donwload clintox
