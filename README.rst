@@ -56,6 +56,7 @@ Install the latest stable release using ``pip``
 🚀 Quckstart
 ============
 Not sure how the python import example would look like.(Will be adjusted soon)
+
 .. code-block:: python
 
     # The following code is just an example and not executable
