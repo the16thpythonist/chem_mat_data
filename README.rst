@@ -13,8 +13,7 @@
 .. image:: chem_mat_data/ChemMatData_logo_final.png
    :alt: ChemMatData Logo
    :align: center
-
-ChemMatData is a database wich contains molecular datasets for machine learning purposes from pyhsics,chemistry and physiology. The datasets are available in ther original format as well as in a graph dictionary structure.
+ChemMatData is a database consisting of a collection of datasets from physics, chemistry, phyisology and material science. Each dataset contains various molecules and/or crystal structures associated with a specific property. The main purpose of these datasets is to be used for the training of machine learning models and thus the prediction fo these properties. The datasets are available in their original format as well in a graph dictionary structure.
 
 =========================
 📦 Installation by Source
@@ -56,22 +55,48 @@ Install the latest stable release using ``pip``
 ============
 🚀 Quckstart
 ============
-
-    **NOTE.** Use this section to create a minimal example of how to use the code in this repository. If your repository is mainly based on a number 
-    of scripts, you could show how the most important scripts can be executed and what the most important parameters are. If your code is rather 
-    used as a library you can write a simple code block that shows how to use the features of that library.
-
+Not sure how the python import example would look like.(Will be adjusted soon)
 .. code-block:: python
 
     # The following code is just an example and not executable
     from chem_mat_data.dataset import Dataset
-    from chem_mat_data.compute import Computation
 
-    dataset = Dataest('name')
-    computation = Computation(dataset)
-    result = computation.compute()
-    print(result)
 
+To see the available datasets execute the following in the terminal
+
+.. code-block:: console 
+
+   chemdata list
+
+Additional information for a specific dataset is obtained by the "info" command. For example for the clintox dataset, execute this
+
+.. code-block:: console
+   
+   chemdata info clintox
+
+To download this dataset, one uses the "download" command:
+.. code-block:: console
+
+   chemdata donwload clintox
+
+This will download the dataset "clintox" to your current working directory. One can also specify the path to wich the dataset should be downloaded as following:
+
+.. code-block:: console
+
+   chemdata download --path="/absolute/path/to/desired/directory"
+
+The dataset will be in a graph dictionary structure.
+If one is interested in the original format of the dataset and the graph dictionary format, use the "full" flag:
+
+.. code-block:: console
+
+   chemdata download --full clintox
+
+One can thus download the full dataset into a desired directory like this:
+
+.. code-block:: console
+
+   chemdata download --full --path="/absolute/path/to/desired/directory" clintox
 ==============
 📖 Referencing
 ==============
