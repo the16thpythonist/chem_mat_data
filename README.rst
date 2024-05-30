@@ -10,7 +10,7 @@
 ⭐ ChemMatData
 =================
 
-.. image:. chem_mat_data/ChemMatData_logo_final.png
+.. image:: chem_mat_data/ChemMatData_logo_final.png
    :alt: ChemMatData Logo
    :align: center
 
