@@ -94,28 +94,11 @@ If one is interested in the original format of the dataset and the graph diction
 
    chemdata download --full clintox
 
-One can thus download the full dataset into a desired directory like this:
+One can thus download both formats of the dataset into a desired directory like this:
 
 .. code-block:: console
 
    chemdata download --full --path="/absolute/path/to/desired/directory" clintox
-==============
-📖 Referencing
-==============
-
-    **NOTE** Delete this section if you are not working / are not planning on a publication of your project
-
-If you use, extend or otherwise reference our work, please cite the corresponding paper as follows:
-
-.. code-block:: bibtex
-
-    @article{
-        title={Your Publication title},
-        author={Mustermann, Max and Doe, John},
-        journal={arxiv},
-        year={2023},
-    }
-
 ==========
 🤝 Credits
 ==========
