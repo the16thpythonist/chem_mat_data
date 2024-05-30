@@ -11,6 +11,7 @@
 =================
 
 ![ChemMatData Logo](ChemMatData_logo_final.png)
+
 ChemMatData is a database wich contains molecular datasets for machine learning purposes from pyhsics,chemistry and physiology. The datasets are available in ther original format as well as in a graph dictionary structure.
     **NOTE.** Write a short project description or use the abstract of your thesis/publication !
 
