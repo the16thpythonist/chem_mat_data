@@ -13,7 +13,7 @@
 .. image:: chem_mat_data/ChemMatData_logo_final.png
    :alt: ChemMatData Logo
    :align: center
-ChemMatData is a database consisting of a collection of datasets from physics, chemistry, phyisology and material science. Each dataset contains various molecules and/or crystal structures associated with a specific property. The main purpose of these datasets is to be used for the training of machine learning models and thus the prediction fo these properties. The datasets are available in their original format as well in a graph dictionary structure.
+ChemMatData is a database consisting of a collection of datasets from physics, chemistry, phyisology and material science. Each dataset contains various molecules and/or crystal structures associated with a specific property. The main purpose of these datasets is to be used for the training of machine learning models and thus the prediction of these properties. The datasets are available in their original format as well in a graph dictionary structure.
 
 =========================
 📦 Installation by Source
