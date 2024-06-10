@@ -7,15 +7,35 @@
    :target: https://www.python.org/
 
 =================
-⭐ ChemMatData
+⚗️ ChemMatData
 =================
 
 .. image:: chem_mat_data/ChemMatData_logo_final.png
    :alt: ChemMatData Logo
    :align: center
-ChemMatData is a database consisting of a collection of datasets from physics, chemistry, phyisology and material science. Each dataset contains various molecules and/or crystal structures associated with a specific property. The main purpose of these datasets is to be used for the training of machine learning models and thus the prediction of these properties. The datasets are available in their original format as well in a graph dictionary structure.
 
-=========================
+ChemMatData is a database consisting of a collection of datasets from the fields of chemistry and material science. 
+Each dataset contains various molecules and/or crystal structures which have been annotated with specific target properties. 
+The main purpose of these datasets is to be used for the training of machine learning models with a special focus on - but not exclusive to -
+the training of graph neural networks (GNNs).
+
+The primary goal of this package is to provide a simple and convenient *command line* as well as *programming* interface 
+to access these datasets. Each dataset is available in two formats: The raw format consists of a CSV file containing the 
+SMILES string representation of the molecules and the target annotations. In the processed format, each molecule is already 
+represented as a full graph structure and ready for GNN training.
+
+Getting ready to train for PyTorch Geometric (PyG) is as easy as this:
+
+.. code-block:: python
+
+   from chem_mat_data import load_graph_dataset, pyg_data_loader_from_graphs
+
+   graphs = load_graph_dataset('clintox')
+   data_loader = pyg_data_loader_from_graphs(graphs)
+
+   # train network...
+
+
 📦 Installation by Source
 =========================
 
@@ -40,11 +60,8 @@ Install using ``pip``:
     python3 -m chem_mat_data.cli --help
 
 
-=========================
 📦 Installation by Source
 =========================
-
-    **NOTE.** delete this section if your code is not to be published as a python package
 
 Install the latest stable release using ``pip``
 
@@ -52,56 +69,113 @@ Install the latest stable release using ``pip``
 
     pip3 install chem_mat_data
 
-============
+
 🚀 Quckstart
 ============
-Not sure how the python import example would look like.(Will be adjusted soon)
 
-.. code-block:: python
+The package provides a simple and convenient interface to access the datasets. 
 
-    # The following code is just an example and not executable
-    from chem_mat_data.dataset import Dataset
+..code-block: python
 
+   from pandas import DataFrame
+   from rich import print
+   from chem_mat_data import load_smiles_dataset, load_graph_dataset
+   from chem_mat_data import pyg_data_list_from_graphs
 
-To see the available datasets execute the following in the terminal
+   # ~ LOADING RAW DATASETS
+   # Datasets are generally available in the "raw" format and the "processed" format.
+   # The most common raw format is simply as a CSV file containing the SMILES string 
+   # representations of hte various molecules in one column and the corresponding 
+   # target value annotations in another column.
+   # The "load_smiles_dataset" function can be used to load such a dataset as a 
+   # pandas data frame.
+
+   df: DataFrame = load_smiles_dataset('_test')
+   print('dataset:\n', df.head())
+
+   # ~ LOADING PROCESSED DATASETS
+   # Alternatively, datasets are available in the "processed" format as well. In this 
+   # format, every molecule is already represented as a graph structure where nodes 
+   # represent the atoms and edges represent the bonds.
+   # A structure like this is especially suited for deep learning applications such as 
+   # graph neural networks (GNNs). The "load_graph_dataset" function can be used to 
+   # directly load such graph representations. 
+
+   graphs: list[dict] = load_graph_dataset('_test')
+   # In practice, these graphs are represented as dictionaries with various keys 
+   # whose values are numpy arrays that represent different aspects of the graph.
+   print('graph keys:', list(graphs[0].keys()))
+
+   # ~ DEEP LEARNING INTEGRATION
+   # The package also provides convenient functions to easily convert these graphs 
+   # dictionaries into a PyTorch Geometric (PyG) DataLoader instance which can then 
+   # be directly employed to train a GNN model!
+
+   import torch_geometric.loader
+   data_list = pyg_data_list_from_graphs(graphs)
+   data_loader = torch_geometric.loader.DataLoader(
+      data_list, 
+      batch_size=32, 
+      shuffle=False
+   )
+
+⌨️ Command Line Interface (CLI)
+==============================
+
+In addition to the programming interface, the package also provides a command line interface (CLI) ``chemdata`` to interact with the database.
+To see the available commands, simply use the ``--help`` flag:
+
+.. code-block:: console
+
+   chemdata --help
+
+Listing Available Datasets
+--------------------------
+
+To see the available datasets execute the ``list`` in the terminal
 
 .. code-block:: console 
 
    chemdata list
 
-Additional information for a specific dataset is obtained by the "info" command. For example for the "clintox" dataset, execute this
+This will print a table containing all the dataset which are currently available to download from the database. Each row of the 
+table represents one dataset and contains the name of the dataset, the number of molecules in the dataset and the number of
+target properties as additional columns.
+
+
+Listing Dataset Information
+---------------------------
+
+Additional information for a specific dataset is obtained by the ``info`` command. 
+For example for the "clintox" dataset, execute this
 
 .. code-block:: console 
 
-   chemdata info clintox
+   chemdata info "clintox"
 
-To download this dataset, one uses the "download" command:
+This command will print all available information about a given dataset to the console - including, for example, a short 
+textual description of the dataset as well as information about where it was originated from.
+
+
+Downloading Datasets
+--------------------
+
+Finally, to download this dataset, use the ``download`` command:
 
 .. code-block:: console
 
-   chemdata donwload clintox
+   chemdata donwload "clintox"
 
-This will download the dataset "clintox" to your current working directory. One can also specify the path to wich the dataset should be downloaded as following:
+This will download the dataset "clintox" to your current working directory. 
+One can also specify the path to wich the dataset should be downloaded as following:
 
 .. code-block:: console
 
    chemdata download --path="/absolute/path/to/desired/directory"
 
-The dataset will be in a graph dictionary structure.
-If one is interested in the original format of the dataset and the graph dictionary format, use the "full" flag:
 
-.. code-block:: console
-
-   chemdata download --full clintox
-
-One can thus download both formats of the dataset into a desired directory like this:
-
-.. code-block:: console
-
-   chemdata download --full --path="/absolute/path/to/desired/directory" clintox
-==========
 🤝 Credits
-==========
+===========
 
 We thank the following packages, institutions and individuals for their significant impact on this package.
 
