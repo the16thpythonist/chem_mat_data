@@ -261,7 +261,6 @@ class CLI(click.RichGroup):
         
         click.secho('Connecting to server...')
         self.file_share.fetch_metadata(force=True)
-        print(self.file_share.keys())
         
         rich_list = RichDatasetList(
             self.file_share['datasets'],

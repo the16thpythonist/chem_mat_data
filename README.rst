@@ -75,7 +75,7 @@ Install the latest stable release using ``pip``
 
 The package provides a simple and convenient interface to access the datasets. 
 
-.. code-block: python
+.. code-block:: python
 
     from pandas import DataFrame
     from rich import print
