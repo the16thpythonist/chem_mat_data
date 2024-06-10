@@ -141,4 +141,4 @@ class RichHeader(RichMixin):
         
         style = Style(bold=True, color=self.color)
         yield Text(f'{self.rule * rule_width} {self.title} {self.rule * rule_width}', style=style)
-    
+
