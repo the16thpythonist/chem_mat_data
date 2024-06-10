@@ -31,7 +31,7 @@ Getting ready to train for PyTorch Geometric (PyG) is as easy as this:
    from chem_mat_data import load_graph_dataset, pyg_data_loader_from_graphs
 
    graphs = load_graph_dataset('clintox')
-   data_loader = pyg_data_loader_from_graphs(graphs)
+   data_list = pyg_data_list_from_graphs(graphs)
 
    # train network...
 
