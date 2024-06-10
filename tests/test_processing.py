@@ -4,7 +4,7 @@ import typing as t
 
 import lorem
 import matplotlib.pyplot as plt
-import chem_mat_data.typing as tc
+import chem_mat_data._typing as tc
 import rdkit.Chem as Chem
 from rich.console import Console
 from chem_mat_data.graph import assert_graph_dict
