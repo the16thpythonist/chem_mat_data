@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import numpy as np
 
-import chem_mat_data.typing as tc
+import chem_mat_data._typing as tc
 
 
 # == UTILITY ==
