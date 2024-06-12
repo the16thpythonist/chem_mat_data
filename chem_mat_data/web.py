@@ -66,14 +66,24 @@ class NextcloudFileShare:
                          folder_path: str = tempfile.gettempdir(),
                          progress: Progress = MockProgress(),
                          ) -> str:
+        """
+        Given the string ``dataset_name`` of a dataset on the remote file share server, this method
+        will download that dataset to the local system into the given ``folder_path``. Note that 
+        the dataset name does NOT have to include the file extension!
+        
+        :param dataset_name: The string name of the dataset to be downloaded.
+        :param folder_path: The string path to the folder where the downloaded dataset should be stored.
+        :param progress: An optional Progress instance which will be used to track the download progress.
+        
+        :returns: The absolute path to the downloaded dataset on the local system.
+        """
         
         if not dataset_name.endswith('.mpack'):
             dataset_name = dataset_name + '.mpack'
             
         dataset_path = os.path.join(folder_path, dataset_name)
         with open(dataset_path, mode='wb') as file:
-            content = self.download(dataset_name, progress=progress)
-            file.write(content)
+            self.download(dataset_name, progress=progress, folder_path=folder_path)
             
         return dataset_path
             
@@ -82,11 +92,21 @@ class NextcloudFileShare:
                       folder_path: str = tempfile.gettempdir(),
                       progress: Progress = MockProgress(),
                       ) -> str:
+        """
+        Given the string ``file_name`` of a file on the remote file share server, this method 
+        will download that file to the local system into the given ``folder_path``. Note that 
+        the given file name has to include a file extension!
         
+        :param file_name: The string name of the file to be downloaded.
+        :param folder_path: The string path to the folder where the downloaded file should be stored.
+        :param progress: An optional Progress instance which will be used to track the download 
+            progress.
+            
+        :returns: The absolute path to the downloaded file on the local system.
+        """
         file_path = os.path.join(folder_path, file_name)
         with open(file_path, mode='wb') as file:
-            content = self.download(file_name, progress=progress, folder_path=folder_path)
-            file.write(content)
+            self.download(file_name, progress=progress, folder_path=folder_path)
             
         return file_path
     
