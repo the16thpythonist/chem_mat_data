@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "chem_mat_data"
-version = "0.1.0"
+version = "0.1.1"
 description = "Interface with database of chemistry and material science datasets for machine learning"
 license = "MIT license"
 authors = ["Mohit Singh <usrlj@student.kit.edu>", "Jonas Teufel <jonas.teufel@kit.edu>"]
@@ -26,7 +26,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = ">=3.8.0,<4.0"
-numpy = ">=1.21.0"
+numpy = ">=1.21.0,<2.0"
 matplotlib = ">=3.4.0"
 rdkit = ">=2023.0.0"
 requests = ">=2.30.0"
