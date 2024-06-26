@@ -7,11 +7,11 @@ import numpy as np
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.data import load_graphs, save_graphs
-
+from typing import Union
 
 def ensure_dataset(dataset_name: str,
                    extension: str = 'mpack',
-                   config: None | Config = None,
+                   config: Union[None, Config] = None,
                    folder_path = os.getcwd(),
                    ) -> str:
     """

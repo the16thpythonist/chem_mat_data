@@ -1,0 +1,15 @@
+numpy 
+matplotlib 
+rdkit 
+requests 
+cairosvg 
+imageio 
+rich_click 
+jinja2 
+lorem 
+networkx 
+python-dotenv 
+pyyaml 
+msgpack 
+pandas 
+

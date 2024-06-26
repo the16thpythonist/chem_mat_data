@@ -6,7 +6,7 @@ import io
 import yaml
 import requests
 from rich.progress import Progress
-
+from typing import Union
 
 class MockProgress:
     
@@ -115,7 +115,7 @@ class NextcloudFileShare:
     def download(self, 
                  file_name: str, 
                  progress: Progress = MockProgress(),
-                 folder_path: str | None = None,
+                 folder_path: Union[str, None] = None,
                  ) -> bytes:
         """
         Given the full ``file_name`` of a file located in the current file share location, this 
