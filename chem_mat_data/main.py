@@ -1,5 +1,7 @@
 import os
 import warnings
+import gzip
+import shutil
 
 import pandas as pd
 import numpy as np
@@ -55,7 +57,26 @@ def ensure_dataset(dataset_name: str,
         if dataset_name not in file_share['datasets']:
             raise FileNotFoundError(f'The dataset {file_name} could not be found on the server!')
         
-        return file_share.download_file(file_name, folder_path=folder_path)
+        # 04.07.24
+        # In the first instance we are going to try and download the compressed (gzip - gz) version 
+        # of the dataset because that is usually at least 10x smaller and should therefore be a lot 
+        # faster to download and only if that doesn't exist or fails due to some other issue we 
+        # attempt to download the uncompressed version.
+        try:
+            file_name_compressed = f'{file_name}.gz'
+            file_path_compressed = file_share.download_file(file_name_compressed, folder_path=folder_path)
+            
+            # Then we can decompress the file using the gzip module. This may take a while.
+            file_path = os.path.join(folder_path, file_name)
+            with open(file_path, mode='wb') as file:
+                with gzip.open(file_path_compressed, mode='rb') as compressed_file:
+                    shutil.copyfileobj(compressed_file, file)
+        
+        # Otherwise we try to download the file without the compression
+        except Exception as exc:
+            file_path = file_share.download_file(file_name, folder_path=folder_path)
+            
+        return file_path
 
 
 

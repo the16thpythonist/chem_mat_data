@@ -105,8 +105,7 @@ class NextcloudFileShare:
         :returns: The absolute path to the downloaded file on the local system.
         """
         file_path = os.path.join(folder_path, file_name)
-        with open(file_path, mode='wb') as file:
-            self.download(file_name, progress=progress, folder_path=folder_path)
+        self.download(file_name, progress=progress, folder_path=folder_path)
             
         return file_path
     

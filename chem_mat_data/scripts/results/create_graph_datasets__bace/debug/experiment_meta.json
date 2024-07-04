@@ -1,0 +1,72 @@
+{
+    "__track__": [],
+    "__wandb__": false,
+    "base_path": "/media/ssd/Programming/chem_mat_data/chem_mat_data/scripts",
+    "description": "\nThis module implements the processing of the BACE dataset. It is a sub experiment that \ninherits from \"create_graph_datasets.py\" base experiment. It overwrites the default \nimplementation of the \"load_dataset\" hook to load the BACE dataset instead from the \nnextcloud data storage.\n",
+    "duration": 2.6709983348846436,
+    "end_time": 1720098709.853281,
+    "has_error": false,
+    "hooks": {
+        "add_graph_metadata": {
+            "name": "add_graph_metadata",
+            "num": 1
+        },
+        "load_dataset": {
+            "name": "load_dataset",
+            "num": 1
+        }
+    },
+    "name": "create_graph_datasets__bace",
+    "namespace": "results/create_graph_datasets",
+    "parameters": {
+        "COMPRESS": {
+            "description": "If this is True, then the final message pack dataset file will be compressed into a gzip file to reduce the file size. This is recommended because the raw message pack files are still relatively large. However, the compression will likely take  a while to complete.  ",
+            "name": "COMPRESS",
+            "type": "bool"
+        },
+        "DATASET_NAME": {
+            "description": "This string determines the name of the message pack dataset file that is then  stored into the \"results\" folder of the experiment as the result of the  processing process. The corresponding file extensions will be added  automatically. ",
+            "name": "DATASET_NAME",
+            "type": "str"
+        },
+        "DATASET_TYPE": {
+            "description": "Either 'regression' or 'classification' to define the type of the dataset. This will also determine how the target values are processed. ",
+            "name": "DATASET_TYPE",
+            "type": "str"
+        },
+        "SCRIPTS_PATH": {
+            "name": "SCRIPTS_PATH"
+        },
+        "SMILES_COLUMN": {
+            "description": "This is the string name of the CSV column which contains the SMILES strings of the molecules. ",
+            "name": "SMILES_COLUMN",
+            "type": "str"
+        },
+        "SOURCE_PATH": {
+            "description": "This is the absolute string path of the dataset CSV file from which the graph dataset should be created.  ",
+            "name": "SOURCE_PATH",
+            "type": "str"
+        },
+        "TARGET_COLUMNS": {
+            "description": "This is a list of string names of the CSV columns which contain the target values of the dataset. This can be a single column for regression tasks or multiple columns for multi-target regression or classification tasks. For the final graph dataset the target values will be merged into a single numeric vector that contains the  corresponding values in the same order as the column names are defined here. ",
+            "name": "TARGET_COLUMNS",
+            "type": "list[str]"
+        },
+        "USE_COORDINATES": {
+            "description": "If this is True, then the graph representations of the molecules will also contain  the \"node_coordinates\" field which will be populated with the 3D coordinates of of the nodes created by RDKIT. Setting this to True will increase the processing  runtime and may cause the processing of some molecules to fail entirely. ",
+            "name": "USE_COORDINATES",
+            "type": "bool"
+        },
+        "__DEBUG__": {
+            "description": "In debug mode, the experiment will not create a unique results folder but instead will overwrite the results of the last experiment. This is useful for debugging the experiment code itself. ",
+            "name": "__DEBUG__"
+        },
+        "__TESTING__": {
+            "description": "If this is True, then the experiment will be started in \"testing\" mode  ",
+            "name": "__TESTING__"
+        }
+    },
+    "short_description": "This module implements the processing of the BACE dataset. It is a sub experiment that inherits from \"create_graph_datasets.py\" base experiment. It overwrites the default implementation of the \"load_dataset\" hook to load the BACE dataset instead from the nextcloud data storage.",
+    "start_time": 1720098707.1822827,
+    "status": "done"
+}

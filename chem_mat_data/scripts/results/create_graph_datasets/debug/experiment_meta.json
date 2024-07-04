@@ -1,0 +1,42 @@
+{
+    "__track__": [],
+    "__wandb__": false,
+    "base_path": "/media/ssd/Programming/chem_mat_data/chem_mat_data/scripts",
+    "description": null,
+    "duration": 0.2967362403869629,
+    "end_time": 1720085670.4489226,
+    "has_error": false,
+    "hooks": {},
+    "name": "create_graph_datasets",
+    "namespace": "results/create_graph_datasets",
+    "parameters": {
+        "DATASET_NAME": {
+            "name": "DATASET_NAME",
+            "type": "str"
+        },
+        "DATASET_TYPE": {
+            "name": "DATASET_TYPE",
+            "type": "str"
+        },
+        "SCRIPTS_PATH": {
+            "name": "SCRIPTS_PATH"
+        },
+        "SOURCE_PATH": {
+            "name": "SOURCE_PATH",
+            "type": "str"
+        },
+        "TARGET_COLUMNS": {
+            "name": "TARGET_COLUMNS",
+            "type": "list[str]"
+        },
+        "__DEBUG__": {
+            "name": "__DEBUG__"
+        },
+        "__TESTING__": {
+            "name": "__TESTING__"
+        }
+    },
+    "short_description": "",
+    "start_time": 1720085670.1521864,
+    "status": "done"
+}

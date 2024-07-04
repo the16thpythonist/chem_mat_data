@@ -11,7 +11,7 @@ from chem_mat_data import pyg_data_list_from_graphs
 # The "load_smiles_dataset" function can be used to load such a dataset as a 
 # pandas data frame.
 
-df: DataFrame = load_smiles_dataset('_test')
+df: DataFrame = load_smiles_dataset('bace')
 print('dataset:\n', df.head())
 
 # ~ LOADING PROCESSED DATASETS
@@ -22,7 +22,7 @@ print('dataset:\n', df.head())
 # graph neural networks (GNNs). The "load_graph_dataset" function can be used to 
 # directly load such graph representations. 
 
-graphs: list[dict] = load_graph_dataset('_test')
+graphs: list[dict] = load_graph_dataset('bace')
 # In practice, these graphs are represented as dictionaries with various keys 
 # whose values are numpy arrays that represent different aspects of the graph.
 print('graph keys:', list(graphs[0].keys()))
