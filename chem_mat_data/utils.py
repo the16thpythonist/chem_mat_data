@@ -19,6 +19,7 @@ from rich.progress import Progress
 # This is the absolute string path to the folder that contains all the code modules. Use this whenever 
 # you need to access files from within the project folder.
 PATH: str = pathlib.Path(__file__).parent.absolute()
+SCRIPTS_PATH: str = os.path.join(PATH, 'scripts')
 
 # Based on the package path we can now define the more specific sub paths
 VERSION_PATH: str = os.path.join(PATH, 'VERSION')
