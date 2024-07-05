@@ -9,6 +9,7 @@ import msgpack
 import msgpack_numpy
 import numpy as np
 
+from typing import List
 from chem_mat_data._typing import GraphDict
 
 
@@ -34,7 +35,7 @@ def ext_hook(code, data):
 
 
 
-def save_graphs(graphs: list[GraphDict],
+def save_graphs(graphs: List[GraphDict],
                 path: str,
                 ) -> None:
 
@@ -43,7 +44,7 @@ def save_graphs(graphs: list[GraphDict],
         file.write(packed)
 
 
-def load_graphs(path: str) -> list[GraphDict]:
+def load_graphs(path: str) -> List[GraphDict]:
     
     with open(path, mode='rb') as file:
         content: bytes = file.read()

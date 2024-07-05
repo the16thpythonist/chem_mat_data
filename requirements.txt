@@ -12,4 +12,5 @@ python-dotenv
 pyyaml 
 msgpack 
 pandas 
-
+pycomex
+msgpack_numpy
