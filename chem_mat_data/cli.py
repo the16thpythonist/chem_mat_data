@@ -22,7 +22,7 @@ from chem_mat_data.utils import RichHeader
 from chem_mat_data.processing import MoleculeProcessing
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
-
+from typing import Dict
 from dotenv import load_dotenv
 import yaml
 import requests
@@ -118,7 +118,7 @@ class RichDatasetList(RichMixin):
     that contain various pieces of information about the datasets.
     """
     def __init__(self, 
-                 datasets: dict[str, dict],
+                 datasets: Dict[str, Dict],
                  sort: bool = False,
                  show_hidden: bool = False,
                  ):

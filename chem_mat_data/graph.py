@@ -5,7 +5,7 @@ from collections import defaultdict
 import numpy as np
 
 import chem_mat_data._typing as tc
-
+from typing import Dict, List
 
 # == UTILITY ==
 
@@ -26,7 +26,7 @@ def to_graph_dict(data: dict) -> tc.GraphDict:
     return data
     
     
-def graph_adjacency_list(graph: tc.GraphDict) -> dict[int, list]:
+def graph_adjacency_list(graph: tc.GraphDict) -> Dict[int, List]:
     """
     Creates an adjacency list / dict from the given GraphDict ``graph``. Returns a dictionary 
     where the keys are the node indices of the given graph and the values are again lists of 
