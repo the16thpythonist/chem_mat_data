@@ -14,6 +14,7 @@ from typing import Union
 def ensure_dataset(dataset_name: str,
                    extension: str = 'mpack',
                    config: Union[None, Config] = None,
+                   file_share: Union[None, NextcloudFileShare] = None,
                    folder_path = os.getcwd(),
                    ) -> str:
     """
@@ -48,7 +49,12 @@ def ensure_dataset(dataset_name: str,
         if not config:
             config = Config()
         
-        file_share = NextcloudFileShare(url=config.get_fileshare_url())
+        # 08.07.24
+        # There is now also the option to pass a custom file share object to this function that 
+        # should be used to download the dataset.
+        if not file_share:
+            file_share = NextcloudFileShare(url=config.get_fileshare_url())
+            
         # This function will download the main metadata yml file from the server to populate the 
         # itnernal metadata dict with all the information about the datasets that are available 
         # on the server.
