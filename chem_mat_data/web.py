@@ -1,4 +1,6 @@
 import os
+import shutil
+import gzip
 import tempfile
 import typing as t
 
@@ -81,11 +83,36 @@ class NextcloudFileShare:
         if not dataset_name.endswith('.mpack'):
             dataset_name = dataset_name + '.mpack'
             
-        dataset_path = os.path.join(folder_path, dataset_name)
-        with open(dataset_path, mode='wb') as file:
-            self.download(dataset_name, progress=progress, folder_path=folder_path)
+        file_name = dataset_name
             
-        return dataset_path
+        # 04.07.24
+        # In the first instance we are going to try and download the compressed (gzip - gz) version 
+        # of the dataset because that is usually at least 10x smaller and should therefore be a lot 
+        # faster to download and only if that doesn't exist or fails due to some other issue we 
+        # attempt to download the uncompressed version.
+        try:
+            file_name_compressed = f'{file_name}.gz'
+            file_path_compressed = self.download_file(
+                file_name_compressed,
+                folder_path=folder_path,
+                progress=progress,
+            )
+            
+            # Then we can decompress the file using the gzip module. This may take a while.
+            file_path = os.path.join(folder_path, file_name)
+            with open(file_path, mode='wb') as file:
+                with gzip.open(file_path_compressed, mode='rb') as compressed_file:
+                    shutil.copyfileobj(compressed_file, file)
+        
+        # Otherwise we try to download the file without the compression
+        except Exception as exc:
+            file_path = self.download_file(
+                file_name, 
+                folder_path=folder_path,
+                progress=progress,
+            )
+            
+        return file_path
             
     def download_file(self,
                       file_name: str,

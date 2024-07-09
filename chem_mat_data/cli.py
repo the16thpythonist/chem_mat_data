@@ -22,6 +22,8 @@ from chem_mat_data.utils import RichHeader
 from chem_mat_data.processing import MoleculeProcessing
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
+from chem_mat_data.main import ensure_dataset
+
 from typing import Dict
 from dotenv import load_dotenv
 import yaml
@@ -244,7 +246,11 @@ class CLI(click.RichGroup):
                 if not dataset['full']:
                     click.secho('Full format dataset not available!', fg='red')
                 
-                self.file_share.download_dataset(name, folder_path=path, progress=progress)
+                self.file_share.download_dataset(
+                    f'{name}.mpack', 
+                    folder_path=path, 
+                    progress=progress
+                )
         
         click.secho('Download complete!', fg='green')
         
