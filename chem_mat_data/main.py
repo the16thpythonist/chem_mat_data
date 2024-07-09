@@ -10,6 +10,7 @@ from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.data import load_graphs, save_graphs
 from typing import Union
+from typing import List
 
 def ensure_dataset(dataset_name: str,
                    extension: str = 'mpack',
@@ -119,7 +120,7 @@ def load_smiles_dataset(dataset_name: str,
 
 def load_graph_dataset(dataset_name: str,
                        folder_path: str = os.getcwd(),
-                       ) -> list[dict]:
+                       ) -> List[dict]:
     """
     Loads the graph dict representations for the dataset with the unique string identifier ``dataset_name`` 
     and returns them as a list of dictionaries. Each dictionary represents a single graph and contains
@@ -147,7 +148,7 @@ def load_graph_dataset(dataset_name: str,
     return graphs
 
 
-def pyg_data_list_from_graphs(graphs: list[dict]) -> list['Data']:
+def pyg_data_list_from_graphs(graphs: List[dict]) -> List['Data']:
     """
     Given a list ``graphs`` of graph dict representations, this function will convert them into 
     a list of pytorch geometric "Data" objects which can then be used to train a PyG graph neural 

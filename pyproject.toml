@@ -35,12 +35,13 @@ imageio = ">=2.34.1"
 rich_click = ">=1.8.0"
 jinja2 = ">=3.0.0"
 lorem = "==0.1.1"
-networkx = "<=3.3"
+networkx = "<=3.3" 
 python-dotenv = "==1.0.1"
 pyyaml = ">=6.0.0"
 msgpack = ">=1.0.2"
 pandas = "<2.2.2"
-pycomex = ">=0.17.0"
+pycomex = "<=0.17.0"
+msgpack_numpy = ">=0.4.8"
 
 # Development dependencies
 # ------------------------

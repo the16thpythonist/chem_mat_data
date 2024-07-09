@@ -23,6 +23,7 @@ from chem_mat_data.utils import mol_from_smiles
 from chem_mat_data.utils import RichMixin
 from chem_mat_data.visualization import create_frameless_figure
 from chem_mat_data.visualization import visualize_molecular_graph_from_mol
+from typing import List, Dict
 
 
 def identity(value: t.Any) -> t.Any:
@@ -176,7 +177,7 @@ class OneHotEncoder(EncoderBase, EncodingDescriptionMixin):
                  add_unknown: bool = False,
                  unknown: t.Any = 'H',
                  dtype: type = float,
-                 value_descriptions: t.Optional[list[str]] = None):
+                 value_descriptions: t.Optional[List[str]] = None):
         self.values = values
         self.add_unknown = add_unknown
         self.unknown = unknown
@@ -266,7 +267,7 @@ class CrippenEncoder(EncoderBase, EncodingDescriptionMixin):
     # method as well.
     requires_molecule: bool = True
     
-    def encode(self, mol: Chem.Mol, atom: Chem.Atom) -> list[float]:
+    def encode(self, mol: Chem.Mol, atom: Chem.Atom) -> List[float]:
         # First of all we need to calculate the crippen contributions with an external method IF it does
         # not already exist!
         if not hasattr(mol, 'crippen_contributions'):
@@ -285,7 +286,7 @@ class CrippenEncoder(EncoderBase, EncodingDescriptionMixin):
         }[index]
 
     @property
-    def descriptions(self) -> list[str]:
+    def descriptions(self) -> List[str]:
         return [
             self.get_description(0),
             self.get_description(1),
@@ -297,7 +298,7 @@ class RichProcessingSummary(RichMixin):
     INDEX_STYLE = Style(bold=True, color='blue')
     
     def __init__(self, 
-                 sections: dict[str, dict]
+                 sections: Dict[str, Dict]
                  ):
         self.sections = sections
     
@@ -982,7 +983,7 @@ class MoleculeProcessing():
 
     # -- utils --
     
-    def get_attribute_map_descriptions(self, attribute_map: dict) -> dict[int, str]:
+    def get_attribute_map_descriptions(self, attribute_map: Dict) -> Dict[int, str]:
         
         descriptions: dict[int, str] = {}
         index: int = 0
