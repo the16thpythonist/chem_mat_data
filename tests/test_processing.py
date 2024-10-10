@@ -1,6 +1,4 @@
 import os
-import pytest
-import typing as t
 
 import lorem
 import matplotlib.pyplot as plt

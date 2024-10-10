@@ -1,16 +1,15 @@
 import os
-import warnings
 import gzip
 import shutil
 
 import pandas as pd
-import numpy as np
 
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
-from chem_mat_data.data import load_graphs, save_graphs
+from chem_mat_data.data import load_graphs
 from typing import Union
 from typing import List
+
 
 def ensure_dataset(dataset_name: str,
                    extension: str = 'mpack',
@@ -80,7 +79,7 @@ def ensure_dataset(dataset_name: str,
                     shutil.copyfileobj(compressed_file, file)
         
         # Otherwise we try to download the file without the compression
-        except Exception as exc:
+        except Exception:
             file_path = file_share.download_file(file_name, folder_path=folder_path)
             
         return file_path
@@ -148,7 +147,7 @@ def load_graph_dataset(dataset_name: str,
     return graphs
 
 
-def pyg_data_list_from_graphs(graphs: List[dict]) -> List['Data']:
+def pyg_data_list_from_graphs(graphs: List[dict]) -> List['Data']:    # noqa
     """
     Given a list ``graphs`` of graph dict representations, this function will convert them into 
     a list of pytorch geometric "Data" objects which can then be used to train a PyG graph neural 
@@ -160,8 +159,8 @@ def pyg_data_list_from_graphs(graphs: List[dict]) -> List['Data']:
     """
     try:
         
-        import torch
-        import torch_geometric.data 
+        import torch                        # noqa
+        import torch_geometric.data         # noqa
         
         data_list = []
         for graph in graphs:
@@ -189,3 +188,4 @@ def pyg_data_list_from_graphs(graphs: List[dict]) -> List['Data']:
     
 
 # TODO: Implement for KGCNN as well!
+# TODO: Implement for jax / jraph as well

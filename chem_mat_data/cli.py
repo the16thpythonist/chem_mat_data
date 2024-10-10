@@ -5,8 +5,6 @@ import typing as t
 import rich_click as click
 from rich.console import Console, ConsoleOptions
 from rich.panel import Panel
-from rich.layout import Layout
-from rich.segment import Segment
 from rich.style import Style
 from rich.padding import Padding
 from rich.text import Text
@@ -14,20 +12,14 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.progress import Progress
 
-from chem_mat_data.utils import download_dataset
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import TEMPLATE_PATH
 from chem_mat_data.utils import RichMixin
-from chem_mat_data.utils import RichHeader
-from chem_mat_data.processing import MoleculeProcessing
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
-from chem_mat_data.main import ensure_dataset
 
 from typing import Dict
 from dotenv import load_dotenv
-import yaml
-import requests
 
 
 # Load environment variables from a .env file if it exits and get the server URL from environment variables

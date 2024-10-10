@@ -1,4 +1,3 @@
-import os
 import re
 import io
 import types
@@ -8,7 +7,6 @@ import cairosvg
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from imageio.v2 import imread
 from rdkit import Chem
 from rdkit.Chem.Draw.rdMolDraw2D import MolDraw2DSVG
 from rdkit.Chem import rdDepictor

@@ -32,7 +32,7 @@ print('graph keys:', list(graphs[0].keys()))
 # dictionaries into a PyTorch Geometric (PyG) DataLoader instance which can then 
 # be directly employed to train a GNN model!
 
-import torch_geometric.loader
+import torch_geometric.loader      # noqa
 data_list = pyg_data_list_from_graphs(graphs)
 data_loader = torch_geometric.loader.DataLoader(
     data_list, 

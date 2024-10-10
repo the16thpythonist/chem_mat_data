@@ -1,18 +1,12 @@
-import os
-import pathlib
 import typing as t
 
 import numpy as np
 import numpy.linalg as la
-import networkx as nx
 import matplotlib.pyplot as plt
 import rdkit.Chem as Chem
 import rdkit.Chem.AllChem as AllChem
-import rdkit.Chem.Descriptors
 from rdkit.Chem import rdMolDescriptors
-from rdkit.Chem import rdPartialCharges
-from matplotlib.backends.backend_agg import FigureCanvas
-from rich.segment import Segment
+from rdkit.Chem import Descriptors
 from rich.panel import Panel
 from rich.table import Table
 from rich.style import Style
@@ -153,10 +147,10 @@ class EncoderBase:
         return self.encode(value, *args, **kwargs)
     
     def encode(self, value: t.Any, *args, **kwargs) -> t.List[float]:
-        raise NotImplemented()
+        raise NotImplementedError()
     
     def decode(self, encoded: t.List[float]) -> t.Any:
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class OneHotEncoder(EncoderBase, EncodingDescriptionMixin):
@@ -515,7 +509,7 @@ class MoleculeProcessing():
 
     graph_attribute_map = {
         'molecular_weight': {
-            'callback': chem_descriptor(Chem.Descriptors.ExactMolWt, list_identity),
+            'callback': chem_descriptor(Descriptors.ExactMolWt, list_identity),
             'description': 'The molecular weight of the entire molecule'
         }
     }
@@ -921,7 +915,7 @@ class MoleculeProcessing():
 
                 graph['edge_lengths'] = np.array(edge_lengths)
 
-            except Exception as exc:
+            except Exception:
                 raise ValueError(f'Cannot calculate node_coordinates for the given '
                                  f'molecule with smiles code: {smiles}')
 

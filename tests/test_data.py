@@ -63,8 +63,8 @@ def test_process_test_dataset():
         try:
             graph = processing.process(row['smiles'])
             graphs.append(graph)
-        except:
-            pass
+        except Exception as exc:
+            print(exc)
         
     dst_path = os.path.join(ASSETS_PATH, f'{name}.mpack')
     save_graphs(graphs, dst_path)

@@ -105,7 +105,7 @@ class NextcloudFileShare:
                     shutil.copyfileobj(compressed_file, file)
         
         # Otherwise we try to download the file without the compression
-        except Exception as exc:
+        except Exception:
             file_path = self.download_file(
                 file_name, 
                 folder_path=folder_path,

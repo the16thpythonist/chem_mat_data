@@ -1,4 +1,3 @@
-import pytest
 
 from chem_mat_data.utils import get_version
 

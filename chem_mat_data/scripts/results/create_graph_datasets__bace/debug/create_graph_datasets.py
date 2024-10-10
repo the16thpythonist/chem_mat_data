@@ -33,10 +33,8 @@ import multiprocessing
 
 import msgpack
 import numpy as np
-import matplotlib.pyplot as plt
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
-from pycomex.utils import CustomJsonEncoder
 
 import chem_mat_data._typing as typc
 from chem_mat_data.processing import MoleculeProcessing
@@ -260,7 +258,7 @@ def experiment(e: Experiment):
         )
         worker.start()
         workers.append(worker)
-        e.log(f' * started worker')
+        e.log(' * started worker')
     
     e.log('loading dataset...')
     dataset: dict[int, dict] = e.apply_hook(

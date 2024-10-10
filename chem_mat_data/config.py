@@ -1,5 +1,4 @@
 import os
-import typing as t
 
 from dotenv import load_dotenv
 

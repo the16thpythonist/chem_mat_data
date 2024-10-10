@@ -6,7 +6,6 @@ import multiprocessing
 
 import msgpack
 import numpy as np
-import matplotlib.pyplot as plt
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -121,7 +120,7 @@ def experiment(e: Experiment):
         )
         worker.start()
         workers.append(worker)
-        e.log(f' * started worker')
+        e.log(' * started worker')
     
     e.log('loading dataset...')
     dataset: dict[int, dict] = e.apply_hook(

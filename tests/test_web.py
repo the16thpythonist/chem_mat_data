@@ -1,6 +1,5 @@
 import os
 import tempfile
-import typing as t
 
 from rich.progress import Progress
 from chem_mat_data.config import Config

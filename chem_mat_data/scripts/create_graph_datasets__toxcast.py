@@ -1,7 +1,5 @@
-import os
 import pandas as pd
 
-from rich import print as pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 

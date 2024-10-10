@@ -119,9 +119,9 @@ The package provides a simple and convenient interface to access the datasets.
         shuffle=False
     )
 
-==============================
+===============================
 ⌨️ Command Line Interface (CLI)
-==============================
+===============================
 
 In addition to the programming interface, the package also provides a command line interface (CLI) ``chemdata`` to interact with the database.
 To see the available commands, simply use the ``--help`` flag:
