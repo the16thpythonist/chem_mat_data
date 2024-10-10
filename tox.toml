@@ -1,0 +1,77 @@
+requires = ["tox>=4"]
+env_list = [
+    "3.8",
+    "3.9", 
+    "3.10", 
+    "3.11", 
+    "3.12", 
+    # The current problem for Python 3.13 support seems to be that RDKit library
+    # is not yet available for 3.13..
+    #"3.13"
+]
+
+# Python 3.8 Unit Tests
+# ===================== 
+[env."3.8"]
+descrpition = "Install pytest in a venv and run unit tests for python 3.8"
+deps = [
+    "pytest>=8.0.0"
+]
+commands = [
+    ["pytest", "tests", {replace="posargs", extend=true}]
+]
+
+# Python 3.9 Unit Tests
+# =====================
+[env."3.9"]
+description = "install pytest in a venv and run unit tests for python 3.9"
+deps = [
+    "pytest>=8.0.0"
+]
+commands = [
+    ["pytest", "tests", {replace="posargs", extend=true}]
+]
+
+# Python 3.10 Unit Tests
+# ======================
+[env."3.10"]
+description = "install pytest in a venv and run unit tests for python 3.10"
+deps = [
+    "pytest>=8.0.0"
+]
+commands = [
+    ["pytest", "tests", {replace="posargs", extend=true}]
+]
+
+# Python 3.11 Unit Tests
+# ======================
+[env."3.11"]
+description = "install pytest in a venv and run unit tests for python 3.11"
+deps = [
+    "pytest>=8.0.0"
+]
+commands = [
+    ["pytest", "tests", {replace="posargs", extend=true}]
+]
+
+# Python 3.12 Unit Tests
+# ======================
+[env."3.12"]
+description = "install pytest in a venv and run unit tests for python 3.12"
+deps = [
+    "pytest>=8.0.0"
+]
+commands = [
+    ["pytest", "tests", {replace="posargs", extend=true}]
+]
+
+# Python 3.13 Unit Tests
+# ======================
+[env."3.13"]
+description = "install pytest in a venv and run unit tets for python 3.13"
+deps = [
+    "pytest>=8.0.0"
+]
+commands = [
+    ["pytest", "tests", {replace="posargs", extend=true}]
+]
