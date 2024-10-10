@@ -2,410 +2,163 @@
 Information for Development
 ===========================
 
-The structure that was automatically created for your structure will seem daunting at first, but 
-this file will walk you through the most imporant parts and aspects of this structure step-by-step.
+This document will provide information about setting up the development environment for this project.
 
-====================
-📁 Project Structure
-====================
 
-Here is an overview of the project structure.
+Setting up a Virtualenv
+=======================
 
-- ``DEVELOP.rst`` - You are here. This file provides additional information for the development of 
-  your project.
-- ``README.rst`` - This will serve as other peoples entry point to your project. The ``rst`` file 
-  extension of this file indicates the usage of reStructuredText_, which is a specific markup language 
-  to produce text files that can be rendered with richer formatting. Such a README_ file will actually 
-  be recognized and rendered when someone opens a project's github page.
-- ``pyproject.toml`` - This file contains the configuration about the package in general. In this file 
-  you'll have to, for example, list all the third party packages that your own code depends on with their 
-  specific version so that the same environment can be recreated on other's systems as well.
-- ``chem_mat_data/`` - This will be the folder that should contain all your **actual code**
-    - ``utils.py`` - Module containing utility functions that can't be associated with a more fitting module name.
-    - ``testing.py`` - Module containing utility functions for unittesting purposes.
-    - ``VERSION`` - A plain text file which contains only the version string of the project.
-- ``tests/`` - Contains all the code for unittesting.
+It is strongly encouraged to set up a virtualenv for the development of the project. The easiest way to 
+do this is by using the [uv](https://github.com/astral-sh/uv) package manager. Specifically you can 
+use the ``venv`` command to create a new virtual environment like this:
 
-==================================
-🚀 Setting Up with Poetry and Venv
-==================================
+.. code-block:: bash
 
-This section will explain how to initially set up the development environment for your project using the 
-``pip`` package manager and a virtual environment.
+    uv venv --python=3.11 --seed venv
 
-Why Virtual Environments in Python?
-===================================
+After this you can activate the the venv like this:
 
-To explain what a virtual environment is and why it is important it makes sense to first explain the python global 
-environment. When installing python on your system it operates on a single global environment by default. Whenever 
-a package is installed using 
-
-.. code-block:: console
-
-    pip3 install some_package
-
-for example, all the code from this package is installed into a certain folder on your system 
-
-Setting up the virtual environment
-==================================
-
-As previously discussed it is very recommended to set up a separate virtual environment for each project you are 
-working on to avoid version conflicts.
-
-This can be done manually by using the ``venv`` python package. First make sure that the venv python package is 
-installed like this:
-
-.. code-block:: console
-
-    sudo apt install python3-venv
-
-Then, simply move into the top level folder of your project and create the virtual env folder like this:
-
-.. code-block:: console
-
-    python3 -m venv venv
-
-This will create a new folder called ``venv``. You can now *activate* this environment with this command:
-
-.. code-block:: console
+.. code-block:: bash
 
     source venv/bin/activate
 
-This will modifiy your current terminal session in such a way that whenever you write commands like ``python3`` or ``pip3`` 
-from that point onwards it will not use the global environment installed on your system but rather the local instance 
-of the python environment contained in the ``venv`` folder.
 
-Installing your existing code
-=============================
+Installing Package in Editable Mode
+===================================
 
-After you have set up and activated your virtual environment, you can use the python related commands as before - the only 
-difference being that they now use the local versions of the virtual environment.
+For development it makes sense to install the project in editable mode so that all the changes that are 
+being done to the source files are immediately reflected in the CLI commands for example without having 
+to reinstall the package first.
 
-That means, for example, that you can now start to add your development dependencies such as pytorch for example.
+This can be done by running the following command:
 
-.. code-block:: console 
+.. code-block:: bash
 
-    pip3 install torch
-
-One important step however is to locally install your own project code, such that all the internal imports will be working 
-correctly. This is done by switching into the top-level folder of your project (the one that contains the ``pyproject.toml`` file)
-and executing the following command:
-
-.. code-block:: console
-
-    cd chem_mat_data
-    pip3 install -e .[dev]
-
-This command warrants some further explanations:
-
-- the dot ``.`` is the linux syntax for "current folder", which tells pip to install the local files.
-- The ``-e`` flag puts the installation into *editable* mode. Instead of installing the package by making a copy, it uses 
-  those exact files in the folder directly. This way you won't have to reinstall the package every time to reflect 
-  changes in the code.
-- the ``[dev]`` addition will install the optional development dependencies as well. These will be third party packages that 
-  are required for development, such as ``pytest`` for unittesting, but don't make sense to include as a general dependency.
-
-Configuring your IDE
-====================
-
-The previous explanations cover the use case in which one wants to manually execute the scripts from the command line. However, 
-this is increasingly not how software development is conducted nowadays anymore. Instead, you'll likely want to use 
-an *integrated development environment* (IDE) application.
-
-When using an IDE, it is important to configure it to use the correct python executable of the virtual environment that you 
-have just created - rather than the global one.
-
-=========================
-📦 Using Absolute Imports
-=========================
-
-Another important aspect to discuss - and one that is often a source of a lot of confusion - is best practices related to 
-the python import system. This section will discuss the do's and don'ts of importing your own modules in the given 
-project structure.
-
-Avoid Relative Imports
-======================
-
-To motivate the use of absolute imports, this section will address some problems with the commonly used alternative - *relative imports*.
-
-When one starts working with python one usually works with one or two isolated scripts and one doesn't give much thought to 
-how the import system works. So at the beginning, a small project will most likely look something like this:
-
-.. code-block:: text 
-
-    project/
-    ├─ utils.py
-    ├─ models.py
-    ├─ main.py
-
-Based on this structure you would do the following imports for example:
-
-.. code-block:: python
-
-    # main.py
-    from models import Model
-    from utils import train_model
-
-    model = Model()
-    train_model(model)
-
-Now consider the following structure of a more mature project instead:
-
-.. code-block:: text
-
-    project/
-    ├─ models/
-    │  ├─ gnn.py
-    │  ├─ dnn.py
-    │  ├─ ...
-    ├─ utils/
-    │  ├─ training.py
-    │  ├─ testing.py
-    ├─ main.py
-
-In this case it would be possible to import ``training.py`` from within ``main.py`` but you'd run into problems when 
-trying to import ``training.py`` from ``gnn.py`` for example.
-
-Another general problem with relative imports is that they can cause naming collisions with existing 
-third-party libraries. Imagine you have your own module called ``utils.py`` and somewhere 
-
-Use Absolute Imports Instead
-============================
-
-For the previously presented reasons, it is recommended to use absolute importing right away. Absolute importing is also a hard 
-requirement if you intend to release your project to the python package repository.
-
-For absolute importing you simply have to have to add the name of your project/package to the front of each import statement 
-and then write out the full "path" towards the desired module you want to import. For the project structure above, the 
-mentioned imports could simply be achieved like this:
-
-.. code-block:: python
-
-    # gnn.py
-    from project.utils.training import train_model
+    uv pip install -e .
 
 
-In a more concrete example for your own project it would work something like this:
+Testing with TOX
+================
 
-.. code-block:: python
+[Tox](https://tox.wiki/en/4.21.2/index.html) is a test automation tool which allows to automatically run the 
+test suites for different versions of python. For this purpose, tox will require access to the different versions 
+of the python interpreter. The easiest way to supply these different python versions is by using the ``python``
+utility of the [uv](https://github.com/astral-sh/uv) package, which is able to quickly download pre-compiled binaries 
+of the python interpreter. This functionality is implemented by the [tox-uv](https://github.com/tox-dev/tox-uv) 
+plugin. You can install the plugin like this:
 
-    # concrete examples of absolute imports
-    import chem_mat_data.visualization.molecules as vis
-    from chem_mat_data.models.gnn import GcnModel
+.. code-block:: bash
 
-=================================
-📦 Releasing your Package to PyPi
-=================================
+    uv tool install tox --with tox-uv
 
-At some point the code of your project perhaps evolves into some general functionality that some other people could 
-potentially benefit from as well. If that is the case, it might make sense to publically release your package to the 
-official python package repository PyPi_. By doing this other people will be able to install your package very 
-conveniently via pip like this:
+After this you can use the ``tox`` command in the base folder of the project (which contains the ``tox.toml`` file):
 
-.. code-block:: console
+.. code-block:: bash
 
-    pip3 install chem_mat_data
+    tox 
 
-The following sections will explain how to achieve this.
 
-Registering with PyPi
-=====================
-
-The first thing you'll have to do is to register a new account with PyPi_ online: https://pypi.org/account/register/
-
-It is advised to note down your username and password as you'll need them later on.
-
-Publishing with Poetry
-======================
-
-On your local system, you can use the ``poetry`` command line interface to publish your package. If you've followed the 
-installation instructions above, Poetry_ should have already been installed to your virtual environment as a development 
-dependency. However, you make sure that it is installed by running:
-
-.. code-block:: console
-
-    pip3 install poetry
-
-**Build the code.** The first step you'll need to do prior to publishing is to actually build your code. This can be done 
-by running the ``build`` command like this:
-
-.. code-block:: console
-
-    poetry build
-
-**Publish the code.** Then you can publish the code using the ``publish`` command. This is where you'll need to provide the 
-username and password for your PyPi_ account.
-
-.. code-block:: console
-
-    poetry build --username='__token__' --password='{pypi_token}'
-
-=====================
-🕰️ Package Versioning
-=====================
-
-One thing that will be important to keep track of - especially if you are planning to release your code - 
-is the versioning of your code. To publish your code, it is required that you provide a unique version identifier.
-Once published, it is also not possible to then modify that code again - the only way to modify the published code 
-is to actually publish a new version.
-
-Even if you don't intend to release the code, it might still make sense to keep track of the version for your 
-own sake. The following sections will introduce the concept of `Semantic Versioning`_ explained.
-
-What is Versioning?
+Testing with Pytest
 ===================
 
-A software version is generally one or multiple increasing numbers associated with a software that 
-uniquely identify a specific state of that software that existed at some point in time.
+During development it sometimes makes sense to run the tests only for a single version of python first. This can 
+be done by using [pytest](https://docs.pytest.org/en/stable/) directly. To do this first make sure that pytest 
+is installed in the current environmnent:
 
-Such versions are important for *dependency management*. The features or at least the specific implementations 
-of a piece of software are very likely to change / evolve over time. Some feature that existed in a popular 
-library 2 years ago might not exist anymore nowadays. However, other software will have been built depending on 
-those features.
+.. code-block:: bash
 
-Due to this and also other reasons, the practice of software versioning has been widely adapted. In this practice, 
-the developers attach a new and unique version to their software product whenever they release changes to public.
+    uv tool install pytest
 
-There is some variance in how exactly to structure and manage this "version" software and some different 
-versioning *schemes* exist based on different philosophies.
-One of the most common versioning schemes is called `Semantic Versioning`_ which will be briefly introduced 
-in the next section.
+Then you can invoke the ``pytest`` command on the tests folder:
 
-Semantic Versioning
-===================
+.. code-block:: bash
 
-If you want to know more details, you can read the official specifications here: https://semver.org/
+    pytest tests
 
-The brief explanation is that in semantic versioning the *version* consists of three different numbers which 
-indicate the state of the software product at different levels of granularity:
 
-.. code-block:: text
+Linting with Ruff
+=================
 
-    major.minor.patch
+Linters apply a set of rules on the codebase to check if the written code complies with certain coding guidelines. 
+In general linters are used to keep and enforce a set of language-specific best practices across a code base and 
+across a set of different developers.
+This project uses the [ruff](https://github.com/astral-sh/ruff) linter, which can be installed like this:
 
-- **major** - This is the version at the highest level of granularity. In general, one can expect a software 
-  to have *major* differences between two different major version. More specifically, a change in major version 
-  indicates *backward incompatible* changes of the API. This means that it will generally not be possible anymore to 
-  use a version ``2.0.0`` in all the cases where a version ``1.0.0`` was previously used.
-- **minor** - Between two minor versions of a software one can also expect only *minor* differences - specifically, 
-  minor versions should only include *backward compatible*. So incrementing a minor version *should not* cause any 
-  dependent software to suddently break. Such a version can still be used to implement (substantial) new features 
-  but it will have to be features that only add functionality without requiring a modification of existing functionality.
-- **patch** - The patch version is the smalles level of granularity. This version should only be used to release 
-  bug fixes.
+.. code-block:: bash
 
-Start Developing Version Zero
-=============================
+    uv tool install ruff
 
-One notable exception of the rules listed above is major version zero ``0.x.x``. It is generally reserved for the initial 
-development
+To check the code against the linting rules use the ``ruff check`` command in the top-level folder:
 
-Therefore, it is also recommended for you to start with version ``0.1.0`` and then start incrementing the minor version 
-whenever you feel like a substantially new feature is completed.
+.. code-block:: bash
 
-If, at some point, you feel that all the primary functionality of your pacakge is implemented or your project is slowly 
-coming to an end, you can think about moving your package to a version ``1.0.0``.
+    ruff check .
 
-======================
-🌐 Working with Github
-======================
 
-It is recommended to maintain a GitHub_ repository. This will serve you as a method of backing up 
-your work and it'll help your supervisor to keep track of your progress.
+Bumping Version for a new Release
+================================= 
 
-At the end of your project it will also be the most convenient hand in your code in the form 
-of a github repository as well, which can then be transferred to the official ``aimat-lab``
-account.
+To release a new version of the package, the version string has to be updated throughout all the different 
+places where this version string is used in the text. In this project, this is handled automatically 
+using the [bump-my-version](https://github.com/callowayproject/bump-my-version) tool, which can be 
+installed like this:
 
-Create Local Git Repository
-===========================
+.. code-block:: bash
 
-Prior to publishing your code on GitHub, you'll have to create a local ``git`` repository in the top-level project 
-folder (the one containing the ``pyproject.toml``):
+    uv tool install bump-my-version
 
-.. code-block:: console
+One of the following commands can then be used to bump the version either for a patch, minor or major release: 
 
-    cd chem_mat_data
-    git init .
+.. code-block:: bash
 
-Then you'll need to add all the files that you want to be part of the repository:
+    bump-my-version bump -v patch
+    bump-my-version bump -v minor
+    bump-my-version bump -v major
 
-.. code-block:: console
+The configuration of which files are being updated and how the version is parsed etc. can be found in a 
+tool section of the ``pyproject.toml``
 
-    git add README.rst
-    git add LICENSE
-    git add chem_mat_data/*.py
-    # and so forth...
 
-And finally you can ``commit`` all these files.
+Building a new Package Version
+==============================
 
-.. code-block:: console
+Before a new version of the package can be published on PyPi for example, the code has to be built first. This 
+can be done with uv's ``build`` command like this:
 
-    git commit -am "briefly describe the changes made in this commit"
+.. code-block:: bash
 
-Connect with Github
-===================
+    uv build --python=3.10
 
-On github you'll have to create a new repository with the same name ``chem_mat_data`` as your 
-project. For this, simply log into your account, navigate to "Your Repisitories" and press "New".
+If it doesn't already exist, this command will create a new ``dist`` folder where the built tarball and wheel of 
+the current version (as defined in the pyproject.toml file) are saved.
 
-After you have created the repository on github, you can link it with your local git repository using the 
-``remote`` command.
 
-.. code-block:: console
+Publishing a new Version to PyPi
+================================
 
-    git remote add origin https://github.com/{your_username}/chem_mat_data.git
+[twine](https://twine.readthedocs.io/en/stable/) is a python library that is specifically intended for publishing python 
+packages to the package indices such as PyPi. Twine can be installed like this:
 
-This command will create a new remote location called ``origin``.
+.. code-block:: bash
 
-Then finally you can use the ``push`` command to push your local commits to the remote github repository:
+    uv tool install twine
 
-.. code-block:: console
+After this the ``twine`` command is available:
 
-    git push origin master
+.. code-block:: bash
 
-(Optional) Avoid Two-Factor Authentication
-==========================================
+    twine --help
 
-Recently, GitHub_ has introduced `two-factor authentication`_ which can be a bit annoying since by default 
-github will require an authentication for each ``push`` command
+**Checking the distribution. ** Twine assumes that the built distribution files (tarball and wheel) already exist in the 
+project's ``dist`` folder (see "Building a New Package Version"). The ``twine check`` command can be used to check 
+these distribution files for correctness before actually uploading them. This command will for example check the 
+syntax of the README file to make sure it can be properly rendered on the PyPi website.
 
-You can avoid the necessity of authenticating for a ``push`` command altogether by setting up the remote 
-github location in a specific manner:
+.. code-block:: bash
 
-.. code-block:: console
+    twine check dist/*
+    
+**Uploading to PyPi. ** Finally, the ``twine upload`` command can be used to actually upload the distribution files 
+to the package index.
 
-    git remote remove origin
-    git remote add origin https://{your_username}:{your_token}@github.com/{your_username}/chem_mat_data.git
-
-In this method you'll have to supply your authentication details only once in the form of your username and your authentication 
-token. However, you'll have to generate such an authentication token in the "Settings" page of your Github account first.
-
-=====================
-📖 Code Documentation
-=====================
-
-Write a README file
-===================
-
-Document API with DocStrings
-============================
-
-How to write useful comments
-============================
-
-=======================
-📚 Additional Resources
-=======================
-
-This section compiles a number of useful resources that might be helpful during development
-
-**TO BE DONE**
-
-.. _reStructuredText: https://www.writethedocs.org/guide/writing/reStructuredText/
-.. _README: https://www.makeareadme.com/
-.. _Poetry: https://python-poetry.org/
-.. _PyPi: https://pypi.org/
-.. _`Semantic Versioning`: https://semver.org/
-.. _GitHub:: https://github.com/
-.. _`two-factor authentication`:: https://en.wikipedia.org/wiki/Multi-factor_authentication
+    twine upload --username='__token__' --password='[your password]' dist/*
