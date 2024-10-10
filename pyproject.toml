@@ -1,73 +1,99 @@
 [build-system]
-requires = ["poetry-core>=1.2.0b2"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
+# Project Metadata
+# ================
 name = "chem_mat_data"
 version = "0.1.1"
-description = "Interface with database of chemistry and material science datasets for machine learning"
-license = "MIT license"
-authors = ["Mohit Singh <usrlj@student.kit.edu>", "Jonas Teufel <jonas.teufel@kit.edu>"]
-maintainers = ["Mohit Singh <usrlj@student.kit.edu>", "Jonas Teufel <jonas.teufel@kit.edu>"]
-keywords = []
-packages = [
-    { include = "chem_mat_data" },
+description = "Command Line Interface for projects"
+readme = "README.rst"
+authors = [
+    {name = "Jonas Teufel", email = "jonseb1998@gmail.com"},
+    {name = "Mohit Singh", email = "mohit.singh@student.kit.edu"}
 ]
-include = [
-    "chem_mat_data/VERSION",
-    "chem_mat_data/scripts/*.rst",
-    "chem_mat_data/scripts/*.sh",
+maintainers = [
+    {name = "Jonas Teufel", email = "jonseb1998@gmail.com"},
+    {name = "Mohit Singh", email = "mohit.singh@student.kit.edu"}
+]
+license = { text = "MIT License" }
+keywords = [
+    "chemistry",
+    "data",
+    "dataset",
+    "machine learning",
+    "data management",
+    "graph neural network",
+    "graph representation",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
-# Code dependencies
-# =================
-# this section is used to define all the packages which you depend on. So as soon as you start using 
-# additional packages they should be added here.
+# Project Dependencies
+# ====================
+requires-python = ">=3.8,<=3.12"
+dependencies = [
+    "numpy>=1.21.0,<2.0",
+    "matplotlib>=3.4.0",
+    "rdkit>=2023.0.0",
+    "requests>=2.30.0",
+    "cairosvg>=2.7.1",
+    "imageio>=2.34.0",
+    "rich_click>=1.8.0",
+    "jinja2>=3.0.0",
+    "lorem==0.1.1",
+    "networkx<=3.3",
+    "python-dotenv==1.0.1",
+    "pyyaml>=6.0.0",
+    "msgpack>=1.0.2",
+    "pandas<2.2.2",
+    "pycomex<=0.17.0",
+    "msgpack_numpy>=0.4.8"
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8.0,<4.0"
-numpy = ">=1.21.0,<2.0" # numpy verions 2.0.0+ breaks
-matplotlib = ">=3.4.0"
-rdkit = ">=2023.0.0"
-requests = ">=2.30.0"
-cairosvg = ">=2.7.1"
-imageio = ">=2.34.1"
-rich_click = ">=1.8.0"
-jinja2 = ">=3.0.0"
-lorem = "==0.1.1"
-networkx = "<=3.3" 
-python-dotenv = "==1.0.1"
-pyyaml = ">=6.0.0"
-msgpack = ">=1.0.2"
-pandas = "<2.2.2"
-pycomex = "<=0.17.0"
-msgpack_numpy = ">=0.4.8"
-
-# Development dependencies
-# ------------------------
-# This is how we can setup development dependencies in such a way that they also work when installing with 
-# ``pip`` package manager. We first have to declare them here in this section as optional dependencies and 
-# then in the "extras" section we define an installation variant called "dev".
-# These dependencies will NOT be installed unless the suffix [dev] is added during the installation.
-
-poetry = { version = ">=1.7.0", optional = true }
-poetry-bumpversion = { version = ">=0.3.0", optional = true }
-pytest = { version = ">=7.4.0", optional = true }
-
-# Poetry installable scripts
-[tool.poetry.scripts]
-chemdata = 'chem_mat_data.cli:cli'
-
-[tool.poetry.extras]
-
-dev = ["poetry", "poetry-bumpversion", "pytest"]
-
-# Bumpversion plugin
+# Executable Scripts
 # ==================
-# This section configures the poetry plugin which helps with the versioning.
 
-# With this configuration we tell he plugin that the content of the "VERSION" file should be 
-# automatically changed every time that we change the version through the plugin.
-[tool.poetry_bumpversion.file."chem_mat_data/VERSION"]
+[project.scripts]
+chemdata = "chem_mat_data.cli:cli"
+
+# Configuration of Build System (Hatchling)
+# =========================================
+
+[tool.hatch.build]
+skip-excluded-dirs=true
+
+# Version Bumping
+# ===============
+
+[tool.bumpversion]
+current_version = "0.1.1"
+parse = "(?<![=<>])(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
 replace = "{new_version}"
+regex = true
+ignore_missing_version = true
+tag = false
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+allow_dirty = true
+commit = false
+message = "Bump version: {current_version} → {new_version}"
+commit_args = ""
+files = [
+    {filename = "pyproject.toml", search="version = \"{current_version}\"", replace="version = \"{new_version}\""},
+    {filename = "README.rst"},
+    {filename = "chem_mat_data/VERSION"},
+]
