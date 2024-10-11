@@ -2,11 +2,9 @@
 title: First Steps
 ---
 
-# First Steps
+After installing the ``chem_mat_data`` package, it can either be directly imported into a Python code or 
+be used via the ``chemdata`` command line interface:
 
-```python title="some_title.py"
-import os
-import pathlib
-
-os.getcwd()
+```console
+chemdata --help
 ```
