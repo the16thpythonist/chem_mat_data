@@ -14,6 +14,7 @@ markdown_extensions:
   - pymdownx.superfences
 theme:
   name: material
+  logo: assets/logo.png
   features:
     - content.code.copy
     - content.code.select
