@@ -7,6 +7,7 @@ import pandas as pd
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.data import load_graphs
+from chem_mat_data._typing import GraphDict
 from typing import Union
 from typing import List
 
@@ -147,6 +148,45 @@ def load_graph_dataset(dataset_name: str,
     return graphs
 
 
+def pyg_from_graph(graph: GraphDict) -> 'Data':    # noqa
+    """
+    Given a graph dict representation ``graph``, this function will convert it into a PyTorch Geometric "Data" 
+    object which can then be used to train a PyG graph neural network model directly.
+    
+    :param graph: A graph dict representation of a dataset's molecule.
+    
+    :returns: A PyG Data instance.
+    """
+    try:
+        
+        import torch                        # noqa
+        import torch_geometric.data         # noqa
+        
+        data = torch_geometric.data.Data(
+            # standard attributes: These are part of every graph and have to be given
+            x=torch.tensor(graph['node_attributes'], dtype=torch.float),
+            edge_attr=torch.tensor(graph['edge_attributes'], dtype=torch.float),
+            edge_index=torch.tensor(graph['edge_indices'].T, dtype=torch.long),
+        )
+        
+        # if graph_labels are present, we also add them to the data object
+        if 'graph_labels' in graph:
+            data.y = torch.tensor(graph['graph_labels'], dtype=torch.float)
+        
+        # optional attributes: These can optionally be part of the graph and are therefore
+        # dynamically attached if they are present in the graph dict.
+        if 'node_coordinates' in graph:
+            data.pos = torch.tensor(graph['node_coordinates'], dtype=torch.float)
+        
+        return data
+        
+    except ImportError:
+        raise ImportError('It seems like you are trying to convert GraphDicts to torch_geometric.data.Data objects. '
+                          'However, it seems like either TORCH or TORCH_GEOMETRIC are not properly installed in your '
+                          'current environment and could not be imported. Please make sure to install them '
+                          'properly first!')
+
+
 def pyg_data_list_from_graphs(graphs: List[dict]) -> List['Data']:    # noqa
     """
     Given a list ``graphs`` of graph dict representations, this function will convert them into 
@@ -157,35 +197,70 @@ def pyg_data_list_from_graphs(graphs: List[dict]) -> List['Data']:    # noqa
     
     :returns: A list of PyG Data instances.
     """
+    data_list = []
+    for graph in graphs:
+        # pyg_from_graph already implements the conversion of a single graph dict to a PyG Data object so 
+        # we can just reuse that function here.
+        data = pyg_from_graph(graph)
+        data_list.append(data)
+        
+    return data_list
+        
+        
+def jraph_from_graph(graph: GraphDict) -> 'GraphsTuple':  # noqa
+    """
+    Given a graph dict representation ``graph``, this function will convert it into a Jraph "GraphsTuple"
+    object which can then be used to train a Jraph graph neural network model directly.
+    
+    :param graph: A graph dict representation of a dataset's molecule.
+    
+    :returns: A Jraph GraphsTuple instance.
+    """
     try:
         
-        import torch                        # noqa
-        import torch_geometric.data         # noqa
+        import jax.numpy as jnp
+        import jraph
         
-        data_list = []
-        for graph in graphs:
-            data = torch_geometric.data.Data(
-                # standard attributes: These are part of every graph and have to be given
-                x=torch.tensor(graph['node_attributes'], dtype=torch.float),
-                edge_attr=torch.tensor(graph['edge_attributes'], dtype=torch.float),
-                edge_index=torch.tensor(graph['edge_indices'].T, dtype=torch.long),
-            )
-            
-            # optional attributes: These can optionally be part of the graph and are therefore
-            # dynamically attached if they are present in the graph dict.
-            if 'node_coordinates' in graph:
-                data.pos = torch.tensor(graph['node_coordinates'], dtype=torch.float)
-            
-            data_list.append(data)
-            
-        return data_list
-        
-    except ImportError:
-        raise ImportError(
-            'The PyTorch and PyTorch Geometric packages have not been found in your environment.'
-            'To use this functionality please install them with "pip install torch torch-geometric"'
+        graph_tuple = jraph.GraphsTuple(
+            nodes=jnp.array(graph['node_attributes']),
+            edges=jnp.array(graph['edge_attributes']),
+            senders=jnp.array(graph['edge_indices'][:, 0]),
+            receivers=jnp.array(graph['edge_indices'][:, 1]), 
+            n_node=jnp.array([len(graph['node_indices'])]),
+            n_edge=jnp.array([len(graph['edge_indices'])]),
+            globals=None,
         )
+        
+        return graph_tuple
+    
+    except ImportError:
+        raise ImportError('It seems like you are trying to convert GraphDicts to jraph.GraphTuples. '
+                          'However, it seems like either JAY or JRAPH are not properly installed in your '
+                          'current environment and could not be imported. Please make sure to install them '
+                          'properly first!')
+    
+
+def jraph_implicit_batch_from_graphs(graphs: list[GraphDict]) -> list['GraphsTuple']:  # noqa
+    """
+    This
+    """
+    try: 
+        import jraph
+        
+        graph_tuples = []
+        for graph in graphs:
+            graph_tuple = jraph_from_graph(graph)
+            graph_tuples.append(graph_tuple)
+        
+        return jraph.batch(graph_tuples)
+    
+    except ImportError:
+        raise ImportError('It seems like you are trying to convert GraphDicts to jraph.GraphTuples. '
+                          'However, it seems like either JAY or JRAPH are not properly installed in your '
+                          'current environment and could not be imported. Please make sure to install them '
+                          'properly first!')
+
+        
     
 
 # TODO: Implement for KGCNN as well!
-# TODO: Implement for jax / jraph as well

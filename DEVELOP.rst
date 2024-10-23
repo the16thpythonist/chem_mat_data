@@ -37,6 +37,22 @@ This can be done by running the following command:
     uv pip install -e .
 
 
+Installing Additional Development Packages
+==========================================
+
+This package specifically aims to offer a data structure that can directly interface to various popular 
+graph neural network libraries such as pytorch geometric, jraph etc. However, these libraries are not
+direct dependencies of this package as it would bloat the dependencies for users who do not need this
+functionality. Some tests still use these packages to test the integration. To install these packages 
+install the like this:
+
+.. code-block:: bash
+
+    uv pip install torch
+    uv pip install torch-geometric
+    uv pip install jax jraph
+
+
 Testing with TOX
 ================
 
