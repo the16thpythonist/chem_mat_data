@@ -1,9 +1,12 @@
 import os
 import sys
+import datetime
 import typing as t
+from typing import Any, Dict, Union
 
 import rich_click as click
-from rich.console import Console, ConsoleOptions
+from rich import box
+from rich.console import Console, ConsoleOptions, RenderResult
 from rich.panel import Panel
 from rich.style import Style
 from rich.padding import Padding
@@ -11,10 +14,12 @@ from rich.text import Text
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.progress import Progress
+from rich.rule import Rule
 
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import TEMPLATE_PATH
 from chem_mat_data.utils import RichMixin
+from chem_mat_data.utils import open_file_in_editor
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
 
@@ -27,6 +32,13 @@ load_dotenv()
 server_url = os.getenv("url")
 if not server_url:
     raise ValueError("Server URL not found in environment variables")
+
+
+# == RICH DISPLAY ELEMENTS ==
+# The following classes are used to define the rich display elements that are used to render the
+# different parts of the command line interface. These classes are all subclasses of the RichMixin
+# class which is a simple class that defines the __rich_console__ method which is used to render
+# the object to the console using the rich library.
 
 
 class RichLogo(RichMixin):
@@ -62,16 +74,62 @@ class RichHelp(RichMixin):
             'You can print a list of the available datasets using the "list" command.'
         ), style=Style(color='bright_black'))
         yield Padding(Syntax((
-            'chemdata list'
+            'cmdata list'
         ), lexer='bash', theme='monokai', line_numbers=False), (1, 5))
         yield Text((
             'To download a dataset, use the "download" command followed by the name of the dataset.'
         ), style=Style(color='bright_black'))
         yield(Padding(Syntax((
-            'chemdata download "dataset_name"'
+            'cmdata download "dataset_name"'
         ), lexer='bash', theme='monokai', line_numbers=False), (1, 5)))
         
         
+class RichCommands(RichMixin):
+    
+    def __init__(self, commands: Dict[str, Union[click.RichCommand, click.RichGroup]]):
+        self.commands = commands
+    
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+        
+        table_commands = Table(title=None, box=None, show_header=False, leading=1)
+        table_commands.add_column(justify='left', style='bold cyan', no_wrap=True)
+        table_commands.add_column(justify='left', style='white', no_wrap=False)
+        
+        for command_name, command in self.commands.items():
+            if isinstance(command, click.RichCommand) and not isinstance(command, click.RichGroup):
+                table_commands.add_row(
+                    command_name,
+                    command.short_help
+                )
+        
+        panel_commands = Panel(
+            table_commands, 
+            title='[bright_black]Commands[/bright_black]',
+            title_align='left', 
+            style='bright_black'
+        )
+        yield panel_commands
+        
+        table_groups = Table(title=None, box=None, show_header=False, leading=1)
+        table_groups.add_column(justify='left', style='bold cyan', no_wrap=True)
+        table_groups.add_column(justify='left', style='white', no_wrap=False)
+        
+        for command_name, command in self.commands.items():
+            if isinstance(command, click.RichGroup):
+                table_groups.add_row(
+                    command_name, #click.style(command_name, fg='cyan', bold=True),
+                    command.help
+                )
+                
+        panel_groups = Panel(
+            table_groups, 
+            title='[bright_black]Command Groups[/bright_black]',
+            title_align='left', 
+            style='bright_black'
+        )
+        yield panel_groups
+        
+
 class RichDatasetInfo(RichMixin):
     """
     Implements the "rich" console rendering of the specific information about a single dataset.
@@ -152,6 +210,78 @@ class RichDatasetList(RichMixin):
         
         yield table
         
+        
+class RichCacheList(RichMixin):
+    
+    """
+    Implements the "rich" console rendering of all the lists that are stored in the cache.
+
+    This display element will show a table which contains one row for each dataset and columns 
+    that contain various pieces of information about the datasets.
+    """
+    def __init__(self, 
+                 dataset_metadata_map: Dict[str, Dict],
+                 sort: bool = True,
+                 show_hidden: bool = False,
+                 ):
+        self.dataset_metadata_map = dataset_metadata_map
+        self.sort = sort
+        self.show_hidden = show_hidden
+        
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+        
+        table = Table(title='Dataset Cache', expand=True, box=box.HORIZONTALS)
+        
+        table.add_column("Dataset", justify="left", style="cyan", no_wrap=True)
+        table.add_column("Created",justify="left", style="bright_black")
+        
+        names = list(self.dataset_metadata_map.keys())
+        # potentially we want to sort the items depending on the "sort" argument
+        if self.sort:
+            names.sort()
+        
+        for name in names:
+            
+            info: dict = self.dataset_metadata_map[name]
+            
+            dt = datetime.datetime.fromtimestamp(info['_cache_time'])
+            table.add_row(
+                name, 
+                f'{dt:%Y-%m-%d %H:%M:%S}', 
+            )
+        
+        yield table
+        
+        
+class RichConfig(RichMixin):
+    
+    def __init__(self, config_file_path: str):
+        self.file_path = config_file_path
+        self.file_name = os.path.basename(self.file_path)
+        with open(self.file_path) as file:
+            self.content = file.read()
+        
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+            
+        rule_top = Rule(
+            title=f'[bright_black]{self.file_path}[/bright_black]', 
+            align='center', 
+            style='bright_black'
+        )
+        yield rule_top
+        
+        yield self.content.replace('[', '\[')
+            
+        rule_bottom = Rule(title=None, style='bright_black', end=' ')
+        yield rule_bottom
+        
+
+# == ACTUAL CLI IMPLEMENTATION ==
+# The following class is the actual implementation of the command line interface for the ChemMatData
+# package. This class is a subclass of the RichGroup class from the rich_click package which is a
+# subclass of the click.Group class. This class is used to define a group of commands that are all
+# related to the same topic. In this case the topic is the ChemMatData package and the commands are
+# all related to the downloading and managing of the datasets that are part of the package.
 
 class CLI(click.RichGroup):
 
@@ -167,6 +297,7 @@ class CLI(click.RichGroup):
         # server from which the datasets will be downloaded.
         self.config = Config()
         self.file_share = NextcloudFileShare(self.config.get_fileshare_url())
+        self.cache = self.config.cache
 
         # ~ Constructing the help string.
         # This is the string which will be printed when the help option is called.
@@ -178,10 +309,18 @@ class CLI(click.RichGroup):
         
         # ~ adding commands
         
-        self.add_command(self.download)
-        self.add_command(self.list)
-        self.add_command(self.info)
-        #self.add_command(self.about)
+        self.add_command(self.download_command)
+        self.add_command(self.list_command)
+        self.add_command(self.info_command)
+        
+        self.add_command(self.cache_group)
+        self.cache_group.add_command(self.cache_list_command)
+        self.cache_group.add_command(self.cache_clear_command)
+        
+        self.add_command(self.config_group)
+        self.config_group.add_command(self.config_show_command)
+        self.config_group.add_command(self.config_edit_command)
+
 
     # Here we override the default "format_help" method of the RichGroup base class.
     # This method is being called to actually render the "--help" option of the command group.
@@ -189,14 +328,22 @@ class CLI(click.RichGroup):
     # printing the help text.
     def format_help(self, ctx: t.Any, formatter: t.Any) -> None:
         
+        formatter.config.command_groups.update({
+            'cache': self.cache_group
+        })
+        
         # Before printing the help text we want to print the logo
         click.echo(self.rich_logo)
         
         self.format_usage(ctx, formatter)
-        # self.format_help_text(ctx, formatter)
         click.echo(self.rich_help)
+        
         self.format_options(ctx, formatter)
         self.format_epilog(ctx, formatter)
+        
+    def format_commands(self, ctx: Any, formatter: Any) -> None:
+        rich_commands = RichCommands(self.commands)
+        click.echo(rich_commands)
 
     # -- commands
     # The following methods are actually the command implementations which are the specific commands 
@@ -208,7 +355,7 @@ class CLI(click.RichGroup):
     @click.option('--path', default=os.getcwd(), type=click.Path(file_okay=False), help='Path to where the files will be downloaded')
     @click.pass_obj
     # Try with "clintox"
-    def download(self, name: str, full: bool, path: str):
+    def download_command(self, name: str, full: bool, path: str):
         """
         Downloads the dataset with the given NAME from the remote file share server to the local system. 
         """
@@ -222,26 +369,42 @@ class CLI(click.RichGroup):
             click.secho('Dataset not found! Use the "list" command to see available datasets...', fg='red')
             return 1
         
-        dataset = self.file_share['datasets'][name]
+        dataset_metadata: dict = self.file_share['datasets'][name]
+        
         with Progress() as progress:
             
             click.secho('Downloading raw dataset...')
-            for file_extension in dataset['raw']:
+            for file_extension in dataset_metadata['raw']:
                 file_name = f'{name}.{file_extension}'
-                self.file_share.download_file(file_name, folder_path=path, progress=progress)
+                self.file_share.download_file(
+                    file_name, 
+                    folder_path=path, 
+                    progress=progress
+                )
                 
             # We only want to download the full dataset (aka the message packed version of the 
             # graph dicts) when the corresponding flag is explicitly set for the command
             if full:
+                
                 # There is also the possibility that a full dataset is not even available for 
                 # the dataset in question. In that case we want to inform the user about that
-                if not dataset['full']:
+                if not dataset_metadata['full']:
                     click.secho('Full format dataset not available!', fg='red')
                 
-                self.file_share.download_dataset(
+                path = self.file_share.download_dataset(
                     f'{name}.mpack', 
                     folder_path=path, 
                     progress=progress
+                )
+                
+                # 01.11.24
+                # After downloading the full dataset we want to store that dataset in the cache for 
+                # future use. This way we can avoid downloading the dataset again in the future.
+                # After each download we want to replace the version in the cache with the new one.
+                self.cache.add_dataset(
+                    name=name,
+                    path=path,
+                    metadata=dataset_metadata,
                 )
         
         click.secho('Download complete!', fg='green')
@@ -250,7 +413,7 @@ class CLI(click.RichGroup):
     @click.option('-s', '--sort', is_flag=True, help='Sort the datasets by name.')
     @click.option('--show-hidden', is_flag=True, help='Show hidden datasets as well. Mainly for testing purposes')
     @click.pass_obj
-    def list(self, sort: bool, show_hidden: bool):
+    def list_command(self, sort: bool, show_hidden: bool):
         """
         This command will display a list of the available datasets that are available for download.
         The list will also display some basic information about each dataset such as the number of
@@ -272,7 +435,7 @@ class CLI(click.RichGroup):
     @click.command('info', short_help='Show detailed information about one of the datasets')
     @click.argument('name')
     @click.pass_obj
-    def info(self, name: str):
+    def info_command(self, name: str):
         """
         This command will print detailed information about the dataset with the given NAME.
         """
@@ -291,6 +454,76 @@ class CLI(click.RichGroup):
     def about(self):
         # TODO: Implement an "about" page which prints additional information about the command line interface
         pass
+    
+    # ~ CACHE COMMAND GROUP
+    # The following methods are the implementations of the commands that are part of the cache command group 
+    # which can be used to manage the local file system cache.
+    
+    @click.group('cache', help='Commands for managing the local dataset cache')
+    @click.pass_obj
+    def cache_group(self):
+        """
+        Commands for managing the local dataset cache. When downloading datasets from the remote cache they 
+        will be stored in a local cache directory to avoid downloading the same dataset multiple times. This 
+        command group allows to view & manipulate the data stored in this cache.
+        """
+        pass
+    
+    @click.command('list', short_help='List the datasets that are currently stored in the cache')
+    @click.pass_obj
+    def cache_list_command(self):
+        """
+        Shows a list of all the datasets that are currently stored in the cache along with some of the metadata 
+        that is stored along with the dataset.
+        """
+        dataset_names: list[str] = self.cache.list_datasets()
+        dataset_metadata_map: dict[str, dict] = {}
+        for name in dataset_names:
+            metadata = self.cache.get_dataset_metadata(name)
+            dataset_metadata_map[name] = metadata
+            
+        rich_cache_list = RichCacheList(dataset_metadata_map)
+        click.echo(rich_cache_list)
+            
+    @click.command('clear', short_help='Clear the entire cache')
+    @click.option('-v', '--verbose', is_flag=True, help='print verbose output')
+    @click.pass_obj
+    def cache_clear_command(self, verbose: bool):
+        """
+        Clears the local cache directory which contains all the datasets that have been downloaded from the
+        remote file share server.
+        """
+        click.echo('clearing cache...')
+        num_elements: int = 0
+        for file_name, file_path in self.cache.iterator_clear_():
+            num_elements += 1
+            click.secho(f' > remove "{file_name}"...', fg='bright_black')
+            
+        click.secho(f'cleared {num_elements} elements', fg='green')
+
+    # ~ CONFIG COMMAND GROUP
+    # The following methods are the implementations of the commands that are part of the config command group
+    # which can be used to manage the config file of the ChemMatData installation.
+    
+    @click.group('config', help='Commands for managing the configuration file')
+    @click.pass_obj
+    def config_group(self):
+        pass
+    
+    @click.command('show', short_help='Show the current configuration settings')
+    @click.pass_obj
+    def config_show_command(self):
+        """
+        Prints the contents of the config file to the console.
+        """
+        rich_config = RichConfig(self.config.config_file_path)
+        click.echo(rich_config, nl=False)
+        
+    @click.command('edit', short_help='Edit the configuration file')
+    @click.pass_obj
+    def config_edit_command(self):
+        open_file_in_editor(self.config.config_file_path)
+
 
 
 @click.group(cls=CLI)
@@ -321,6 +554,7 @@ def cli(ctx: t.Any,
     # to the CLI at all, it will simply show the help information.
     elif not ctx.args and not ctx.invoked_subcommand:
         ctx.command.format_help(ctx, ctx.formatter_class())
+
 
 
 if __name__ == "__main__":

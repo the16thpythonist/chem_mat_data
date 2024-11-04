@@ -1,10 +1,15 @@
 """
 This module contains all the additional functionality that is needed for the unittesting.
 """
+import os
+import tempfile
 import random
+from typing import Optional, Dict
+
 import numpy as np
 
 from chem_mat_data._typing import GraphDict
+from chem_mat_data.config import Config
 
 
 def create_mock_graph(num_nodes: int = 10,
@@ -62,3 +67,66 @@ def sample_mock_graphs(k: int,
         graphs.append(graph)
         
     return graphs
+
+
+class ConfigIsolation:
+    """
+    Instances of this class act as context managers that can be used to isolate the state of the "Config" singleton to 
+    avoid side effects between tests. The context manager creates a new temp dir and sets the cache and config paths
+    of the config object to this temp dir on enter. On exit, the original cache and config paths are restored to 
+    their original values.
+    """
+    def __init__(self,
+                 config: Config = Config(),
+                 config_data: Dict = {},
+                 ):
+        
+        self.config = config
+        self.config_data = config_data
+        
+        self.temp_dir = tempfile.TemporaryDirectory()
+        
+        self.path: Optional[str] = None
+        self.cache_path: Optional[str] = None
+        self.config_path: Optional[str] = None
+    
+        self.original_cache_path: Optional[str] = None
+        self.original_config_path: Optional[str] = None
+    
+    def __enter__(self):
+        
+        # By entering the temp dir object we obtain the actual absolute path to the temporary directory.
+        # The temporary folder is only created on enter.
+        self.path = self.temp_dir.__enter__()
+        
+        # We obtain the current cache and config paths from the config object. It is important to store these 
+        # so that we can later restore them on exit.
+        self.original_cache_path = self.config.cache_path
+        self.original_config_path = self.config.config_path
+        
+        # Then we create the cache and config folders inside the temporary directory.
+        self.cache_path = os.path.join(self.path, 'cache')
+        os.mkdir(self.cache_path)
+        
+        self.config_path = os.path.join(self.path, 'config')
+        os.mkdir(self.config_path)
+        
+        # The "set" methods on the config object actually handle all the important things such as creating 
+        # a new Cache wrapper object and creating a new config TOML file inside the config folder.
+        self.config.set_cache_path(self.cache_path)
+        self.config.set_config_path(self.config_path)
+        
+        # If there is some custom overwrites of the config data, we need to apply these updates to the 
+        # config data dict.
+        self.config.config_data.update(self.config_data)
+        self.config.save()
+        
+        return self
+    
+    def __exit__(self, *args, **kwargs):
+        
+        # On exit we need to reset the cache and config paths to the original values.
+        self.config.set_cache_path(self.original_cache_path)
+        self.config.set_config_path(self.original_config_path)
+        
+        return self.temp_dir.__exit__(*args, **kwargs)

@@ -22,7 +22,7 @@ from chem_mat_data.testing import sample_mock_graphs
 from chem_mat_data.main import pyg_from_graph
 from chem_mat_data.main import pyg_data_list_from_graphs
 from chem_mat_data.main import jraph_from_graph
-from chem_mat_data.main import jraph_batch_from_graphs
+from chem_mat_data.main import jraph_implicit_batch_from_graphs
 
 
 # == TORCH/PYTORCH GEOMETRIC ==
@@ -223,7 +223,7 @@ class TestJraph:
         )
         
         # The aggregated batch also is again a GraphsTuple instance
-        batch = jraph_batch_from_graphs(graphs)
+        batch = jraph_implicit_batch_from_graphs(graphs)
         print(batch)
         assert isinstance(batch, jraph.GraphsTuple)
         assert len(jraph.unbatch(batch)) == num_graphs
@@ -245,7 +245,7 @@ class TestJraph:
             num_edge_attributes=num_edge_attributes,
             num_graph_labels=num_graph_labels,
         )
-        batch = jraph_batch_from_graphs(graphs)
+        batch = jraph_implicit_batch_from_graphs(graphs)
         print(batch)
         
         # Here we just want to construct a very simple graph network

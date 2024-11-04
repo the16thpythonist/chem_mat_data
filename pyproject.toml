@@ -65,7 +65,7 @@ dependencies = [
 # ==================
 
 [project.scripts]
-chemdata = "chem_mat_data.cli:cli"
+cmdata = "chem_mat_data.cli:cli"
 
 # Configuration of Build System (Hatchling)
 # =========================================

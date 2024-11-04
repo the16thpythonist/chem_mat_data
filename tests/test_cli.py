@@ -3,6 +3,12 @@ from click.testing import CliRunner
 from chem_mat_data.cli import cli
 
 
+def test_help_command_basically_works():
+    runner = CliRunner()
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+
+
 def test_list_command_basically_works():
     """
     The "list" command is supposed to simply print a list of all the available datasets on the 

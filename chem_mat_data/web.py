@@ -3,12 +3,15 @@ import shutil
 import gzip
 import tempfile
 import typing as t
+from typing import Optional
 
 import io
 import yaml
 import requests
+from requests.auth import HTTPBasicAuth
 from rich.progress import Progress
 from typing import Union
+
 
 class MockProgress:
     
@@ -20,17 +23,97 @@ class MockProgress:
     
     def start_task(self, *args, **kwargs):
         pass
-
-
-
-class NextcloudFileShare:
     
-    def __init__(self, 
-                 url: str
-                 ) -> None:
-        # For all the functionality in this class we want to make sure that the URL ends with a 
-        # trailing slash
+    
+class AbstractFileShare:
+    """
+    This class defines the abstract interface for a file share server. This interface defines the methods 
+    which can be used to interact with the remote file share server solution. The concrete implementation 
+    and storage solution that is used for the file share server is not defined here and should be
+    implemented in a subclass.
+    """
+    
+    def __init__(self, url: str):
         self.url = url
+        self.metadata: Optional[dict] = None
+    
+    def fetch_metadata(self) -> dict:
+        """
+        This method should fetch the metadata from the remote file share server and return the metadata 
+        as a dictionary that was loaded from the metadata yml file. This method should also populate the 
+        "self.metadata" attribute of the object.
+        """
+        raise NotImplementedError()
+
+    def upload_metadata(self, metadata: dict) -> None:
+        """
+        This method should take the metadata dictionary and upload that information to the remote file 
+        server such that after the function is executed the remote file share information should be 
+        updated.
+        """
+        raise NotImplementedError()
+
+    def download_dataset(self,
+                         dataset_name: str,
+                         folder_path: str,
+                         ) -> None:
+        """
+        This method should download the dataset which is identified by the unique string name and the 
+        downloaded dataset should be placed in the given folder path.
+        """
+        raise NotImplementedError()
+    
+    def authenticate(self, auth_info: dict) -> None:
+        """
+        This method should be implemented so that after calling it the object should be authenticated 
+        in the file server - meaning that it should be possible to make modifications to the files there
+        This is mostely relevant for developers and not regular users of the package.
+        """
+        raise NotImplementedError()
+    
+    # ~ implement dict-like behaviour
+    # Here we implement that the file share server instance acts as a dictionary regarding the metadata
+        
+    def assert_metadata(self):
+        """
+        This method checks if the metadata attribute of the object has already been loaded and 
+        raises an error if that is not the case.
+        """
+        if self.metadata is None:
+            raise LookupError('Metadata has not been fetched from the remote location yet!'
+                              'Call the "fetch_metadata" method on the file share object first!')
+        
+    def keys(self) -> t.List[str]:
+        self.assert_metadata()
+        return self.metadata.keys()
+        
+    def __contains__(self, key: str) -> bool:
+        self.assert_metadata()
+        return self.metadata[key]
+        
+    def __getitem__(self, key: str) -> t.Any:
+        self.assert_metadata()
+        return self.metadata[key]
+
+
+class NextcloudFileShare(AbstractFileShare):
+    """
+    This specific subblass implements the usage of a Nextcloud server as a file share solution to 
+    download the remote datasets from.
+    """
+    def __init__(self, 
+                 url: str,
+                 dav_url: Optional[str] = None,
+                 dav_username: Optional[str] = None,
+                 dav_password: Optional[str] = None,
+                 **kwargs,
+                 ) -> None:
+        
+        AbstractFileShare.__init__(self, url)
+        
+        self.dav_url = dav_url
+        self.dav_username = dav_username
+        self.dav_password = dav_password
 
         # This is the name of the file on the file share server which contains the metadata. This 
         # is a human-readable yml file which not only contains the information about the file share 
@@ -48,8 +131,16 @@ class NextcloudFileShare:
         # metadata file. This dictionary will be created by the fetch_metadata method.
         self.metadata: dict[str, t.Any] = None
     
-    def fetch_metadata(self, force: bool = False) -> None:
+    def fetch_metadata(self, force: bool = False) -> dict:
+        """
+        Fetches the "metadata.yml" file from the remote file server, returns the metadata dict and 
+        also stores it in the metadata attribute of the object. If the metadata file already exists
+        on the local system, it will be loaded from there instead of being downloaded again.
         
+        :param force: If set to True, the metadata file will be downloaded again even if it already
+        
+        :returns: None
+        """
         # For the sake of efficiency, we will first check if the metadata file already exists on the
         # local system. If it does, we will simply load it into the metadata attribute of the object
         # and return.
@@ -62,6 +153,8 @@ class NextcloudFileShare:
         # Now that the file definitely exists, we will load it into the metadata attribute of the object.
         with open(self.metadata_path, mode='r') as file:
             self.metadata = yaml.safe_load(file)
+            
+        return self.metadata
     
     def download_dataset(self, 
                          dataset_name: str, 
@@ -210,22 +303,41 @@ class NextcloudFileShare:
         
         else:
             raise Exception(f'Failed to download file from the server: {file_url}')
+
+    def upload(self,
+               file_name: str,
+               file_path: str,
+               ) -> None:
         
-    def check_metadata(self) -> None:
-        if self.metadata is None:
-            raise LookupError('Metadata has not been fetched yet! Call fetch_metadata first!')
+        self.assert_dav(action='upload')
         
-    # ~ implement dict-like behaviour
+        upload_url = f'{self.dav_url}/{file_name}'
+        with open(file_path, 'rb') as file:
+            requests.put(
+                upload_url,
+                data=file,
+                auth=HTTPBasicAuth(
+                    self.dav_username,
+                    self.dav_password,
+                )
+            )
+
+    def assert_dav(self, action: str = '') -> None:
         
-    def keys(self) -> t.List[str]:
-        return self.metadata.keys()
+        assert self.dav_url is not None, (
+            f'The requested action "{action}" requires extended access to the nextcloud server and therefore requires the '
+            f'dav_url to be given to the NextcloudFileShare object. Please provide the dav_url parameter to the constructor '
+            f'or by adding it to the config file.'
+        )
         
-    def __contains__(self, key: str) -> bool:
+        assert self.dav_username is not None, (
+            f'The requested action "{action}" requires extended access to the nextcloud server and therefore requires the '
+            f'dav_username to be given to the NextcloudFileShare object. Please provide the dav_username parameter to the '
+            f'constructor or by adding it to the config file.'
+        )
         
-        self.check_metadata()
-        return self.metadata[key]
-        
-    def __getitem__(self, key: str) -> t.Any:
-        
-        self.check_metadata()
-        return self.metadata[key]
+        assert self.dav_password is not None, (
+            f'The requested action "{action}" requires extended access to the nextcloud server and therefore requires the '
+            f'dav_password to be given to the NextcloudFileShare object. Please provide the dav_password parameter to the '
+            f'constructor or by adding it to the config file.'
+        )

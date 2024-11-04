@@ -4,6 +4,10 @@ This module is used to collect common utility functions that thematically don't 
 import os
 import math
 import pathlib
+import zipfile
+import tarfile
+import platform
+import subprocess
 
 import requests
 import jinja2 as j2
@@ -30,6 +34,28 @@ TEMPLATE_ENV = j2.Environment(loader=j2.FileSystemLoader(TEMPLATE_PATH))
 # MISC FUNCTIONS
 # ==============
 
+def open_file_in_editor(file_path):
+    # Check the OS and open the file with the system default editor
+    if platform.system() == 'Windows':
+        os.startfile(file_path)  # Windows
+    elif platform.system() == 'Darwin':
+        subprocess.run(['open', file_path])  # macOS
+    else:
+        subprocess.run(['xdg-open', file_path])  # Linux
+
+
+def get_template(name: str) -> j2.Template:
+    """
+    Load a jinja2 template with the given file name ``name`` from the "templates" folder and
+    return it.
+    
+    :param name: The name of the template file to be loaded.
+    
+    :returns: The jinja2 template object.
+    """
+    return TEMPLATE_ENV.get_template(name)
+
+
 def get_version(path: str = os.path.join(PATH, 'VERSION')) -> str:
     """
     This function returns the string representation of the package version.
@@ -39,6 +65,27 @@ def get_version(path: str = os.path.join(PATH, 'VERSION')) -> str:
         version = content.replace(' ', '').replace('\n', '')
         
     return version
+
+
+def config_file_from_template(output_path: str, 
+                              template_name: str = 'config.toml.j2', 
+                              context: dict = {},
+                              ) -> None:
+    """
+    This function will use the given ``template_name`` to render a new default config file at the 
+    given ``output_path``. The rendering will be done using the given ``context`` dictionary.
+    
+    :param output_path: The absolute string path to the output file that should be created.
+    :param template_name: The name of the template file that should be used for rendering.
+    :param context: The dictionary containing the context variables that should be used for rendering
+        of the jinja2 template.
+    
+    :returns: None
+    """
+    template = get_template(template_name)
+    content = template.render(**context)
+    with open(output_path, 'w') as file:
+        file.write(content)
 
 
 def download_dataset(url, destination):
@@ -83,6 +130,29 @@ def mol_from_smiles(smiles: str
         raise ValueError(f'Could not convert SMILES string "{smiles}" into a valid RDKit molecule object!')
 
     return mol
+
+
+def is_archive(path: str) -> bool:
+    """
+    This function returns whether the given ``path`` is a compressed archive or not.
+    
+    :param path: The path of the file to be checked.
+    
+    :returns: bool
+    """
+    
+    # Check for zip files
+    if zipfile.is_zipfile(path):
+        return True
+    
+    # Check for tar files (supports .tar, .tar.gz, .tgz, .tar.bz2, .tar.xz, etc.)
+    try:
+        with tarfile.open(path):
+            return True
+    except tarfile.ReadError:
+        pass  # Not a tar file
+
+    return False
 
 
 class RichMixin:

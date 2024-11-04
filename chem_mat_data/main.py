@@ -1,22 +1,50 @@
 import os
 import gzip
 import shutil
+import tempfile
+from typing import Dict
 
 import pandas as pd
 
 from chem_mat_data.config import Config
+from chem_mat_data.web import AbstractFileShare
 from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.data import load_graphs
 from chem_mat_data._typing import GraphDict
 from typing import Union
 from typing import List
 
+FILE_SHARE_CLASS_MAP: Dict[str, type] = {
+    'nextcloud': NextcloudFileShare,
+}
+
+
+def get_file_share(self, config: Config) -> AbstractFileShare:
+    """
+    This function will return a concrete file share object that can be used to interact with a remote file 
+    share server. The type of the file share object that is returned depends on the file share type that is 
+    configured in the given ``config`` object and by extension in the config TOML file.
+    
+    :param config: The Config object that contains the configuration data for the application.
+    
+    :returns: An instance of a AbstractFileShare subclass that can be used to interact with a remote 
+        file share server of dynamically determined type.
+    """
+    fileshare_type: str = config.get_fileshare_type()
+    klass: type = FILE_SHARE_CLASS_MAP[fileshare_type]
+    
+    fileshare_url: str = config.get_fileshare_url()
+    fileshare_params: dict = config.get_fileshare_params(fileshare_type)
+    file_share = klass(url=fileshare_url, **fileshare_params)
+    return file_share
+
 
 def ensure_dataset(dataset_name: str,
                    extension: str = 'mpack',
                    config: Union[None, Config] = None,
-                   file_share: Union[None, NextcloudFileShare] = None,
-                   folder_path = os.getcwd(),
+                   file_share: AbstractFileShare = None,
+                   use_cache: bool = True,
+                   folder_path = tempfile.gettempdir(),
                    ) -> str:
     """
     Given the string identifier ``dataset_name`` of a dataset, this function will make sure that 
@@ -32,7 +60,7 @@ def ensure_dataset(dataset_name: str,
         should determine the desired extension of the dataset file.
     :param config: An optional Config object which contains the object.
     :param folder_path: The absolute path to the folder where the dataset files should be 
-        stored. The default is the current working directory.
+        stored. The default is the system's temporary directory.
     
     :returns: The absolute string path to the dataset file.
     """
@@ -49,41 +77,72 @@ def ensure_dataset(dataset_name: str,
     else:
         if not config:
             config = Config()
-        
-        # 08.07.24
-        # There is now also the option to pass a custom file share object to this function that 
-        # should be used to download the dataset.
-        if not file_share:
-            file_share = NextcloudFileShare(url=config.get_fileshare_url())
             
-        # This function will download the main metadata yml file from the server to populate the 
-        # itnernal metadata dict with all the information about the datasets that are available 
-        # on the server.
-        file_share.fetch_metadata()
-        
-        if dataset_name not in file_share['datasets']:
-            raise FileNotFoundError(f'The dataset {file_name} could not be found on the server!')
-        
-        # 04.07.24
-        # In the first instance we are going to try and download the compressed (gzip - gz) version 
-        # of the dataset because that is usually at least 10x smaller and should therefore be a lot 
-        # faster to download and only if that doesn't exist or fails due to some other issue we 
-        # attempt to download the uncompressed version.
-        try:
-            file_name_compressed = f'{file_name}.gz'
-            file_path_compressed = file_share.download_file(file_name_compressed, folder_path=folder_path)
+        # 04.11.24
+        # Before attempting to fetch the dataset from the remote server, we first try to see if the 
+        # dataset is in the local file system cache.
+        if config.cache.contains_dataset(dataset_name, extension) and use_cache:
             
-            # Then we can decompress the file using the gzip module. This may take a while.
-            file_path = os.path.join(folder_path, file_name)
-            with open(file_path, mode='wb') as file:
-                with gzip.open(file_path_compressed, mode='rb') as compressed_file:
-                    shutil.copyfileobj(compressed_file, file)
+            # If the dataset does exist in the dataset cache, we can simply retrieve it from there 
+            # and return the path to dataset file that was copied into the given destination folder_path
+            file_path = config.cache.retrieve_dataset(
+                name=dataset_name, 
+                typ=extension, 
+                dest_path=folder_path
+            )
+            return file_path
         
-        # Otherwise we try to download the file without the compression
-        except Exception:
-            file_path = file_share.download_file(file_name, folder_path=folder_path)
+        else:
+        
+            # 08.07.24
+            # There is now also the option to pass a custom file share object to this function that 
+            # should be used to download the dataset.
+            if not file_share:
+                
+                # This function will use the information in the config file to construct the concrete
+                # file share instance that should be used to interact with the remote file share server 
+                # that is configured in the config file.
+                file_share = get_file_share(config=config)
+                
+            # This function will download the main metadata yml file from the server to populate the 
+            # itnernal metadata dict with all the information about the datasets that are available 
+            # on the server.
+            file_share.fetch_metadata()
             
-        return file_path
+            if dataset_name not in file_share['datasets']:
+                raise FileNotFoundError(f'The dataset {file_name} could not be found on the server!')
+            
+            # 04.07.24
+            # In the first instance we are going to try and download the compressed (gzip - gz) version 
+            # of the dataset because that is usually at least 10x smaller and should therefore be a lot 
+            # faster to download and only if that doesn't exist or fails due to some other issue we 
+            # attempt to download the uncompressed version.
+            try:
+                file_name_compressed = f'{file_name}.gz'
+                file_path_compressed = file_share.download_file(file_name_compressed, folder_path=folder_path)
+                
+                # Then we can decompress the file using the gzip module. This may take a while.
+                file_path = os.path.join(folder_path, file_name)
+                with open(file_path, mode='wb') as file:
+                    with gzip.open(file_path_compressed, mode='rb') as compressed_file:
+                        shutil.copyfileobj(compressed_file, file)
+            
+            # Otherwise we try to download the file without the compression
+            except Exception:
+                file_path = file_share.download_file(file_name, folder_path=folder_path)
+                
+            # 04.11.24
+            # After the dataset has been downloaded we can then also add the dataset to the cache so that it 
+            # does not have to be downloaded the next time.
+            if use_cache:
+                config.cache.add_dataset(
+                    name=dataset_name,
+                    typ=extension,
+                    path=file_path,
+                    metadata=file_share['datasets'][dataset_name],
+                )
+                
+            return file_path
 
 
 
@@ -242,7 +301,12 @@ def jraph_from_graph(graph: GraphDict) -> 'GraphsTuple':  # noqa
 
 def jraph_implicit_batch_from_graphs(graphs: list[GraphDict]) -> list['GraphsTuple']:  # noqa
     """
-    This
+    This function will convert a list of graph dict representations ``graphs`` into a list of Jraph
+    "GraphsTuple" objects which can then be used to train a Jraph graph neural network model directly.
+    
+    :param graphs: A list of graph dict representations of a dataset's molecules.
+    
+    :returns: A list of Jraph GraphsTuple instances.
     """
     try: 
         import jraph
