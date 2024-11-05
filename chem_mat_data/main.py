@@ -19,7 +19,7 @@ FILE_SHARE_CLASS_MAP: Dict[str, type] = {
 }
 
 
-def get_file_share(self, config: Config) -> AbstractFileShare:
+def get_file_share(config: Config) -> AbstractFileShare:
     """
     This function will return a concrete file share object that can be used to interact with a remote file 
     share server. The type of the file share object that is returned depends on the file share type that is 
@@ -34,7 +34,7 @@ def get_file_share(self, config: Config) -> AbstractFileShare:
     klass: type = FILE_SHARE_CLASS_MAP[fileshare_type]
     
     fileshare_url: str = config.get_fileshare_url()
-    fileshare_params: dict = config.get_fileshare_params(fileshare_type)
+    fileshare_params: dict = config.get_fileshare_parameters(fileshare_type)
     file_share = klass(url=fileshare_url, **fileshare_params)
     return file_share
 
@@ -144,6 +144,13 @@ def ensure_dataset(dataset_name: str,
                 
             return file_path
 
+
+def load_dataset_metadata(dataset_name: str,
+                          config: Config = Config(),
+                          ) -> Dict:
+    file_share: AbstractFileShare = get_file_share(config)
+    metadata: Dict = file_share.fetch_metadata()
+    return metadata['datasets'][dataset_name]
 
 
 def load_smiles_dataset(dataset_name: str, 

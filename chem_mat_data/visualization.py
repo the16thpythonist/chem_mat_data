@@ -2,6 +2,7 @@ import re
 import io
 import types
 import typing as t
+from typing import Union
 
 import cairosvg
 import numpy as np
@@ -175,3 +176,62 @@ def visualize_molecular_graph_from_mol(ax: plt.Axes,
     del image, mol_drawer, png_data
 
     return node_coordinates, svg_string
+
+
+# This is simply a wrapper function of the function above to make it more convenient to use since here we 
+# want to support different types of input for the molecule - including directly passing graph dicts
+def plot_molecule(ax: plt.Axes,
+                  molecule: Union[Chem.Mol, str, dict],
+                  image_width: int = 1000,
+                  image_height: int = 1000,
+                  **kwargs,
+                  ) -> np.ndarray:
+    """
+    Plot a visual representation of the given ``molecule`` on the given matplotlib Axes object ``ax``.
+    
+    :param ax: The matplotlib Axes object onto which the visualization should be drawn
+    :param molecule: The molecule that should be visualized. This can be either a RDKit Mol object, a SMILES
+        string or a graph dict that contains a SMILES string under the key "graph_repr".
+    :param image_width: The pixel width of the resulting image
+    :param image_height: The pixel height of the resulting image
+    
+    :return: A numpy array of shape (V, 2) containing the node positions of the molecule in the visualization.
+        This can be used to plot additional information on top of the molecule visualization.
+    """
+    
+    # ~ data validation
+    # Since we allow multiple different data types as the input for the molecule here we will perform some 
+    # validation to make sure that the input actually specifies a valid molecule that can be plotted at all.
+    
+    if isinstance(molecule, str):
+        mol = Chem.MolFromSmiles(molecule)
+        assert mol, f'Could not convert SMILES string "{molecule}" into a valid RDKit molecule object!'
+        
+    elif isinstance(molecule, dict):
+        assert_graph_dict(molecule)
+        assert 'graph_repr' in molecule, 'The given graph dict does not contain a "graph_repr" (smiles) key!'
+        mol = Chem.MolFromSmiles(molecule['graph_repr'])
+        assert mol, (
+            f'Could not convert the SMILES string "{molecule["graph_repr"]}" from the given graph dict '
+            f'into a valid RDKit molecule object!'
+        )
+    
+    elif isinstance(molecule, Chem.Mol):
+        mol = molecule
+        
+    else:
+        raise TypeError(f'Unsupported molecule type "{type(molecule)}" for plotting!')
+    
+    # ~ visualization
+    # for the visualization itself we can just use this function which handles the actual plotting based on the 
+    # rdkit Mol object.
+    
+    node_coordinates, _ = visualize_molecular_graph_from_mol(
+        ax=ax,
+        mol=mol,
+        image_width=image_width,
+        image_height=image_height,
+        **kwargs,
+    )
+    
+    return node_coordinates

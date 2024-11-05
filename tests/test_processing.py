@@ -30,6 +30,50 @@ class TestMoleculeProcessing:
         graph: tc.GraphDict = processing.process(smiles)
         assert_graph_dict(graph)
         
+    def test_process_includes_node_atom_symbols(self):
+        """
+        When processing a smiles string the resulting graph dict should also contian the "node_atoms" entry which 
+        is essentially a list of string representations of the atom symbols.
+        """
+        processing = MoleculeProcessing()
+        
+        smiles = self.DEFAULT_SMILES
+        graph: tc.GraphDict = processing.process(smiles)
+        
+        assert 'node_atoms' in graph
+        print(graph['node_atoms'])
+        assert len(graph['node_indices']) == len(graph['node_atoms'])
+        assert isinstance(graph['node_atoms'][0], str)
+        
+    def test_process_includes_edge_bond_types(self):
+        """
+        When processing a smiles string the resulting graph dict should also contain the "edge_bonds" entry which
+        is essentially a list of string representations of the bond types.
+        """
+        processing = MoleculeProcessing()
+        
+        smiles = self.DEFAULT_SMILES
+        graph: tc.GraphDict = processing.process(smiles)
+        
+        assert 'edge_bonds' in graph
+        print(graph['edge_bonds'])
+        assert len(graph['edge_bonds']) == len(graph['edge_indices'])
+        assert isinstance(graph['edge_bonds'][0], str)
+        
+    def test_process_includes_graph_representation(self):
+        """
+        When processing a smiles string the resulting graph dict should also contain the "graph_repr" entry which 
+        is essentially a string representation of the original SMILES string.
+        """
+        processing = MoleculeProcessing()
+        
+        smiles = self.DEFAULT_SMILES
+        graph: tc.GraphDict = processing.process(smiles)
+        
+        assert 'graph_repr' in graph
+        assert isinstance(graph['graph_repr'], str)
+        assert graph['graph_repr'] == smiles
+        
     def test_visualize_as_figure(self):
         """
         visualize_as_figure should use the rdkit SVG engine to draw the given molecule and 

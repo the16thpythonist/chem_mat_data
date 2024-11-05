@@ -2,7 +2,7 @@ import os
 import sys
 import datetime
 import typing as t
-from typing import Any, Dict, Union
+from typing import Any, List, Tuple, Dict, Union
 
 import rich_click as click
 from rich import box
@@ -147,18 +147,31 @@ class RichDatasetInfo(RichMixin):
         
         yield ''
         
-        table = Table(title=None, box=None, show_header=False, leading=1)
-        table.add_column(justify='left', style='yellow', no_wrap=True)
+        table = Table(title=None, box=None, show_header=False, leading=1, padding=(0, 2), pad_edge=False)
+        table.add_column(justify='left', style='magenta', no_wrap=True)
         table.add_column(justify='left', style='white', no_wrap=False)
-        table.add_row('Name', self.name)
-        table.add_row('Description', self.info['description'])
+        table.add_row('Name', f'[bold cyan]{self.name}[/bold cyan]')
         table.add_row('Type', ', '.join(self.info['target_type']))
-        table.add_row('#Elements', str(self.info['compounds']))
-        table.add_row('#Targets', str(self.info['targets']))
-        
-        panel = Panel(table, title='Dataset Info', title_align='left')
+        table.add_row('No. Elements', str(self.info['compounds']))
+        table.add_row('No. Targets', str(self.info['targets']))
+        panel = Panel(
+            table, 
+            title='[bright_black]Basic Info[/bright_black]', 
+            title_align='left',
+            border_style='bright_black',
+        )
         
         yield panel
+        
+        panel_description = Panel(
+            self.info['description'],
+            title='[bright_black]Description[/bright_black]',
+            title_align='left',
+            border_style='bright_black',
+            style='white',
+            padding=(0, 1),
+        )
+        yield panel_description
         
         
 class RichDatasetList(RichMixin):
@@ -180,13 +193,13 @@ class RichDatasetList(RichMixin):
         
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
         
-        table = Table(title='Available Datasets', expand=True)
+        table = Table(title='Available Datasets', expand=True, box=box.HORIZONTALS)
         
         table.add_column("Name", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Compounds",justify="left", style="magenta")
-        table.add_column("Targets", justify="left", style="green")
+        table.add_column("No. Elements",justify="left", style="magenta")
+        table.add_column("No. Targets", justify="left", style="green")
         table.add_column("Target type", justify="left", style="yellow")
-        table.add_column("Tags", justify="left", style="cyan")
+        table.add_column("Tags", justify="left", style="bright_black")
         
         names = list(self.datasets.keys())
         # potentially we want to sort the items depending on the "sort" argument
@@ -201,7 +214,7 @@ class RichDatasetList(RichMixin):
             
             details = self.datasets[name]
             table.add_row(
-                name, 
+                f'[bold]{name}[/bold]', 
                 str(details['compounds']), 
                 str(details['targets']),
                 ', '.join(details['target_type']), 
@@ -220,7 +233,7 @@ class RichCacheList(RichMixin):
     that contain various pieces of information about the datasets.
     """
     def __init__(self, 
-                 dataset_metadata_map: Dict[str, Dict],
+                 dataset_metadata_map: Dict[Tuple[str, str], Dict],
                  sort: bool = True,
                  show_hidden: bool = False,
                  ):
@@ -235,19 +248,20 @@ class RichCacheList(RichMixin):
         table.add_column("Dataset", justify="left", style="cyan", no_wrap=True)
         table.add_column("Created",justify="left", style="bright_black")
         
-        names = list(self.dataset_metadata_map.keys())
+        keys = list(self.dataset_metadata_map.keys())
         # potentially we want to sort the items depending on the "sort" argument
         if self.sort:
-            names.sort()
+            keys.sort()
         
-        for name in names:
+        for key in keys:
             
-            info: dict = self.dataset_metadata_map[name]
+            info: dict = self.dataset_metadata_map[key]
+            name, typ = key
             
             dt = datetime.datetime.fromtimestamp(info['_cache_time'])
             table.add_row(
-                name, 
-                f'{dt:%Y-%m-%d %H:%M:%S}', 
+                f'{name}.{typ}', 
+                f'{dt:%d.%b %Y, %H:%M}', 
             )
         
         yield table
@@ -376,10 +390,17 @@ class CLI(click.RichGroup):
             click.secho('Downloading raw dataset...')
             for file_extension in dataset_metadata['raw']:
                 file_name = f'{name}.{file_extension}'
-                self.file_share.download_file(
+                file_path = self.file_share.download_file(
                     file_name, 
                     folder_path=path, 
                     progress=progress
+                )
+                
+                self.cache.add_dataset(
+                    name=name,
+                    typ=file_extension,
+                    path=file_path,
+                    metadata=dataset_metadata,
                 )
                 
             # We only want to download the full dataset (aka the message packed version of the 
@@ -403,6 +424,7 @@ class CLI(click.RichGroup):
                 # After each download we want to replace the version in the cache with the new one.
                 self.cache.add_dataset(
                     name=name,
+                    typ='mpack',
                     path=path,
                     metadata=dataset_metadata,
                 )
@@ -476,14 +498,25 @@ class CLI(click.RichGroup):
         Shows a list of all the datasets that are currently stored in the cache along with some of the metadata 
         that is stored along with the dataset.
         """
-        dataset_names: list[str] = self.cache.list_datasets()
-        dataset_metadata_map: dict[str, dict] = {}
-        for name in dataset_names:
-            metadata = self.cache.get_dataset_metadata(name)
-            dataset_metadata_map[name] = metadata
+        if len(self.cache) == 0:
+            click.secho('Cache is empty!', fg='yellow')
+        
+        else:
+            click.echo('')
             
-        rich_cache_list = RichCacheList(dataset_metadata_map)
-        click.echo(rich_cache_list)
+            # This method will return all the datasets that are stored in the cache as a list of tuples where the 
+            # first element of the tuple is the name of the dataset and the second element is the type of the dataset.
+            datasets: List[Tuple[str, str]] = self.cache.list_datasets()
+            dataset_metadata_map: Dict[Tuple[str, str], dict] = {}
+            for name, typ in datasets:
+                # Given the name and type of dataset, this function will simply read the metadata from the 
+                # corresponding yml file.
+                metadata = self.cache.get_dataset_metadata(name, typ)
+                dataset_metadata_map[(name, typ)] = metadata
+                
+
+            rich_cache_list = RichCacheList(dataset_metadata_map, sort=True)
+            click.echo(rich_cache_list)
             
     @click.command('clear', short_help='Clear the entire cache')
     @click.option('-v', '--verbose', is_flag=True, help='print verbose output')

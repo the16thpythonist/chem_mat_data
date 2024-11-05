@@ -1,6 +1,7 @@
 import os
 import tempfile
 import yaml
+from typing import List, Tuple
 
 from chem_mat_data.cache import Cache
 from .utils import ARTIFACTS_PATH, get_mock_dataset_path
@@ -42,6 +43,21 @@ class TestCache:
             assert isinstance(metadata, dict)
             assert 'num_elements' in metadata
             assert '_cache_filename' in metadata
+            
+    def test_list_datasets_basically_works(self):
+        """
+        The "list_datasets" method should return a list of tuples where each tuple contains the 
+        name of the dataset and the type of the dataset that are currently stored in the cache folder.
+        """
+        with tempfile.TemporaryDirectory() as path:
+            
+            cache = Cache(path)
+            cache.add_dataset('test_1', 'mpack', get_mock_dataset_path(), {'num_elements': 100})
+            cache.add_dataset('test_2', 'mpack', get_mock_dataset_path(), {'num_elements': 200})
+            
+            datasets: List[Tuple[str, str]] = cache.list_datasets()
+            assert len(datasets) == 2
+            assert datasets == [('test_1', 'mpack'), ('test_2', 'mpack')]
             
     def test_contains_dataset_basically_works(self):
         """

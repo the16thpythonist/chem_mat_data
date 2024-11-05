@@ -4,6 +4,7 @@ import datetime
 import shutil
 import zipfile
 import yaml
+from typing import Dict, List, Tuple, Optional
 
 from chem_mat_data.utils import is_archive
 
@@ -158,15 +159,20 @@ class Cache:
         """
         return f'{name}.{typ}'
     
-    def list_datasets(self) -> list[str]:
+    def list_datasets(self) -> List[Tuple[str, str]]:
         """
         Returns a list containing the string names of all the datasets contained in the cache.
         
         :returns: list of strings
         """
         files = os.listdir(self.path)
-        dataset_names = [f.replace('.yml', '') for f in files if f.endswith('.yml')]
-        return dataset_names
+        metadata_files = [f for f in files if f.endswith('.yml')]
+        datasets = []
+        for file_name in metadata_files:
+            split_name = file_name.split('.')
+            datasets.append((split_name[0], split_name[1]))
+        
+        return datasets
     
     def iterator_clear_(self) -> str:
         """
@@ -193,3 +199,6 @@ class Cache:
             num_elements += 1
             
         return num_elements
+    
+    def __len__(self):
+        return len(os.listdir(self.path))

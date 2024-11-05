@@ -1,4 +1,4 @@
-import typing as t
+from typing import Any, Dict, List, Tuple, Callable, Optional, Union
 
 import numpy as np
 import numpy.linalg as la
@@ -20,7 +20,7 @@ from chem_mat_data.visualization import visualize_molecular_graph_from_mol
 from typing import List, Dict
 
 
-def identity(value: t.Any) -> t.Any:
+def identity(value: Any) -> Any:
     """
     Simple implementation of the identity function. Returns the given ``value`` as it is.
     
@@ -31,7 +31,7 @@ def identity(value: t.Any) -> t.Any:
     return value
 
 
-def list_identity(value: t.Any, dtype: type = float) -> t.Any:
+def list_identity(value: Any, dtype: type = float) -> Any:
     """
     Returns the given ``value`` as the singular element inside a list. Converts the given 
     value into the given ``dtype``.
@@ -45,8 +45,8 @@ def list_identity(value: t.Any, dtype: type = float) -> t.Any:
 
 
 def chem_prop(property_name: str,
-              callback: t.Callable[[t.Any], t.Any],
-              ) -> t.Callable:
+              callback: Callable[[Any], Any],
+              ) -> Callable:
     """
     This function can be used to construct a callback function to encode a property of either a Atom or a
     Bond object belonging to an RDKit Mol. The returned function will query the ``property_name`` from the
@@ -59,7 +59,7 @@ def chem_prop(property_name: str,
 
     :returns: A function with the signature [Union[Chem.Atom, Chem.Bond]] -> List[float]
     """
-    def func(element: t.Union[Chem.Atom, Chem.Bond], data: dict = {}):
+    def func(element: Union[Chem.Atom, Chem.Bond], data: dict = {}):
         method = getattr(element, property_name)
         value = method()
         value = callback(value)
@@ -75,9 +75,9 @@ def chem_prop(property_name: str,
     return func
 
 
-def chem_descriptor(descriptor_func: t.Callable[[Chem.Mol], t.Any],
-                    callback: t.Callable[[t.Any], t.Any],
-                    ) -> t.Callable[[Chem.Mol], t.Any]:
+def chem_descriptor(descriptor_func: Callable[[Chem.Mol], Any],
+                    callback: Callable[[Any], Any],
+                    ) -> Callable[[Chem.Mol], Any]:
     """
     Given a ``descripter_func`` callable which transforms a Mol object into some other ``callback`` 
     function, this function returns a callable which combines both of these functions. The callable 
@@ -114,9 +114,8 @@ class EncodingDescriptionMixin:
     def get_description(self, index: int = 0) -> str:
         raise NotImplementedError()
     
-    def descriptions() -> t.List[str]:
+    def descriptions() -> List[str]:
         raise NotImplementedError()
-
 
 class EncoderBase: 
     """
@@ -139,21 +138,35 @@ class EncoderBase:
     which internally uses the implementation of the ``encode`` method.
     """
     
-    @property
-    def callback(self) -> t.Callable:
-        return self
-    
-    def __call__(self, value: t.Any, *args, **kwargs) -> t.List[float]:
+    def __call__(self, value: Any, *args, **kwargs) -> List[float]:
         return self.encode(value, *args, **kwargs)
     
-    def encode(self, value: t.Any, *args, **kwargs) -> t.List[float]:
+    def encode(self, value: Any, *args, **kwargs) -> List[float]:
         raise NotImplementedError()
     
-    def decode(self, encoded: t.List[float]) -> t.Any:
+    def decode(self, encoded: List[float]) -> Any:
+        raise NotImplementedError()
+    
+    
+class StringEncoderMixin:
+    """
+    This is an interface which can optionally be implemented by an EncoderBase subclass to provide the 
+    additional functionality of encoding and decoding string representations of the domain values.
+    
+    Subclasses need to implement the following methods:
+    - ``encode_string``: Given the domain value to be encoded, this method will return a human-readable
+        string representation of that value.
+    - ``decode_string``: Given the string representation of a domain value, this method will return the
+        original domain value.
+    """
+    def encode_string(self, value: Any) -> str:
+        raise NotImplementedError()
+    
+    def decode_string(self, string: str) -> Any:
         raise NotImplementedError()
 
 
-class OneHotEncoder(EncoderBase, EncodingDescriptionMixin):
+class OneHotEncoder(EncoderBase, StringEncoderMixin):
     """
     This is the specific implementation of an attribute Encoder class for the process of 
     OneHotEncoding elements of different types.
@@ -165,45 +178,119 @@ class OneHotEncoder(EncoderBase, EncodingDescriptionMixin):
     that matches the given element through an equality check.
     
     :param values: A list of elements which each will be checked when encoding an element
+    :param add_unknown: Boolean flag which determines whether an additional one-hot encoding 
+        element is added to the end of the list. This element will be used as the encoding for
+        any element which is not part of the original list of values. If this flag is False 
+        and an unkown element is otherwise encountered, the encoder will silently ignore it 
+        and return a vector of zeros.
+    :param unknown: The value which will be used as the encoding for any element which is not part
+        of the original list of values. This parameter is only relevant if the add_unknown flag is
+        set to True.
+    :param dtype: a type callable that defines the type of the elements in the ``values`` list
+    :param string_values: Optionally a list of string which provide human-readable string representations 
+        for each of the elements in the ``values`` parameter. Therefore, this list needs to be the same 
+        length as the ``values`` list. This parameter can optionally be None, in which case simply the 
+        str() transformation of the elements in the ``values`` list will be used as the string 
+        representations.
+    :param use_soft_decode: If this flag is set to True, instead of matching the given encoded vector 
+        exactly, the decoder will return the value which has the highest value in the encoded vector. 
+        This is useful when the encoded vector is not exactly one-hot encoded, but rather a probability 
+        distribution over the possible values.
     """
     def __init__(self,
-                 values: t.List[t.Any],
+                 values: List[Any],
                  add_unknown: bool = False,
-                 unknown: t.Any = 'H',
+                 unknown: Any = 'H',
                  dtype: type = float,
-                 value_descriptions: t.Optional[List[str]] = None):
+                 string_values: Optional[List[str]] = None,
+                 use_soft_decode: bool = False,
+                 value_descriptions: List[str] = [],
+                 ):
+        EncoderBase.__init__(self)
+        StringEncoderMixin.__init__(self)
+        
         self.values = values
         self.add_unknown = add_unknown
         self.unknown = unknown
         self.dtype = dtype
+        self.use_soft_decode = use_soft_decode
+        self.value_descriptions = value_descriptions
         
-        # 12.05.24
-        # Optionally, this list will contain as many strings as there are possible values for the 
-        # one-hot encoder to encode. Each of these strings will need to be a human-readable description 
-        # of the corresponding value.
-        self.value_descriptions: list[str] = value_descriptions
-        if value_descriptions:
-            assert len(value_descriptions) == len(values), 'number of descriptions does not match number of values'
+        # We want the "string_values" to always be a list of strings. If the parameter is None that means 
+        # it is unnecessary to define a separate list and we can just use the "values" list as the string 
+        # representation as well.
+        if string_values is None:
+            self.string_values: List[str] = [str(v) for v in values]
+        else:
+            self.string_values: List[str] = string_values
 
-    def __call__(self, value: t.Any, *args, **kwargs) -> t.List[float]:
+    def __call__(self, value: Any, *args, **kwargs) -> List[float]:
         return self.encode(value)
+    
+    # implement "EncoderBase"
 
-    def encode(self, value: t.Any, *args, **kwargs) -> t.List[float]:
+    def encode(self, value: Any, *args, **kwargs) -> List[float]:
         """
-        Given the input ``value``, this method will encode it into its corresponding one-hot 
-        vector representation. Returns a list of values where each value is either 0 or 1.
+        Given the domain ``value`` to be encoded, this method will return a list of float values that 
+        represents the one-hot encoding corresponding to that exact value as defined by the list of possible 
+        values given to the constructor.
         
-        :param value: The value to be encoded
+        :param value: The domain value to be encoded. Must be part of the list of values given to the
+            constructor - otherwise if add_unknown is True, the unknown one-hot encoding will be returned.
         
-        :returns: list of numeric values
+        :returns: list of float values which are either 1. or 0. (one-hot encoded)
         """
         one_hot = [1. if v == self.dtype(value) else 0. for v in self.values]
         if self.add_unknown:
             one_hot += [0. if 1 in one_hot else 1.]
 
         return one_hot
+        
+    def decode(self, encoded: List[float]) -> Any:
+        """
+        Given the one-hot encoded representation ``encoded`` of a domain value, this method will return the
+        original domain value.
+        
+        Note that this method will try to do an exact match of the one-hot position. If the one-hot encoding
+        is not exact, then the "unknown" value will be returned.
+        
+        :returns: The domain value which corresponds to the given one-hot encoding. This will have whatever 
+            type the original domain values have.
+        """
+        if self.use_soft_decode:
+            return self.decode_soft(encoded)
+        else:
+            return self.decode_hard(encoded)
     
-    def decode(self, encoded: t.List[float]) -> t.Any:
+    def decode_soft(self, encoded: List[float]) -> Any:
+        """
+        Given the one-hot encoded representation ``encoded`` of a domain value, this method will return the
+        original domain value. This method is a soft decoding method, which means that it will return the
+        value which has the highest value in the encoded vector. This is useful when the encoded vector is
+        not exactly one-hot encoded, but rather a probability distribution over the possible values.
+        
+        :param encoded: The one-hot encoded representation of the domain value
+        
+        :returns: The domain value which corresponds to the given one-hot encoding. This will have whatever
+            type the original domain values have.
+        """
+        max_index = np.argmax(encoded)
+        if max_index < len(self.values):
+            return self.values[max_index]
+        else:
+            return self.unknown
+    
+    def decode_hard(self, encoded: List[float]) -> Any:
+        """
+        Given the one-hot encoded representation ``encoded`` of a domain value, this method will return the
+        original domain value. This method is a hard decoding method, which means that it will return the
+        value which has the exact one-hot encoding as the given encoded vector.
+        
+        :param encoded: The one-hot encoded representation of the domain value
+        
+        :returns: The domain value which corresponds to the given one-hot encoding. This will have whatever
+            type the original domain values have.
+        """
         for one_hot, value in zip(encoded, self.values):
             if one_hot:
                 return value
@@ -213,47 +300,51 @@ class OneHotEncoder(EncoderBase, EncodingDescriptionMixin):
         # the constructor.
         return self.unknown
     
-    def __len__(self) -> int:
-        """
-        Returns the number of values in the encoded vector representation.
-        """
-        length = len(self.values)
-        if self.add_unknown:
-            length += 1
-        
-        return length
-    
-    # implements "EncodingDescriptionMixin"
-    def get_description(self, index: int = 0) -> str:
-        """
-        Returns a human-readable descriptive string for the ``index``-th element of the encoded 
-        vector representation.
-        
-        :param index: The index of the element for which to get the description
-        
-        :returns: The description string
-        """
-        if self.value_descriptions:
-            return f'is {self.value_descriptions[index]}?'
-        else:
-            return f'is {self.values[index]}?'
-
-    # implements "EncodingDescriptionMixin"
     @property
-    def descriptions(self) -> t.List[str]:
+    def descriptions(self) -> Dict[str, str]:
+        if self.value_descriptions:
+            descriptions = self.value_descriptions
+        else:
+            descriptions = [str(v) for v in self.values]
+            
+        return [f'is {desc}?' for desc in descriptions]
+
+    # implement "StringEncoderMixin"
+
+    def encode_string(self, value: Any) -> str:
         """
-        A property which is a list of descriptive strings where the indices directly correspond to the 
-        indices of the encoder one-hot vector representation.
+        Given the domain ``value`` to be encoded, this method will return a human-readable string representation 
+        of that value.
         
-        :returns: list of string descriptions - one for each element in the one-hot encoded vector.
+        :param value: The domain value to be encoded. Must be part of the list of values given to the
+            constructor - otherwise if add_unknown is True, returns the string "unknown".
+        
+        :returns: A single string value which represents the given domain value
         """
-        descriptions =  [self.get_description(index) for index, value in enumerate(self.values)]
-        if self.add_unknown:
-            descriptions += ['is unknown?']
+        for v, s in zip(self.values, self.string_values):
+            if v == self.dtype(value):
+                return s
+    
+        return 'unknown'
+    
+    def decode_string(self, string: str) -> Any:
+        """
+        Given the string representation ``string`` of a domain value, this method will return the original domain 
+        value.
         
-        return descriptions
+        Note that this method will try to do an exact match of the string. If the string is not exact, then the 
+        "unknown" value will be returned.
+        
+        :returns: The domain value which corresponds to the given string representation. This will have whatever 
+            type the original domain values have.
+        """
+        for v, s in zip(self.values, self.string_values):
+            if s == string:
+                return v
+        
+        return self.unknown
     
-    
+
 class CrippenEncoder(EncoderBase, EncodingDescriptionMixin):
     
     # We have to set this attribute here to True to signal to the Processing class
@@ -296,7 +387,7 @@ class RichProcessingSummary(RichMixin):
                  ):
         self.sections = sections
     
-    def __rich_console__(self, console, options) -> t.Any:
+    def __rich_console__(self, console, options) -> Any:
         
         for name, descriptions in self.sections.items():
             
@@ -477,6 +568,7 @@ class MoleculeProcessing():
                     'Single Bond', 'Double Bond', 'Triple Bond', 
                     'Aromatic Bond', 'Ionic Bond', 'Hydrogen Bond',
                 ],
+                string_values=['S', 'D', 'T', 'A', 'I', 'H'],
             )),
             'description': 'One hot encoding of the bond type',
             'is_type': True,
@@ -581,7 +673,7 @@ class MoleculeProcessing():
             lambda data: 'encodes_bond' in data and data['encodes_bond'],
         )
         try:
-            self.bond_encoder: t.Optional[t.Any] = data['callback'].callback
+            self.bond_encoder: Optional[Any] = data['callback'].callback
         except TypeError:
             if not self.ignore_issues:
                 raise AssertionError('None of the elements defined in edge_attribute_map implement the flag '
@@ -596,18 +688,18 @@ class MoleculeProcessing():
         
         
     def get_attribute_data(self,
-                           attribute_map: t.Dict[str, dict],
-                           condition: t.Callable,
+                           attribute_map: Dict[str, dict],
+                           condition: Callable,
                            ) -> dict:
         for name, data in attribute_map.items():
             if condition(data):
                 return data
         
     def get_attribute_indices(self,
-                              attribute_map: t.Dict[str, dict],
-                              element: t.Any,
-                              condition: t.Callable
-                              ) -> t.List[int]:
+                              attribute_map: Dict[str, dict],
+                              element: Any,
+                              condition: Callable
+                              ) -> List[int]:
         """
         Given given an ``attribute_map`` which describes the attribute extraction from a molecule, an 
         atom object ``element`` and a callable ``condition``, this method returns a list which contains 
@@ -652,9 +744,9 @@ class MoleculeProcessing():
                 graph: tv.GraphDict,
                 mask: np.ndarray,
                 clear_aromaticity: bool = True,
-                process_kwargs: dict = {},
-                unprocess_kwargs: dict = {},
-                ) -> t.Tuple[str, tc.GraphDict]:
+                process_kwargs: Dict[str, Any] = {},
+                unprocess_kwargs: Dict[str, Any] = {},
+                ) -> Tuple[str, tc.GraphDict]:
         
         return super().extract(
             graph=graph,
@@ -738,10 +830,10 @@ class MoleculeProcessing():
         return Chem.MolToSmiles(mol)
     
     def apply_callback(self, 
-                       callback: t.Callable, 
+                       callback: Callable, 
                        mol: Chem.Mol, 
-                       element: t.Any
-                       ) -> t.List[float]:
+                       element: Any
+                       ) -> List[float]:
         """
         Given a ``callback`` function, the base ``mol`` molecule object and the ``element`` - an atom or a bond 
         object - on which to apply that callback, this method will apply the callback in the correct manner and 
@@ -776,7 +868,7 @@ class MoleculeProcessing():
 
     def process(self,
                 value: str,
-                double_edges_undirected: bool = True,
+                double_edges_undirected: bool = False,
                 use_node_coordinates: bool = False,
                 graph_labels: list = [],
                 ) -> dict:
@@ -816,8 +908,13 @@ class MoleculeProcessing():
         # First of all we iterate over all the atoms in the molecule and apply all the callback
         # functions on the atom objects which then calculate the actual attribute values for the final
         # node attribute vector.
-        node_indices = []
-        node_attributes = []
+        node_indices: list[int] = []
+        node_attributes: list[list[float]] = []
+        # Here we want to maintain a list of the the string atom symbols for each of the atom nodes as 
+        # we process the molecule graph structure.
+        # The goal is to have some kind of information such that a human could reconstruct 
+        # the molecule from the graph structure later on as well.
+        node_atoms: list[str] = []
         for atom in atoms:
             node_indices.append(atom.GetIdx())
 
@@ -832,10 +929,23 @@ class MoleculeProcessing():
 
             node_attributes.append(attributes)
 
+            # "symbol_encoder" is an Encoder specifically designed to encode the atom symbols into a 
+            # one-hot encoded vector. It has the additional method "encode_string" which encodes the 
+            # symbol into a human readable string.
+            if self.symbol_encoder:
+                atom_symbol = self.symbol_encoder.encode_string(atom.GetSymbol())
+                node_atoms.append(atom_symbol)
+
         bonds = mol.GetBonds()
         # Next up is the same with the bonds
-        edge_indices = []
-        edge_attributes = []
+        edge_indices: list[tuple[int, int]] = []
+        edge_attributes: list[list[float]] = []
+        # Here we want to maintain a list of the bond types for each of the edge nodes as we process the
+        # molecule graph structure. More specifically, we want to safe a human readable string representation 
+        # of the bond type. 
+        # The goal is to have some kind of information such that a human could reconstruct 
+        # the molecule from the graph structure later on as well.
+        edge_bonds: list[str] = []
         for bond in bonds:
             i = int(bond.GetBeginAtomIdx())
             j = int(bond.GetEndAtomIdx())
@@ -855,6 +965,12 @@ class MoleculeProcessing():
             edge_attributes.append(attributes)
             if double_edges_undirected:
                 edge_attributes.append(attributes)
+                
+            if self.bond_encoder:
+                bond_type: str = self.bond_encoder.encode_string(bond.GetBondType())
+                edge_bonds.append(bond_type)
+                if double_edges_undirected:
+                    edge_bonds.append(bond_type)
 
         # Then there is also the option to add global graph attributes. The callbacks for this kind of
         # attribute take the entire molecule object as an argument rather than just atom or bond
@@ -877,8 +993,17 @@ class MoleculeProcessing():
             # 14.02.24 - Initially I wanted to avoid addding the string graph representation to the graph 
             # dictionary itself, because I kind of wanted all of the values to be numpy array. However, I 
             # have now hit a problem where this is pretty much necessary.
-            'graph_repr':           value,
+            'graph_repr':           smiles,
         }
+        
+        # 28.10.24 - Here we save some domain-specific additional information on the node and edge level.
+        # More specifically these are lists of human readable strings which contain the atom symbols and
+        # bond types respectively. The goal of this additional information is to provide a way for a human 
+        # to easily reconstruct the molecule from the graph representation as well.
+        if node_atoms:
+            graph['node_atoms'] = np.array(node_atoms, dtype=str)
+        if edge_bonds:
+            graph['edge_bonds'] = np.array(edge_bonds, dtype=str)
 
         # Optionally, if the flag is set, this will apply a conformer on the molecule which will
         # then calculate the 3D coordinates of each atom in space.
@@ -925,9 +1050,9 @@ class MoleculeProcessing():
                             value: str,
                             width: int,
                             height: int,
-                            additional_returns: t.Optional[dict] = None,
+                            additional_returns: Optional[dict] = None,
                             **kwargs,
-                            ) -> t.Tuple[plt.Figure, np.ndarray]:
+                            ) -> Tuple[plt.Figure, np.ndarray]:
         """
         The normal "visualize" method has to return a numpy array representation of the image. While that
         is a decent choice for printing it to the console, it is not a good choice for direct API usage.

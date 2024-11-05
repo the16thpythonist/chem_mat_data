@@ -313,7 +313,7 @@ class NextcloudFileShare(AbstractFileShare):
         
         upload_url = f'{self.dav_url}/{file_name}'
         with open(file_path, 'rb') as file:
-            requests.put(
+            response = requests.put(
                 upload_url,
                 data=file,
                 auth=HTTPBasicAuth(
@@ -321,6 +321,8 @@ class NextcloudFileShare(AbstractFileShare):
                     self.dav_password,
                 )
             )
+            print(response.status_code)
+            print(response.text)
 
     def assert_dav(self, action: str = '') -> None:
         
