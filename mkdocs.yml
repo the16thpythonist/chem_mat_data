@@ -4,6 +4,16 @@ nav:
   - Getting Started:
     - Installation: installation.md
     - First steps: first_steps.md
+  - Command Line Interface:
+    - List Available Datasets: cli_list.md
+    - Show Dataset Metadata: cli_info.md
+    - Download Dataset: cli_download.md
+    - Local Configuration File: cli_config.md
+    - Local File Cache: cli_cache.md
+  - Programming Interface:
+    - Loading Datasets: api_datasets.md
+    - Graph Representation: graph_representation.md
+    - Processing New Graphs: processing_graphs.md
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
@@ -12,6 +22,11 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 theme:
   name: material
   logo: assets/logo.png

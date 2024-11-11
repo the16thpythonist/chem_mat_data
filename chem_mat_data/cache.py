@@ -195,7 +195,7 @@ class Cache:
         :returns: The number of deleted elements
         """
         num_elements = 0
-        for file_name, file_path in self.iterator_clear():
+        for file_name, file_path in self.iterator_clear_():
             num_elements += 1
             
         return num_elements

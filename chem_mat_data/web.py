@@ -131,7 +131,7 @@ class NextcloudFileShare(AbstractFileShare):
         # metadata file. This dictionary will be created by the fetch_metadata method.
         self.metadata: dict[str, t.Any] = None
     
-    def fetch_metadata(self, force: bool = False) -> dict:
+    def fetch_metadata(self, force: bool = True) -> dict:
         """
         Fetches the "metadata.yml" file from the remote file server, returns the metadata dict and 
         also stores it in the metadata attribute of the object. If the metadata file already exists

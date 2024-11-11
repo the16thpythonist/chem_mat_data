@@ -58,7 +58,9 @@ dependencies = [
     "msgpack>=1.0.2",
     "pandas<2.2.2",
     "pycomex<=0.17.0",
-    "msgpack_numpy>=0.4.8"
+    "msgpack_numpy>=0.4.8",
+    "appdirs>=1.4.4,<2.0",
+    "tomlkit>=0.13.2,<1.0"
 ]
 
 # Executable Scripts

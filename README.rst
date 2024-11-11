@@ -1,10 +1,20 @@
-|made-with-python| |python-version|
+|made-with-python| |python-version| |ruff|
+
 
 .. |made-with-python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
    :target: https://www.python.org/
 
-.. |python-version| image:: https://img.shields.io/badge/Python-3.8.0-green.svg
+.. |python-version| image:: https://img.shields.io/badge/python-3.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12-blue
    :target: https://www.python.org/
+
+.. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+   :target: https://github.com/astral-sh/ruff
+
+.. |pipi| image:: https://img.shields.io/pypi/v/chem_mat_data.svg
+   :target: https://pypi.org/project/ruff/
+
+.. |license| image:: https://img.shields.io/github/license/astral-sh/chem_mat_data
+   :target:
 
 =================
 ⚗️ ChemMatData
@@ -13,6 +23,12 @@
 .. image:: chem_mat_data/ChemMatData_logo_final.png
    :alt: ChemMatData Logo
    :align: center
+
+- 🐍 Easily installable via ``pip``
+- 📦 Instant access to a collection of datasets across the domains of *chemistry* and *material science* 
+- 🤖 Direct support of popular graph deep learning libraries like [Torch/PyG](https://pytorch-geometric.readthedocs.io/en/latest/) and [Jax/Jraph](https://jraph.readthedocs.io/en/latest/)
+- 🤝 Python version compatibility
+- ⌨️ Comprehensive command line interface (CLI)
 
 ChemMatData is a database consisting of a collection of datasets from the fields of chemistry and material science. 
 Each dataset contains various molecules and/or crystal structures which have been annotated with specific target properties. 
@@ -24,7 +40,7 @@ to access these datasets. Each dataset is available in two formats: The raw form
 SMILES string representation of the molecules and the target annotations. In the processed format, each molecule is already 
 represented as a full graph structure and ready for GNN training.
 
-Getting ready to train for PyTorch Geometric (PyG) is as easy as this:
+Getting ready to train a PyTorch Geometric model can be as easy as this:
 
 .. code-block:: python
 
@@ -35,41 +51,23 @@ Getting ready to train for PyTorch Geometric (PyG) is as easy as this:
 
    # train network...
 
-=========================
-📦 Installation by Source
-=========================
 
-First, clone the repository:
+📦 Pip Installation
+===================
 
-.. code-block:: console
-
-    git clone {your github url}/chem_mat_data.git
-
-Install using ``pip``:
+Install the latest stable release using ``pip`` from the Python Package Index (PyPI):
 
 .. code-block:: console
 
-    cd chem_mat_data
-    python3 -m pip install .
+    pip install chem_mat_data
 
-**(Optional)** Afterwards, you can check the installation by invoking the CLI:
-
-.. code-block:: console
-
-    python3 -m chem_mat_data.cli --version
-    python3 -m chem_mat_data.cli --help
-
-=========================
-📦 Installation by Source
-=========================
-
-Install the latest stable release using ``pip``
+Or install the latest development versin directly from the GitHub repository:
 
 .. code-block::
 
-    pip3 install chem_mat_data
+    pip install git+https://github.com/the16thpythonist/chem_mat_data.git
 
-=============
+
 🚀 Quickstart
 =============
 
@@ -119,7 +117,7 @@ The package provides a simple and convenient interface to access the datasets.
         shuffle=False
     )
 
-===============================
+
 ⌨️ Command Line Interface (CLI)
 ===============================
 
@@ -175,7 +173,6 @@ One can also specify the path to wich the dataset should be downloaded as follow
    chemdata download --path="/absolute/path/to/desired/directory"
 
 
-===========
 🤝 Credits
 ===========
 

@@ -11,6 +11,8 @@ from PIL import Image
 from rdkit import Chem
 from rdkit.Chem.Draw.rdMolDraw2D import MolDraw2DSVG
 from rdkit.Chem import rdDepictor
+from chem_mat_data.graph import assert_graph_dict
+
 rdDepictor.SetPreferCoordGen(True)
 
 

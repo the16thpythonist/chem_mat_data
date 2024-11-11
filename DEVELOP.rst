@@ -178,3 +178,27 @@ syntax of the README file to make sure it can be properly rendered on the PyPi w
 to the package index.
 
     twine upload --username='__token__' --password='[your password]' dist/*
+
+
+Documentation with MkDocs
+=========================
+
+The documentation is done with [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/). The documentation configuration 
+can be found in the ``mkdocs.yml`` file and the actual markdown files are in the top-level ``docs`` folder of the project.
+
+**Local Development.** To view the local dev version of the documentation, you can use the ``mkdocs serve`` command:
+like this:
+
+.. code-block:: bash
+
+    mkdocs serve    
+
+This will start a development web server to serve the static doc files which can then be viewed with a browser.
+
+**Publishing to Github Pages.** The production version of the documentation is hosted on Github Pages. Once a sufficient update 
+of the documentation was written locally, these changes can be published to the Gh Pages branch of the remote repository by 
+using the following command:
+
+.. code-block:: bash
+
+    mkdocs gh-deploy --force

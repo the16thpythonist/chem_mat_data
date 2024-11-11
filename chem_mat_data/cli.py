@@ -217,8 +217,8 @@ class RichDatasetList(RichMixin):
                 f'[bold]{name}[/bold]', 
                 str(details['compounds']), 
                 str(details['targets']),
-                ', '.join(details['target_type']), 
-                ', '.join(details['tags']),
+                ', '.join(details.get('target_type', '')), 
+                ', '.join(details.get('tags', '')),
             )
         
         yield table
