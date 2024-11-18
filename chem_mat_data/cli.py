@@ -156,7 +156,7 @@ class RichDatasetInfo(RichMixin):
         table.add_row('No. Targets', str(self.info['targets']))
         panel = Panel(
             table, 
-            title='[bright_black]Basic Info[/bright_black]', 
+            title='[bright_black]Metadata[/bright_black]', 
             title_align='left',
             border_style='bright_black',
         )
@@ -172,6 +172,36 @@ class RichDatasetInfo(RichMixin):
             padding=(0, 1),
         )
         yield panel_description
+        
+        if 'sources' in self.info and self.info['sources']:
+            
+            sources_content = '\n'.join([
+                f':left_arrow_curving_right: [yellow]{s}[/yellow]' 
+                for s in self.info['sources']
+            ])
+            sources_panel = Panel(
+                sources_content,
+                title='[bright_black]References[/bright_black]',
+                title_align='left',
+                border_style='bright_black',
+                style='white',
+                padding=(0, 1),
+            )
+            yield sources_panel
+        
+        tags_content = ', '.join([
+            f':label:  {s}' 
+            for s in self.info['tags']
+        ])
+        tags_panel = Panel(
+            tags_content,
+            title='[bright_black]Tags[/bright_black]',
+            title_align='left',
+            border_style='bright_black',
+            style='bright_black',
+            padding=(0, 1),
+        )
+        yield tags_panel
         
         
 class RichDatasetList(RichMixin):
@@ -204,7 +234,7 @@ class RichDatasetList(RichMixin):
         names = list(self.datasets.keys())
         # potentially we want to sort the items depending on the "sort" argument
         if self.sort:
-            names.sort()
+            names.sort(key=lambda value: value.lower())
         
         for name in names:
             # Most importantly, if the name of the datasets starts with an underscore, we will consider
@@ -284,7 +314,7 @@ class RichConfig(RichMixin):
         )
         yield rule_top
         
-        yield self.content.replace('[', '\[')
+        yield self.content.replace(r'[', r'\[')
             
         rule_bottom = Rule(title=None, style='bright_black', end=' ')
         yield rule_bottom
@@ -450,7 +480,7 @@ class CLI(click.RichGroup):
             sort=sort,
             show_hidden=show_hidden,    
         )
-        click.secho(rich_list)
+        click.echo(rich_list)
         
         return 0
            

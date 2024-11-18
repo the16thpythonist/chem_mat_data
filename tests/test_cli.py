@@ -20,6 +20,7 @@ def test_list_command_basically_works():
     result = runner.invoke(cli, ['list'])
     assert result.exit_code == 0
     assert 'available datasets' in result.output.lower()
+    assert 'TypeError' not in result.output
 
     
 def test_list_command_hidden_datasets_omitted():

@@ -44,7 +44,131 @@ Getting ready to train a PyTorch Geometric model can be as easy as this:
 
 .. code-block:: python
 
-   from torch import Tensor
+    from chem_mat_data import load_graph_dataset, pyg_data_list_from_graphs
+    from torch_geometric.data import Data
+    from torch_geometric.loader import DataLoader
+    
+    # Load the dataset of graphs
+    graphs: list[dict] = load_graph_dataset('clintox')
+    
+    # Convert the graph dicts into PyG Data objects
+    data_list: list[Data] = pyg_data_list_from_graphs(graphs)
+    data_loader: DataLoader = DataLoader(data_list, batch_size=32, shuffle=True)
+    
+    # Network training...
+
+
+📦 Pip Installation
+===================
+
+Install the latest stable release using ``pip`` from the Python Package Index (PyPI):
+
+.. code-block:: console
+
+    pip install chem_mat_data
+
+Or install the latest development versin directly from the GitHub repository:
+
+.. code-block::
+
+    pip install git+https://github.com/the16thpythonist/chem_mat_data.git
+
+
+⌨️ Command Line Interface (CLI)
+===============================
+
+The package provides the ``cmdata`` command line interface (CLI) to interact with the remote database.
+
+To see the list of all available commands, simply use the ``--help`` flag:
+
+.. code-block:: bash
+
+    cmdata --help
+
+Listing Available Datasets
+--------------------------
+
+To which datasets are available to be downloaded from the remote file share server, use the ``list`` command:
+
+.. code-block:: bash
+
+    cmdata list
+
+This will print a table containing all the dataset which are currently available to download from the database. Each row of the 
+table represents one dataset and contains the name of the dataset, the number of molecules in the dataset and the number of
+target properties as additional columns.
+
+
+Downloading Datasets
+--------------------
+
+Finally, to download this dataset, use the ``download`` command:
+
+.. code-block:: bash
+
+    cmdata donwload "clintox"
+
+This will download the dataset ``clintox.csv`` dataset file to your current working directory.
+
+One can also specify the path to wich the dataset should be downloaded as following:
+
+.. code-block:: bash
+
+    cmdata download --path="/tmp" "clintox"
+
+
+🚀 Quickstart
+=============
+
+Alternatively, the ``chem_mat_data`` functionality can be used programmatically as part of python code. The 
+package provides each dataset either in **raw** or **processed/graph** format (For further information on the 
+distincation visit the [Documentation](https://the16thpythonist.github.io/chem_mat_data/api_datasets/)).
+
+Raw Datasets
+------------
+
+You can use the ``load_smiles_dataset`` function to download the raw dataset format. This function will 
+return the dataset as a ``pandas.DataFrame`` object which contains a "smiles" column along with the specific 
+target value annotations as separate data frame columns.
+
+.. code-block:: python
+
+    import pandas as pd
+    from chem_mat_data import load_smiles_dataset
+
+    df: pd.DataFrame = load_smiles_dataset('clintox')
+    print(df.head())
+
+
+Graph Datasets
+--------------
+
+You can also use the ``load_graph_dataset`` function to download the same dataset in the *pre-processed* graph 
+representation. This function will return a list of ``dict`` objects which contain the full graph representation 
+of the corresponding molecules.
+
+.. code-block:: python
+
+    from rich.pretty import pprint
+    from chem_mat_data import load_graph_dataset
+
+    graphs: list[dict] = load_graph_dataset('clintox')
+    example_graph = graphs[0]
+    pprint(example_graph)
+
+
+For further information on the graph representation, visit the [Documentation](https://the16thpythonist.github.io/chem_mat_data/graph_representation/).
+
+
+Training Graph Neural Networks
+------------------------------
+
+Finally, the following code snippet demonstrates how to train a graph neural network (GNN) model using the
+PyTorch Geometric library with the dataset loaded from the ``chem_mat_data`` package.
+
+.. code-block:: python
+
+    from torch import Tensor
     from torch_geometric.data import Data
     from torch_geometric.loader import DataLoader
     from torch_geometric.nn.models import GIN
@@ -77,107 +201,6 @@ Getting ready to train a PyTorch Geometric model can be as easy as this:
         batch=data.batch
     )
     pprint(out_pred)
-
-
-📦 Pip Installation
-===================
-
-Install the latest stable release using ``pip`` from the Python Package Index (PyPI):
-
-.. code-block:: console
-
-    pip install chem_mat_data
-
-Or install the latest development versin directly from the GitHub repository:
-
-.. code-block::
-
-    pip install git+https://github.com/the16thpythonist/chem_mat_data.git
-
-
-⌨️ Command Line Interface (CLI)
-===============================
-
-The package provides the ``cmdata`` command line interface (CLI) to interact with the remote database.
-
-To see the list of all available commands, simply use the ``--help`` flag:
-
-.. code-block:: console
-
-   cmdata --help
-
-Listing Available Datasets
---------------------------
-
-To which datasets are available to be downloaded from the remote file share server, use the ``list`` command:
-
-.. code-block:: console 
-
-   cmdata list
-
-This will print a table containing all the dataset which are currently available to download from the database. Each row of the 
-table represents one dataset and contains the name of the dataset, the number of molecules in the dataset and the number of
-target properties as additional columns.
-
-
-Downloading Datasets
---------------------
-
-Finally, to download this dataset, use the ``download`` command:
-
-.. code-block:: console
-
-   cmdata donwload "clintox"
-
-This will download the dataset ``clintox.csv`` dataset file to your current working directory.
-
-One can also specify the path to wich the dataset should be downloaded as following:
-
-.. code-block:: console
-
-   cmdata download --path="/tmp" "clintox"
-
-
-🚀 Quickstart
-=============
-
-Alternatively, the ``chem_mat_data`` functionality can be used programmatically as part of python code. The 
-package provides each dataset either in **raw** or **processed/graph** format (For further information on the 
-distincation visit the [Documentation](https://the16thpythonist.github.io/chem_mat_data/api_datasets/)).
-
-Raw Datasets
-------------
-
-You can use the ``load_smiles_dataset`` function to download the raw dataset format. This function will 
-return the dataset as a ``pandas.DataFrame`` object which contains a "smiles" column along with the specific 
-target value annotations as separate data frame columns.
-
-.. code-block:: python
-
-   import pandas as pd
-   from chem_mat_data import load_smiles_dataset
-
-   df: pd.DataFrame = load_smiles_dataset('clintox')
-   print(df.head())
-
-
-Graph Datasets
---------------
-
-You can also use the ``load_graph_dataset`` function to download the same dataset in the *pre-processed* graph 
-representation. This function will return a list of ``dict`` objects which contain the full graph representation 
-of the corresponding molecules.
-
-.. code-block:: python
-
-   from rich.pretty import pprint
-   from chem_mat_data import load_graph_dataset
-
-   graphs: list[dict] = load_graph_dataset('clintox')
-   example_graph = graphs[0]
-   pprint(example_graph)
-
-For further information on the graph representation, visit the [Documentation](https://the16thpythonist.github.io/chem_mat_data/graph_representation/).
 
 
 🤝 Credits
