@@ -67,6 +67,10 @@ TARGET_COLUMNS: list[str] = ['target']
 #       Either 'regression' or 'classification' to define the type of the dataset. This
 #       will also determine how the target values are processed.
 DATASET_TYPE: str = 'regression'
+# :param DESCRIPTION:
+#       This is a string description of the dataset that will be stored in the experiment
+#       metadata.
+DESCRIPTION: str = 'the description of the dataset'
 
 # == PROCESSING PARAMETERS ==
 # These parameters can be used to configure the processing functionality of the script 
@@ -267,8 +271,6 @@ def experiment(e: Experiment):
     num_elements = len(dataset)
     e.log(f'loaded dataset with {num_elements} elements')
     
-    
-    
     # when starting the experiment in testing mode we want to limit the number of elements in 
     # the dataset to only a few examples so that the experiment overall finishes really quickly 
     # and so that all the code in the experiment (from start to finish) can be tested quickly 
@@ -340,6 +342,9 @@ def experiment(e: Experiment):
         
     del input_queue
     del output_queue
+
+    e.log('Description:')
+    e.log(e.DESCRIPTION)
 
     # ~ saving the dataset into the msgpack format
     e.log(f'saving the dataset with {len(graphs)} graphs...')

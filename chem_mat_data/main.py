@@ -2,13 +2,14 @@ import os
 import gzip
 import shutil
 import tempfile
-from typing import Dict
+from typing import Dict, Optional
 
 import pandas as pd
 
 from chem_mat_data.config import Config
 from chem_mat_data.web import AbstractFileShare
 from chem_mat_data.web import NextcloudFileShare
+from chem_mat_data.web import construct_file_share
 from chem_mat_data.data import load_graphs
 from chem_mat_data._typing import GraphDict
 from typing import Union
@@ -30,12 +31,16 @@ def get_file_share(config: Config) -> AbstractFileShare:
     :returns: An instance of a AbstractFileShare subclass that can be used to interact with a remote 
         file share server of dynamically determined type.
     """
-    fileshare_type: str = config.get_fileshare_type()
-    klass: type = FILE_SHARE_CLASS_MAP[fileshare_type]
+
+    # This function will construct the concrete file share object based on the string identifier of the 
+    # file share type that is configured in the given config file.
+    file_share_type = config.get_fileshare_type()    
+    file_share = construct_file_share(
+        file_share_type=config.get_fileshare_type(),
+        file_share_url=config.get_fileshare_url(),
+        file_share_kwargs=config.get_fileshare_parameters(file_share_type),
+    )
     
-    fileshare_url: str = config.get_fileshare_url()
-    fileshare_params: dict = config.get_fileshare_parameters(fileshare_type)
-    file_share = klass(url=fileshare_url, **fileshare_params)
     return file_share
 
 
@@ -186,6 +191,7 @@ def load_smiles_dataset(dataset_name: str,
 
 def load_graph_dataset(dataset_name: str,
                        folder_path: str = os.getcwd(),
+                       config: Optional[Config] = None,
                        ) -> List[dict]:
     """
     Loads the graph dict representations for the dataset with the unique string identifier ``dataset_name`` 
@@ -206,7 +212,8 @@ def load_graph_dataset(dataset_name: str,
     file_path = ensure_dataset(
         dataset_name, 
         extension='mpack', 
-        folder_path=folder_path
+        folder_path=folder_path,
+        config=config,
     )
     
     # Then we simply have to load the graphs from that file and return them

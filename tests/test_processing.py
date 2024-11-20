@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import chem_mat_data._typing as tc
 import rdkit.Chem as Chem
 from rich.console import Console
-from chem_mat_data.graph import assert_graph_dict
+from rich.pretty import pprint
+from chem_mat_data.testing import assert_graph_dict
+#from chem_mat_data.graph import assert_graph_dict
 from chem_mat_data.processing import OneHotEncoder
 from chem_mat_data.processing import RichProcessingSummary
 from chem_mat_data.processing import CrippenEncoder
@@ -28,7 +30,11 @@ class TestMoleculeProcessing:
         
         smiles = self.DEFAULT_SMILES
         graph: tc.GraphDict = processing.process(smiles)
+        
+        # This function will run a series of assert statements that checks the validity of the graph dict
+        # formatting. So if it contains the correct keys and the correct array shapes etc.
         assert_graph_dict(graph)
+        pprint(graph)
         
     def test_process_includes_node_atom_symbols(self):
         """
@@ -188,7 +194,7 @@ class TestRichProcessingSummary:
         assert '00' in st
 
 
-class TestEncoder:
+class TestOneHotEncoder:
     
     def test_basically_works(self):
         """

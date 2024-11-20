@@ -31,3 +31,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Custom
+chem_mat_data/scripts/results/*

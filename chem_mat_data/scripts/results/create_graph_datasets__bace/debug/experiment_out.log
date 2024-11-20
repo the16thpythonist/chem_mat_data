@@ -1,54 +1,52 @@
-2024-07-04 15:11:47,185 - ================================================================================
-2024-07-04 15:11:47,185 - EXPERIMENT STARTED
-2024-07-04 15:11:47,185 -     namespace:          results/create_graph_datasets__bace
-2024-07-04 15:11:47,185 -     start time:         Thursday, July 04, 2024 at 03:11 PM
-2024-07-04 15:11:47,185 -     archive path:       /media/ssd/Programming/chem_mat_data/chem_mat_data/scripts/results/create_graph_datasets__bace/debug
-2024-07-04 15:11:47,185 -     debug mode?         True
-2024-07-04 15:11:47,185 - ================================================================================
-2024-07-04 15:11:47,185 - no wandb project defined. skipping...
-2024-07-04 15:11:47,185 - starting experiment...
-2024-07-04 15:11:47,185 - creating processing workers...
-2024-07-04 15:11:47,198 -  * started worker
-2024-07-04 15:11:47,205 -  * started worker
-2024-07-04 15:11:47,212 -  * started worker
-2024-07-04 15:11:47,220 -  * started worker
-2024-07-04 15:11:47,231 -  * started worker
-2024-07-04 15:11:47,244 -  * started worker
-2024-07-04 15:11:47,252 -  * started worker
-2024-07-04 15:11:47,261 -  * started worker
-2024-07-04 15:11:47,268 -  * started worker
-2024-07-04 15:11:47,278 -  * started worker
-2024-07-04 15:11:47,285 -  * started worker
-2024-07-04 15:11:47,293 -  * started worker
-2024-07-04 15:11:47,300 -  * started worker
-2024-07-04 15:11:47,307 -  * started worker
-2024-07-04 15:11:47,315 -  * started worker
-2024-07-04 15:11:47,323 -  * started worker
-2024-07-04 15:11:47,330 -  * started worker
-2024-07-04 15:11:47,337 -  * started worker
-2024-07-04 15:11:47,344 -  * started worker
-2024-07-04 15:11:47,351 -  * started worker
-2024-07-04 15:11:47,360 -  * started worker
-2024-07-04 15:11:47,368 -  * started worker
-2024-07-04 15:11:47,375 -  * started worker
-2024-07-04 15:11:47,382 -  * started worker
-2024-07-04 15:11:47,382 - loading dataset...
-2024-07-04 15:11:47,536 - loaded dataset with 1513 elements
-2024-07-04 15:11:47,536 - processing dataset...
-2024-07-04 15:11:47,884 -  * 01000/1513 done - time passed: 0.01m - time remaining: 0.00m - eta: Thu 04.07 15:11
-2024-07-04 15:11:48,020 - finished processing dataset after 0.00h
-2024-07-04 15:11:48,020 - stopping the workers...
-2024-07-04 15:11:48,091 - saving the dataset with 1513 graphs...
-2024-07-04 15:11:48,226 - wrote file with 31.8 MB
-2024-07-04 15:11:48,227 - compressing the dataset file, this may take a while...
-2024-07-04 15:11:49,845 - compressed file with 0.8 MB
-2024-07-04 15:11:49,855 - ================================================================================
-2024-07-04 15:11:49,855 - EXPERIMENT ENDED
-2024-07-04 15:11:49,855 -     duration:           0.001 hrs
-2024-07-04 15:11:49,855 -     start time:         Thursday, July 04, 2024 at 03:11 PM
-2024-07-04 15:11:49,856 -     end time:           Thursday, July 04, 2024 at 03:11 PM
-2024-07-04 15:11:49,856 -     error?              None
-2024-07-04 15:11:49,856 -     n/o parameters:     10
-2024-07-04 15:11:49,856 -     data size:          0.000 MB
-2024-07-04 15:11:49,856 - ================================================================================
-2024-07-04 15:11:49,872 - plotting tracked elements...
+2024-11-20 10:40:23,712 - ================================================================================
+2024-11-20 10:40:23,712 - EXPERIMENT STARTED
+2024-11-20 10:40:23,712 -     namespace:          results/create_graph_datasets__bace
+2024-11-20 10:40:23,712 -     start time:         Wednesday, November 20, 2024 at 10:40 AM
+2024-11-20 10:40:23,712 -     archive path:       /media/ssd/Programming/chem_mat_data/chem_mat_data/scripts/results/create_graph_datasets__bace/debug
+2024-11-20 10:40:23,712 -     debug mode?         True
+2024-11-20 10:40:23,712 - ================================================================================
+2024-11-20 10:40:23,712 - starting experiment...
+2024-11-20 10:40:23,712 - creating processing workers...
+2024-11-20 10:40:23,721 -  * started worker
+2024-11-20 10:40:23,725 -  * started worker
+2024-11-20 10:40:23,729 -  * started worker
+2024-11-20 10:40:23,733 -  * started worker
+2024-11-20 10:40:23,737 -  * started worker
+2024-11-20 10:40:23,741 -  * started worker
+2024-11-20 10:40:23,745 -  * started worker
+2024-11-20 10:40:23,749 -  * started worker
+2024-11-20 10:40:23,753 -  * started worker
+2024-11-20 10:40:23,759 -  * started worker
+2024-11-20 10:40:23,764 -  * started worker
+2024-11-20 10:40:23,768 -  * started worker
+2024-11-20 10:40:23,772 -  * started worker
+2024-11-20 10:40:23,776 -  * started worker
+2024-11-20 10:40:23,779 -  * started worker
+2024-11-20 10:40:23,783 -  * started worker
+2024-11-20 10:40:23,787 -  * started worker
+2024-11-20 10:40:23,791 -  * started worker
+2024-11-20 10:40:23,795 -  * started worker
+2024-11-20 10:40:23,800 -  * started worker
+2024-11-20 10:40:23,805 -  * started worker
+2024-11-20 10:40:23,809 -  * started worker
+2024-11-20 10:40:23,813 -  * started worker
+2024-11-20 10:40:23,818 -  * started worker
+2024-11-20 10:40:23,818 - loading dataset...
+2024-11-20 10:40:24,234 - loaded dataset with 1513 elements
+2024-11-20 10:40:24,234 - processing dataset...
+2024-11-20 10:40:24,531 -  * 01000/1513 done - time passed: 0.00m - time remaining: 0.00m - eta: Wed 20.11 10:40
+2024-11-20 10:40:24,663 - finished processing dataset after 0.00h
+2024-11-20 10:40:24,663 - stopping the workers...
+2024-11-20 10:40:24,736 - saving the dataset with 1513 graphs...
+2024-11-20 10:40:24,845 - wrote file with 25.6 MB
+2024-11-20 10:40:24,845 - compressing the dataset file, this may take a while...
+2024-11-20 10:40:26,182 - compressed file with 0.8 MB
+2024-11-20 10:40:26,193 - ================================================================================
+2024-11-20 10:40:26,193 - EXPERIMENT ENDED
+2024-11-20 10:40:26,193 -     duration:           0.001 hrs
+2024-11-20 10:40:26,193 -     start time:         Wednesday, November 20, 2024 at 10:40 AM
+2024-11-20 10:40:26,193 -     end time:           Wednesday, November 20, 2024 at 10:40 AM
+2024-11-20 10:40:26,193 -     error?              None
+2024-11-20 10:40:26,193 -     n/o parameters:     10
+2024-11-20 10:40:26,193 -     data size:          0.000 MB
+2024-11-20 10:40:26,193 - ================================================================================

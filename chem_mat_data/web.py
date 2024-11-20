@@ -3,7 +3,7 @@ import shutil
 import gzip
 import tempfile
 import typing as t
-from typing import Optional
+from typing import Optional, Dict
 
 import io
 import yaml
@@ -343,3 +343,37 @@ class NextcloudFileShare(AbstractFileShare):
             f'dav_password to be given to the NextcloudFileShare object. Please provide the dav_password parameter to the '
             f'constructor or by adding it to the config file.'
         )
+        
+
+# This dictionary assigns the string names of the different file share types to the actual classes 
+# So given the name of a fileshare type, this map can be used to obtain to actual class to then 
+# consruct a fileshare instance from.
+FILESHARE_TYPES: Dict[str, type] = {
+    'nextcloud': NextcloudFileShare,
+}        
+
+
+
+def construct_file_share(file_share_type: str,
+                         file_share_url: str,
+                         file_share_kwargs: dict,
+                         ) -> AbstractFileShare:
+    """
+    Given the string name of a valid ``file_share_type`` and the ``file_share_url`` of the file share
+    server, this function will construct an instance of the corresponding file share class which is 
+    a subclass implementing the AbstractFileShare interface.
+    
+    :param file_share_type: The unique string name that identifies the type of file share server that 
+        is to be used.
+    :param file_share_url: The url that points to the actual file share server. This is a required 
+        parameter for the construction of any file share.
+    :param file_share_kwargs: A dictionary of additional keyword arguments that may be required for the
+        construction of a specific file share subclass.
+    """
+    fileshare_class: type = FILESHARE_TYPES[file_share_type]
+    fileshare: AbstractFileShare = fileshare_class(
+        url=file_share_url,
+        **file_share_kwargs,
+    )
+    return fileshare
+    

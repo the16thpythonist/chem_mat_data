@@ -7,9 +7,14 @@ folder, without actually executing the experiment again. All the code that was d
 "analysis" decorator was copied into this file and can subsequently be changed as well.
 """
 import os
+import json
 import pathlib
+from pprint import pprint
+from typing import Dict, Any
 
 # Useful imports for conducting analysis
+import numpy as np
+import matplotlib.pyplot as plt
 from pycomex.functional.experiment import Experiment
 
 # Importing the experiment

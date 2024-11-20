@@ -4,7 +4,7 @@ inherits from "create_graph_datasets.py" base experiment. It overwrites the defa
 implementation of the "load_dataset" hook to load the CLINTOX dataset instead from the 
 nextcloud data storage.
 """
-
+import rdkit.Chem as Chem
 from rich import print as pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
@@ -69,6 +69,22 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
     for index, data in enumerate(df.to_dict('records')):
         
         data['smiles'] = data['smiles']
+        
+        # == MOLECULE FILTERS ==
+        # We don't want to use compounds with '.' in the smiles (separate molecules)
+        if '.' in data['smiles']:
+            continue
+        
+        # We don't want to use compounds that only consist of a single atom
+        mol = Chem.MolFromSmiles(data['smiles'])
+        if not mol:
+            continue
+        
+        # We also don't want to accept "molecules" that are essentially just individual atoms
+        if len(mol.GetAtoms()) < 2:
+            continue
+        
+        # == TARGET VALUES ==
         # For this dataset we specifically know that there are only 2 classes. 
         # Either fda approved or toxic
         data['targets'] = [data['FDA_APPROVED'], data['CT_TOX']]

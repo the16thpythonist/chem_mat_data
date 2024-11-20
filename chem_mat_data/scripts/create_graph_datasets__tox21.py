@@ -1,3 +1,4 @@
+import rdkit.Chem as Chem
 import pandas as pd
 
 from pycomex.functional.experiment import Experiment
@@ -23,16 +24,46 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
     graph['graph_id'] = data['mol_id']
 
+
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> dict[int, dict]:
     df = load_smiles_dataset('tox21')
 
     dataset: dict[int, dict] = {}
     # List of all 12 targets
-    columns = ['NR-AR','NR-AR-LBD','NR-AhR','NR-Aromatase','NR-ER','NR-ER-LBD','NR-PPAR-gamma','SR-ARE','SR-ATAD5','SR-HSE','SR-MMP','SR-p53']
+    columns = [
+        'NR-AR',
+        'NR-AR-LBD',
+        'NR-AhR',
+        'NR-Aromatase',
+        'NR-ER',
+        'NR-ER-LBD',
+        'NR-PPAR-gamma',
+        'SR-ARE',
+        'SR-ATAD5',
+        'SR-HSE',
+        'SR-MMP',
+        'SR-p53'
+    ]
     for index, data in enumerate(df.to_dict('records')):
         
         data['smiles'] = data['smiles']
+        
+        # === MOLECULE FILTERS ===
+        # We don't want to use compounds with '.' in the smiles (separate molecules)
+        if '.' in data['smiles']:
+            continue
+        
+        # We don't want to use compounds that only consist of a single atom
+        mol = Chem.MolFromSmiles(data['smiles'])
+        if not mol:
+            continue
+        
+        # We also don't want to accept "molecules" that are essentially just individual atoms
+        if len(mol.GetAtoms()) < 2:
+            continue
+        
+        # == TARGETS ==
         # Is either 0 (inactive) , 1 (active) or no data given so -1
         data['targets'] = [(0 if data[col] == 0 else 1) if pd.notna(data[col]) else -1 for col in columns] 
         dataset[index] = data

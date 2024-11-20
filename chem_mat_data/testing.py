@@ -69,6 +69,104 @@ def sample_mock_graphs(k: int,
     return graphs
 
 
+def assert_graph_dict(graph: GraphDict):
+    """
+    This function runs a number of assert statements that will check if the given ``graph`` dict 
+    in fact represents a valid graph dict from the perspective of the format. This includes to check 
+    if the dict contains all the required keys and if all of the corresponding arrays have the correct 
+    shape in principle.
+    """
+    assert isinstance(graph, dict), (
+        f'A graph dict should be a dictionary! instead got instance of type {type(graph)}'
+    )
+    assert len(graph) != 0, (
+        'A graph dict should not be empty!'
+    )
+    
+    # ~ checking the existence of the required keys
+    # The keys of the following dict defines all the properties which a valid graph dict should absolutely 
+    # have in order to count as a "graph dict". The corresponding values are the expected types for these 
+    # values.
+    required_key_type_map = {
+        'node_indices': (np.ndarray, list),
+        'node_attributes': (np.ndarray, list),
+        'node_atoms': (np.ndarray, list),
+        'edge_indices': (np.ndarray, list),
+        'edge_attributes': (np.ndarray, list),
+        'edge_bonds': (np.ndarray, list),
+        'graph_labels': (np.ndarray, list),
+        'graph_repr': (np.ndarray, str)
+    }
+    for key, expected_type in required_key_type_map.items():
+        assert key in graph, (
+            f'A graph dict should contain a "{key}" property!'
+        )
+        assert isinstance(graph[key], expected_type), (
+            f'The value of the "{key}" property should be an instance of {expected_type}!'
+        )
+        
+    # For good measure - if there are any lists we convert all the properties to numpy arrays 
+    # from this point on. But we do this on a copy of the original graph dict because we dont 
+    # want to modify the original graph dict with this function that is only supposed to check
+    graph = graph.copy()
+    for key, value in graph.items():
+        graph[key] = np.array(value)
+    
+    # ~ checking the node properties
+    assert graph['node_indices'].ndim == 1, (
+        'The node indices should be a 1D array!'
+    )
+    assert graph['node_attributes'].ndim == 2, (
+        'The node attributes should be a 2D array!'
+    )
+    assert graph['node_atoms'].ndim == 1, (
+        'The node atoms should be a 1D array!'
+    )
+    # In the first dimension (number of nodes) all of the node related attributes should have 
+    # the same length!
+    assert (
+        graph['node_indices'].shape[0] \
+        == graph['node_attributes'].shape[0] \
+        == graph['node_atoms'].shape[0]
+    ), (
+        'The number of nodes should be the same for all node related attributes!'
+    )
+    
+    # ~ checking the edge properties
+    assert graph['edge_indices'].ndim == 2, (
+        'The edge indices should be a 2D array!'
+    )
+    assert graph['edge_indices'].shape[1] == 2, (
+        'The edge indices should have 2 columns! (edges == node index tuples)'
+    )
+    assert graph['edge_attributes'].ndim == 2, (
+        'The edge attributes should be a 2D array!'
+    )
+    assert graph['edge_bonds'].ndim == 1, (
+        'The edge bonds should be a 1D array!'
+    )
+    # In the first dimension (number of edges) all of the edge related attributes should have
+    # the same length!
+    assert (
+        graph['edge_indices'].shape[0] \
+        == graph['edge_attributes'].shape[0] \
+        == graph['edge_bonds'].shape[0]
+    ), (
+        'The number of edges should be the same for all edge related attributes!'
+    )
+
+    # ~ checking the graph properties
+    assert graph['graph_labels'].ndim == 1, (
+        'The graph labels should be a 1D array!'
+    )
+    assert graph['graph_repr'].ndim == 0, (
+        'The graph representation should be a single string value!'
+    )
+    assert str(graph['graph_repr']) != '', (
+        'The graph representation (SMILES) should not be an empty string!'
+    )
+
+
 class ConfigIsolation:
     """
     Instances of this class act as context managers that can be used to isolate the state of the "Config" singleton to 

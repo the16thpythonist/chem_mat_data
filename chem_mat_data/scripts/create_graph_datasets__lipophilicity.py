@@ -1,4 +1,4 @@
-
+import rdkit.Chem as Chem
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -20,7 +20,8 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
     We add the compound id
     """
-    graph['graph_id'] = data['CMPD_CHEMBLID']
+    graph['graph_chemblid'] = data['CMPD_CHEMBLID']
+
 
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> dict[int, dict]:
@@ -29,8 +30,24 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
     dataset: dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
         data['smiles'] = data['smiles']
+        
+        # === MOLECULE FILTERS ===
+        # We don't want to use compounds with '.' in the smiles (separate molecules)
+        if '.' in data['smiles']:
+            continue
+        
+        # We don't want to use compounds that only consist of a single atom
+        mol = Chem.MolFromSmiles(data['smiles'])
+        if not mol:
+            continue
+        
+        # We also don't want to accept "molecules" that are essentially just individual atoms
+        if len(mol.GetAtoms()) < 2:
+            continue
+        
+        # == TARGETS ==
         # We have only one target
-        data['targets'] = data['exp']
+        data['targets'] = [data['exp']]
 
         dataset[index] = data
     
