@@ -1,6 +1,7 @@
 import os
 import gzip
 import shutil
+import zipfile
 import tempfile
 from typing import Dict, Optional
 
@@ -11,6 +12,7 @@ from chem_mat_data.web import AbstractFileShare
 from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.web import construct_file_share
 from chem_mat_data.data import load_graphs
+from chem_mat_data.data import load_xyz_as_mol
 from chem_mat_data._typing import GraphDict
 from typing import Union
 from typing import List
@@ -117,6 +119,8 @@ def ensure_dataset(dataset_name: str,
             if dataset_name not in file_share['datasets']:
                 raise FileNotFoundError(f'The dataset {file_name} could not be found on the server!')
             
+            file_path = os.path.join(folder_path, file_name)
+            
             # 04.07.24
             # In the first instance we are going to try and download the compressed (gzip - gz) version 
             # of the dataset because that is usually at least 10x smaller and should therefore be a lot 
@@ -127,15 +131,37 @@ def ensure_dataset(dataset_name: str,
                 file_path_compressed = file_share.download_file(file_name_compressed, folder_path=folder_path)
                 
                 # Then we can decompress the file using the gzip module. This may take a while.
-                file_path = os.path.join(folder_path, file_name)
                 with open(file_path, mode='wb') as file:
                     with gzip.open(file_path_compressed, mode='rb') as compressed_file:
                         shutil.copyfileobj(compressed_file, file)
             
             # Otherwise we try to download the file without the compression
-            except Exception:
-                file_path = file_share.download_file(file_name, folder_path=folder_path)
+            except Exception as exc:
+                #print(exc)
+                pass
                 
+            # 20.11.24
+            # In the second instance we are going to try and download the 'zip' compressed version of the 
+            # dataset. Some datasets will be available either .gz (files only) or .zip (folders) and we
+            # need to be able to handle both cases.
+            try:
+                file_name_compressed = f'{file_name}.zip'
+                file_path_compressed = file_share.download_file(file_name_compressed, folder_path=folder_path)
+                
+                # Unpack the downloaded zip archive to the "file_path" file path
+                folder_path = os.path.dirname(file_path)
+                with zipfile.ZipFile(file_path_compressed, 'r') as zip_ref:
+                    zip_ref.extractall(folder_path)
+                                    
+            except Exception as exc:
+                #print(exc)
+                pass
+            
+            # Only in the last instance, if the "file_path" does not already exist, we try to download the 
+            # uncompressed version of the dataset file.
+            if not os.path.exists(file_path):
+                file_path = file_share.download_file(file_name, folder_path=folder_path)
+                                    
             # 04.11.24
             # After the dataset has been downloaded we can then also add the dataset to the cache so that it 
             # does not have to be downloaded the next time.
@@ -158,8 +184,54 @@ def load_dataset_metadata(dataset_name: str,
     return metadata['datasets'][dataset_name]
 
 
+def load_xyz_dataset(dataset_name: str,
+                     folder_path: str = tempfile.gettempdir(),
+                     config: Optional[Config] = None,
+                     use_cache: bool = True,
+                     ) -> pd.DataFrame:
+    
+    # The "ensure_dataset" function is a utility function which will make sure that the dataset
+    # in question just generally exists. To do this, the function first checks if the dataset
+    # file already eixsts in the given folder. If that is not the case it will attempt to download
+    # the dataset from the remote file share server. Either way, the function WILL return a path
+    # towards the requested dataset file in the end.
+    
+    # In the case of a xyz dataset we know that the result will be a folder path and not a file path!
+    folder_path = ensure_dataset(
+        dataset_name=dataset_name,
+        folder_path=folder_path,
+        extension='xyz_bundle',
+        config=config,
+        use_cache=use_cache,
+    )    
+    
+    # This folder now consists of two important contents:
+    # - A "meta.csv" file which contains the metadata of the dataset in tabular format. This includes 
+    #   most importantly the numeric ID of all the elements and the associated target value annotations.
+    # - Multiple .xyz files with the format "{id}.xyz" which contain the actual positional information 
+    #   of the atoms in the molecules.
+    
+    # We first load the metadata file which contains the target value annotations.
+    meta_path = os.path.join(folder_path, 'meta.csv')
+    df = pd.read_csv(meta_path)
+    
+    # Add an additional column "mol" to the DataFrame which is currently empty but will later be 
+    # populated with the rdkit Mol objects that are loaded from the xyz files.
+    df['mol'] = None
+    
+    # Iterate over the rows of the DataFrame and load the corresponding xyz files
+    for index, row in df.iterrows():
+        xyz_file_path = os.path.join(folder_path, f"{row['id']}.xyz")
+        mol = load_xyz_as_mol(xyz_file_path)
+        df.at[index, 'mol'] = mol
+    
+    return df
+
+
 def load_smiles_dataset(dataset_name: str, 
-                        folder_path: str = os.getcwd()
+                        folder_path: str = tempfile.gettempdir(),
+                        config: Optional[Config] = None,
+                        use_cache: bool = True,
                         ) -> pd.DataFrame:
     """
     Loads the SMILES dataset with the unique string identifier ``dataset_name`` and returns it 
@@ -181,7 +253,9 @@ def load_smiles_dataset(dataset_name: str,
     file_path = ensure_dataset(
         dataset_name, 
         extension='csv', 
-        folder_path=folder_path
+        folder_path=folder_path,
+        config=config,
+        use_cache=use_cache,
     )
     
     # Then we simply have to load that csv file into a pandas DataFrame and return it.

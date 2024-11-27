@@ -646,7 +646,7 @@ class MoleculeProcessing():
             lambda data: 'encodes_symbol' in data and data['encodes_symbol']
         )
         try:
-            self.symbol_encoder: t.Optional[t.Any] = data['callback'].callback
+            self.symbol_encoder: Optional[Any] = data['callback'].callback
         except TypeError:
             if not self.ignore_issues:
                 raise AssertionError('None of elements defined in node_attribute_map implement the flag'
@@ -662,7 +662,7 @@ class MoleculeProcessing():
         ), dtype=int)
         
         # 29.01.24
-        self.charge_indices: t.List[int] = np.array(self.get_attribute_indices(
+        self.charge_indices: List[int] = np.array(self.get_attribute_indices(
             self.node_attribute_map,
             self.MOCK_ATOM,
             lambda data: 'encodes_charge' in data and data['encodes_charge'],
@@ -922,7 +922,7 @@ class MoleculeProcessing():
             # "node_attribute_callbacks" is a dictionary which specifies all the transformation functions
             # that are to be applied on each atom to calculate part of the node feature vector
             for name, data in self.node_attribute_map.items():
-                callback: t.Callable[[Chem.Mol, Chem.Atom], list] = data['callback']
+                callback: Callable[[Chem.Mol, Chem.Atom], list] = data['callback']
                 value: list = self.apply_callback(callback, mol, atom)
 
                 attributes += value
@@ -956,7 +956,7 @@ class MoleculeProcessing():
 
             attributes = []
             for name, data in self.edge_attribute_map.items():
-                callback: t.Callable[[Chem.Bond], list] = data['callback']
+                callback: Callable[[Chem.Bond], list] = data['callback']
                 value: list = self.apply_callback(callback, mol, bond)
                 attributes += value
 
@@ -976,7 +976,7 @@ class MoleculeProcessing():
         # attribute take the entire molecule object as an argument rather than just atom or bond
         graph_attributes = []
         for name, data in self.graph_attribute_map.items():
-            callback: t.Callable[[Chem.Mol], list] = data['callback']
+            callback: Callable[[Chem.Mol], list] = data['callback']
             value: list = callback(mol)
             graph_attributes += value
 
@@ -1000,14 +1000,12 @@ class MoleculeProcessing():
         # More specifically these are lists of human readable strings which contain the atom symbols and
         # bond types respectively. The goal of this additional information is to provide a way for a human 
         # to easily reconstruct the molecule from the graph representation as well.
-        if node_atoms:
-            graph['node_atoms'] = np.array(node_atoms, dtype=str)
-        if edge_bonds:
-            graph['edge_bonds'] = np.array(edge_bonds, dtype=str)
+        graph['node_atoms'] = np.array(node_atoms, dtype=str)
+        graph['edge_bonds'] = np.array(edge_bonds, dtype=str)
 
         # Optionally, if the flag is set, this will apply a conformer on the molecule which will
         # then calculate the 3D coordinates of each atom in space.
-        if use_node_coordinates:
+        if use_node_coordinates and mol.GetNumConformers() == 0:
             try:
                 # # https://sourceforge.net/p/rdkit/mailman/message/33386856/
                 # try:
@@ -1025,24 +1023,30 @@ class MoleculeProcessing():
                 AllChem.UFFOptimizeMolecule(mol)
                 mol = Chem.RemoveHs(mol)
 
-                conformer = mol.GetConformers()[0]
-                node_coordinates = np.array(conformer.GetPositions())
-                graph['node_coordinates'] = node_coordinates
-
-                # Now that we have the 3D coordinates for every atom, we can also calculate the length of all
-                # the bonds from that!
-                edge_lengths = []
-                for i, j in graph['edge_indices']:
-                    c_i = graph['node_coordinates'][i]
-                    c_j = graph['node_coordinates'][j]
-                    length = la.norm(c_i - c_j)
-                    edge_lengths.append([length])
-
-                graph['edge_lengths'] = np.array(edge_lengths)
-
             except Exception:
                 raise ValueError(f'Cannot calculate node_coordinates for the given '
                                  f'molecule with smiles code: {smiles}')
+
+        # 21.10.24 - with the processing of Mol objects that were directly loaded from xyz files, there is 
+        # now actually the possibility that they already have a pre-defined set of node coordinates when 
+        # they enter the processing method. So in that case we detect this here and properly add those 
+        # as the "node_coordinates" property of the graph dict.
+        if mol.GetNumConformers() > 0:
+            
+            conformer = mol.GetConformers()[0]
+            node_coordinates = np.array(conformer.GetPositions())
+            graph['node_coordinates'] = node_coordinates
+
+            # Now that we have the 3D coordinates for every atom, we can also calculate the length of all
+            # the bonds from that!
+            edge_lengths = []
+            for i, j in graph['edge_indices']:
+                c_i = graph['node_coordinates'][i]
+                c_j = graph['node_coordinates'][j]
+                length = la.norm(c_i - c_j)
+                edge_lengths.append([length])
+
+            graph['edge_lengths'] = np.array(edge_lengths)
 
         return graph
 

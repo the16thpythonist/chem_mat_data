@@ -97,8 +97,18 @@ class Cache:
         
         # Here we put this into an archive
         dest_path = os.path.join(self.path, f"{base_name}.zip")
-        with zipfile.ZipFile(dest_path, mode='w') as archive:
-            archive.write(path, os.path.basename(path))
+        
+        # Here we have to differentiate and handle differently if the dataset is a file or a folder
+        if os.path.isfile(path):
+            with zipfile.ZipFile(dest_path, mode='w') as archive:
+                archive.write(path, os.path.basename(path))
+                
+        elif os.path.isdir(path):
+            with zipfile.ZipFile(dest_path, mode='w') as archive:
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        archive.write(file_path, os.path.relpath(file_path, path))
         
         # ~ dataset metadata
         # Besides the actual dataset data we also want to store some metadata about the dataset 

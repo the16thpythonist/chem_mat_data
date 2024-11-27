@@ -149,7 +149,7 @@ def is_archive(path: str) -> bool:
     try:
         with tarfile.open(path):
             return True
-    except tarfile.ReadError:
+    except (tarfile.ReadError, IsADirectoryError):
         pass  # Not a tar file
 
     return False

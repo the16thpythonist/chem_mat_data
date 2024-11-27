@@ -12,8 +12,9 @@ from chem_mat_data.processing import OneHotEncoder
 from chem_mat_data.processing import RichProcessingSummary
 from chem_mat_data.processing import CrippenEncoder
 from chem_mat_data.processing import MoleculeProcessing
+from chem_mat_data.data import load_xyz_as_mol
 
-from .utils import ARTIFACTS_PATH
+from .utils import ARTIFACTS_PATH, ASSETS_PATH
 
 
 class TestMoleculeProcessing:
@@ -108,6 +109,39 @@ class TestMoleculeProcessing:
         
         assert isinstance(st, str)
         assert len(st) != 0
+
+    def test_process_mol_object_works(self):
+        """
+        In principle, the process function is designed to work on the SMILES representation of a molecule 
+        but it should also work with the rdkit Mol object itself as converting to a Mol is the first 
+        thing that happens in the process function anyway.
+        """
+        smiles = self.DEFAULT_SMILES
+        mol = Chem.MolFromSmiles(smiles)
+        
+        processing = MoleculeProcessing()
+        graph = processing.process(mol)
+        assert isinstance(graph, dict)
+        assert_graph_dict(graph)
+        
+    def test_process_mol_object_from_xyz_file_works(self):
+        """
+        As a special case of processing a RDKit molecule object, we can also load a molecule from a
+        xyz file and then process it into a graph representation. This is perhaps a bit different 
+        because by default the Mol object that is loaded from the xyz file does not contain any 
+        bonds/edges.
+        """
+        xyz_path = os.path.join(ASSETS_PATH, '_test.xyz')
+        mol = load_xyz_as_mol(xyz_path)
+        
+        processing = MoleculeProcessing()
+        graph = processing.process(mol)
+        assert isinstance(graph, dict)
+        assert_graph_dict(graph)
+        
+        # Another specialty of processing a mol from an xyz file is that the graph representation
+        # should also contain the 3D node coordinates.
+        assert 'node_coordinates' in graph
 
 
 class TestCrippenEncoder:

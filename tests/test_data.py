@@ -1,9 +1,11 @@
 import os
 import csv
 
+import rdkit.Chem as Chem
 from chem_mat_data.processing import MoleculeProcessing
 from chem_mat_data.graph import assert_graph_dict
 from chem_mat_data.data import save_graphs, load_graphs
+from chem_mat_data.data import load_xyz_as_mol
 
 from .utils import ASSETS_PATH, ARTIFACTS_PATH
 
@@ -72,3 +74,16 @@ def test_process_test_dataset():
     
     graphs_loaded = load_graphs(dst_path)
     assert len(graphs) == len(graphs_loaded)
+    
+    
+def test_load_xyz_as_mol_basically_works():
+    """
+    The "load_xyz_as_mol" function should be able to load a xyz file from the disk and return
+    a RDKit molecule object from it.
+    """
+    xyz_path = os.path.join(ASSETS_PATH, '_test.xyz')
+    mol = load_xyz_as_mol(xyz_path)
+    
+    assert isinstance(mol, Chem.Mol)
+    # For this particular molecule we know that it should have 16 atoms!
+    assert mol.GetNumAtoms() == 16

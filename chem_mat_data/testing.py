@@ -133,27 +133,34 @@ def assert_graph_dict(graph: GraphDict):
     )
     
     # ~ checking the edge properties
-    assert graph['edge_indices'].ndim == 2, (
-        'The edge indices should be a 2D array!'
-    )
-    assert graph['edge_indices'].shape[1] == 2, (
-        'The edge indices should have 2 columns! (edges == node index tuples)'
-    )
-    assert graph['edge_attributes'].ndim == 2, (
-        'The edge attributes should be a 2D array!'
-    )
-    assert graph['edge_bonds'].ndim == 1, (
-        'The edge bonds should be a 1D array!'
-    )
-    # In the first dimension (number of edges) all of the edge related attributes should have
-    # the same length!
-    assert (
-        graph['edge_indices'].shape[0] \
-        == graph['edge_attributes'].shape[0] \
-        == graph['edge_bonds'].shape[0]
-    ), (
-        'The number of edges should be the same for all edge related attributes!'
-    )
+    
+    # We need to check here if there are any edge indices and if there are none we actually 
+    # dont do any further checks on the edge related properties. This is because we need to support 
+    # graph representations without any edges as that is how the come out of the xyz files by 
+    # default (with only the coordinates - the edges first have to be inserted by thresholding the 
+    # inter-atomic distances).
+    if len(graph['edge_indices']) > 0:
+        assert graph['edge_indices'].ndim == 2, (
+            'The edge indices should be a 2D array!'
+        )
+        assert graph['edge_indices'].shape[1] == 2, (
+            'The edge indices should have 2 columns! (edges == node index tuples)'
+        )
+        assert graph['edge_attributes'].ndim == 2, (
+            'The edge attributes should be a 2D array!'
+        )
+        assert graph['edge_bonds'].ndim == 1, (
+            'The edge bonds should be a 1D array!'
+        )
+        # In the first dimension (number of edges) all of the edge related attributes should have
+        # the same length!
+        assert (
+            graph['edge_indices'].shape[0] \
+            == graph['edge_attributes'].shape[0] \
+            == graph['edge_bonds'].shape[0]
+        ), (
+            'The number of edges should be the same for all edge related attributes!'
+        )
 
     # ~ checking the graph properties
     assert graph['graph_labels'].ndim == 1, (
