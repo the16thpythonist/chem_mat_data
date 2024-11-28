@@ -46,6 +46,7 @@ dependencies = [
     "numpy>=1.21.0,<2.0",
     "matplotlib>=3.4.0",
     "rdkit>=2023.0.0",
+    "ase>=3.23.0,<4.0",
     "requests>=2.30.0",
     "cairosvg>=2.7.1",
     "imageio>=2.34.0",

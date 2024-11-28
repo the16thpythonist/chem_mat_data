@@ -34,3 +34,5 @@ MANIFEST
 
 # Custom
 chem_mat_data/scripts/results/*
+site/*
+adrs/*
