@@ -14,6 +14,7 @@ nav:
     - Loading Datasets: api_datasets.md
     - Graph Representation: graph_representation.md
     - Processing New Graphs: processing_graphs.md
+    - Custom Pre-Processing: custom_pre_processing.md
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
