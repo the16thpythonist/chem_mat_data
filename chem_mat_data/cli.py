@@ -493,7 +493,8 @@ class CLI(click.RichGroup):
         """
         self.file_share.fetch_metadata()
         if name not in self.file_share['datasets']:
-            pass
+            click.secho('Dataset not found on the remote file share server!', fg='red')
+            return
         
         dataset_info: dict = self.file_share['datasets'][name]
         rich_info = RichDatasetInfo(name, dataset_info)

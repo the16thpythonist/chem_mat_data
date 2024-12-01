@@ -3,7 +3,7 @@ from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 from chem_mat_data import load_smiles_dataset
 
-DATASET_NAME: str = 'QM9'
+DATASET_NAME: str = 'qm9'
 __TESTING__ = False
 
 experiment = Experiment.extend(

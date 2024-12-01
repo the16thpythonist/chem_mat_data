@@ -1,11 +1,13 @@
 import os
 import csv
+import pytest
 
 import rdkit.Chem as Chem
 from chem_mat_data.processing import MoleculeProcessing
 from chem_mat_data.graph import assert_graph_dict
 from chem_mat_data.data import save_graphs, load_graphs
 from chem_mat_data.data import load_xyz_as_mol
+from chem_mat_data.data import DefaultXyzParser
 
 from .utils import ASSETS_PATH, ARTIFACTS_PATH
 
@@ -87,3 +89,30 @@ def test_load_xyz_as_mol_basically_works():
     assert isinstance(mol, Chem.Mol)
     # For this particular molecule we know that it should have 16 atoms!
     assert mol.GetNumAtoms() == 16
+    
+    
+class TestDefaultXyzParser:
+    
+    def test_parsing_example_file_works(self):
+        """
+        Parsing a standard xyz file should work for the default parser and return a RDKit molecule
+        object as intended with the correct number of atoms.
+        """
+        xyz_path = os.path.join(ASSETS_PATH, '_test.xyz')
+        parser = DefaultXyzParser(xyz_path)
+        mol: Chem.Mol = parser.parse()
+        assert isinstance(mol, Chem.Mol)
+        assert len(mol.GetAtoms()) > 0
+        assert len(mol.GetAtoms()) == 17
+        
+    def test_parsing_qm9_file_doesnt_work(self):
+        """
+        The special format of the QM9 dataset is not supported by the default parser and should 
+        therefore not work.
+        """
+        xyz_path = os.path.join(ASSETS_PATH, 'qm9.xyz')
+        parser = DefaultXyzParser(xyz_path)
+        
+        with pytest.raises(Exception):
+            mol: Chem.Mol = parser.parse()
+        

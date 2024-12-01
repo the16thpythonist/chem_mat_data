@@ -179,6 +179,14 @@ def ensure_dataset(dataset_name: str,
 def load_dataset_metadata(dataset_name: str,
                           config: Config = Config(),
                           ) -> Dict:
+    """
+    Load and return the metadata dict of the dataset with the unique string identifier ``dataset_name``.
+    Uses the metadata information from the default file share configuration in the given ``config`` object.
+    
+    :param dataset_name: The unique string identifier of the dataset.
+    
+    :returns: The metadata dict of the dataset.
+    """
     file_share: AbstractFileShare = get_file_share(config)
     metadata: Dict = file_share.fetch_metadata()
     return metadata['datasets'][dataset_name]
@@ -188,6 +196,7 @@ def load_xyz_dataset(dataset_name: str,
                      folder_path: str = tempfile.gettempdir(),
                      config: Optional[Config] = None,
                      use_cache: bool = True,
+                     # xyz_parser: XYZParser = None,
                      ) -> pd.DataFrame:
     
     # The "ensure_dataset" function is a utility function which will make sure that the dataset

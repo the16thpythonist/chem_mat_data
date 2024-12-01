@@ -2,6 +2,7 @@
 This module implements the saving and loading of the datasets from and to the persistent 
 file storage representations.
 """
+import re
 import ase.io
 import rdkit.Chem as Chem
 import msgpack
@@ -47,6 +48,88 @@ def load_graphs(path: str) -> List[GraphDict]:
     with open(path, mode='rb') as file:
         content: bytes = file.read()
         return msgpack.unpackb(content, ext_hook=ext_hook)
+
+
+# == XYZ FILES ==
+
+class AbstractXyzParser:
+    
+    def __init__(self, path: str, **kwargs):
+        self.path = path
+
+    def parse(self) -> Chem.Mol:
+        raise NotImplementedError()
+    
+    
+class DefaultXyzParser(AbstractXyzParser):
+    """
+    This is the default implementation of the XYZ parser which uses the loading capabilities that are 
+    already present in the ASE library to load the information in the xyz file. This parser should be 
+    sufficient for most use cases.
+    """
+    
+    def __init__(self, path: str, **kwargs):
+        AbstractXyzParser.__init__(self, path)
+    
+    def parse(self) -> Chem.Mol:
+        # first we initialize a read-write molecule which we can then populate with the atoms
+        # loaded from the xyz file
+        mol = Chem.RWMol()
+        
+        # The "read" function will parse the xyz file and return an Atoms object which itself 
+        # is an iterable of Atom objects. We can then iterate over these atoms and add them
+        # to the molecule.
+        atoms: ase.atoms.Atoms = ase.io.read(self.path, format='xyz')
+        for atom in atoms:
+            mol.AddAtom(Chem.Atom(atom.symbol))
+        
+        # We then need to add the positions of the atoms to the molecule's conformer object
+        # which is a container for the 3D coordinates of the atoms.
+        conf = Chem.Conformer(len(atoms))
+        for i, atom in enumerate(atoms):
+            pos = atom.position
+            conf.SetAtomPosition(i, pos)
+            
+        mol.AddConformer(conf)
+        # Finally we need to convert the read-write molecule to a read-only molecule and return
+        mol: Chem.Mol = mol.GetMol()
+        mol.UpdatePropertyCache()
+        
+        return mol
+
+    
+    
+class QM9XyzParser(AbstractXyzParser):
+
+    def __init__(self, path: str, **kwargs):
+        AbstractXyzParser.__init__(self, path)
+        
+    def parse(self) -> Chem.Mol:
+        
+        with open(self.path, mode='r') as file:
+            content = file.read()
+        
+        # ~ header information
+        pattern_header = re.compile(
+            r'^(?P<num_atoms>\d+)\n'
+            r'+(?P<functional>[\w\d]*)\s?'
+            r'(?P<target_values>(?:-?\d+(?:\.\d+)?\s+)+)\n'
+        )
+        
+        match = pattern_header.match(content)
+        
+        num_atoms = int(match.group('num_atoms'))
+        functional = match.group('functional')
+        target_values = match.group('target_values')
+        target_values = [
+            float(value.replace(' ', '')) 
+            for value in target_values.split() 
+            if value != ''
+        ]
+        
+        # ~ atom information
+        
+        
 
 
 def load_xyz_as_mol(file_path: str
