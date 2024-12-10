@@ -66,7 +66,23 @@ class AbstractXyzParser:
         """
         This method should be implemented by the concrete implementations of the XYZ parser. It should
         actually load the content of the xyz file and return the corresponding RDKit molecule object
-        as well as a dictionary with additional information.
+        as well as a dictionary with additional information. 
+        
+        :returns: A tuple (mol, info) where mol is the Chem.Mol object representing the loaded molecule 
+            and info is a dictionary object containing additional information from the xyz file which 
+            cannot be attached to the mol object such as potentially information about target property 
+            annotations.
+        """
+        raise NotImplementedError()
+    
+    @classmethod
+    def get_fields(cls) -> List[str]:
+        """
+        This class method should return a list containing the string key names which will be included in 
+        the additional "info" dicts that are returned by the "parse" method for the particular flavor 
+        of xyz file.
+        
+        :returns: a list of string keys
         """
         raise NotImplementedError()
     
@@ -81,7 +97,11 @@ class DefaultXyzParser(AbstractXyzParser):
     def __init__(self, path: str, **kwargs):
         AbstractXyzParser.__init__(self, path)
     
-    def parse(self) -> Chem.Mol:
+    def parse(self) -> Tuple[Chem.Mol, dict]:
+        # This dict will store the additional information about the molecule, which in the default case
+        # there are None.
+        info: dict = {}
+        
         # first we initialize a read-write molecule which we can then populate with the atoms
         # loaded from the xyz file
         mol = Chem.RWMol()
@@ -105,24 +125,37 @@ class DefaultXyzParser(AbstractXyzParser):
         mol: Chem.Mol = mol.GetMol()
         mol.UpdatePropertyCache()
         
-        return mol
+        return mol, info
 
-    
+    @classmethod
+    def get_fields(cls) -> List[str]:
+        """
+        Since the default xyz file format does not contain any additional info besides the atom positions,
+        there are no additional keys in the "info" dicts and this method returns an empty list.
+        
+        :returns: empty list
+        """
+        return []
+
     
 class QM9XyzParser(AbstractXyzParser):
 
     def __init__(self, path: str, **kwargs):
         AbstractXyzParser.__init__(self, path)
         
-    def parse(self) -> Chem.Mol:
+    def parse(self) -> Tuple[Chem.Mol, dict]:
+        
+        # This dict will serve to hold all of the additional information that is loaded 
+        # from the file which cannot be directly attached to the mol object.
+        info: dict = {}
         
         with open(self.path, mode='r') as file:
             content = file.read()
         
         # ~ header information
         pattern_header = re.compile(
-            r'^(?P<num_atoms>\d+)\n'
-            r'+(?P<functional>[\w\d]*)\s?'
+            r'^(?P<num_atoms>\d+)\s?\n'
+            r'(?P<functional>[\w\d]*)\s?'
             r'(?P<target_values>(?:-?\d+(?:\.\d+)?\s+)+)\n'
         )
         
@@ -136,13 +169,15 @@ class QM9XyzParser(AbstractXyzParser):
             for value in target_values.split() 
             if value != ''
         ]
+        info['functional'] = functional
+        info['targets'] = target_values
         
         # ~ atom information
         pattern_atoms = re.compile(
-            r'^(?P<symbol>\w)\s+'
-            r'(?P<x>-?[\d\.]*)\s+'
-            r'(?P<y>-?[\d\.]*)\s+'
-            r'(?P<z>-?[\d\.]*)\s+'
+            r'\n(?P<symbol>\w)[\s\t]+'
+            r'(?P<x>-?[\d\.]*)[\s\t]+'
+            r'(?P<y>-?[\d\.]*)[\s\t]+'
+            r'(?P<z>-?[\d\.]*)[\s\t]+'
             r'(?P<charge>-?[\d\.]*)'
         )
         
@@ -164,12 +199,37 @@ class QM9XyzParser(AbstractXyzParser):
         mol.AddConformer(conf)
         mol.UpdatePropertyCache()
         
-        return mol
+        # ~ smiles information
+        pattern_smiles = re.compile(
+            r'\n(?P<smiles1>[-\#\.\+\w\d\\(\)[\]\@\=]*)[\s\t]+'
+            r'(?P<smiles2>[-\#\.\+\w\d\\(\)[\]\@\=]*)[\s\t]+\n'
+        )
+        match = re.search(pattern_smiles, content)
+        smiles1 = match.group('smiles1')
+        smiles2 = match.group('smiles2')
+        info['smiles1'] = smiles1
+        info['smiles2'] = smiles2
         
+        return mol, info
+    
+    @classmethod
+    def get_fields(cls):
+        """
+        Returns the list of string keys which are included in the additional "info" dict that is 
+        returned by the "parse" method.
+        
+        For the QM9 flavor of xyz files, this includes the following keys:
+        - targets: A list of float values representing the 12 target values that have been calculated for 
+          each molecule element using the QM calculations.
+        - functional: The string name of the functional that was used for the calculations.
+        - smiles1: The smiles string that represents the molecule that is described by the xyz file.
+        """
+        return ['targets', 'functional', 'smiles1', 'smiles2']
 
 
-def load_xyz_as_mol(file_path: str
-                    ) -> Chem.Mol:
+def load_xyz_as_mol(file_path: str,
+                    parser_cls: type = DefaultXyzParser,
+                    ) -> Tuple[Chem.Mol, dict]:
     """
     Given the absolute string ``file_path`` to a .xyz file, this function will load the corresponding 
     molecule/atom constallation into an RDKit molecule object and return it. This means that all the atom 
@@ -179,28 +239,11 @@ def load_xyz_as_mol(file_path: str
     
     :returns: The RDKit Mol object that represents the molecule from the xyz file.
     """
-    # first we initialize a read-write molecule which we can then populate with the atoms
-    # loaded from the xyz file
-    mol = Chem.RWMol()
+    # We will use the dynamically injected parser class to construct a new parser instance which we can 
+    # then use to actually parse the molecule information from the file. Since all the parsers have to 
+    # implement the AbstractXyzParser interface, we know that the first argument of the constructor is 
+    # the file path to be parsed.
+    parser = parser_cls(path=file_path)
+    mol, info = parser.parse()
     
-    # The "read" function will parse the xyz file and return an Atoms object which itself 
-    # is an iterable of Atom objects. We can then iterate over these atoms and add them
-    # to the molecule.
-    atoms: ase.atoms.Atoms = ase.io.read(file_path, format='xyz')
-    for atom in atoms:
-        mol.AddAtom(Chem.Atom(atom.symbol))
-    
-    # We then need to add the positions of the atoms to the molecule's conformer object
-    # which is a container for the 3D coordinates of the atoms.
-    conf = Chem.Conformer(len(atoms))
-    for i, atom in enumerate(atoms):
-        pos = atom.position
-        conf.SetAtomPosition(i, pos)
-        
-    mol.AddConformer(conf)
-    # Finally we need to convert the read-write molecule to a read-only molecule and return
-    mol: Chem.Mol = mol.GetMol()
-    mol.UpdatePropertyCache()
-    
-    return mol
-    
+    return mol, info

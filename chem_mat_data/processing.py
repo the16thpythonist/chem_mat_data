@@ -867,7 +867,7 @@ class MoleculeProcessing():
         return value
 
     def process(self,
-                value: str,
+                value: Union[str, Chem.Mol],
                 double_edges_undirected: bool = False,
                 use_node_coordinates: bool = False,
                 graph_labels: list = [],

@@ -30,9 +30,11 @@ import gzip
 import shutil
 import datetime
 import multiprocessing
+from typing import Union
 
 import msgpack
 import numpy as np
+import rdkit.Chem as Chem
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -41,6 +43,7 @@ from chem_mat_data.processing import MoleculeProcessing
 from chem_mat_data.data import default, ext_hook
 from chem_mat_data.data import save_graphs
 from chem_mat_data.utils import SCRIPTS_PATH
+import yaml
 
 # == SOURCE PARAMETERS ==
 # These global parameters can be used to configure the source files from which the 
@@ -71,6 +74,12 @@ DATASET_TYPE: str = 'regression'
 #       This is a string description of the dataset that will be stored in the experiment
 #       metadata.
 DESCRIPTION: str = 'the description of the dataset'
+# :param METADATA:
+#       A dictionary which will be used as the basis for the metadata that will be added 
+#       as additional information to the file share server.
+METADATA: dict = {
+    'tags': ['Molecules']
+}
 
 # == PROCESSING PARAMETERS ==
 # These parameters can be used to configure the processing functionality of the script 
@@ -155,9 +164,18 @@ class ProcessingWorker(multiprocessing.Process):
         for data in iter(self.input_queue.get, None):
             
             try:
-                smiles = data['smiles']
+                # 10.12.24 - If we want to support the processing of xyz file based datasets as well we need 
+                # to not only support the conversion based on a smiles string representation but also the 
+                # direct conversion based from a Mol object directly. The processing.process method supports 
+                # this inherently to use either - we only have to check here what we are actually getting.
+                value: Union[Chem.Mol, str]
+                if 'mol' in data:
+                    value = data['mol']
+                else:
+                    value = data['smiles']
+                
                 graph: typc.GraphDict = self.processing.process(
-                    smiles, 
+                    value=value, 
                     use_node_coordinates=experiment.USE_COORDINATES,
                 )
                 
@@ -169,7 +187,7 @@ class ProcessingWorker(multiprocessing.Process):
                 )
                 
             except Exception as exc:
-                print(f' ! error processing {smiles} - {exc}')
+                print(f' ! error processing {value} - {exc.__class__.__name__}: {exc}')
                 graph = None
             
             graph_encoded = msgpack.packb(graph, default=default)            
@@ -371,5 +389,42 @@ def experiment(e: Experiment):
         compressed_size = os.path.getsize(compressed_path)
         compressed_size_mb = compressed_size / (1024 * 1024)
         e.log(f'compressed file with {compressed_size_mb:.1f} MB')
+        
+    # ~ saving metadata
+    # Alongside the actual dataset information, we also save metadata about the dataset which will later 
+    # on be available to be fetched from the remote file share server and includes information such as 
+    # a short description about the dataset, some relevant tags but also automatically determined information 
+    # such as the number of elements in the dataset and the number of 
+    e.log('saving metadata...')
+        
+    # first of all we need to construct the actual metadata dict.
+    example_graph = graphs[0]
+    metadata: dict = {
+        'compounds': len(graphs),
+        'targets': len(example_graph['graph_labels']),
+        'target_type': [e.DATASET_TYPE],
+        'raw': ['csv'],
+        'sources': [],
+    }
+    
+    # We also want to apply the user-defined overwrites to the metadata dict.
+    metadata.update(e.METADATA)
+    
+    # Finally we save the metadata in yml format to the experiment archive folder.
+    metadata_path = os.path.join(e.path, 'metadata.yml')
+    with open(metadata_path, 'w') as metadata_file:
+        yaml.dump(metadata, metadata_file)
+        
+    e.log(f'saved metadata @ {metadata_path}')
+        
+    # :hook after_save:
+    #       Action hook that is called after the graph dataset itself has been saved to the disk inside 
+    #       the experiment archive folder. Receives the dataset in the form of the index_data_map and the 
+    #       list of graphs as parameters.
+    e.apply_hook(
+        'after_save',
+        index_data_map=dataset,
+        graphs=graphs,
+    )
 
 experiment.run_if_main()

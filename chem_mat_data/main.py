@@ -4,6 +4,7 @@ import shutil
 import zipfile
 import tempfile
 from typing import Dict, Optional
+from collections import defaultdict
 
 import pandas as pd
 
@@ -13,6 +14,8 @@ from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.web import construct_file_share
 from chem_mat_data.data import load_graphs
 from chem_mat_data.data import load_xyz_as_mol
+from chem_mat_data.data import DefaultXyzParser
+from chem_mat_data.data import QM9XyzParser
 from chem_mat_data._typing import GraphDict
 from typing import Union
 from typing import List
@@ -71,7 +74,11 @@ def ensure_dataset(dataset_name: str,
     
     :returns: The absolute string path to the dataset file.
     """
-    file_name = f'{dataset_name}.{extension}'
+    if dataset_name.endswith(f'.{extension}'):
+        file_name = dataset_name
+    else:
+        file_name = f'{dataset_name}.{extension}'
+    
     path = os.path.join(folder_path, file_name)
     
     # The easiest case is if the file already exists. In that case we can simply return the path
@@ -196,9 +203,29 @@ def load_xyz_dataset(dataset_name: str,
                      folder_path: str = tempfile.gettempdir(),
                      config: Optional[Config] = None,
                      use_cache: bool = True,
-                     # xyz_parser: XYZParser = None,
+                     parser_cls: type = DefaultXyzParser,
                      ) -> pd.DataFrame:
+    """
+    Given the string ``dataset_name`` of an existing dataset in the format of an "xyz_bundle", this method 
+    will load that dataset either from the remote file share server or from the local file cache. A xyz_bundle 
+    dataset is a dataset that also includes information about the atom positions in this case in the form of 
+    .xyz files.
     
+    :param dataset_name: THe
+    :param folder_path: The absolute path of where the dataset should be downloaded to. Default is the 
+        system's temp folder.
+    :param config: Optional overwrite for the Config instance to be used to retrieve the information about 
+        the remote file share server for example.
+    :param use_cache: Boolean flag of whether or not to use the local file system cache or force a 
+        re-download.
+    :param parser_cls: The XzyParser class to be used to load the xyz files of the dataset. There exist 
+        different parser implementations for different flavors of xyz file formats.
+        
+    :returns: A pandas dataframe which contains the two columns "id" and "mol". The id column is a unique 
+        string ID for the element and the "mol" column contains a Chem.Mol object that represents the molecule 
+        element - including the atom positions in the form of a Conformer. Depending on the dataset, the 
+        dataframe may contain additional columns.
+    """
     # The "ensure_dataset" function is a utility function which will make sure that the dataset
     # in question just generally exists. To do this, the function first checks if the dataset
     # file already eixsts in the given folder. If that is not the case it will attempt to download
@@ -214,25 +241,54 @@ def load_xyz_dataset(dataset_name: str,
         use_cache=use_cache,
     )    
     
-    # This folder now consists of two important contents:
-    # - A "meta.csv" file which contains the metadata of the dataset in tabular format. This includes 
-    #   most importantly the numeric ID of all the elements and the associated target value annotations.
+    # This folder now consists of the following contents:
     # - Multiple .xyz files with the format "{id}.xyz" which contain the actual positional information 
     #   of the atoms in the molecules.
+    # - (OPTIONAL) A "meta.csv" file which contains the metadata of the dataset in tabular format. This includes 
+    #   most importantly the numeric ID of all the elements and the associated target value annotations.
     
-    # We first load the metadata file which contains the target value annotations.
+    # We first check if a metadata csv file exists in the folder and if it does we load the metadata contents as 
+    # "id_data_map" which is a dict whose keys are the unique string keys of the elements and the values are the 
+    # dict elements.
+    # TODO: We can more robustly search for a CSV file here...
     meta_path = os.path.join(folder_path, 'meta.csv')
-    df = pd.read_csv(meta_path)
+    id_data_map: Dict[str, dict] = defaultdict(dict)
+    if os.path.exists(meta_path):
+        data_list: List[dict] = pd.read_csv(meta_path).to_dict(orient='records')
+        for data in data_list:
+            element_id = data['id']
+            id_data_map[element_id] = data
     
-    # Add an additional column "mol" to the DataFrame which is currently empty but will later be 
-    # populated with the rdkit Mol objects that are loaded from the xyz files.
-    df['mol'] = None
+    # Iterate over the xyz files in the folder and add each one as an entry in the dataframe
+    for xyz_file in os.listdir(folder_path):
+        if xyz_file.endswith('.xyz'):
+            xyz_path = os.path.join(folder_path, xyz_file)
+            element_id = os.path.splitext(xyz_file)[0]
+            # If possible, we convert the ID into an integer otherwise we leave it as a string
+            try:
+                element_id = int(element_id)
+            except ValueError:
+                pass
+            
+            try:
+                mol, info = load_xyz_as_mol(xyz_path, parser_cls=parser_cls)
+                data = {
+                    'id': element_id, 
+                    'mol': mol,
+                    # We'll also add all of the information that is included in the additional info dict
+                    # for each of the elements as separate columns of the data frame.
+                    **info
+                }
+                id_data_map[element_id].update(data)
+            except:
+                print("hello")
     
-    # Iterate over the rows of the DataFrame and load the corresponding xyz files
-    for index, row in df.iterrows():
-        xyz_file_path = os.path.join(folder_path, f"{row['id']}.xyz")
-        mol = load_xyz_as_mol(xyz_file_path)
-        df.at[index, 'mol'] = mol
+    # Finally, in the end we create a data frame object from the list of data dicts that 
+    # we've assembled from the metadata csv and the parsing of the xyz files.
+    df = pd.DataFrame([{
+        'id': element_id,
+        **id_data_map[element_id]
+    } for element_id, data in id_data_map.items()])
     
     return df
 

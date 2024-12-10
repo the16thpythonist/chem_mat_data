@@ -8,6 +8,7 @@ from chem_mat_data.graph import assert_graph_dict
 from chem_mat_data.data import save_graphs, load_graphs
 from chem_mat_data.data import load_xyz_as_mol
 from chem_mat_data.data import DefaultXyzParser
+from chem_mat_data.data import QM9XyzParser
 
 from .utils import ASSETS_PATH, ARTIFACTS_PATH
 
@@ -116,3 +117,23 @@ class TestDefaultXyzParser:
         with pytest.raises(Exception):
             mol: Chem.Mol = parser.parse()
         
+        
+class TestQM9XYZParser():
+    
+    def test_parsing_qm9_file_basically_works(self):
+        """
+        Loading a xyz file with the special qm9 flavor should work and retrieve all the important 
+        information.
+        """
+        xyz_path = os.path.join(ASSETS_PATH, 'qm9.xyz')
+        parser = QM9XyzParser(xyz_path)
+        
+        mol, info = parser.parse()
+        assert isinstance(mol, Chem.Mol)
+        assert isinstance(info, dict)
+        assert len(info) != 0
+        
+        assert 'labels' in info
+        assert 'functional' in info
+        assert 'smiles1' in info
+        assert 'smiles2' in info
