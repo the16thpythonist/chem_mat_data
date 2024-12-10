@@ -8,7 +8,7 @@ import rdkit.Chem as Chem
 import msgpack
 import numpy as np
 
-from typing import List
+from typing import List, Tuple
 from chem_mat_data._typing import GraphDict
 
 
@@ -53,11 +53,21 @@ def load_graphs(path: str) -> List[GraphDict]:
 # == XYZ FILES ==
 
 class AbstractXyzParser:
-    
+    """
+    Abstract base class for xyz file parsers. This class defines the interface that all different 
+    implementations of xyz file parsers should adhere to. The main method that needs to be implemented 
+    is the ``parse`` method which should return a tuple of a RDKit molecule object and a dictionary 
+    with additional information (including the target values).
+    """
     def __init__(self, path: str, **kwargs):
         self.path = path
 
-    def parse(self) -> Chem.Mol:
+    def parse(self) -> Tuple[Chem.Mol, dict]:
+        """
+        This method should be implemented by the concrete implementations of the XYZ parser. It should
+        actually load the content of the xyz file and return the corresponding RDKit molecule object
+        as well as a dictionary with additional information.
+        """
         raise NotImplementedError()
     
     
@@ -128,7 +138,33 @@ class QM9XyzParser(AbstractXyzParser):
         ]
         
         # ~ atom information
+        pattern_atoms = re.compile(
+            r'^(?P<symbol>\w)\s+'
+            r'(?P<x>-?[\d\.]*)\s+'
+            r'(?P<y>-?[\d\.]*)\s+'
+            r'(?P<z>-?[\d\.]*)\s+'
+            r'(?P<charge>-?[\d\.]*)'
+        )
         
+        matches = pattern_atoms.finditer(content)
+        
+        mol = Chem.RWMol()
+        conf = Chem.Conformer(num_atoms)
+        
+        for i, match in enumerate(matches):
+            symbol = match.group('symbol')
+            x = float(match.group('x'))
+            y = float(match.group('y'))
+            z = float(match.group('z'))
+            
+            atom = Chem.Atom(symbol)
+            mol.AddAtom(atom)
+            conf.SetAtomPosition(i, (x, y, z))
+        
+        mol.AddConformer(conf)
+        mol.UpdatePropertyCache()
+        
+        return mol
         
 
 
