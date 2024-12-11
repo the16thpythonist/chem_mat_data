@@ -203,7 +203,7 @@ def load_xyz_dataset(dataset_name: str,
                      folder_path: str = tempfile.gettempdir(),
                      config: Optional[Config] = None,
                      use_cache: bool = True,
-                     parser_cls: type = DefaultXyzParser,
+                     parser_cls: Union[type, str] = 'default',
                      ) -> pd.DataFrame:
     """
     Given the string ``dataset_name`` of an existing dataset in the format of an "xyz_bundle", this method 
@@ -357,6 +357,9 @@ def load_graph_dataset(dataset_name: str,
     
     # Then we simply have to load the graphs from that file and return them
     graphs = load_graphs(file_path)
+    
+    
+    
     return graphs
 
 

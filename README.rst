@@ -38,7 +38,7 @@ Features:
 - 🤖 Direct support of popular graph deep learning libraries like [Torch/PyG](https://pytorch-geometric.readthedocs.io/en/latest/) and [Jax/Jraph](https://jraph.readthedocs.io/en/latest/)
 - 🤝 Large python version compatibility
 - ⌨️ Comprehensive command line interface (CLI)
-- 📖 Documentation: https://the16thpythonist.github.io/the16thpythonist 
+- 📖 Documentation: https://the16thpythonist.github.io/chem_mat_data 
 
 Getting ready to train a PyTorch Geometric model can be as easy as this:
 

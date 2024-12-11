@@ -5,6 +5,7 @@ import numpy as np
 
 import chem_mat_data._typing as tc
 from typing import Dict, List
+from scipy.spatial.distance import pdist, squareform
 
 
 # == UTILITY ==
@@ -73,6 +74,36 @@ def is_graph_connected(graph: tc.GraphDict) -> None:
     _visitation_dfs(0, adjacency_list, visited)
     
     return (visited > 0).all()
+
+
+def graph_threshold_edges(graph: tc.GraphDict, 
+                          threshold: float,
+                          ) -> tc.GraphDict:
+    """
+    Given a ``graph`` dict representation and a distance ``threshold`` this function will calculate all the 
+    pairwise distances between the nodes of the graph and then create new edges by inserting new edges for all 
+    nodes whose distance is smaller or equal to the given threshold. The function will also replace the previous 
+    edge_attributes of the 
+    """
+    assert 'node_coordinates' in graph, (
+        'graph must contain "node_coordinates" property to calculate distance-based edges. '
+    )
+    
+    node_indices: np.ndarray = graph['node_indices']
+    node_coordinates: np.ndarray = graph['node_coordinates']
+    # Calculate pairwise distances between all nodes
+    distances = squareform(pdist(node_coordinates))
+
+    # Create new edge list based on the threshold
+    new_edge_indices = []
+    for i in range(len(node_indices)):
+        for j in range(i + 1, len(node_indices)):
+            if distances[i, j] <= threshold:
+                new_edge_indices.append([i, j])
+
+    graph['edge_indices'] = np.array(new_edge_indices, dtye=np.int32)
+    graph['edge_attributes'] = np.ones((len(new_edge_indices), 1), dtype=np.float32)
+    return graph
 
 # == ASSERTIONS ==
 

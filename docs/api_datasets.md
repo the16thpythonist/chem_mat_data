@@ -33,6 +33,31 @@ df: pd.DataFrame = load_smiles_dataset('clintox')
 print(df.head())
 ```
 
+### XYZ Datasets
+
+Alternative to SMILES representations, some datasets are stored in the form of [.XYZ files](https://en.wikipedia.org/wiki/XYZ_file_format). 
+The main difference of an XYZ dataset w.r.t. to a SMILES dataset is that the SMILES dataset contains the *graph structure* in the form of the bond 
+information and the XYZ dataset contains additional geometry information in the form of atom coordinates.
+
+A raw XYZ dataset can be loaded using the ``load_xyz_dataset`` function. This function will return a 
+``pandas.DataFrame`` object that most importantly contains the "mol" column as well as various other columns that 
+contain the target property annotations or other additional values.
+
+```python
+import pandas as pd
+from chem_mat_data import load_xyz_dataset
+
+df: pd.DataFrame = load_xyz_dataset('qm9', parser_cls='qm9')
+print(df.head())
+```
+
+!!! info "Different XYZ File Formats"
+
+    There exist slightly different format specifications for .xyz files which vary in how the include which information. The 
+    ``parser_cls`` parameter of the ``load_xyz_dataset`` function can be used to specify a distinct parser to be used to load 
+    the dataset in question. To find out which parser to use, one can use the ``cmdata info`` command for the dataset in 
+    question.
+
 ## Loading Processed Datasets
 
 The processed/graph format of a dataset can be loaded with the ``load_graph_dataset`` function. This function 

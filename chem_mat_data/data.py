@@ -8,7 +8,7 @@ import rdkit.Chem as Chem
 import msgpack
 import numpy as np
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from chem_mat_data._typing import GraphDict
 
 
@@ -139,12 +139,23 @@ class DefaultXyzParser(AbstractXyzParser):
 
     
 class QM9XyzParser(AbstractXyzParser):
-
+    """
+    This is the specific parser class for the QM9 flavor of xyz files. Unlike the standard format, the QM9 XYZ files 
+    contain additional information about the target values that have been calculated as well as the SMILES strings of 
+    the corresponding molecules.
+    """
     def __init__(self, path: str, **kwargs):
         AbstractXyzParser.__init__(self, path)
         
     def parse(self) -> Tuple[Chem.Mol, dict]:
+        """
+        This method will parse the content of the xyz file and return the corresponding RDKit molecule object as well
+        as a dictionary with additional information about the molecule.
         
+        :returns: A tuple (mol, info) where mol is the Chem.Mol object representing the loaded molecule and info is a
+            dictionary object containing additional information from the xyz file which cannot be attached to the mol 
+            object such as potentially information about target property annotations.
+        """
         # This dict will serve to hold all of the additional information that is loaded 
         # from the file which cannot be directly attached to the mol object.
         info: dict = {}
@@ -227,8 +238,16 @@ class QM9XyzParser(AbstractXyzParser):
         return ['targets', 'functional', 'smiles1', 'smiles2']
 
 
+# This dictionary maps the string keys to the corresponding parser classes. This way we can dynamically
+# select the correct parser class based on the string key that is provided by the user.
+XYZ_PARSER_MAP = {
+    'default': DefaultXyzParser,
+    'qm9': QM9XyzParser,
+}
+
+
 def load_xyz_as_mol(file_path: str,
-                    parser_cls: type = DefaultXyzParser,
+                    parser_cls: Union[str, type] = 'default',
                     ) -> Tuple[Chem.Mol, dict]:
     """
     Given the absolute string ``file_path`` to a .xyz file, this function will load the corresponding 
@@ -239,6 +258,13 @@ def load_xyz_as_mol(file_path: str,
     
     :returns: The RDKit Mol object that represents the molecule from the xyz file.
     """
+    if isinstance(parser_cls, str): 
+        try:
+            parser_cls = XYZ_PARSER_MAP[parser_cls]
+        except KeyError:
+            raise KeyError(f'The given string "{parser_cls}" is not a valid identifier for an xyz parser class. '
+                           f'Has to be one of the following: {", ".join(XYZ_PARSER_MAP.keys())}')
+    
     # We will use the dynamically injected parser class to construct a new parser instance which we can 
     # then use to actually parse the molecule information from the file. Since all the parsers have to 
     # implement the AbstractXyzParser interface, we know that the first argument of the constructor is 
