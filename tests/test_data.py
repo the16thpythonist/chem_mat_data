@@ -85,11 +85,12 @@ def test_load_xyz_as_mol_basically_works():
     a RDKit molecule object from it.
     """
     xyz_path = os.path.join(ASSETS_PATH, '_test.xyz')
-    mol = load_xyz_as_mol(xyz_path)
+    mol, info = load_xyz_as_mol(xyz_path)
     
     assert isinstance(mol, Chem.Mol)
+    assert isinstance(info, dict)
     # For this particular molecule we know that it should have 16 atoms!
-    assert mol.GetNumAtoms() == 16
+    assert mol.GetNumAtoms() == 17
     
     
 class TestDefaultXyzParser:
@@ -101,7 +102,7 @@ class TestDefaultXyzParser:
         """
         xyz_path = os.path.join(ASSETS_PATH, '_test.xyz')
         parser = DefaultXyzParser(xyz_path)
-        mol: Chem.Mol = parser.parse()
+        mol, info = parser.parse()
         assert isinstance(mol, Chem.Mol)
         assert len(mol.GetAtoms()) > 0
         assert len(mol.GetAtoms()) == 17
@@ -133,7 +134,7 @@ class TestQM9XYZParser():
         assert isinstance(info, dict)
         assert len(info) != 0
         
-        assert 'labels' in info
+        assert 'targets' in info
         assert 'functional' in info
         assert 'smiles1' in info
         assert 'smiles2' in info

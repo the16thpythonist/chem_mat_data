@@ -132,7 +132,10 @@ class TestMoleculeProcessing:
         bonds/edges.
         """
         xyz_path = os.path.join(ASSETS_PATH, '_test.xyz')
-        mol = load_xyz_as_mol(xyz_path)
+        mol, info = load_xyz_as_mol(xyz_path)
+        print(mol, mol.GetNumAtoms())
+        assert isinstance(mol, Chem.Mol)
+        assert isinstance(info, dict)
         
         processing = MoleculeProcessing()
         graph = processing.process(mol)

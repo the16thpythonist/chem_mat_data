@@ -13,9 +13,6 @@
 .. |pypi| image:: https://img.shields.io/pypi/v/chem_mat_data.svg
    :target: https://pypi.org/project/ruff/
 
-.. |license| image:: https://img.shields.io/github/license/astral-sh/chem_mat_data
-   :target:
-
 =================
 ⚗️ ChemMatData
 =================
@@ -65,7 +62,7 @@ Install the latest stable release using ``pip`` from the Python Package Index (P
 
 .. code-block:: console
 
-    pip install chem_mat_data
+    pip install chem_mat_database
 
 Or install the latest development versin directly from the GitHub repository:
 

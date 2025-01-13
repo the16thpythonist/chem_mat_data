@@ -5,8 +5,8 @@ build-backend = "hatchling.build"
 [project]
 # Project Metadata
 # ================
-name = "chem_mat_data"
-version = "0.1.1"
+name = "chem_mat_database"
+version = "1.0.0"
 description = "Command Line Interface for projects"
 readme = "README.rst"
 authors = [
@@ -76,11 +76,14 @@ cmdata = "chem_mat_data.cli:cli"
 [tool.hatch.build]
 skip-excluded-dirs=true
 
+[tool.hatch.build.targets.wheel]
+packages = ["chem_mat_data"]
+
 # Version Bumping
 # ===============
 
 [tool.bumpversion]
-current_version = "0.1.1"
+current_version = "1.0.0"
 parse = "(?<![=<>])(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"

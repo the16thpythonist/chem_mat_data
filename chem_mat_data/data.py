@@ -256,7 +256,8 @@ def load_xyz_as_mol(file_path: str,
     
     :param file_path: The absolute path to the .xyz file that should be loaded.
     
-    :returns: The RDKit Mol object that represents the molecule from the xyz file.
+    :returns: A tuple (mol, info) where the first element is the RDKit Mol object that represents 
+        the molecule from the xyz file and the second value is the additional info dict.
     """
     if isinstance(parser_cls, str): 
         try:

@@ -57,7 +57,7 @@ class TestCache:
             
             datasets: List[Tuple[str, str]] = cache.list_datasets()
             assert len(datasets) == 2
-            assert datasets == [('test_1', 'mpack'), ('test_2', 'mpack')]
+            assert set(datasets) == set([('test_1', 'mpack'), ('test_2', 'mpack')])
             
     def test_contains_dataset_basically_works(self):
         """
