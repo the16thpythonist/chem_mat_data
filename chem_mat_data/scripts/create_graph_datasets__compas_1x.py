@@ -20,14 +20,16 @@ DATASET_NAME: str = 'compas_1x'
 #       as additional information to the file share server.
 METADATA: dict = {
     'description': (
-        'The COMPAS-1 dataset is part of the largest freely available collection of geometries and properties of cata-condensed '
-        'poly(hetero)cyclic aromatic molecules. It includes quantum chemical properties of 1,000 molecules calculated at the '
-        'GFN1-xTB level, representative of a highly diverse chemical space.'
+        'The COMPAS Project provides a computational database of polycyclic aromatic systems, '
+        'including optimized ground-state structures and molecular properties of approximately '
+        '34k and 9k cata-condensed polybenzenoid hydrocarbons. This dataset supports the investigation '
+        'of structure-property relationships and the design of novel functional compounds, with data '
+        'generated at the GFN2-xTB and B3LYP-D3BJ/def2-SVP levels.'
     ),
     'target_type': ['Regression'],
     'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties'],
     'sources': [
-        'https://chemrxiv.org/engage/chemrxiv/article-details/64bf8dd7b053dad33ad856cf',
+        'https://pubs.acs.org/doi/full/10.1021/acs.jcim.2c00503',
         'https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-1?ref_type=heads',
     ],
     'target_descriptions': {
