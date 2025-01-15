@@ -1,6 +1,9 @@
 import io
+import os
 import requests
 import pandas as pd
+import gzip
+import shutil
 
 from rich.pretty import pprint
 from rdkit import Chem
@@ -33,15 +36,15 @@ METADATA: dict = {
         'https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-1?ref_type=heads',
     ],
     'target_descriptions': {
-        0: 'HOMO_eV_corrected - The corrected energy of the Highest Occupied Molecular Orbital (HOMO) in electron volts (eV).',
-        1: 'LUMO_eV_corrected - The corrected energy of the Lowest Unoccupied Molecular Orbital (LUMO) in electron volts (eV).',
-        2: 'GAP_eV_corrected - The corrected energy gap between the HOMO and LUMO in electron volts (eV).',
-        3: 'aIP_eV_corrected - The corrected adiabatic ionization potential in electron volts (eV).',
-        4: 'aEA_eV_corrected - The corrected adiabatic electron affinity in electron volts (eV).',
-        5: 'Erel_eV_corrected - The corrected relative energy in electron volts (eV).',
-        6: 'Dipmom_Debye - The dipole moment of the molecule in Debye units.',
-        7: 'NFOD - The number of free valence electrons in the molecule.',
-        8: 'n_rings - The number of ring structures within the molecule.',
+        0: 'HOMO_eV - energy of the highest molecular orbit (HOMO) in electron volt (eV)',
+        1: 'LUMO_eV - energy of the lowest unoccupied molecular orbit (LUMO) in electron volt (eV)',
+        2: 'GAP_eV - energy gap between HOMO and LUMO in electron volt (eV)',
+        3: 'Dipmom_Debye - dipole moment in Debye',
+        4: 'Etot_eV - total energy of the molecule in electron volt (eV)',
+        5: 'aEA_eV - adiabatic electron affinity in electron volt (eV)',
+        6: 'aIP_eV - adiabatic ionization potential in electron volt (eV)',
+        7: 'NFOD - fractional occupation density',
+        8: 'n_rings - number of rings in the molecule',
     }
 }
 
@@ -68,21 +71,24 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
     
     e.log('downloading raw csv file...')
     raw_url = 'https://gitlab.com/porannegroup/compas/-/raw/main/COMPAS-1/compas-1x.csv?ref_type=heads&inline=false'
-    response = requests.get(raw_url)
-    df = pd.read_csv(io.StringIO(response.text))
+    response = requests.get(raw_url, verify=False)
+    csv_file = io.StringIO(response.text)
+    df = pd.read_csv(csv_file)
     
     print(df.head())
     
-    #df = load_smiles_dataset('qm9_smiles')
+    compressed_path = os.path.join(e.path, f'{e.DATASET_NAME}.csv.gz')
+    with gzip.open(compressed_path, mode='wb') as compressed_file:
+        shutil.copyfileobj(csv_file, compressed_file)
 
     columns = [
-        'HOMO_eV_corrected',
-        'LUMO_eV_corrected',
-        'GAP_eV_corrected',
-        'aIP_eV_corrected',
-        'aEA_eV_corrected',
-        'Erel_eV_corrected',
+        'HOMO_eV',
+        'LUMO_eV',
+        'GAP_eV',
         'Dipmom_Debye',
+        'Etot_eV',
+        'aEA_eV',
+        'aIP_eV',
         'NFOD',
         'n_rings',
     ]

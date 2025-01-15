@@ -6,8 +6,10 @@ import typing as t
 from typing import Optional, Dict
 
 import io
+import requests.adapters
 import yaml
 import requests
+from rich.pretty import pprint
 from requests.auth import HTTPBasicAuth
 from rich.progress import Progress
 from typing import Union
@@ -100,12 +102,21 @@ class NextcloudFileShare(AbstractFileShare):
     """
     This specific subblass implements the usage of a Nextcloud server as a file share solution to 
     download the remote datasets from.
+    
+    :param url: The publically shared url from which the datasets can be downloaded.
+    :param dav_url: The url to the nextcloud server DAV endpoint of the specific folder that contains 
+        the shared datasets.
+    :param dav_username: The username that is used to authenticate against the DAV endpoint of the
+        nextcloud server.
+    :param dav_password: The password that is used to authenticate against the DAV endpoint of the
+        nextcloud server.
     """
     def __init__(self, 
                  url: str,
                  dav_url: Optional[str] = None,
                  dav_username: Optional[str] = None,
                  dav_password: Optional[str] = None,
+                 verify: bool = False,
                  **kwargs,
                  ) -> None:
         
@@ -114,6 +125,7 @@ class NextcloudFileShare(AbstractFileShare):
         self.dav_url = dav_url
         self.dav_username = dav_username
         self.dav_password = dav_password
+        self.verify = verify
 
         # This is the name of the file on the file share server which contains the metadata. This 
         # is a human-readable yml file which not only contains the information about the file share 
@@ -255,7 +267,18 @@ class NextcloudFileShare(AbstractFileShare):
             returns None.
         """
         file_url = self.url + file_name
-        response = requests.get(file_url, stream=True)
+        
+        # Create a session with no connection pooling
+        session = requests.Session()
+        session.keep_alive = False
+        
+        response = session.get(
+            file_url, 
+            stream=True, 
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0', 'Connection': 'close'},
+            verify=self.verify,
+            timeout=1.5,
+        )
         
         # Only when we get the correct status code, we can assume that the download was 
         # succesfull and we can proceed with the download.
@@ -292,7 +315,7 @@ class NextcloudFileShare(AbstractFileShare):
                         file.write(chunk)
                         progress.update(task, advance=bytes_written)
                         bytes_written += len(chunk)
-            
+                
                 # If there is no file path given, we return the content of the file as a bytes 
                 # object.
                 if folder_path is None:
@@ -308,21 +331,36 @@ class NextcloudFileShare(AbstractFileShare):
                file_name: str,
                file_path: str,
                ) -> None:
+        """
+        Given the ``file_name`` that a file should have on the server and the ``file_path`` to the 
+        local version of the file, this method uploads the file to the remote file share server, 
+        using the DAV endpoint of the server.
         
+        :param file_name: The string name of the file that the file should have on the server.
+        :param file_path: The string path to the local file that should be uploaded
+        
+        :returns: None
+        """
+        # This method will simply check if the file share object instance as it is has enough 
+        # information / permission to actually upload files to the remote fileshare. 
+        # Will raise an error if that is not the case.
         self.assert_dav(action='upload')
         
         upload_url = f'{self.dav_url}/{file_name}'
         with open(file_path, 'rb') as file:
+            
             response = requests.put(
                 upload_url,
                 data=file,
                 auth=HTTPBasicAuth(
                     self.dav_username,
                     self.dav_password,
-                )
+                ),
+                verify=self.verify,
             )
-            print(response.status_code)
-            print(response.text)
+            
+            # If something went wrong during the upload, we raise an error.
+            response.raise_for_status()
 
     def assert_dav(self, action: str = '') -> None:
         

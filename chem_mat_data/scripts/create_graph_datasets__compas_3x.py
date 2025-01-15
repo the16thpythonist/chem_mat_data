@@ -1,4 +1,7 @@
 import io
+import os
+import shutil
+import gzip
 import requests
 import pandas as pd
 
@@ -70,13 +73,16 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
     # here we download that file and then open the content as a pandas dataframe.
     e.log('downloading raw csv file...')
     raw_url = 'https://gitlab.com/porannegroup/compas/-/raw/main/COMPAS-3/compas-3x.csv?ref_type=heads&inline=false'
-    response = requests.get(raw_url)
+    response = requests.get(raw_url, verify=False)
     response.raise_for_status()  # Ensure the request was successful
-    df = pd.read_csv(io.StringIO(response.text), quotechar='"')
+    csv_file = io.StringIO(response.text)
+    df = pd.read_csv(csv_file, quotechar='"')
     
     print(df.head())
     
-    #df = load_smiles_dataset('qm9_smiles')
+    compressed_path = os.path.join(e.path, f'{e.DATASET_NAME}.csv.gz')
+    with gzip.open(compressed_path, mode='wb') as compressed_file:
+        shutil.copyfileobj(csv_file, compressed_file)
 
     columns = [
         'HOMO_eV',
