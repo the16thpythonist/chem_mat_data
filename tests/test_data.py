@@ -9,6 +9,7 @@ from chem_mat_data.data import save_graphs, load_graphs
 from chem_mat_data.data import load_xyz_as_mol
 from chem_mat_data.data import DefaultXyzParser
 from chem_mat_data.data import QM9XyzParser
+from chem_mat_data.data import TUDatasetParser
 
 from .utils import ASSETS_PATH, ARTIFACTS_PATH
 
@@ -138,3 +139,79 @@ class TestQM9XYZParser():
         assert 'functional' in info
         assert 'smiles1' in info
         assert 'smiles2' in info
+        
+        
+class TestTUDatasetParser():
+    
+    def test_loading_dataset_basically_works(self):
+        
+        path: str = os.path.join(ASSETS_PATH, 'TU_MUTAG')
+        parser = TUDatasetParser(path=path, name='MUTAG')
+    
+        # This step is required to properly initialize the parser
+        parser.initialize()
+        
+        try:
+            # This method will actually load the information from all the files and then turn this 
+            # into a list of the graph dictionaries containing the informations about the 
+            # individual graphs.
+            parser.load()
+            assert isinstance(parser.index_graph_map, dict)
+            assert len(parser.index_graph_map) == 188
+            
+        finally:
+            parser.finalize()
+        
+    def test_iterating_over_mols_works(self):
+        """
+        This test will check it it is possible to use the parser object as an iterator to iterate 
+        over rdkit mol objects of the individual graphs.
+        """
+        
+        path: str = os.path.join(ASSETS_PATH, 'TU_MUTAG')
+        parser = TUDatasetParser(
+            path=path, 
+            name='MUTAG',
+            node_label_map={
+                0: 'C',
+                1: 'N',
+                2: 'O',
+                3: 'F',
+                4: 'I',
+                5: 'Cl',
+                6: 'Br',
+            },
+            edge_label_map={
+                0: Chem.BondType.AROMATIC,
+                1: Chem.BondType.SINGLE,
+                2: Chem.BondType.DOUBLE,
+                3: Chem.BondType.TRIPLE,
+            },
+        )
+    
+        # This step is required to properly initialize the parser
+        parser.initialize()
+        
+        try:
+            # This method will actually load the information from all the files and then turn this 
+            # into a list of the graph dictionaries containing the informations about the 
+            # individual graphs.
+            parser.load()
+           
+            counter = 0
+            for mol, label in parser:
+                
+                assert isinstance(mol, Chem.Mol)
+                assert mol.GetNumAtoms() > 0
+                assert mol.GetNumBonds() > 0
+                
+                smiles = Chem.MolToSmiles(mol)
+                print(smiles)
+                assert smiles is not None
+                
+                counter += 1
+                
+            assert counter == 188
+            
+        finally:
+            parser.finalize()

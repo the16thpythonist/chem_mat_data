@@ -358,8 +358,6 @@ def load_graph_dataset(dataset_name: str,
     # Then we simply have to load the graphs from that file and return them
     graphs = load_graphs(file_path)
     
-    
-    
     return graphs
 
 

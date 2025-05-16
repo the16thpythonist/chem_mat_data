@@ -35,6 +35,7 @@ from typing import Union
 import msgpack
 import numpy as np
 import rdkit.Chem as Chem
+from rich.pretty import pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -399,6 +400,7 @@ def experiment(e: Experiment):
         
     # first of all we need to construct the actual metadata dict.
     example_graph = graphs[0]
+    pprint(example_graph)
     metadata: dict = {
         'compounds': len(graphs),
         'targets': len(example_graph['graph_labels']),
