@@ -15,7 +15,6 @@ authors = [
 ]
 maintainers = [
     {name = "Jonas Teufel", email = "jonseb1998@gmail.com"},
-    {name = "Mohit Singh", email = "mohit.singh@student.kit.edu"}
 ]
 license = { text = "MIT License" }
 keywords = [
