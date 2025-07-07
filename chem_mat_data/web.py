@@ -111,6 +111,9 @@ class NextcloudFileShare(AbstractFileShare):
         nextcloud server.
     :param dav_password: The password that is used to authenticate against the DAV endpoint of the
         nextcloud server.
+    :param use_download_url_path: If set to True, the files will be downloaded from the share point 
+        using the URL directly instead of using the URL parameters to define the relative path 
+        (legacy behaviour). This may be set to False for older versions of nextcloud.
     """
     def __init__(self, 
                  url: str,
@@ -118,6 +121,7 @@ class NextcloudFileShare(AbstractFileShare):
                  dav_username: Optional[str] = None,
                  dav_password: Optional[str] = None,
                  verify: bool = False,
+                 use_download_url_path: bool = True,
                  **kwargs,
                  ) -> None:
         
@@ -127,6 +131,7 @@ class NextcloudFileShare(AbstractFileShare):
         self.dav_username = dav_username
         self.dav_password = dav_password
         self.verify = verify
+        self.use_download_url_path = use_download_url_path
 
         ## -- Derived Attributes --
         
@@ -321,7 +326,7 @@ class NextcloudFileShare(AbstractFileShare):
             stream=True, 
             headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0', 'Connection': 'close'},
             verify=self.verify,
-            timeout=1.5,
+            timeout=5,
         )
         
         # Only when we get the correct status code, we can assume that the download was 
