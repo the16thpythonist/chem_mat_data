@@ -35,3 +35,14 @@ Changelog
   - `skin_sensitizers` binary classification dataset on skin sensitization
   - `elanos_bp` regression of boiling point
   - `elanos_vp` regression of vapor pressure 
+
+1.1.1 - 07.07.2025
+==================
+
+- Added `prettytable` as a dependency to create markdown tables in the documentation
+- Changes to the `cli.py` CLI
+  - `list` command now also printes the verbose name / short description of the datasets
+- Changes to the `manage.py` CLI
+  - Added the `docs` command group to manage the documentation
+    - `collect-datasets` which collects all the datasets that are listed in the metadata.yml file and 
+    creates a new markdown docs file in the docs folder with a table containing all those datasets.

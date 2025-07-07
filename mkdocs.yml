@@ -1,6 +1,7 @@
 site_name: ChemMatData
 nav:
   - Introduction: index.md
+  - Datasets: datasets.md
   - Getting Started:
     - Installation: installation.md
     - First steps: first_steps.md

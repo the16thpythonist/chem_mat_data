@@ -225,6 +225,7 @@ class RichDatasetList(RichMixin):
         table = Table(title='Available Datasets', expand=True, box=box.HORIZONTALS)
         
         table.add_column("Name", justify="left", style="cyan", no_wrap=True)
+        table.add_column("Description", justify="left", style="white", no_wrap=False)
         table.add_column("No. Elements",justify="left", style="magenta")
         table.add_column("No. Targets", justify="left", style="green")
         table.add_column("Target type", justify="left", style="yellow")
@@ -244,6 +245,7 @@ class RichDatasetList(RichMixin):
             details = self.datasets[name]
             table.add_row(
                 f'[bold]{name}[/bold]', 
+                details.get('verbose', '-'),
                 str(details['compounds']), 
                 str(details['targets']),
                 ', '.join(details.get('target_type', '')), 

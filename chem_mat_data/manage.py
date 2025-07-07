@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import List, Dict, Any
 
 import rich_click as click
+from prettytable import PrettyTable, TableStyle
 from rich.style import Style
 from rich.text import Text
 from rich.pretty import pprint
@@ -16,7 +17,9 @@ from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import PATH
+from chem_mat_data.utils import DOCS_PATH
 from chem_mat_data.utils import METADATA_PATH
+from chem_mat_data.utils import TEMPLATE_ENV
 from chem_mat_data.utils import CsvListType
 from chem_mat_data.utils import open_file_in_editor
 
@@ -73,19 +76,25 @@ class CLI(click.RichGroup):
             'package and the database itself.'
         )
         
-        # ~ adding commands
+        ## -- Adding commands --
         
+        # metadata command group
         self.add_command(self.metadata_group)
         self.metadata_group.add_command(self.metadata_collect_command)
         self.metadata_group.add_command(self.metadata_upload_command)
         self.metadata_group.add_command(self.metadata_edit_command)
         
+        # dataset command group
         self.add_command(self.dataset_group)
         self.dataset_group.add_command(self.dataset_create_command)
         self.dataset_group.add_command(self.dataset_upload_command)
 
-    # -- commands
-    # The following methods are actually the command implementations
+        # docs command group
+        self.add_command(self.docs_group)
+        self.docs_group.add_command(self.docs_collect_datasets_command)
+
+    ## == METADATA COMMAND GROUP ==
+    # This command group is used to manage the metadata.yml file both locally and on the remote server 
 
     @click.group('metadata', help='Commands for managing the metadata YML of the remote server.')
     @click.pass_obj
@@ -272,7 +281,7 @@ class CLI(click.RichGroup):
         
         open_file_in_editor(path)
     
-    # ~ dataset commands
+    ## == DATASET COMMAND GROUP ==
     # all the commands related to the interaction with the local datasets - such as the (re)creation of
     # datasets or the uploading to the remote file share server.
         
@@ -430,6 +439,78 @@ class CLI(click.RichGroup):
 
         click.secho('✅ datasets uploaded', fg='green')
         click.secho()
+
+    ## == DOCS COMMAND GROUP ==
+    # This command group is used to manage the documentation of the package.
+    
+    @click.group('docs', help='Commands for managing the documentation of the package.')
+    @click.pass_obj
+    def docs_group(self,
+                     ) -> None:
+          """
+          This command group contains commands that can be used to manage the documentation of the package.
+          This includes commands to build the documentation, open it in a browser, or edit it.
+          """
+          pass
+      
+    @click.command('collect-datasets', help='Compiles the datasets for the documentation from the metadata file.')
+    @click.option('--metadata-path', help='The path to the metadata file to use for compiling the datasets.',
+                  default=METADATA_PATH, show_default=True)
+    @click.option('--output-path', help='The path to the output file where the compiled datasets will be written.',
+                  default=os.path.join(DOCS_PATH, 'datasets.md'), show_default=True)
+    @click.pass_obj
+    def docs_collect_datasets_command(self,
+                                      metadata_path: str,
+                                      output_path: str,
+                                      ) -> None:
+        """
+        This command will dynamically create the overview of the datasets that are available in the 
+        remote file share server using the metadata.yml file.
+        """
+        
+        ## -- Getting Metadata --
+        # This dictionary contains all the metadata information stored on the remote file share server.
+        click.secho('fetching metadata from remote fileshare server...')
+        metadata: dict = self.file_share.fetch_metadata(force=True)
+        
+        ## -- Creating Table --
+        # Using prettytable to create the table in the markdown format
+        click.secho('compiling datasets overview...')
+        table = PrettyTable()
+        table.align = 'l'
+        table.field_names = [
+            "Name",
+            "Description",
+            "No. Elements",
+            "Target Type",
+        ]
+        for dataset_name, dataset_info in metadata['datasets'].items():
+            table.add_row([
+                f'**{dataset_name}**',
+                dataset_info.get('verbose', '-'),
+                str(dataset_info.get('compounds', 0)),
+                ', '.join(dataset_info.get('target_type', [])),
+            ])
+            
+        # This is important to set the style to markdown so that the string that is created from this is 
+        # actually a valid markdown syntax.
+        table.set_style(TableStyle.MARKDOWN)
+        datasets_table: str = table.get_string()
+        
+        ## -- Writing the Docs File --
+        # Here we use the jinja2 template to actually render the content of the documentation file 
+        # mainly centered around the just created table of the datasets.
+        click.secho('writing datasets overview to file...')
+        template = TEMPLATE_ENV.get_template('docs_dataset.md.j2')
+        content = template.render(
+            file_share_url=self.file_share.url,
+            datasets_table=datasets_table,
+        )
+        with open(output_path, 'w') as file:
+            file.write(content)
+        
+        click.secho('✅ datasets overview written to file', fg='green')
+        click.secho('')
 
 
 @click.group(cls=CLI)
