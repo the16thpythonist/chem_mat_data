@@ -19,6 +19,8 @@ from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.cache import Cache
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import PATH
+from chem_mat_data.utils import METADATA_PATH
+from chem_mat_data.utils import CsvListType
 from chem_mat_data.utils import open_file_in_editor
 
 # The path to the "scripts" folder of the experiment modules
@@ -150,11 +152,15 @@ class CLI(click.RichGroup):
     @click.command('collect')
     @click.option('--blank', is_flag=True, help=('If this flag is set, the initial metadata.yml file will be created from scratch.'
                                                  'Otherwise, the remote metadata.yml file will be downloaded and used as a base.'))
-    @click.option('-p', '--path', help='The path at which to save the new metadata file', default='./metadata.yml')
+    @click.option('-p', '--path', help='The path at which to save the new metadata file', 
+                  default=METADATA_PATH, show_default=True)
     @click.option('-s', '--source', help='The source path at which to search for dataset metadata.', default=RESULTS_PATH)
     @click.option('--strategy', help='The strategy to use for collecting the metadata.', 
                   type=click.Choice(EXPERIMENT_COLLECT_STRATEGIES), default='recent')
     @click.option('--verbose', is_flag=True, help='If this flag is set, the command will print additional information.')
+    @click.option('--datasets', type=CsvListType(), help=(
+        'A list of dataset names to collect metadata for. If not provided, all datasets will be collected.'
+    ))
     @click.pass_obj
     def metadata_collect_command(self,
                                  blank: bool,
@@ -162,15 +168,16 @@ class CLI(click.RichGroup):
                                  source: str,
                                  strategy: str,
                                  verbose: bool,
+                                 datasets: List[str],
                                  ) -> None:
         """
         This command collects the metadata of all datasets that are currently stored on the LOCAL system
         and bundles that information into a single metadata.yml file. Will use the current version of the 
-        remote file share metadata as a base unless the ``--blank`` flag is set.
+        remote file share metadata as a base unless the `--blank` flag is set.
         """
         time_start: float = time.time()
         
-        # ~ creating the base
+        ## -- Creating the Base --
         # If the blank flag is NOT explicitly set, we are going to try and download the metadata.yml file from the remote file 
         # share server and use that as a base version which is then updated with the local metadata.
         metadata_all: dict = {'datasets': []}
@@ -178,12 +185,21 @@ class CLI(click.RichGroup):
             click.echo('downloading the metadata.yml file from the remote file share server...')
             metadata_all.update(self.file_share.fetch_metadata())
         
-        # ~ collecting the metadata
+        ## -- Collecting the Metadata --
         
         # This method will return a dict data structure that maps the dataset names to lists of Experiment instances
         # that have been loaded from the results folder of completed experiment. For each dataset name key the corresponding
         # value list consists of all experiment archives related to that dataset.
         dataset_archives_map: Dict[str, List[Experiment]] = self.collect_dataset_archives_map(source)
+        
+        if datasets:
+            dataset_archives_map = {
+                name: experiments
+                for name, experiments in dataset_archives_map.items()
+                if name in datasets
+            }
+        
+        click.echo(f'updating information on {len(dataset_archives_map)} datasets: {" ".join(dataset_archives_map.keys())}')
         
         # This data structure will hold the metadata for each dataset that we have collected from the experiments.
         dataset_metadata_map: Dict[str, dict] = {}
@@ -210,8 +226,8 @@ class CLI(click.RichGroup):
         
         # ~ saving the file
         # In the end we can save the collected metadata into a file and place it at the specified path.
-        click.echo('saving the metadata file...')
         path = os.path.expanduser(path)
+        click.echo(f'saving the metadata file @ {path}...')
         with open(path, 'w') as file:
             yaml.dump(metadata_all, file, sort_keys=True, indent=4)
             
@@ -222,8 +238,11 @@ class CLI(click.RichGroup):
         if verbose:
             pprint(metadata_all, max_string=100)
             
+        click.secho()
+            
     @click.command('upload')
-    @click.option('-p', '--path', help='The path to the metadata file that should be uploaded.', default='./metadata.yml')
+    @click.option('-p', '--path', help='The path to the metadata file that should be uploaded.', 
+                  default=METADATA_PATH, show_default=True)
     @click.pass_obj
     def metadata_upload_command(self,
                                 path: str
@@ -237,8 +256,9 @@ class CLI(click.RichGroup):
             sys.exit(1)
 
         click.secho('uploading the metadata file to the remote file share server...')        
-        self.file_share.upload('metadata.yml', 'metadata.yml')
+        self.file_share.upload('metadata.yml', path)
         click.secho('✅ uploaded metadata.yml', fg='green')
+        click.secho()
         
     @click.command('edit')
     @click.option('-p', '--path', help='The path to the metadata file that should be uploaded.', default='./metadata.yml')
@@ -363,7 +383,6 @@ class CLI(click.RichGroup):
         The NAME argument may either be the string name of a single dataset to be created or a 
         comma separated list of dataset names.
         """
-        click.secho('collecting experiment archives...', fg='bright_black')
         
         # This method will return a dict data structure that maps the dataset names to lists of Experiment instances
         # that have been loaded from the results folder of completed experiment. For each dataset name key the corresponding
@@ -406,13 +425,14 @@ class CLI(click.RichGroup):
                 click.secho(f'   uploading "{mpack_file_name}"')
                 self.file_share.upload(mpack_file_name, mpack_file_path)
 
-            csv_file_name = f'{dataset_name}.csv'
+            csv_file_name = f'{dataset_name}.csv.gz'
             csv_file_path: str = os.path.join(experiment.path, f'{dataset_name}.csv.gz')
             if os.path.exists(csv_file_path):
                 click.secho(f'   uploading "{csv_file_name}"')
                 self.file_share.upload(csv_file_name, csv_file_path)
 
         click.secho('✅ datasets uploaded', fg='green')
+        click.secho()
 
 
 @click.group(cls=CLI)

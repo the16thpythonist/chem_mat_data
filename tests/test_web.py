@@ -4,6 +4,7 @@ file share server that hosts the datasets.
 """
 import os
 import tempfile
+import pytest
 
 from rich.progress import Progress
 from chem_mat_data.config import Config
@@ -61,11 +62,12 @@ class TestNextcloudFileShare:
         server and store the metadata then in the file share object as a dictionary.
         """
         config = Config()
-        file_share = NextcloudFileShare(config.get_fileshare_url())
+        file_share = NextcloudFileShare(url=config.get_fileshare_url())
         metadata = file_share.fetch_metadata()
         assert isinstance(metadata, dict)
         assert 'datasets' in file_share
         
+    @pytest.mark.localonly
     def test_upload(self):
         """
         Given the DAV credentials, it should be possible to upload files to the nextcloud file share as well using 
@@ -74,7 +76,7 @@ class TestNextcloudFileShare:
         config = Config()
         file_share = NextcloudFileShare(
             config.get_fileshare_url(),
-            config.get_fileshare_parameters('nextcloud'),
+            **config.get_fileshare_parameters('nextcloud'),
             verify=False,
         )
         file_path = os.path.join(ASSETS_PATH, 'test.txt')
@@ -83,4 +85,25 @@ class TestNextcloudFileShare:
         with tempfile.TemporaryDirectory() as folder_path:
             file_share.download_file('test.txt', folder_path)
             assert os.path.exists(os.path.join(folder_path, 'test.txt'))
-        
+            
+    def test_exists_works(self):
+        """
+        The ``exists`` method should correctly check for the existence of a file on the remote file share server and return appropriate metadata if the file exists.
+        """
+        config = Config()
+        file_share = NextcloudFileShare(
+            config.get_fileshare_url(),
+            **config.get_fileshare_parameters('nextcloud'),
+            verify=False,
+        )
+        # Test for a file that should exist (metadata.yml is expected to be present)
+        exists, meta = file_share.exists('metadata.yml')
+        assert exists is True
+        assert isinstance(meta, dict)
+        assert 'size' in meta
+        assert 'last_modified' in meta
+        assert 'content_type' in meta
+        # Test for a file that should not exist
+        not_exists, meta2 = file_share.exists('this_file_does_not_exist_123456789.txt')
+        assert not_exists is False
+        assert meta2 == {}

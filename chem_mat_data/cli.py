@@ -1,8 +1,9 @@
 import os
 import sys
+import yaml
 import datetime
 import typing as t
-from typing import Any, List, Tuple, Dict, Union
+from typing import Any, List, Tuple, Dict, Union, Optional
 
 import rich_click as click
 from rich import box
@@ -18,6 +19,8 @@ from rich.rule import Rule
 
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import TEMPLATE_PATH
+from chem_mat_data.utils import METADATA_PATH
+from chem_mat_data.utils import CsvListType
 from chem_mat_data.utils import RichMixin
 from chem_mat_data.utils import open_file_in_editor
 from chem_mat_data.config import Config
@@ -340,7 +343,10 @@ class CLI(click.RichGroup):
         # important config parameter of the project such as the URL address of the fileshare 
         # server from which the datasets will be downloaded.
         self.config = Config()
-        self.file_share = NextcloudFileShare(self.config.get_fileshare_url())
+        self.file_share = NextcloudFileShare(
+            url=self.config.get_fileshare_url(),
+            **self.config.get_fileshare_parameters(fileshare_type='nextcloud'),
+        )
         self.cache = self.config.cache
 
         # ~ Constructing the help string.
@@ -351,20 +357,27 @@ class CLI(click.RichGroup):
         # console.
         self.rich_logo = RichLogo()
         
-        # ~ adding commands
+        ## -- Adding Actual Commands --
         
+        # first level commands
         self.add_command(self.download_command)
         self.add_command(self.list_command)
         self.add_command(self.info_command)
         
+        # cache command group
         self.add_command(self.cache_group)
         self.cache_group.add_command(self.cache_list_command)
         self.cache_group.add_command(self.cache_clear_command)
         
+        # config command group
         self.add_command(self.config_group)
         self.config_group.add_command(self.config_show_command)
         self.config_group.add_command(self.config_edit_command)
 
+        # remote command group
+        self.add_command(self.remote_group)
+        self.remote_group.add_command(self.remote_upload_command)
+        self.remote_group.add_command(self.remote_exists_command)
 
     # Here we override the default "format_help" method of the RichGroup base class.
     # This method is being called to actually render the "--help" option of the command group.
@@ -565,7 +578,7 @@ class CLI(click.RichGroup):
             
         click.secho(f'cleared {num_elements} elements', fg='green')
 
-    # ~ CONFIG COMMAND GROUP
+    ## == CONFIG COMMAND GROUP ==
     # The following methods are the implementations of the commands that are part of the config command group
     # which can be used to manage the config file of the ChemMatData installation.
     
@@ -588,6 +601,97 @@ class CLI(click.RichGroup):
     def config_edit_command(self):
         open_file_in_editor(self.config.config_file_path)
 
+    ## == REMOTE GROUP ==
+    # This command group exposes specific commands to interact with the remote file share server
+    # which are more targeted towards the maintainers of the database to expose some utility 
+    # functions that are not really meant to be used by the end users of the package.
+    
+    @click.group('remote', help='Commands for interacting with the remote file share server')
+    @click.pass_obj
+    def remote_group(self):
+        pass
+    
+    def check_dav_credentials(self) -> None:
+        """
+        Checks if the DAV credentials are set up correctly in the config file and if not prints a 
+        warning message to the user.
+        
+        :raises: AssertionError if the DAV credentials are not set up correctly
+        
+        :returns: None
+        """
+        try:
+            self.file_share.assert_dav()
+        except AssertionError:
+            click.secho('⚠️ DAV credentials are not set up!'
+                        'You need to add valid DAV credentials in the config file to interact '
+                        'with files located on the remote file share server.')
+    
+    @click.command('upload', short_help='Upload a dataset or file to the remote file share server')
+    @click.argument('file_path', type=click.Path(exists=True, dir_okay=False))
+    @click.option('--name', default=None, help=(
+        'The name of the file on the remote server. If not provided, the name of the file '
+        'itself will be used.'
+    ))
+    @click.pass_obj
+    def remote_upload_command(self, 
+                              file_path: str,
+                              name: Optional[str],
+                              **kwargs
+                              ) -> None:
+        
+        ## -- Checking Credentials --
+        # This will make sure that the DAV credentials are set up correctly before trying to upload 
+        # anything. If the credentials are missing, this will print to the user.
+        self.check_dav_credentials()
+
+        ## -- Uploading the file --
+        if name is not None:
+            file_name: str = name
+        else: # If the name is not provided, we will use the name of the file itself
+            file_name = os.path.basename(file_path)
+        
+        file_size: int = os.path.getsize(file_path)
+        file_size_mb: int = file_size // (1024 * 1024)
+        click.secho(f'... Uploading file "{file_name}" with {file_size_mb} MB')
+        
+        # This method will actually upload the file to the remote server.
+        self.file_share.upload(file_name, file_path)
+
+        ## -- Checking for the file --
+        # After the upload is complete, we want to check if the file was actually uploaded.
+        exists, meta = self.file_share.exists(file_name)
+        if exists:
+            click.secho('✅ File uploaded successfully!')
+        else:
+            click.secho('⚠️ File upload failed!')
+
+    @click.command('exists', short_help='Check if a file exists on the rmote file share server')
+    @click.argument('file_name')
+    @click.pass_obj
+    def remote_exists_command(self,
+                              file_name: str,
+                              ) -> None:
+        """
+        Checks if the file with the given FILE_NAME exists on the remote file share server.
+        """
+        ## -- Checking Credentials --
+        # This will make sure that the DAV credentials are set up correctly before trying to upload
+        # anything. If the credentials are missing, this will print to the user.
+        self.check_dav_credentials()
+        
+        ## -- Checking for the file --
+        # This method will check if the file with the given name exists on the remote server.
+        exists, meta = self.file_share.exists(file_name)
+        if exists:
+            click.secho(f'✅ File "{file_name}" exists on the remote server!')
+            click.secho(f'  - Size: {meta["size"]} bytes')
+            click.secho(f'  - Last modified: {meta["last_modified"]}')
+            click.secho(f'  - Content type: {meta["content_type"]}')
+            
+        else:
+            click.secho(f'⚠️ File "{file_name}" does not exist on the remote server!', fg='red')
+            sys.exit(1)
 
 
 @click.group(cls=CLI)

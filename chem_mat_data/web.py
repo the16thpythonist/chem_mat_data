@@ -3,7 +3,7 @@ import shutil
 import gzip
 import tempfile
 import typing as t
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 
 import io
 import requests.adapters
@@ -13,6 +13,7 @@ from rich.pretty import pprint
 from requests.auth import HTTPBasicAuth
 from rich.progress import Progress
 from typing import Union
+from urllib.parse import urlparse, urlunparse
 
 
 class MockProgress:
@@ -127,6 +128,17 @@ class NextcloudFileShare(AbstractFileShare):
         self.dav_password = dav_password
         self.verify = verify
 
+        ## -- Derived Attributes --
+        
+        # The given URL will be in the format of a publically shared link to a folder on the nextcloud 
+        # served in the format of "https://nextcloud.example.com/s/abc123xyz456"
+        # We want to separate this into the base URL of the nextcloud server and the share token
+        # Parse the given URL and reconstruct only the scheme and netloc (base URL)
+        base_url, share_token = self.url.split('/s/', 1)
+        self.base_url = base_url.rstrip('/')
+        self.share_token = share_token.replace('/download', '').rstrip('/')
+
+        ## -- Metadata-related Attributes --
         # This is the name of the file on the file share server which contains the metadata. This 
         # is a human-readable yml file which not only contains the information about the file share 
         # in general, but also detailed information about the individual datasets that are 
@@ -243,6 +255,36 @@ class NextcloudFileShare(AbstractFileShare):
     
     # ~ utility methods
     
+    def construct_download_url(self, 
+                               file_name: str,
+                               ) -> str:
+        """
+        Returns the direct download URL for a file stored on the file share server.
+
+        :param file_name: The name of the file to be downloaded, including any subdirectory structure
+            and file extension, relative to the root of the shared folder.
+        
+        :returns: The fully constructed download URL as a string. This URL can be used in a browser or
+            with command-line tools (such as wget or curl) to download the file directly from the server.
+            The format is: ``{self.url}/{file_name}?files={file_name}``
+        
+        Example::
+            
+            share = NextcloudFileShare(url="https://nextcloud.example.com/s/abc123xyz456")
+            url = share.construct_download_url("mydata.mpack.gz")
+            # url == 'https://nextcloud.example.com/s/abc123xyz456/mydata.mpack.gz?files=mydata.mpack.gz'
+        
+        Note:
+            The exact format of the download URL may depend on the server's configuration and sharing mechanism.
+            This method assumes the server accepts the constructed URL for direct file downloads. If the server
+            uses a different API or requires additional parameters, this method may need to be adapted accordingly.
+        """
+        download_url = (
+            f'{self.url}/{file_name}?files={file_name}'
+        )
+        
+        return download_url
+    
     def download(self, 
                  file_name: str, 
                  progress: Progress = MockProgress(),
@@ -266,7 +308,9 @@ class NextcloudFileShare(AbstractFileShare):
         :returns: The bytes content of the downloaded file if no folder path is given. Otherwise,
             returns None.
         """
-        file_url = self.url + file_name
+        
+        # This method will construct the download URL for the given file name 
+        file_url: str = self.construct_download_url(file_name)
         
         # Create a session with no connection pooling
         session = requests.Session()
@@ -310,7 +354,7 @@ class NextcloudFileShare(AbstractFileShare):
             
             with file:
                 bytes_written = 0
-                for chunk in response.iter_content(chunk_size=1024):
+                for chunk in response.iter_content(chunk_size=1024**2):
                     if chunk:
                         file.write(chunk)
                         progress.update(task, advance=bytes_written)
@@ -326,6 +370,80 @@ class NextcloudFileShare(AbstractFileShare):
         
         else:
             raise Exception(f'Failed to download file from the server: {file_url}')
+
+    def exists(self,
+               file_name: str,
+               ) -> Tuple[bool, dict]:
+        """
+        Checks whether a file with the given ``file_name`` exists on the remote Nextcloud file share server.
+
+        This method sends a HEAD request to the Nextcloud WebDAV endpoint to determine if the specified file exists. If the file exists, it returns True and a dictionary containing basic metadata about the file (such as size, last modified date, and content type) as obtained from the response headers. If the file does not exist, it returns False and an empty dictionary.
+
+        :param file_name: The name of the file to check for existence on the remote server. This should include any subdirectory structure and file extension, relative to the root of the shared folder.
+
+        :returns: A tuple (exists, metadata) where:
+            - exists (bool): True if the file exists on the server, False otherwise.
+            - metadata (dict): If the file exists, a dictionary with the following keys:
+                - 'size': The size of the file in bytes (as a string), or 'unknown' if not available.
+                - 'last_modified': The last modified date of the file (as a string), or 'unknown' if not available.
+                - 'content_type': The MIME type of the file (as a string), or 'unknown' if not available.
+              If the file does not exist, this will be an empty dictionary.
+
+        :raises AssertionError: If the required DAV credentials (dav_url, dav_username, dav_password) are not set on the object.
+        :raises Exception: If the server returns an unexpected status code or there is a network error.
+
+        Example::
+
+            share = NextcloudFileShare(
+                url="https://nextcloud.example.com/s/abc123xyz456",
+                dav_url="https://nextcloud.example.com/remote.php/dav/files/username/shared_folder",
+                dav_username="myuser",
+                dav_password="mypassword"
+            )
+            exists, meta = share.exists("mydata.mpack.gz")
+            if exists:
+                print(f"File exists! Size: {meta['size']} bytes, Last modified: {meta['last_modified']}")
+            else:
+                print("File does not exist on the server.")
+        """
+        # This method will simply check if the file share object instance as it is has enough 
+        # information / permission to actually upload files to the remote fileshare. 
+        # Will raise an error if that is not the case.
+        self.assert_dav(action='upload')
+        
+        ## -- Making Request --
+        # The check for the existence of a file on a remote nextcloud file share server, one 
+        # simply needs to make a HEAD request to the DAV endpoint.
+        file_url = f'{self.dav_url}/{file_name}'
+        response = requests.head(
+            file_url,
+            auth=HTTPBasicAuth(
+                self.dav_username,
+                self.dav_password,
+            ),
+            verify=self.verify,
+            timeout=1.0,
+        )
+        
+        ## -- Handling Response --
+        # If the HEAD request was successful, that means that the file exists on the server and 
+        # we can infer some basic metadata about the file from the response headers. 
+        if response.status_code == 200:
+            
+            size = response.headers.get('Content-Length', 'unknown')
+            last_modified = response.headers.get('Last-Modified', 'unknown')
+            content_type = response.headers.get('Content-Type', 'unknown')
+            
+            return True, {
+                'size': size,
+                'last_modified': last_modified,
+                'content_type': content_type,
+            }
+            
+        else:
+            
+            return False, {}
+        
 
     def upload(self,
                file_name: str,
@@ -414,4 +532,3 @@ def construct_file_share(file_share_type: str,
         **file_share_kwargs,
     )
     return fileshare
-    

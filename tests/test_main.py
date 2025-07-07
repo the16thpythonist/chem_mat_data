@@ -8,6 +8,7 @@ from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.main import get_file_share
 from chem_mat_data.main import ensure_dataset
 from chem_mat_data.main import load_xyz_dataset
+from chem_mat_data.main import load_smiles_dataset
 
 from .utils import get_mock_dataset_path
 
@@ -66,4 +67,17 @@ def test_load_xyz_dataset_works():
         for _, row in df.iterrows():
             assert isinstance(row['mol'], Chem.Mol)
         
+        
+def test_load_smiles_dataset_works():
+    
+    with tempfile.TemporaryDirectory() as temp_path:
+        
+        df: pd.DataFrame = load_smiles_dataset(
+            dataset_name='clintox',
+            folder_path=temp_path,
+            use_cache=False
+        )
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) > 0
+        print(df.head())
         

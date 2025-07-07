@@ -12,6 +12,7 @@ import subprocess
 import requests
 import jinja2 as j2
 import rdkit.Chem as Chem
+import rich_click as click
 from rich.console import Console, ConsoleOptions, RenderResult
 from rich.text import Text
 from rich.style import Style
@@ -30,6 +31,8 @@ VERSION_PATH: str = os.path.join(PATH, 'VERSION')
 
 TEMPLATE_PATH = os.path.join(PATH, 'templates')
 TEMPLATE_ENV = j2.Environment(loader=j2.FileSystemLoader(TEMPLATE_PATH))
+
+METADATA_PATH = os.path.join(PATH, 'metadata.yml')
 
 # MISC FUNCTIONS
 # ==============
@@ -155,6 +158,14 @@ def is_archive(path: str) -> bool:
     return False
 
 
+def load_global_metadata() -> dict:
+    pass
+
+
+def safe_global_metadata() -> None:
+    pass
+
+
 class RichMixin:
     """
     Implements a mixin/interface for objects whose string representations should be rendered using 
@@ -213,3 +224,42 @@ class RichHeader(RichMixin):
         style = Style(bold=True, color=self.color)
         yield Text(f'{self.rule * rule_width} {self.title} {self.rule * rule_width}', style=style)
 
+
+
+class CsvListType(click.ParamType):
+    """
+    A custom click type for parsing a comma-separated list of strings into a Python list.
+
+    This class is intended for use with the ``click`` library as a custom type for command line options or arguments.
+    When used, it will automatically convert a comma-separated string (e.g. ``"a,b,c"``) into a Python list of strings
+    (e.g. ``["a", "b", "c"]``). Whitespace around each item will be stripped. If the input value is already a list,
+    it will be returned unchanged.
+
+    Example usage::
+
+        import click
+        from chem_mat_data.utils import CsvListType
+
+        @click.command()
+        @click.option('--items', type=CsvListType(), help='Comma-separated list of items')
+        def cli(items):
+            click.echo(items)
+
+    :cvar name: The name of the custom type (used by click for help messages)
+    """
+
+    name = 'csv_list'
+
+    def convert(self, value, param, ctx):
+        """
+        Converts the input value into a list of strings by splitting on commas.
+
+        :param value: The input value provided by click (either a string or already a list)
+        :param param: The parameter object being processed (unused)
+        :param ctx: The click context (unused)
+
+        :returns: A list of strings parsed from the input value
+        """
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(',') if item.strip()]
+        return value

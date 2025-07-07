@@ -1,4 +1,15 @@
 datasets:
+    MCF_7:
+        compounds: 26776
+        description: Dataset related to cancer
+        raw:
+        - csv
+        sources: []
+        tags:
+        - Molecules
+        target_type:
+        - regression
+        targets: 2
     _price_small:
         compounds: 80000
     _test:
@@ -27,6 +38,7 @@ datasets:
         targets: 1
     ames:
         compounds: 6512
+        verbose: Ames Mutagenicity Assays
         description: Ames mutagenicity. The dataset includes 6512 compounds and corresponding
             binary labels from Ames mutagenicity assay results.
         full: true
@@ -41,6 +53,7 @@ datasets:
         targets: 2
     aqsoldb:
         compounds: 9889
+        verbose: Aqueous Solubility
         description: A curated reference set of aqueous solubility, created by the
             Autonomous Energy Materials Discovery [AMD] research group, consists of
             aqueous solubility values of 9,982 unique compounds curated from 9 different
@@ -60,6 +73,7 @@ datasets:
         targets: 1
     bace:
         compounds: 1513
+        verbose: BACE-1 Binding Affinity
         description: "The BACE dataset provides quantitative (IC50) and qualitative\
             \ (binary label) binding results for a set of inhibitors of human \u03B2\
             -secretase 1 (BACE-1)."
@@ -75,6 +89,7 @@ datasets:
         - Classification
         targets: 2
     bbbp:
+        verbose: Blood-Brain Barrier Penetration
         compounds: 1934
         description: Binary labels of blood-brain barrier penetration(permeability).
         full: true
@@ -88,6 +103,7 @@ datasets:
         - Classification
         targets: 1
     beet:
+        verbose: Honey Bee Toxicity
         compounds: 254
         description: The toxicity in honey bees (beet) dataset was extract from a
             study on the prediction of acute contact toxicity of pesticides in honeybees.
@@ -111,6 +127,7 @@ datasets:
         - Classification
         targets: 2
     clintox:
+        verbose: Clinical Toxicity
         compounds: 1465
         description: Qualitative data of drugs approved by the FDA and those that
             have failed clinical trials for toxicity reasons.
@@ -125,17 +142,17 @@ datasets:
         - Classification
         targets: 2
     compas_1x:
+        verbose: DFT properties of polycyclic aromatic hydrocarbons
         compounds: 34072
-        description: The COMPAS Project provides a computational database of polycyclic
-            aromatic systems, including optimized ground-state structures and molecular
-            properties of approximately 34k and 9k cata-condensed polybenzenoid hydrocarbons.
-            This dataset supports the investigation of structure-property relationships
-            and the design of novel functional compounds, with data generated at the
-            GFN2-xTB and B3LYP-D3BJ/def2-SVP levels.
+        description: The COMPAS-1 dataset is part of the largest freely available
+            collection of geometries and properties of cata-condensed poly(hetero)cyclic
+            aromatic molecules. It includes quantum chemical properties of 1,000 molecules
+            calculated at the  GFN1-xTB level, representative of a highly diverse
+            chemical space.
         raw:
         - csv
         sources:
-        - https://pubs.acs.org/doi/full/10.1021/acs.jcim.2c00503
+        - https://chemrxiv.org/engage/chemrxiv/article-details/64bf8dd7b053dad33ad856cf
         - https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-1?ref_type=heads
         tags:
         - SMILES
@@ -143,21 +160,26 @@ datasets:
         - Quantum Chemistry
         - Molecular Properties
         target_descriptions:
-            0: HOMO_eV - energy of the highest molecular orbit (HOMO) in electron
-                volt (eV)
-            1: LUMO_eV - energy of the lowest unoccupied molecular orbit (LUMO) in
-                electron volt (eV)
-            2: GAP_eV - energy gap between HOMO and LUMO in electron volt (eV)
-            3: Dipmom_Debye - dipole moment in Debye
-            4: Etot_eV - total energy of the molecule in electron volt (eV)
-            5: aEA_eV - adiabatic electron affinity in electron volt (eV)
-            6: aIP_eV - adiabatic ionization potential in electron volt (eV)
-            7: NFOD - fractional occupation density
-            8: n_rings - number of rings in the molecule
+            0: HOMO_eV_corrected - The corrected energy of the Highest Occupied Molecular
+                Orbital (HOMO) in electron volts (eV).
+            1: LUMO_eV_corrected - The corrected energy of the Lowest Unoccupied Molecular
+                Orbital (LUMO) in electron volts (eV).
+            2: GAP_eV_corrected - The corrected energy gap between the HOMO and LUMO
+                in electron volts (eV).
+            3: aIP_eV_corrected - The corrected adiabatic ionization potential in
+                electron volts (eV).
+            4: aEA_eV_corrected - The corrected adiabatic electron affinity in electron
+                volts (eV).
+            5: Erel_eV_corrected - The corrected relative energy in electron volts
+                (eV).
+            6: Dipmom_Debye - The dipole moment of the molecule in Debye units.
+            7: NFOD - The number of free valence electrons in the molecule.
+            8: n_rings - The number of ring structures within the molecule.
         target_type:
         - Regression
         targets: 9
     compas_3x:
+        verbose: DFT properties of polycyclic aromatic hydrocarbons
         compounds: 39482
         description: The third installment of the COMPAS Project, a computational
             database of polycyclic aromatic systems, focused on peri-condensed polybenzenoid
@@ -192,6 +214,7 @@ datasets:
         - Regression
         targets: 9
     dpp4:
+        verbose: DPP-4 inhibitors
         compounds: 3933
         description: DPP-4 inhibitors (DPP4) was extract from ChEMBL with DPP-4 target.
             The data was processed by removing salt and normalizing molecular structure,
@@ -212,7 +235,42 @@ datasets:
         target_type:
         - Classification
         targets: 2
+    elanos_bp:
+        verbose: Boiling Point
+        compounds: 5431
+        raw:
+        - csv
+        sources:
+        - https://zenodo.org/records/14392754
+        - https://link.springer.com/article/10.1007/s11030-025-11196-5
+        tags:
+        - Molecules
+        - SMILES
+        - Molecular Properties
+        - Boiling Point
+        target_type:
+        - regression
+        targets: 1
+    elanos_vp:
+        verbose: Vapor Pressure
+        compounds: 2704
+        raw:
+        - csv
+        sources:
+        - https://zenodo.org/records/14364265
+        - https://link.springer.com/article/10.1007/s11030-025-11196-5
+        tags:
+        - Molecules
+        - SMILES
+        - Molecular Properties
+        - Vapor Pressure
+        target_descriptions:
+            '0': Log VP (Vapor Pressure) in log10(Pa)
+        target_type:
+        - regression
+        targets: 1
     esol:
+        verbose: Water Solubility
         compounds: 1127
         description: Water solubility data(log solubility in mols per litre) for common
             organic small molecules.
@@ -229,6 +287,7 @@ datasets:
         - Regression
         targets: 1
     freesolv:
+        verbose: Hydration Free Energy
         compounds: 639
         description: A collection of experimental and calculated hydration free energies
             for small molecules in water. The calculated values are derived from alchemical
@@ -250,6 +309,7 @@ datasets:
         - Regression
         targets: 2
     hiv:
+        verbose: HIV Inhibitors
         compounds: 38040
         description: Experimentally measured abilities to inhibit HIV replication.
         full: true
@@ -265,6 +325,7 @@ datasets:
         - Classification
         targets: 2
     lipophilicity:
+        verbose: Octanol/Water Distribution Coefficient
         compounds: 4199
         description: Experimental results of octanol/water distribution coefficient(logD
             at pH 7.4).
@@ -279,6 +340,7 @@ datasets:
         - Regression
         targets: 1
     muv:
+        verbose: MUV Benchmark
         compounds: 93087
         description: Subset of PubChem BioAssay by applying a refined nearest neighbor
             analysis, designed for validation of virtual screening techniques.
@@ -312,6 +374,7 @@ datasets:
         - Regression
         targets: 1
     qm9:
+        verbose: DFT properties of small molecules
         compounds: 134000
         description: QM9 is a comprehensive dataset that provides geometric, energetic,
             electronic and thermodynamic properties for a subset of GDB-17 database,
@@ -333,6 +396,7 @@ datasets:
         - Regression
         targets: 16
     qm9_smiles:
+        verbose: DFT properties of small molecules
         compounds: 133882
         description: QM9 is a comprehensive dataset that provides geometric, energetic,
             electronic and thermodynamic properties for a subset of GDB-17 database,
@@ -356,6 +420,7 @@ datasets:
         - Regression
         targets: 16,
     sider:
+        verbose: Drug Side Effects
         compounds: 1220
         description: Database of marketed drugs and adverse drug reactions (ADR),
             grouped into 27 system organ classes.
@@ -369,7 +434,66 @@ datasets:
         target_type:
         - Classification
         targets: 27
+    skin_irritation:
+        verbose: Skin Irritation
+        compounds: 1263
+        raw:
+        - csv
+        sources:
+        - https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds14
+        - https://ehp.niehs.nih.gov/doi/10.1289/EHP9341
+        tags:
+        - Molecules
+        - SMILES
+        - Biology
+        target_descriptions:
+            '0': non-irritant
+            '1': skin-irritant
+        target_type:
+        - classification
+        targets: 2
+    skin_sensitizers:
+        verbose: Skin Sensitization
+        compounds: 1263
+        raw:
+        - csv
+        sources:
+        - https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds15
+        - https://ehp.niehs.nih.gov/doi/10.1289/EHP9341
+        tags:
+        - Molecules
+        - SMILES
+        - Biology
+        target_descriptions:
+            '0': non-sensitizer
+            '1': skin-sensitizer
+        target_type:
+        - classification
+        targets: 2
+    synth_binary_global:
+        compounds: 249455
+        description: synthetic binary classification task based on global properties
+        raw:
+        - csv
+        sources: []
+        tags:
+        - Molecules
+        target_type:
+        - Classification
+        targets: 2
+    synth_binary_local:
+        compounds: 249455
+        description: synthetic binary classification task based on local properties
+        raw:
+        - csv
+        sources: []
+        tags:
+        - Molecules
+        target_type:
+        - Classification
+        targets: 2
     tox21:
+        verbose: Toxicology
         compounds: 7570
         description: Qualitative toxicity measurements on 12 biological targets, including
             nuclear receptors and stress response pathways.
@@ -385,6 +509,7 @@ datasets:
         - Classification
         targets: 12
     toxcast:
+        verbose: Toxicology
         compounds: 6842
         description: Toxicology data for a large library of compounds based on in
             vitro high-throughput screening, including experiments on over 600 tasks.
