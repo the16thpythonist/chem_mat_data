@@ -3,12 +3,10 @@ import sys
 import yaml
 import time
 from collections import defaultdict
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Any
 
 import rich_click as click
-from rich.panel import Panel
 from rich.style import Style
-from rich.padding import Padding
 from rich.text import Text
 from rich.pretty import pprint
 from pycomex.functional.experiment import Experiment
@@ -16,7 +14,6 @@ from pycomex.utils import dynamic_import
 
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
-from chem_mat_data.cache import Cache
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import PATH
 from chem_mat_data.utils import METADATA_PATH
@@ -125,7 +122,7 @@ class CLI(click.RichGroup):
                 if is_experiment_archive(folder_path):
                     try:
                         experiment = Experiment.load(folder_path)
-                    except Exception as e:
+                    except Exception:
                         continue
                     
                     # for now we just add the loaded experiment to the list and will then later 

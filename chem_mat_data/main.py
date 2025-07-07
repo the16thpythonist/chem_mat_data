@@ -14,8 +14,6 @@ from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.web import construct_file_share
 from chem_mat_data.data import load_graphs
 from chem_mat_data.data import load_xyz_as_mol
-from chem_mat_data.data import DefaultXyzParser
-from chem_mat_data.data import QM9XyzParser
 from chem_mat_data._typing import GraphDict
 from typing import Union
 from typing import List
@@ -143,7 +141,7 @@ def ensure_dataset(dataset_name: str,
                         shutil.copyfileobj(compressed_file, file)
             
             # Otherwise we try to download the file without the compression
-            except Exception as exc:
+            except Exception:
                 #print(exc)
                 pass
                 
@@ -160,7 +158,7 @@ def ensure_dataset(dataset_name: str,
                 with zipfile.ZipFile(file_path_compressed, 'r') as zip_ref:
                     zip_ref.extractall(folder_path)
                                     
-            except Exception as exc:
+            except Exception:
                 #print(exc)
                 pass
             
@@ -280,8 +278,8 @@ def load_xyz_dataset(dataset_name: str,
                     **info
                 }
                 id_data_map[element_id].update(data)
-            except:
-                print("hello")
+            except Exception:
+                print("Error loading xyz file:", xyz_file)
     
     # Finally, in the end we create a data frame object from the list of data dicts that 
     # we've assembled from the metadata csv and the parsing of the xyz files.

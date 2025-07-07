@@ -3,8 +3,7 @@ This experiment downloads the MOLT-4 dataset from the TU dataset collection whic
 dataset related to  Leukemia. 
 The dataset consists of molecular graphs and binary class labels.
 """
-import os
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 
 import rdkit.Chem as Chem
 

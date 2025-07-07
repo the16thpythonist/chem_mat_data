@@ -17,7 +17,6 @@ from chem_mat_data.utils import mol_from_smiles
 from chem_mat_data.utils import RichMixin
 from chem_mat_data.visualization import create_frameless_figure
 from chem_mat_data.visualization import visualize_molecular_graph_from_mol
-from typing import List, Dict
 
 
 def identity(value: Any) -> Any:

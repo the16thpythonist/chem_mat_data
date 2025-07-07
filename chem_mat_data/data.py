@@ -10,11 +10,9 @@ import msgpack
 import numpy as np
 import tempfile
 import zipfile
-import itertools
 
 from typing import Dict, List, Tuple, Union, Optional, Any, Generator
 from chem_mat_data._typing import GraphDict
-from rdkit.Chem import Draw
 
 
 def default(obj):
@@ -434,7 +432,7 @@ class TUDatasetParser:
             # aka categories which in this case represent different atom types and which will have 
             # to be mapped back to those later on.
             node_labels: np.ndarray = np.array([int(line) for line in file.readlines()], ndmin=1)
-            num_nodes: int = len(node_labels) + 1
+            # num_nodes: int = len(node_labels) + 1
         
         with open(self.edge_labels_path, mode='r') as file:
             # This is a vector where the indices are the edge indices and the values are the edge labels 

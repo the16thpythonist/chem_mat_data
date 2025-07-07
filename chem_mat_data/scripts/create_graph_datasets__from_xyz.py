@@ -7,20 +7,15 @@ of the atoms.
 """
 import os
 import csv
-import rdkit.Chem as Chem
 import pandas as pd
 from typing import Dict, List
 
 import numpy as np
-import pandas as pd
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from chem_mat_data.main import load_xyz_dataset
-from chem_mat_data import load_smiles_dataset
 from chem_mat_data.utils import SCRIPTS_PATH
-from chem_mat_data.data import AbstractXyzParser
-from chem_mat_data.data import DefaultXyzParser
 from chem_mat_data.data import QM9XyzParser
 
 # :param SOURCE_PATH:

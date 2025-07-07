@@ -1,13 +1,12 @@
 import os
 import sys
-import yaml
 import datetime
 import typing as t
 from typing import Any, List, Tuple, Dict, Union, Optional
 
 import rich_click as click
 from rich import box
-from rich.console import Console, ConsoleOptions, RenderResult
+from rich.console import Console, ConsoleOptions
 from rich.panel import Panel
 from rich.style import Style
 from rich.padding import Padding
@@ -19,14 +18,11 @@ from rich.rule import Rule
 
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import TEMPLATE_PATH
-from chem_mat_data.utils import METADATA_PATH
-from chem_mat_data.utils import CsvListType
 from chem_mat_data.utils import RichMixin
 from chem_mat_data.utils import open_file_in_editor
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
 
-from typing import Dict
 from dotenv import load_dotenv
 
 

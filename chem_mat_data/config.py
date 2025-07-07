@@ -1,5 +1,4 @@
 import os
-import yaml
 from typing import Optional, Dict, Any
 
 import tomlkit

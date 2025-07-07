@@ -3,7 +3,6 @@ import pandas as pd
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
-from chem_mat_data import load_smiles_dataset
 
 DATASET_NAME: str = 'qm9_smiles'
 

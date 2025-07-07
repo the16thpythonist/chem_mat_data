@@ -1,10 +1,9 @@
 import os
 import time
-import datetime
 import shutil
 import zipfile
 import yaml
-from typing import Dict, List, Tuple, Optional
+from typing import List, Tuple
 
 from chem_mat_data.utils import is_archive
 

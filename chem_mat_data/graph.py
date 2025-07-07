@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import rdkit.Chem as Chem
 import numpy as np
 
 import chem_mat_data._typing as tc

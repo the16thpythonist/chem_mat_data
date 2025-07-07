@@ -5,12 +5,10 @@ import pandas as pd
 import gzip
 import shutil
 
-from rich.pretty import pprint
 from rdkit import Chem
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
-from chem_mat_data import load_smiles_dataset
 
 # :param DATASET_NAME:
 #       This string determines the name of the message pack dataset file that is then 

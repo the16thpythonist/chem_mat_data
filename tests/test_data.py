@@ -117,7 +117,7 @@ class TestDefaultXyzParser:
         parser = DefaultXyzParser(xyz_path)
         
         with pytest.raises(Exception):
-            mol: Chem.Mol = parser.parse()
+            mol: Chem.Mol = parser.parse()  # noqa: F841
         
         
 class TestQM9XYZParser():

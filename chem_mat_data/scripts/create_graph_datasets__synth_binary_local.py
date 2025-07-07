@@ -1,11 +1,10 @@
-from typing import Dict, List, Any
+from typing import Dict
 from rdkit import Chem
 import pandas as pd
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 import numpy as np
-from chem_mat_data import load_smiles_dataset
 
 DATASET_NAME: str = 'synth_binary_local'
 

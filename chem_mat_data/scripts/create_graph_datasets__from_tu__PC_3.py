@@ -3,8 +3,7 @@ This experiment downloads the PC-3 dataset from the TU dataset collection which 
 dataset related to prostate cancer. 
 The dataset consists of molecular graphs and binary class labels.
 """
-import os
-from typing import Optional, Dict, List
+from typing import Optional, Dict
 
 import rdkit.Chem as Chem
 

@@ -1,13 +1,11 @@
-from typing import Dict, List, Any
+from typing import Dict, Any
 from rdkit import Chem
 import pandas as pd
-from rdkit import Chem
 from rdkit.Chem import Descriptors, Crippen, rdMolDescriptors, QED
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 import numpy as np
-from chem_mat_data import load_smiles_dataset
 
 DATASET_NAME: str = 'synth_binary_local'
 
@@ -62,8 +60,10 @@ def druglikeness_label(mol: Chem.Mol, criteria: dict) -> int:
     desc = compute_descriptors(mol)
     for key, (op, thresh) in criteria.items():
         val = desc[key]
-        if   op == '<=' and not (val <=  thresh): return 0
-        elif op == '>=' and not (val >=  thresh): return 0
+        if   op == '<=' and not (val <=  thresh): 
+            return 0
+        elif op == '>=' and not (val >=  thresh): 
+            return 0
     return 1
 
 

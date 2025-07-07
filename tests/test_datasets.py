@@ -84,7 +84,7 @@ def test_dataset_torch_forward_pass(dataset_name: str):
         # ~ Doing model forward pass
         try:
             from torch import Tensor
-            from torch_geometric.data import Data
+            from torch_geometric.data import Data  # noqa: F401
             from torch_geometric.loader import DataLoader
             from torch_geometric.nn.models import GIN
 
@@ -105,7 +105,7 @@ def test_dataset_torch_forward_pass(dataset_name: str):
                 out_pred: np.ndarray = out_pred.cpu().detach().numpy()
                 assert not (np.isnan(out_pred).any() or np.isinf(out_pred).any())
             
-        except (ImportError, ModuleNotFoundError) as exc:
+        except (ImportError, ModuleNotFoundError):
             
             print('Skipping forward pass test because PyTorch is not installed...')
             

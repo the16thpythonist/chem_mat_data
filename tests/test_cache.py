@@ -4,7 +4,7 @@ import yaml
 from typing import List, Tuple
 
 from chem_mat_data.cache import Cache
-from .utils import ARTIFACTS_PATH, get_mock_dataset_path
+from .utils import get_mock_dataset_path
 
 
 class TestCache:

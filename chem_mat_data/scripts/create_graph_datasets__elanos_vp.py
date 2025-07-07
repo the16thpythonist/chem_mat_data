@@ -5,7 +5,6 @@ from pycomex.utils import folder_path, file_namespace
 from chem_mat_data.config import Config
 from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.main import get_file_share
-from chem_mat_data import load_smiles_dataset
 import pandas as pd
 
 # :param DATASET_NAME:

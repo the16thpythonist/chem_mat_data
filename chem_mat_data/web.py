@@ -9,11 +9,9 @@ import io
 import requests.adapters
 import yaml
 import requests
-from rich.pretty import pprint
 from requests.auth import HTTPBasicAuth
 from rich.progress import Progress
 from typing import Union
-from urllib.parse import urlparse, urlunparse
 
 
 class MockProgress:
