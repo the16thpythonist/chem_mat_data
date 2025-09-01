@@ -316,7 +316,6 @@ def load_xyz_as_mol(file_path: str,
 
 # == TUDATASET ==
 
-
 class TUDatasetParser:
     
     def __init__(self, 

@@ -174,7 +174,7 @@ syntax of the README file to make sure it can be properly rendered on the PyPi w
 
     twine check dist/*
     
-**Uploading to PyPi. ** Finally, the ``twine upload`` command can be used to actually upload the distribution files 
+**Uploading to PyPi.** Finally, the ``twine upload`` command can be used to actually upload the distribution files 
 to the package index.
 
     twine upload --username='__token__' --password='[your password]' dist/*

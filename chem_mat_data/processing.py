@@ -408,6 +408,16 @@ class RichProcessingSummary(RichMixin):
             )
 
 
+
+class AbstractProcessing:
+    
+    def process(self, value):
+        raise NotImplementedError()
+    
+    def visualize(self, value, width: int = 1000, height: int = 1000) -> None:
+        pass
+
+
 class MoleculeProcessing():
     """
     This class is used for the processing of the special "Molecule Graph" graph type. A molecule graph consists of 

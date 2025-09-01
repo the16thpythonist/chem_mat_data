@@ -14,6 +14,8 @@ from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.web import construct_file_share
 from chem_mat_data.data import load_graphs
 from chem_mat_data.data import load_xyz_as_mol
+from chem_mat_data.processing import AbstractProcessing
+from chem_mat_data.processing import MoleculeProcessing
 from chem_mat_data._typing import GraphDict
 from typing import Union
 from typing import List
@@ -357,6 +359,49 @@ def load_graph_dataset(dataset_name: str,
     graphs = load_graphs(file_path)
     
     return graphs
+
+
+# TODO: Implement LAZY DATASETS
+
+class AbstractLazyDataset:
+    
+    def __init__(self,
+                 dataset_name: str,
+                 processing: AbstractProcessing,
+                 num_workers: int = 0,
+                 num_prefetch: int = 0,
+                 **kwargs,
+                 ) -> None:
+        self.dataset_name = dataset_name
+        self.processing = processing
+        self.num_workers = num_workers
+        self.num_prefetch = num_prefetch
+        
+    def __len__(self) -> int:
+        raise NotImplementedError()
+    
+    def __getitem__(self, index: int) -> Union[dict, None]:
+        raise NotImplementedError()
+    
+    def __iter__(self):
+        pass
+
+    
+class LazySmilesDataset(AbstractLazyDataset):
+    
+    def __init__(self,
+                 dataset_name: str,
+                 processing: AbstractProcessing = MoleculeProcessing(),
+                 **kwargs,
+                 ) -> None:
+        
+        AbstractLazyDataset.__init__(
+            self, 
+            dataset_name=dataset_name, 
+            processing=processing,
+            **kwargs
+        )
+    
 
 
 def pyg_from_graph(graph: GraphDict) -> 'Data':    # noqa
