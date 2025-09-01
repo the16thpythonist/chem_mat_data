@@ -46,3 +46,9 @@ Changelog
   - Added the `docs` command group to manage the documentation
     - `collect-datasets` which collects all the datasets that are listed in the metadata.yml file and 
     creates a new markdown docs file in the docs folder with a table containing all those datasets.
+
+1.1.2 - 01.09.2025
+==================
+
+- Changed the default template for the `config.toml` file to include commented out example values for the 
+  nextcloud remote file share configuration and to fix the default download location.
