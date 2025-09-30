@@ -36,3 +36,10 @@ MANIFEST
 chem_mat_data/scripts/results/*
 site/*
 adrs/*
+
+*.gz
+*.csv
+*.mpack
+*.zip
+*.data
+*.backup

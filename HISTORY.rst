@@ -3,7 +3,7 @@ Changelog
 =========
 
 0.2.0 - 12.12.2024
-==================
+------------------
 
 - added `HISTORY.rst` to start a Changelog of the changes for each version of the program
 - added `DEVELOP.rst` which contains information about the development environment of the 
@@ -14,12 +14,12 @@ Changelog
   the build backend.
 
 1.0.0 - 01.05.2025
-==================
+------------------
 
 - First official release of the package
 
 1.1.0 - 07.07.2025
-==================
+------------------
 
 - Added `AGENTS.md` file which contains information that can be used by AI agents such as 
   ChatGPT Codex to understand and work with the package
@@ -37,7 +37,7 @@ Changelog
   - `elanos_vp` regression of vapor pressure 
 
 1.1.1 - 07.07.2025
-==================
+------------------
 
 - Added `prettytable` as a dependency to create markdown tables in the documentation
 - Changes to the `cli.py` CLI
@@ -48,13 +48,13 @@ Changelog
     creates a new markdown docs file in the docs folder with a table containing all those datasets.
 
 1.1.2 - 01.09.2025
-==================
+------------------
 
 - Changed the default template for the `config.toml` file to include commented out example values for the 
   nextcloud remote file share configuration and to fix the default download location.
 
 1.2.0 - 04.09.2025
-==================
+------------------
 
 General:
 
@@ -82,7 +82,7 @@ Datasets:
 
 
 1.2.1 - 22.09.2025
-==================
+------------------
 
 - Modified the syntax of type annotations so that the package is now actually compatible with 
   Python Version up to 3.8 at the lower end and Python 3.12 at the upper end.
@@ -91,3 +91,25 @@ Testing
 
 - Using `nox` now for the testing sessions instead of `tox` due to the much faster uv backend to 
   create the virtual environments.
+
+1.3.0 - 12.12.2025
+-------------------
+
+Packaging
+
+- Changed the minimum required version of pycomex to `0.23.0` to support the most recent features
+  such as the caching system which has also been implemented now in the dataset processing scripts.
+
+Command Line Interface
+
+- Changed the logo which is displayed at the beginning of the help message to "CMDATA" in another
+  ascii font and added a logo image in ANSI art.
+- Fixed the formatting of the 
+
+Datasets
+
+- Added the `HOPV15_exp` dataset which contains experimental values for organic photovoltaic materials
+  to the database.
+- Added missing target descriptions for the QM9 dataset.
+- Added the `melting_point` dataset which contains melting points for small organic molecules
+  to the database.
