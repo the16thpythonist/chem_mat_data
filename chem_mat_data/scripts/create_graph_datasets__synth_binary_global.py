@@ -1,4 +1,5 @@
 from typing import Dict, Any
+from typing import List, Dict
 from rdkit import Chem
 import pandas as pd
 from rdkit.Chem import Descriptors, Crippen, rdMolDescriptors, QED
@@ -76,12 +77,12 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     df = pd.read_csv('/media/data/Downloads/zinc_250k.csv')
     e.log(f'dataset of size {len(df)} loaded')
     e.log(df.head())
 
-    dataset: dict[int, dict] = {}
+    dataset: Dict[int, dict] = {}
     index: int = 0
     for c, data in enumerate(df.to_dict('records')):
         data['smiles'] = data['smiles']

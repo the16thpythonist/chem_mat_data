@@ -197,17 +197,90 @@ class Cache:
                 
             yield file_name, file_path
     
+    def remove_dataset(self,
+                       name: str,
+                       typ: str,
+                       ) -> bool:
+        """
+        Removes a specific dataset from the cache by name and type.
+
+        :param name: The unique string name of the dataset to remove
+        :param typ: The type of the dataset to remove
+
+        :returns: True if the dataset was successfully removed, False if it didn't exist
+        """
+        if not self.contains_dataset(name, typ):
+            return False
+
+        base_name = self.construct_base_name(name, typ)
+
+        # Remove the dataset archive file
+        archive_path = os.path.join(self.path, f'{base_name}.zip')
+        if os.path.exists(archive_path):
+            os.remove(archive_path)
+
+        # Remove the metadata file
+        metadata_path = os.path.join(self.path, f'{base_name}.yml')
+        if os.path.exists(metadata_path):
+            os.remove(metadata_path)
+
+        return True
+
     def clear(self) -> int:
         """
         Clears the cache by deleting all the datasets and metadata files that are stored in the cache.
-        
+
         :returns: The number of deleted elements
         """
         num_elements = 0
         for file_name, file_path in self.iterator_clear_():
             num_elements += 1
-            
+
         return num_elements
     
+    def get_dataset_size(self, name: str, typ: str) -> int:
+        """
+        Returns the size of a specific dataset in bytes.
+
+        :param name: The unique string name of the dataset
+        :param typ: The type of the dataset
+
+        :returns: Size of the dataset in bytes
+        """
+        if not self.contains_dataset(name, typ):
+            return 0
+
+        base_name = self.construct_base_name(name, typ)
+
+        # Get the size of the zip archive
+        archive_path = os.path.join(self.path, f'{base_name}.zip')
+        archive_size = os.path.getsize(archive_path) if os.path.exists(archive_path) else 0
+
+        # Get the size of the metadata file
+        metadata_path = os.path.join(self.path, f'{base_name}.yml')
+        metadata_size = os.path.getsize(metadata_path) if os.path.exists(metadata_path) else 0
+
+        return archive_size + metadata_size
+
+    def get_total_cache_size(self) -> int:
+        """
+        Returns the total size of all files in the cache directory in bytes.
+
+        :returns: Total cache size in bytes
+        """
+        total_size = 0
+
+        for file_name in os.listdir(self.path):
+            file_path = os.path.join(self.path, file_name)
+            if os.path.isfile(file_path):
+                total_size += os.path.getsize(file_path)
+            elif os.path.isdir(file_path):
+                # If there are subdirectories, calculate their sizes too
+                for root, dirs, files in os.walk(file_path):
+                    for file in files:
+                        total_size += os.path.getsize(os.path.join(root, file))
+
+        return total_size
+
     def __len__(self):
         return len(os.listdir(self.path))

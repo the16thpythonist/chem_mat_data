@@ -4,7 +4,7 @@ This module contains all the additional functionality that is needed for the uni
 import os
 import tempfile
 import random
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Tuple
 
 import numpy as np
 
@@ -44,11 +44,11 @@ def create_mock_graph(num_nodes: int = 10,
     
 
 def sample_mock_graphs(k: int,
-                       num_nodes_range: tuple[int, int] = (10, 20),
+                       num_nodes_range: Tuple[int, int] = (10, 20),
                        num_node_attributes: int = 10,
                        num_edge_attributes: int = 5,
                        num_graph_labels: int = 2
-                       ) -> list[GraphDict]:
+                       ) -> List[GraphDict]:
     """
     Samples a number of ``k`` mock graphs with a random number of nodes in the given range 
     ``num_nodes_range``. 

@@ -1,4 +1,5 @@
 """
+from typing import List, Dict
 This experiment module is the base module that handles the creation of a graph dataset from a 
 raw representation as an "xyz bundle". In the most basic form, such an xyz bundle represents a target 
 dataset as a folder or an archive consisting of multiple .xyz files where each file represents one 
@@ -54,7 +55,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     """
     """
     e.log('loading dataset from "xyz_bundle"...')
@@ -111,7 +112,7 @@ def after_save(e: Experiment,
     # csv format.
     # To do this we loop over all the keys of an example element and check the types.
     example_data: dict = next(iter(index_data_map.values()))
-    keys: list[str] = []
+    keys: List[str] = []
     for key, value in example_data.items():
         
         # if the value is a primitive data type we use it for sure.

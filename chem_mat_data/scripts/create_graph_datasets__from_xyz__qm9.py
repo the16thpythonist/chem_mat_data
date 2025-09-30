@@ -1,4 +1,5 @@
 
+from typing import List, Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 

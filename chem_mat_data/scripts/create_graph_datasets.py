@@ -1,4 +1,5 @@
 """
+from typing import List, Dict
 This module implements the conversion of a dataset of molecules (SMILES strings) to 
 fully pre-processed dataset of GraphDict object in message pack format that can be 
 directly loaded for the training of graph neural networks.
@@ -30,11 +31,12 @@ import gzip
 import shutil
 import datetime
 import multiprocessing
-from typing import Union
+from typing import Union, List, Dict
 
 import msgpack
 import numpy as np
 import rdkit.Chem as Chem
+import pandas as pd
 from rich.pretty import pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
@@ -66,7 +68,7 @@ SMILES_COLUMN: str = 'smiles'
 #       for multi-target regression or classification tasks. For the final graph dataset
 #       the target values will be merged into a single numeric vector that contains the 
 #       corresponding values in the same order as the column names are defined here.
-TARGET_COLUMNS: list[str] = ['target']
+TARGET_COLUMNS: List[str] = ['target']
 # :param DATASET_TYPE:
 #       Either 'regression' or 'classification' to define the type of the dataset. This
 #       will also determine how the target values are processed.
@@ -213,7 +215,7 @@ def add_graph_metadata(e: Experiment,
 
 
 @experiment.hook('load_dataset', default=True, replace=False)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     """
     In the experiment, this hook is invoked at the very beginning to obtain the actual 
     raw data of the dataset that should be processed. The output of this function should 
@@ -256,6 +258,44 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
     e.log(f'dataset @ "{e.SOURCE_PATH}" not found!')
 
 
+@experiment.hook('save_csv', default=True, replace=False)
+def save_csv(
+    e: Experiment, 
+    dataset: Dict[int, dict]
+) -> None:
+    """
+    This hook is invoked right after the dataset has been loaded and processed. It is supposed 
+    to save the raw dataset as a CSV file into the experiment archive folder.
+    """
+    
+    # constructing a dataframe from the dataset dict structure
+    e.log('constructing dataframe from dataset dict...')
+    # Construct a list of dictionaries for DataFrame creation
+    df_data = []
+    for index, data in dataset.items():
+        row = {
+            'smiles': data['smiles']
+        }
+        # Add each target as a separate column
+        for i, target in enumerate(data['targets']):
+            if len(e.TARGET_COLUMNS) > i:
+                row[e.TARGET_COLUMNS[i]] = target
+            else:
+                row[f'target_{i}'] = target
+        df_data.append(row)
+    
+    df = pd.DataFrame(df_data)
+        
+    ## -- Save Dataset --
+    e.log('Saving the dataset as CSV and GZipped CSV file...')
+    csv_path = os.path.join(e.path, f'{e.DATASET_NAME}.csv')
+    df.to_csv(csv_path, index=False)
+
+    gz_path = csv_path + '.gz'
+    with open(csv_path, 'rb') as f_in, gzip.open(gz_path, 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
+
+
 @experiment
 def experiment(e: Experiment):
     """
@@ -263,6 +303,7 @@ def experiment(e: Experiment):
     """
     
     e.log('starting experiment...')
+    e.log_parameters()
     
     # We need to setup the multiprocessing at the beginning here because of the following 
     # technical problem:
@@ -282,85 +323,94 @@ def experiment(e: Experiment):
         worker.start()
         workers.append(worker)
         e.log(' * started worker')
-    
-    e.log('loading dataset...')
-    dataset: dict[int, dict] = e.apply_hook(
-        'load_dataset'
-    )
-    num_elements = len(dataset)
-    e.log(f'loaded dataset with {num_elements} elements')
-    
-    # when starting the experiment in testing mode we want to limit the number of elements in 
-    # the dataset to only a few examples so that the experiment overall finishes really quickly 
-    # and so that all the code in the experiment (from start to finish) can be tested quickly 
-    # for obvious errors (e.g. syntax errors, etc.) 
-    if e.__TESTING__:
-        
-        e.log('running experiment in testing mode...')
-        
-        e.log(' * limiting to only 50 elements')
-        num_elements = min(num_elements, 50)
-        dataset = dict(list(dataset.items())[:num_elements])
 
-    e.log('processing dataset...')
-    indices = list(dataset.keys())
-    num_indices = len(indices)
-    graphs = []
-    
-    start_time = time.time()
-    count = 0
-    prev_count = 0
-    
-    # The actual processing happens in the additional worker processes and in this loop we simply 
-    # feed the data to be processed into the input queue for the workers processes and then collect 
-    # the processed graphs from the output queue and store that in the local "graphs" list.
-    # In the end all the graph dicts in that graphs list will be saved into a msgpack file to the 
-    # disk.
-    while count < num_indices:
-        
-        # In each iteration we will completely fill up the input queue so that it is always full
-        # and the workers are always busy
-        while not input_queue.full() and len(indices) != 0:
-            index = indices.pop()
-            data = dataset[index]
-            input_queue.put(data)
-            
-        # Then we also want to clear all the contents of output queue and transfer them to the 
-        # local graph list
-        while not output_queue.empty():
-            graph_encoded = output_queue.get()
-            graph = msgpack.unpackb(graph_encoded, ext_hook=ext_hook)
-            if graph:
-                graphs.append(graph)
-            
-            count += 1
-            
-        if count % 1000 == 0 and count != prev_count:
-            prev_count = count
-            time_passed = time.time() - start_time
-            num_remaining = num_elements - (count + 1)
-            time_per_element = time_passed / (count + 1)
-            time_remaining =time_per_element * num_remaining
-            eta = datetime.datetime.now() + datetime.timedelta(seconds=time_remaining)
-            e.log(f' * {count:05d}/{num_elements} done'
-                  f' - time passed: {time_passed / 60:.2f}m'
-                  f' - time remaining: {time_remaining / 60:.2f}m'
-                  f' - eta: {eta:%a %d.%m %H:%M}')
-            
-    end_time = time.time()
-    duration = end_time - start_time
-    e.log(f'finished processing dataset after {duration / 3600:.2f}h')
+    try:
+        e.log('loading dataset...')
+        dataset: Dict[int, dict] = e.apply_hook(
+            'load_dataset'
+        )
+        num_elements = len(dataset)
+        e.log(f'loaded dataset with {num_elements} elements')
 
-    # We need to stop the subprocesses here because if we don't do that then the main process won't be 
-    # able to properly exit either...
-    e.log('stopping the workers...')
-    for worker in workers:
-        input_queue.put(None)
-        worker.terminate()
-        worker.join()
-        
-    del input_queue
-    del output_queue
+        # This following hook will save the dataset as a csv file to the experiment folder.
+        e.apply_hook(
+            'save_csv',
+            dataset=dataset,
+        )
+
+        # when starting the experiment in testing mode we want to limit the number of elements in
+        # the dataset to only a few examples so that the experiment overall finishes really quickly
+        # and so that all the code in the experiment (from start to finish) can be tested quickly
+        # for obvious errors (e.g. syntax errors, etc.)
+        if e.__TESTING__:
+
+            e.log('running experiment in testing mode...')
+
+            e.log(' * limiting to only 50 elements')
+            num_elements = min(num_elements, 50)
+            dataset = dict(list(dataset.items())[:num_elements])
+
+        e.log('processing dataset...')
+        indices = list(dataset.keys())
+        num_indices = len(indices)
+        graphs = []
+
+        start_time = time.time()
+        count = 0
+        prev_count = 0
+
+        # The actual processing happens in the additional worker processes and in this loop we simply
+        # feed the data to be processed into the input queue for the workers processes and then collect
+        # the processed graphs from the output queue and store that in the local "graphs" list.
+        # In the end all the graph dicts in that graphs list will be saved into a msgpack file to the
+        # disk.
+        while count < num_indices:
+
+            # In each iteration we will completely fill up the input queue so that it is always full
+            # and the workers are always busy
+            while not input_queue.full() and len(indices) != 0:
+                index = indices.pop()
+                data = dataset[index]
+                input_queue.put(data)
+
+            # Then we also want to clear all the contents of output queue and transfer them to the
+            # local graph list
+            while not output_queue.empty():
+                graph_encoded = output_queue.get()
+                graph = msgpack.unpackb(graph_encoded, ext_hook=ext_hook)
+                if graph:
+                    graphs.append(graph)
+
+                count += 1
+
+            if count % 1000 == 0 and count != prev_count:
+                prev_count = count
+                time_passed = time.time() - start_time
+                num_remaining = num_elements - (count + 1)
+                time_per_element = time_passed / (count + 1)
+                time_remaining =time_per_element * num_remaining
+                eta = datetime.datetime.now() + datetime.timedelta(seconds=time_remaining)
+                e.log(f' * {count:05d}/{num_elements} done'
+                      f' - time passed: {time_passed / 60:.2f}m'
+                      f' - time remaining: {time_remaining / 60:.2f}m'
+                      f' - eta: {eta:%a %d.%m %H:%M}')
+
+        end_time = time.time()
+        duration = end_time - start_time
+        e.log(f'finished processing dataset after {duration / 3600:.2f}h')
+
+    finally:
+        # We need to stop the subprocesses here because if we don't do that then the main process won't be
+        # able to properly exit either. This is done in a finally block to ensure workers are cleaned up
+        # even if an exception occurs during processing.
+        e.log('stopping the workers...')
+        for worker in workers:
+            input_queue.put(None)
+            worker.terminate()
+            worker.join()
+
+        del input_queue
+        del output_queue
 
     e.log('Description:')
     e.log(e.DESCRIPTION)
@@ -405,6 +455,7 @@ def experiment(e: Experiment):
         'compounds': len(graphs),
         'targets': len(example_graph['graph_labels']),
         'target_type': [e.DATASET_TYPE],
+        'description': e.DESCRIPTION,
         'raw': ['csv'],
         'sources': [],
     }

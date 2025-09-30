@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import lorem
 import matplotlib.pyplot as plt
@@ -157,7 +158,7 @@ class TestCrippenEncoder:
         
         mol = Chem.MolFromSmiles(self.DEFAULT_SMILES)
         for atom in mol.GetAtoms():
-            value: list[float] = encoder.encode(mol, atom)
+            value: List[float] = encoder.encode(mol, atom)
             print(value)
             
             assert isinstance(value, list)

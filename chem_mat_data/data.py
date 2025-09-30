@@ -10,9 +10,13 @@ import msgpack
 import numpy as np
 import tempfile
 import zipfile
+import pandas as pd
 
 from typing import Dict, List, Tuple, Union, Optional, Any, Generator
 from chem_mat_data._typing import GraphDict
+
+from parsimonious.grammar import Grammar
+from parsimonious.nodes import NodeVisitor
 
 
 def default(obj):
@@ -264,11 +268,11 @@ class QM9XyzParser(AbstractXyzParser):
     @classmethod
     def get_fields(cls):
         """
-        Returns the list of string keys which are included in the additional "info" dict that is 
+        Returns the list of string keys which are included in the additional "info" dict that is
         returned by the "parse" method.
-        
+
         For the QM9 flavor of xyz files, this includes the following keys:
-        - targets: A list of float values representing the 12 target values that have been calculated for 
+        - targets: A list of float values representing the 12 target values that have been calculated for
           each molecule element using the QM calculations.
         - functional: The string name of the functional that was used for the calculations.
         - smiles1: The smiles string that represents the molecule that is described by the xyz file.
@@ -276,11 +280,433 @@ class QM9XyzParser(AbstractXyzParser):
         return ['targets', 'functional', 'smiles1', 'smiles2']
 
 
+class HOPV15Parser(AbstractXyzParser):
+    """
+    Parser for the HOPV15 dataset format using a 2-step approach:
+    1. Split the file into individual molecule chunks based on recognizable patterns
+    2. Parse each chunk separately using pattern matching and grammar parsing
+
+    The HOPV15 dataset consists of .data files containing molecular information including
+    SMILES, InChI, experimental properties, and multiple conformers with XYZ coordinates
+    and calculated properties.
+
+    The file format can have two variations:
+    1. Full format: SMILES -> InChI -> experimental data -> pruned SMILES -> conformers
+    2. Short format: SMILES -> conformers
+    """
+
+    # Define the single molecule grammar (simpler than multi-molecule grammar)
+    SINGLE_MOLECULE_GRAMMAR = r"""
+    molecule = full_molecule / short_molecule
+
+    full_molecule = smiles_line newline inchi_line newline experimental_line newline
+                   pruned_smiles_line newline conformers
+
+    short_molecule = smiles_line newline conformers
+
+    smiles_line = smiles
+    inchi_line = inchi
+    experimental_line = experimental_data
+    pruned_smiles_line = smiles
+
+    conformers = num_conformers_line newline conformer+
+
+    num_conformers_line = number
+
+    conformer = conformer_header newline num_atoms_line newline xyz_coords calculated_data*
+
+    conformer_header = "Conformer" ws+ number
+    num_atoms_line = number
+
+    xyz_coords = xyz_coord+
+    xyz_coord = element ws+ coordinate ws+ coordinate ws+ coordinate newline
+
+    calculated_data = qchem_line newline?
+    qchem_line = "QChem" ws+ method "," coordinate "," coordinate "," coordinate "," additional_values
+
+    smiles = ~r"[A-Za-z0-9@+\-\[\]()=#\\.\\/:]+(?=\n)"
+    inchi = ~r"InChI=[^\n]+(?=\n)"
+    experimental_data = ~r"[^,\n]*(?:,[^,\n]*)*,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?(?=\n)"
+
+    method = ~r"[^,]+(?=,)"
+    element = ~r"[A-Z][a-z]?(?=\s)"
+    coordinate = ~r"-?\d+\.\d+(?:[eE][+-]?\d+)?"
+    number = ~r"\d+(?=\n)"
+    additional_values = ~r"[^\n\r]*"
+
+    ws = ~r"[ \t]+"
+    newline = ~r"\n"
+    """
+
+    def __init__(self, path: str, **kwargs):
+        AbstractXyzParser.__init__(self, path)
+        self.grammar = Grammar(self.SINGLE_MOLECULE_GRAMMAR)
+
+    class HOPV15Visitor(NodeVisitor):
+        """Custom visitor to transform the parsed tree into structured data"""
+
+        def visit_molecule(self, node, visited_children):
+            return visited_children[0]  # full_molecule or short_molecule
+
+        def visit_full_molecule(self, node, visited_children):
+            smiles, _, inchi, _, exp_data, _, pruned_smiles, _, conformers = visited_children
+            return {
+                'smiles': smiles,
+                'inchi': inchi,
+                'experimental_properties': exp_data,
+                'pruned_smiles': pruned_smiles,
+                'num_conformers': conformers['num_conformers'],
+                'conformers': conformers['conformers']
+            }
+
+        def visit_short_molecule(self, node, visited_children):
+            smiles, _, conformers = visited_children
+            return {
+                'smiles': smiles,
+                'num_conformers': conformers['num_conformers'],
+                'conformers': conformers['conformers']
+            }
+
+        def visit_smiles_line(self, node, visited_children):
+            return visited_children[0]
+
+        def visit_inchi_line(self, node, visited_children):
+            return visited_children[0]
+
+        def visit_experimental_line(self, node, visited_children):
+            return visited_children[0]
+
+        def visit_pruned_smiles_line(self, node, visited_children):
+            return visited_children[0]
+
+        def visit_conformers(self, node, visited_children):
+            num_conformers, _, conformer_list = visited_children
+            return {
+                'num_conformers': num_conformers,
+                'conformers': conformer_list
+            }
+
+        def visit_num_conformers_line(self, node, visited_children):
+            return visited_children[0]
+
+        def visit_conformer(self, node, visited_children):
+            header, _, num_atoms, _, xyz_coords, calc_data = visited_children
+            conformer_info = {
+                'header': header['header'],
+                'conformer_id': header['conformer_id'],
+                'num_atoms': num_atoms,
+                'atoms': [coord['element'] for coord in xyz_coords],
+                'coordinates': np.array([[coord['x'], coord['y'], coord['z']] for coord in xyz_coords]),
+                'calculated_data': calc_data
+            }
+            return conformer_info
+
+        def visit_conformer_header(self, node, visited_children):
+            _, _, number = visited_children
+            return {
+                'header': node.text.strip(),
+                'conformer_id': number
+            }
+
+        def visit_num_atoms_line(self, node, visited_children):
+            return visited_children[0]
+
+        def visit_xyz_coords(self, node, visited_children):
+            return visited_children
+
+        def visit_xyz_coord(self, node, visited_children):
+            element, _, x, _, y, _, z, _ = visited_children
+            return {
+                'element': element,
+                'x': x,
+                'y': y,
+                'z': z
+            }
+
+        def visit_calculated_data(self, node, visited_children):
+            qchem_line, _ = visited_children
+            return qchem_line
+
+        def visit_qchem_line(self, node, visited_children):
+            _, _, method, _, homo, _, lumo, _, gap, _, additional = visited_children
+
+            # Parse additional values
+            additional_values = []
+            for val in additional.split(','):
+                try:
+                    additional_values.append(float(val.strip()))
+                except ValueError:
+                    continue
+
+            return {
+                'method': method,
+                'HOMO': homo,
+                'LUMO': lumo,
+                'gap': gap,
+                'additional_values': additional_values
+            }
+
+        def visit_smiles(self, node, visited_children):
+            return node.text.strip()
+
+        def visit_inchi(self, node, visited_children):
+            return node.text.strip()
+
+        def visit_experimental_data(self, node, visited_children):
+            exp_line = node.text.strip()
+            # Extract the last 6 numerical values
+            parts = exp_line.split(',')
+            values = []
+            for part in reversed(parts):
+                try:
+                    values.append(float(part.strip()))
+                    if len(values) == 6:
+                        break
+                except ValueError:
+                    continue
+
+            if len(values) == 6:
+                values.reverse()  # Reverse to get correct order
+                return {
+                    'PCE': values[0],    # Power conversion efficiency
+                    'VOC': values[1],    # Open circuit potential
+                    'JSC': values[2],    # Short circuit current density
+                    'HOMO': values[3],   # HOMO energy
+                    'LUMO': values[4],   # LUMO energy
+                    'gap': values[5]     # HOMO-LUMO gap
+                }
+            return None
+
+        def visit_method(self, node, visited_children):
+            return node.text.strip()
+
+        def visit_element(self, node, visited_children):
+            return node.text.strip()
+
+        def visit_coordinate(self, node, visited_children):
+            return float(node.text.strip())
+
+        def visit_number(self, node, visited_children):
+            return int(node.text.strip())
+
+        def visit_additional_values(self, node, visited_children):
+            return node.text.strip()
+
+        def generic_visit(self, node, visited_children):
+            return visited_children or node
+
+    def _split_file_into_molecules(self, content: str) -> List[str]:
+        """
+        Split the HOPV15 file content into individual molecule chunks.
+
+        This is the first step of the 2-step parsing approach.
+
+        :param content: The complete file content as a string
+        :returns: List of strings, each containing one molecule's data
+        """
+        lines = content.split('\n')
+        molecule_chunks = []
+        current_chunk_lines = []
+        in_qchem_section = False
+        qchem_count = 0
+
+        for i, line in enumerate(lines):
+            line = line.strip()
+
+            # Skip empty lines at the start of a potential new molecule
+            if not line and not current_chunk_lines:
+                continue
+
+            current_chunk_lines.append(line)
+
+            # Track QChem sections to identify molecule boundaries
+            if line.startswith('QChem '):
+                in_qchem_section = True
+                qchem_count += 1
+
+            # After being in a QChem section, if we encounter a line that looks like a new SMILES
+            # and we've seen some QChem data, this is likely a new molecule
+            elif in_qchem_section and qchem_count >= 1:
+                # Check if this line looks like a SMILES string starting a new molecule
+                if (len(line) > 20 and
+                    not line.startswith('InChI=') and
+                    not line.startswith('QChem ') and
+                    not line.startswith('Conformer ') and
+                    not line.replace('.', '').replace(',', '').replace('-', '').replace('nan', '').replace(' ', '').isdigit() and
+                    ('c' in line.lower() or 'C' in line) and  # Contains carbon (likely organic chemistry)
+                    '(' in line and ')' in line):  # Has typical SMILES parentheses
+
+                    # This is likely the start of a new molecule
+                    # Remove this line from current chunk and save the current chunk
+                    current_chunk_lines.pop()
+
+                    if current_chunk_lines:
+                        molecule_content = '\n'.join(current_chunk_lines)
+                        if molecule_content.strip():
+                            molecule_chunks.append(molecule_content)
+
+                    # Start new chunk with this line
+                    current_chunk_lines = [line]
+                    in_qchem_section = False
+                    qchem_count = 0
+
+        # Add the last chunk if it exists
+        if current_chunk_lines:
+            molecule_content = '\n'.join(current_chunk_lines)
+            if molecule_content.strip():
+                molecule_chunks.append(molecule_content)
+
+        return molecule_chunks
+
+    def _parse_single_molecule(self, molecule_content: str) -> dict:
+        """
+        Parse a single molecule chunk using the grammar.
+
+        This is the second step of the 2-step parsing approach.
+
+        :param molecule_content: String containing one molecule's data
+        :returns: Dictionary containing parsed molecule data
+        """
+        try:
+            # Parse using grammar
+            tree = self.grammar.parse(molecule_content)
+            visitor = self.HOPV15Visitor()
+            molecule_data = visitor.visit(tree)
+            return molecule_data
+        except Exception as e:
+            # If grammar parsing fails, try to extract basic information manually
+            lines = molecule_content.split('\n')
+            basic_data = {'smiles': None, 'conformers': []}
+
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if not line:
+                    continue
+
+                # First substantial line is likely SMILES
+                if basic_data['smiles'] is None and len(line) > 10 and not line.startswith('InChI='):
+                    basic_data['smiles'] = line
+
+            # If we at least have a SMILES, return basic data
+            if basic_data['smiles']:
+                basic_data['num_conformers'] = 0
+                return basic_data
+            else:
+                raise e
+
+    def parse(self) -> Tuple[Chem.Mol, dict]:
+        """
+        Parse the HOPV15 .data file and extract molecular information and properties.
+
+        Uses the 2-step approach: first splits the file into molecule chunks,
+        then parses the first molecule chunk.
+
+        :returns: A tuple (mol, info) where mol is the primary Chem.Mol object and info contains
+            all additional information including experimental data, conformers, and calculated properties.
+        """
+        with open(self.path, mode='r') as file:
+            content = file.read()
+
+        # Step 1: Split file into molecule chunks
+        molecule_chunks = self._split_file_into_molecules(content)
+
+        if not molecule_chunks:
+            raise ValueError("No molecules found in the file")
+
+        # Step 2: Parse the first molecule chunk
+        molecule_data = self._parse_single_molecule(molecule_chunks[0])
+        mol = self._create_molecule_from_data(molecule_data)
+
+        return mol, molecule_data
+
+    def _create_molecule_from_data(self, molecule_data: dict) -> Chem.Mol:
+        """
+        Create an RDKit molecule from parsed data and add 3D conformer if available.
+
+        :param molecule_data: Dictionary containing parsed molecule data
+        :returns: RDKit molecule object
+        """
+        # Create RDKit molecule from SMILES
+        smiles = molecule_data['smiles']
+        mol = Chem.MolFromSmiles(smiles)
+
+        # Fallback to pruned SMILES if available and main SMILES fails
+        if mol is None and 'pruned_smiles' in molecule_data:
+            mol = Chem.MolFromSmiles(molecule_data['pruned_smiles'])
+
+        if mol is not None and molecule_data.get('conformers'):
+            # Add 3D conformer from first conformer if available
+            first_conformer = molecule_data['conformers'][0]
+            if 'coordinates' in first_conformer:
+                mol_atoms = mol.GetNumAtoms()
+                xyz_atoms = first_conformer['coordinates'].shape[0]
+
+                if mol_atoms == xyz_atoms:
+                    conf = Chem.Conformer(mol.GetNumAtoms())
+                    for i, coord in enumerate(first_conformer['coordinates']):
+                        conf.SetAtomPosition(i, coord)
+                    mol.AddConformer(conf)
+                else:
+                    # Try to add hydrogens to match XYZ structure
+                    mol_with_h = Chem.AddHs(mol)
+                    if mol_with_h.GetNumAtoms() == xyz_atoms:
+                        conf = Chem.Conformer(mol_with_h.GetNumAtoms())
+                        for i, coord in enumerate(first_conformer['coordinates']):
+                            conf.SetAtomPosition(i, coord)
+                        mol_with_h.AddConformer(conf)
+                        mol = mol_with_h
+
+        return mol
+
+    def parse_all(self) -> List[Tuple[Chem.Mol, dict]]:
+        """
+        Parse all molecules from a HOPV15 .data file that contains multiple molecules.
+
+        Uses the 2-step approach: first splits the file into molecule chunks,
+        then parses each chunk separately.
+
+        :returns: List of tuples (mol, info) for each molecule in the file
+        """
+        with open(self.path, mode='r') as file:
+            content = file.read()
+
+        # Step 1: Split file into molecule chunks
+        molecule_chunks = self._split_file_into_molecules(content)
+
+        # Step 2: Parse each molecule chunk separately
+        results = []
+        for i, chunk in enumerate(molecule_chunks):
+            try:
+                molecule_data = self._parse_single_molecule(chunk)
+                mol = self._create_molecule_from_data(molecule_data)
+                if mol is not None:
+                    results.append((mol, molecule_data))
+            except Exception as e:
+                # Log the error but continue with other molecules
+                print(f"Warning: Failed to parse molecule {i+1}: {e}")
+                continue
+
+        return results
+
+    @classmethod
+    def get_fields(cls) -> List[str]:
+        """
+        Returns the list of string keys included in the info dict for HOPV15 files.
+
+        :returns: List of field names available in the parsed info dictionary
+        """
+        return [
+            'smiles', 'inchi', 'pruned_smiles', 'num_conformers',
+            'experimental_properties', 'conformers'
+        ]
+
+
 # This dictionary maps the string keys to the corresponding parser classes. This way we can dynamically
 # select the correct parser class based on the string key that is provided by the user.
 XYZ_PARSER_MAP = {
     'default': DefaultXyzParser,
     'qm9': QM9XyzParser,
+    'hopv15': HOPV15Parser,
 }
 
 
@@ -570,3 +996,5 @@ class TUDatasetParser:
 
 def load_tu_dataset() -> Tuple[dict, dict]:
     pass
+
+

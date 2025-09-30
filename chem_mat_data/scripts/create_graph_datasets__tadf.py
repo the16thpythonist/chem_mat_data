@@ -15,7 +15,7 @@ from chem_mat_data.main import get_file_share
 #       This is the name of the dataset that will be used to identify the dataset in the
 #       file share server. It will also be used to create the folder structure for the dataset
 #       on the file share server.
-DATASET_NAME: str = 'zinc250'
+DATASET_NAME: str = 'tadf'
 # :param SMILES_COLUMN:
 #       This is the string name of the CSV column which contains the SMILES strings of
 #       the molecules.
@@ -26,7 +26,7 @@ SMILES_COLUMN: str = 'smiles'
 #       for multi-target regression or classification tasks. For the final graph dataset
 #       the target values will be merged into a single numeric vector that contains the 
 #       corresponding values in the same order as the column names are defined here.
-TARGET_COLUMNS: List[str] = ['logP', 'qed', 'SAS']
+TARGET_COLUMNS: List[str] = ['tadf_rate', 'splitting_energy', 'oscillator_strength']
 # :param DATASET_TYPE:
 #       Either 'regression' or 'classification' to define the type of the dataset. This
 #       will also determine how the target values are processed.
@@ -35,12 +35,8 @@ DATASET_TYPE: str = 'regression'
 #       This is a string description of the dataset that will be stored in the experiment
 #       metadata.
 DESCRIPTION: str = (
-    'Curated subset of approximately 250000 drug-like, commercially available small organic '
-    'molecules selected for virtual screening and molecular generation benchmarks, each '
-    'represented as a molecular graph of up to 38 heavy atoms.'
-    'Data were retrieved from the ZINC database (ZINC15), filtered for molecular size and drug-likeness, '
-    'and were processed as part of the "Automatic Chemical Design Using a Data-Driven Continuous '
-    'Representation of Molecules" study by Gómez-Bombarelli et al.'
+    'Set of organic molecules used in a high-throughput virtual screening approach of '
+    'to find candidates for more efficient molecular organic light-emitting diodes.'
 )
 # :param METADATA:
 #       A dictionary which will be used as the basis for the metadata that will be added 
@@ -49,15 +45,18 @@ METADATA: dict = {
     'tags': [
         'Molecules', 
         'SMILES', 
-        'Biology', 
+        'DFT',
+        'Electronic Properties',
+        'OLED', 
     ],
     'sources': [
-        'https://www.kaggle.com/datasets/basu369victor/zinc250k',  
+        'https://www.nature.com/articles/nmat4717#Sec16',  
     ],
+    # TADF: Thermally Activated Delayed Fluorescence
     'target_descriptions': {
-        '0': 'Octanol-water partition coefficient (logP)',
-        '1': 'Quantitative Estimation of Drug-likeness (QED)',
-        '2': 'Synthetic Accessibility Score (SAS)',
+        '0': 'tadf_rate - Thermally activated delayed fluorescence (TADF) rate',
+        '1': 'splitting_energy - Singlet-triplet splitting energy',
+        '2': 'oscillator_strength - Oscillator strength',
     }
 }
 
@@ -86,7 +85,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     e.log('Loading the CSV file from the remote file share server...')
     config = Config()
     file_share: NextcloudFileShare = get_file_share(config)
-    file_path: str = file_share.download_file('zinc250.csv', folder_path=e.path)
+    file_path: str = file_share.download_file('tadf.csv', folder_path=e.path)
     df: pd.DataFrame = pd.read_csv(file_path)
     print(df.head())
     

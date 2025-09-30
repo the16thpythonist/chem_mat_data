@@ -13,7 +13,7 @@ def test_readme_example():
     from chem_mat_data import load_graph_dataset, pyg_data_list_from_graphs
     
     # Load the dataset of graphs
-    graphs: list[dict] = load_graph_dataset('clintox')
+    graphs: List[dict] = load_graph_dataset('clintox')
     example_graph = graphs[0]
     pprint(example_graph)
     
@@ -52,7 +52,7 @@ def test_first_steps_graphs():
     from rich.pretty import pprint
     from chem_mat_data import load_graph_dataset
 
-    graphs: list[dict] = load_graph_dataset('clintox')
+    graphs: List[dict] = load_graph_dataset('clintox')
     example_graph = graphs[0]
     pprint(example_graph)
     

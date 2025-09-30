@@ -71,23 +71,65 @@ datasets:
         - Regression
         targets: 1
         verbose: Aqueous Solubility
-    bace:
+    bace_cls:
         compounds: 1513
-        description: "The BACE dataset provides quantitative (IC50) and qualitative\
-            \ (binary label) binding results for a set of inhibitors of human \u03B2\
-            -secretase 1 (BACE-1)."
-        full: true
+        description: "The BACE dataset contains quantitative IC50 and qualitative\
+            \ binary binding results for 1522 inhibitors of human \u03B2-secretase\
+            \ 1 (BACE-1), an important enzyme target for Alzheimers disease research.\
+            \ The dataset was originally compiled by Subramanian et al. (2016) from\
+            \ experimental values reported in scientific literature and integrated\
+            \ into MoleculeNet as a binary classification benchmark. All data represent\
+            \ experimental values with some compounds having detailed crystal structures\
+            \ available, making it valuable for drug discovery applications targeting\
+            \ neurodegeneration."
         raw:
         - csv
+        sources:
+        - https://pubs.acs.org/doi/full/10.1021/acs.jcim.6b00290
+        - https://doi.org/10.1039/C7SC02664A
         tags:
-        - Smiles
         - Molecules
-        - Biophysics
+        - SMILES
+        - Protein Target
+        - Protein Binding
+        - Inhibitors
+        target_descriptions:
+            '0': Inactive class indicator - 1 if the compound is inactive
+            '1': Active class indicator - 1 if the compound is a beta secretase 1
+                inhibitor
         target_type:
-        - Regression
-        - Classification
+        - classification
         targets: 2
-        verbose: BACE-1 Binding Affinity
+        verbose: Beta Secretase 1 Inhibitors
+    bace_reg:
+        compounds: 1513
+        description: "The BACE dataset contains quantitative IC50 and qualitative\
+            \ binary binding results for 1522 inhibitors of human \u03B2-secretase\
+            \ 1 (BACE-1), an important enzyme target for Alzheimers disease research.\
+            \ The dataset was originally compiled by Subramanian et al. (2016) from\
+            \ experimental values reported in scientific literature and integrated\
+            \ into MoleculeNet as a binary classification benchmark. All data represent\
+            \ experimental values with some compounds having detailed crystal structures\
+            \ available, making it valuable for drug discovery applications targeting\
+            \ neurodegeneration."
+        raw:
+        - csv
+        sources:
+        - https://pubs.acs.org/doi/full/10.1021/acs.jcim.6b00290
+        - https://doi.org/10.1039/C7SC02664A
+        tags:
+        - Molecules
+        - SMILES
+        - Protein Target
+        - Protein Binding
+        - Inhibitors
+        target_descriptions:
+            '0': pIC50 - Negative decadic logarithm of the IC50 value (in molar) indicating
+                the binding affinity to the BACE-1 protein
+        target_type:
+        - classification
+        targets: 1
+        verbose: Beta Secretase 1 Inhibitors
     bbbp:
         compounds: 1934
         description: Binary labels of blood-brain barrier penetration(permeability).
@@ -287,20 +329,56 @@ datasets:
             is associated with 2 target values (experimental, calculated) where the
             first value is the experimental hydration free energy and the second value
             is the calculated hydration free energy.
-        full: true
         raw:
         - csv
         sources:
         - https://pubmed.ncbi.nlm.nih.gov/24928188/
+        - https://pubs.acs.org/doi/10.1021/acs.jcim.8b00180
+        - https://github.com/MobleyLab/FreeSolv
         tags:
-        - Smiles
         - Molecules
-        - Physical Chemistry
-        - Solubility
+        - SMILES
+        - Experimental
+        - Hydration Free Energy
+        - Molecular Dynamics
+        - Hydration
+        target_descriptions:
+            '0': HDF expt - Experimentally determined hydration free energy
+            '1': HDF calc - hydration free energy calculated using molecular dynamics
+                simulations
         target_type:
-        - Regression
+        - regression
         targets: 2
         verbose: Hydration Free Energy
+    half_life:
+        compounds: 892
+        description: The dataset consists of 6,309 experimental soil biotransformation
+            half-life values for 893 pesticides and pesticide transformation products,
+            extracted from publicly available regulatory reports via the EAWAG-SOIL
+            package on enviPath. Each substance can have multiple reported half-life
+            values obtained from different experiments conducted under varying environmental
+            conditions (different soils, temperatures, pH levels, etc.) and calculated
+            using different kinetic models, resulting in substantial variability spanning
+            several orders of magnitude for the same chemical. The dataset includes
+            both uncensored half-life measurements and censored values (311 total)
+            that fall beyond reliable quantification limits, either as very fast degradation
+            (<0.1 days) or very slow degradation (>1000 days).
+        raw:
+        - csv
+        sources:
+        - https://chemrxiv.org/engage/chemrxiv/article-details/64be471cb605c6803b425da6
+        tags:
+        - Molecules
+        - SMILES
+        - Environment
+        - Half-Life
+        target_descriptions:
+            '0': DT50 - Mean Experimental half-life (DT50) in days under aerobic soil
+                conditions
+        target_type:
+        - regression
+        targets: 1
+        verbose: Half-Life Biotransformation
     hiv:
         compounds: 38040
         description: Experimentally measured abilities to inhibit HIV replication.
@@ -317,21 +395,59 @@ datasets:
         - Classification
         targets: 2
         verbose: HIV Inhibitors
-    lipophilicity:
-        compounds: 4199
-        description: Experimental results of octanol/water distribution coefficient(logD
-            at pH 7.4).
-        full: true
+    hopv15_exp:
+        compounds: 175
+        description: The Harvard Organic Photovoltaic Dataset (HOPV15) is a comprehensive
+            collection of experimental photovoltaic data from the literature for 350
+            different organic solar cell donor structures, combined with corresponding
+            quantum-chemical calculations performed over multiple molecular conformers.
+            The dataset includes both experimental measurements (such as power conversion
+            efficiency, HOMO/LUMO energies, and other photovoltaic characteristics)
+            and computational results using various density functionals and basis
+            sets. This resource is designed to enable calibration of quantum chemical
+            calculations to experimental observations, support the development of
+            new computational methodologies, and benchmark current and future model
+            chemistries for organic electronic applications.
         raw:
         - csv
+        sources:
+        - https://chemrxiv.org/engage/chemrxiv/article-details/64be471cb605c6803b425da6
         tags:
-        - Smiles
         - Molecules
-        - Physical Chemistry
+        - SMILES
+        - Organic Electronics
+        - Solar Cells
+        target_descriptions:
+            '0': homo - Highest occupied molecular orbit in eV
+            '1': lumo - Lowest unoccupied molecular orbit in eV
+            '2': gap - Gap between HOMO and LUMO energy levels in eV
+            '3': JSC - Closed circuit current in mA/cm2
+            '4': VOC - Open circuit voltage in V
+            '5': PCE - Power conversion efficience in percent
         target_type:
-        - Regression
+        - regression
+        targets: 6
+        verbose: Harvard Organic Photovoltaic Dataset
+    lipophilicity:
+        compounds: 4199
+        description: Experimental results for the octanol/water distribution coefficient
+            (logD at pH7.4) for a set of 4200 drug-like compounds.
+        raw:
+        - csv
+        sources:
+        - https://doi.org/10.1039/C7SC02664A
+        - https://moleculenet.org/datasets-1
+        tags:
+        - Molecules
+        - SMILES
+        - Experimental
+        - Partition Coefficient
+        target_descriptions:
+            '0': logD - Experimental logD (pH 7.4) octanol-water distribution coefficient
+        target_type:
+        - regression
         targets: 1
-        verbose: Octanol/Water Distribution Coefficient
+        verbose: Octanol-Water Distribution Coefficient
     muv:
         compounds: 93087
         description: Subset of PubChem BioAssay by applying a refined nearest neighbor
@@ -349,6 +465,33 @@ datasets:
         - Classification
         targets: 17
         verbose: MUV Benchmark
+    open_melting_point:
+        compounds: 27965
+        description: "The Jean-Claude Bradley Open Melting Point Dataset contains\
+            \ 28k melting point measurements for organic compounds. A highly curated\
+            \ subset of 3,041 validated measurements is also available, containing\
+            \ only data with multiple measurements and temperature ranges between\
+            \ 0.01\xB0C and 5\xB0C. Released as open data under a CC0 license, this\
+            \ dataset is widely used in machine learning and computational chemistry\
+            \ research for developing models to predict melting points from molecular\
+            \ structure."
+        raw:
+        - csv
+        sources:
+        - https://www.nature.com/articles/npre.2011.6229.1
+        - http://dx.doi.org/10.6084/m9.figshare.1031638
+        - https://figshare.com/articles/dataset/Jean_Claude_Bradley_Open_Melting_Point_Datset/1031637?file=1503990
+        tags:
+        - Molecules
+        - SMILES
+        - Physical Property
+        - Melting Point
+        target_descriptions:
+            '0': mpC - Experimental melting point in Celsius degrees
+        target_type:
+        - regression
+        targets: 1
+        verbose: Melting Point
     pcqm4mv2:
         compounds: 3378606
         description: Based on the PubChemQC, we define a meaningful ML task of predicting
@@ -390,28 +533,45 @@ datasets:
         verbose: DFT properties of small molecules
     qm9_smiles:
         compounds: 133882
-        description: QM9 is a comprehensive dataset that provides geometric, energetic,
-            electronic and thermodynamic properties for a subset of GDB-17 database,
-            comprising 134 thousand stable organic molecules with up to nine heavy
-            atoms. All molecules are modeled using density functional theory. This
-            version of the datasets is based on the molecule smiles representation
-            only - with implicit hydrogen modeling and without the 3D coordinates.
-        full: true
+        description: The QM9 dataset is a comprehensive collection of approximately
+            134,000 stable small organic molecules composed of up to nine heavy atoms
+            (including carbon, oxygen, nitrogen, and fluorine). Each molecule in the
+            dataset includes detailed geometric, energetic, electronic, and thermodynamic
+            properties calculated using density functional theory (DFT), providing
+            quantum-mechanical ground truth data
         raw:
         - csv
         sources:
         - https://www.nature.com/articles/sdata201422
-        - https://paperswithcode.com/dataset/qm9
-        - https://pytorch-geometric.readthedocs.io/en/2.5.0/generated/torch_geometric.datasets.QM9.html
         - https://moleculenet.org/datasets
+        - https://pytorch-geometric.readthedocs.io/en/2.5.0/generated/torch_geometric.datasets.QM9.html
         tags:
-        - Smiles
         - Molecules
-        - Quantum Mechanics
+        - SMILES
+        - Quantum Chemistry
+        - DFT
+        - Electronic Properties
+        target_descriptions:
+            '0': A - rotational constant in GHz
+            '1': B - rotational constant in GHz
+            '10': U_0 - Internal energy at 0K in eV
+            '11': U - Internal energy at 298.15K
+            '12': H - Enthalpy at 298.15K
+            '13': G - Free energy at 298.15K
+            '14': Cv - Heat capacity at 298.15K
+            '15': U_0 atom - Atomization energy at 0K
+            '2': C - rotational constant in GHz
+            '3': mu - dipole moment in Debye
+            '4': alpha - isotropic polarizability in Bohr^3
+            '5': homo - Highest occupied molecular orbit in eV
+            '6': lumo - lowest unoccupied molecular orbit in eV
+            '7': gap - Gap between HOMO and LUMO energies in eV
+            '8': R^2 - Electronic spatial extent
+            '9': ZPVE - Zero Point vibrational energy
         target_type:
-        - Regression
-        targets: 16,
-        verbose: DFT properties of small molecules
+        - regression
+        targets: 19
+        verbose: QM9 SMILES Dataset
     sider:
         compounds: 1220
         description: Database of marketed drugs and adverse drug reactions (ADR),
@@ -482,6 +642,28 @@ datasets:
         target_type:
         - regression
         targets: 2
+    tadf:
+        compounds: 460199
+        description: Set of organic molecules used in a high-throughput virtual screening
+            approach of to find candidates for more efficient molecular organic light-emitting
+            diodes.
+        raw:
+        - csv
+        sources:
+        - https://www.nature.com/articles/nmat4717#Sec16
+        tags:
+        - Molecules
+        - SMILES
+        - DFT
+        - Electronic Properties
+        - OLED
+        target_descriptions:
+            '0': tadf_rate - Thermally activated delayed fluorescence (TADF) rate
+            '1': splitting_energy - Singlet-triplet splitting energy
+            '2': oscillator_strength - Oscillator strength
+        target_type:
+        - regression
+        targets: 3
     tox21:
         compounds: 7570
         description: Qualitative toxicity measurements on 12 biological targets, including

@@ -2,6 +2,7 @@ import os
 import sys
 import yaml
 import time
+import difflib
 from collections import defaultdict
 from typing import List, Dict, Any
 
@@ -10,6 +11,9 @@ from prettytable import PrettyTable, TableStyle
 from rich.style import Style
 from rich.text import Text
 from rich.pretty import pprint
+from rich.console import Console, ConsoleOptions
+from rich.panel import Panel
+from rich.syntax import Syntax
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import dynamic_import
 
@@ -22,11 +26,65 @@ from chem_mat_data.utils import METADATA_PATH
 from chem_mat_data.utils import TEMPLATE_ENV
 from chem_mat_data.utils import CsvListType
 from chem_mat_data.utils import open_file_in_editor
+from chem_mat_data.utils import RichMixin
 
 # The path to the "scripts" folder of the experiment modules
 SCRIPTS_PATH: str = os.path.join(PATH, 'scripts')
 # The path to the "results" folder of the experiment module executions.
 RESULTS_PATH: str = os.path.join(PATH, 'scripts', 'results')
+
+
+class RichDiffDisplay(RichMixin):
+    """
+    Rich display element that shows the diff between two metadata.yml files.
+    """
+    def __init__(self, local_file: str, remote_file: str, diff_lines: List[str], changed_lines: int):
+        self.local_file = local_file
+        self.remote_file = remote_file
+        self.diff_lines = diff_lines
+        self.changed_lines = changed_lines
+        
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+        
+        yield ''
+        
+        # Show file paths being compared
+        from rich.table import Table
+        comparison_table = Table(box=None)
+        comparison_table.add_column("File", style="magenta", no_wrap=True)
+        comparison_table.add_column("Path", style="cyan", no_wrap=False)
+        comparison_table.add_row("Local", self.local_file)
+        comparison_table.add_row("Remote", "metadata.yml (from server)")
+        
+        yield comparison_table
+        
+        # Show the actual diff if there are changes
+        if self.changed_lines > 0 and self.diff_lines:
+            yield ""
+            
+            # Limit diff output to first 50 lines to avoid overwhelming display
+            display_lines = self.diff_lines[:50]
+            if len(self.diff_lines) > 50:
+                display_lines.append(f"... ({len(self.diff_lines) - 50} more lines truncated)")
+            
+            # Create a syntax-highlighted diff
+            diff_text = '\n'.join(display_lines)
+            syntax = Syntax(diff_text, "diff", theme="monokai", line_numbers=False)
+            
+            panel = Panel(
+                syntax,
+                title=f'File Differences (showing first {min(50, len(self.diff_lines))} lines)',
+                expand=True
+            )
+            
+            yield panel
+            
+        # Show diff summary
+        yield ""
+        if self.changed_lines == 0:
+            yield Text(f"✅ Files are identical", style="green")
+        else:
+            yield Text(f"📊 {self.changed_lines} lines differ between local and remote files", style="yellow")
 
 
 def is_experiment_archive(folder_path: str) -> bool:
@@ -83,6 +141,8 @@ class CLI(click.RichGroup):
         self.metadata_group.add_command(self.metadata_collect_command)
         self.metadata_group.add_command(self.metadata_upload_command)
         self.metadata_group.add_command(self.metadata_edit_command)
+        self.metadata_group.add_command(self.metadata_diff_command)
+        self.metadata_group.add_command(self.metadata_remove_command)
         
         # dataset command group
         self.add_command(self.dataset_group)
@@ -122,7 +182,7 @@ class CLI(click.RichGroup):
         
         # ~ collecting experiment archives
         # We first want to generally collect all the experiment archives here for each dataset.
-        experiments: list[Experiment] = []
+        experiments: List[Experiment] = []
         for root, folders, files in os.walk(results_path):
             
             for folder in folders:
@@ -183,7 +243,7 @@ class CLI(click.RichGroup):
         """
         time_start: float = time.time()
         
-        ## -- Creating the Base --
+        ## --- Creating the Base ---
         # If the blank flag is NOT explicitly set, we are going to try and download the metadata.yml file from the remote file 
         # share server and use that as a base version which is then updated with the local metadata.
         metadata_all: dict = {'datasets': []}
@@ -191,7 +251,7 @@ class CLI(click.RichGroup):
             click.echo('downloading the metadata.yml file from the remote file share server...')
             metadata_all.update(self.file_share.fetch_metadata())
         
-        ## -- Collecting the Metadata --
+        ## --- Collecting the Metadata ---
         
         # This method will return a dict data structure that maps the dataset names to lists of Experiment instances
         # that have been loaded from the results folder of completed experiment. For each dataset name key the corresponding
@@ -223,14 +283,14 @@ class CLI(click.RichGroup):
             
             dataset_metadata_map[dataset] = metadata
 
-        # ~ merging the metadata
+        # --- merging the metadata ---
         # The structure of the overall metadata is such that there is an additional key for each dataset and the 
         # corresponding value is again a dict-like object that contains the metadata for that dataset.
         click.echo('merging the metadata...')
         for dataset, metadata in dataset_metadata_map.items():
             metadata_all['datasets'][dataset] = metadata
         
-        # ~ saving the file
+        # --- saving the file ---
         # In the end we can save the collected metadata into a file and place it at the specified path.
         path = os.path.expanduser(path)
         click.echo(f'saving the metadata file @ {path}...')
@@ -280,7 +340,143 @@ class CLI(click.RichGroup):
             sys.exit(1)
         
         open_file_in_editor(path)
-    
+
+    @click.command('diff', short_help='Compare local metadata.yml with remote version')
+    @click.option('--local-file', '-f', type=click.Path(exists=True, dir_okay=False, readable=True), 
+                  default=METADATA_PATH, show_default=True,
+                  help='Path to the local metadata.yml file to compare')
+    @click.pass_obj
+    def metadata_diff_command(self, local_file: str) -> None:
+        """
+        Compares a local metadata.yml file with the remote metadata.yml file from the server.
+        Shows the number of different lines and displays a visual diff of the changes.
+        
+        By default, uses the package metadata.yml file for comparison.
+        """
+        
+        ## --- Fetch Remote Metadata ---
+        try:
+            # Try to fetch the remote metadata
+            self.file_share.fetch_metadata(force=True)
+            
+            if not hasattr(self.file_share, 'metadata') or self.file_share.metadata is None:
+                click.secho('❌ Could not fetch remote metadata.yml file', fg='red')
+                sys.exit(1)
+                
+        except Exception as e:
+            click.secho(f'❌ Error fetching remote metadata: {str(e)}', fg='red')
+            sys.exit(1)
+        
+        ## --- Read Local File ---
+        try:
+            with open(local_file, 'r', encoding='utf-8') as f:
+                local_content = f.read()
+        except Exception as e:
+            click.secho(f'❌ Error reading local file: {str(e)}', fg='red')
+            sys.exit(1)
+        
+        ## --- Normalize Both Files for Comparison ---
+        try:
+            # Parse local file to normalize it
+            local_data = yaml.safe_load(local_content)
+            # Convert both to the same YAML format for fair comparison
+            local_normalized = yaml.dump(local_data, default_flow_style=False, sort_keys=True, indent=2)
+            remote_normalized = yaml.dump(self.file_share.metadata, default_flow_style=False, sort_keys=True, indent=2)
+        except Exception as e:
+            click.secho(f'❌ Error normalizing YAML data: {str(e)}', fg='red')
+            sys.exit(1)
+        
+        ## --- Calculate Diff ---
+        local_lines = local_normalized.splitlines(keepends=False)
+        remote_lines = remote_normalized.splitlines(keepends=False)
+        
+        # Generate unified diff
+        diff_lines = list(difflib.unified_diff(
+            local_lines,
+            remote_lines,
+            fromfile=f'local/{os.path.basename(local_file)}',
+            tofile='remote/metadata.yml',
+            lineterm=''
+        ))
+        
+        # Count changed lines (lines starting with + or - but not +++ or ---)
+        changed_lines = sum(1 for line in diff_lines 
+                           if (line.startswith('+') and not line.startswith('+++')) or
+                              (line.startswith('-') and not line.startswith('---')))
+        
+        ## --- Display Results ---
+        rich_diff = RichDiffDisplay(
+            local_file=local_file,
+            remote_file="remote/metadata.yml",
+            diff_lines=diff_lines,
+            changed_lines=changed_lines
+        )
+        click.echo(rich_diff)
+
+    @click.command('remove', short_help='Remove a dataset entry from the local metadata.yml file')
+    @click.argument('dataset_name', type=str)
+    @click.option('--metadata-path', '-f', type=click.Path(exists=True, dir_okay=False, readable=True, writable=True),
+                  default=METADATA_PATH, show_default=True,
+                  help='Path to the local metadata.yml file to modify')
+    @click.option('--backup', is_flag=True, default=True, show_default=True,
+                  help='Create a backup copy before modifying the file')
+    @click.pass_obj
+    def metadata_remove_command(self, dataset_name: str, metadata_path: str, backup: bool) -> None:
+        """
+        Removes a dataset entry from the local metadata.yml file.
+
+        DATASET_NAME: Name of the dataset to remove from the metadata file
+        """
+
+        ## --- Read and Parse Local File ---
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as f:
+                metadata_content = f.read()
+            metadata = yaml.safe_load(metadata_content)
+        except Exception as e:
+            click.secho(f'❌ Error reading metadata file: {str(e)}', fg='red')
+            sys.exit(1)
+
+        ## --- Check if Dataset Exists ---
+        if 'datasets' not in metadata:
+            click.secho('❌ No datasets section found in metadata file', fg='red')
+            sys.exit(1)
+
+        if dataset_name not in metadata['datasets']:
+            click.secho(f'❌ Dataset "{dataset_name}" not found in metadata file', fg='red')
+            available_datasets = list(metadata['datasets'].keys())
+            if available_datasets:
+                click.secho(f'Available datasets: {", ".join(sorted(available_datasets))}', fg='yellow')
+            sys.exit(1)
+
+        ## --- Create Backup if Requested ---
+        if backup:
+            backup_path = f"{metadata_path}.backup"
+            try:
+                import shutil
+                shutil.copy2(metadata_path, backup_path)
+                click.secho(f'📋 Created backup at: {backup_path}', fg='bright_black')
+            except Exception as e:
+                click.secho(f'⚠️ Warning: Could not create backup: {str(e)}', fg='yellow')
+
+        ## --- Remove Dataset ---
+        removed_dataset = metadata['datasets'].pop(dataset_name)
+
+        ## --- Write Updated Metadata ---
+        try:
+            with open(metadata_path, 'w', encoding='utf-8') as f:
+                yaml.dump(metadata, f, default_flow_style=False, sort_keys=True, indent=4)
+            click.secho(f'✅ Successfully removed dataset "{dataset_name}" from {metadata_path}', fg='green')
+
+            # Show some info about what was removed
+            compounds = removed_dataset.get('compounds', 'Unknown')
+            targets = removed_dataset.get('targets', 'Unknown')
+            click.secho(f'   Removed dataset had {compounds} compounds and {targets} targets', fg='bright_black')
+
+        except Exception as e:
+            click.secho(f'❌ Error writing updated metadata file: {str(e)}', fg='red')
+            sys.exit(1)
+
     ## == DATASET COMMAND GROUP ==
     # all the commands related to the interaction with the local datasets - such as the (re)creation of
     # datasets or the uploading to the remote file share server.
@@ -383,11 +579,12 @@ class CLI(click.RichGroup):
                                all: bool,
                                ) -> None:
         """
-        This command can be used to trigger the execution of one or multiple experiment modules which 
-        will re-create a dataset.
-        
-        The NAME argument may either be the string name of a single dataset to be created or a 
-        comma separated list of dataset names.
+        This command will upload the graph dataset MPACK file and the raw CSV file for a given dataset
+        NAME to the remote file share server. If the `--all` flag is set, all available datasets will be
+        uploaded. Note that this will overwrite any existing dataset files on the remote server.
+
+        The NAME argument may either be the string name of a single dataset to be uploaded or a
+        comma-separated list of dataset names.
         """
         
         # This method will return a dict data structure that maps the dataset names to lists of Experiment instances
@@ -401,8 +598,11 @@ class CLI(click.RichGroup):
         # The name argument may be a single dataset name or a comma separated list of dataset names.
         if all:
             dataset_names: List[str] = list(dataset_archives_map.keys())
-        else:
+        elif name:
             dataset_names: List[str] = [n.replace(' ', '') for n in name.split(',')]
+        else:
+            click.secho('❌ Error: Must specify either dataset NAME(s) or use --all flag', fg='red')
+            sys.exit(1)
             
         # ~ uploading the datasets
         # Now we can go through the dataset archives map and upload the dataset files to the file share server.
@@ -428,13 +628,17 @@ class CLI(click.RichGroup):
             mpack_file_name = f'{dataset_name}.mpack.gz'
             mpack_file_path: str = os.path.join(experiment.path, f'{dataset_name}.mpack.gz')
             if os.path.exists(mpack_file_path):
-                click.secho(f'   uploading "{mpack_file_name}"')
+                file_size = os.path.getsize(mpack_file_path)
+                file_size_mb = file_size / (1024 * 1024)
+                click.secho(f'   uploading "{mpack_file_name}" [{file_size_mb:.1f} MB]')
                 self.file_share.upload(mpack_file_name, mpack_file_path)
 
             csv_file_name = f'{dataset_name}.csv.gz'
             csv_file_path: str = os.path.join(experiment.path, f'{dataset_name}.csv.gz')
             if os.path.exists(csv_file_path):
-                click.secho(f'   uploading "{csv_file_name}"')
+                file_size = os.path.getsize(csv_file_path)
+                file_size_mb = file_size / (1024 * 1024)
+                click.secho(f'   uploading "{csv_file_name}" [{file_size_mb:.1f} MB]')
                 self.file_share.upload(csv_file_name, csv_file_path)
 
         click.secho('✅ datasets uploaded', fg='green')
@@ -465,7 +669,8 @@ class CLI(click.RichGroup):
                                       ) -> None:
         """
         This command will dynamically create the overview of the datasets that are available in the 
-        remote file share server using the metadata.yml file.
+        remote file share server using the metadata.yml file. By default, this will collect the dataset information 
+        from the results of the experiments that have been executed the most recently.
         """
         
         ## -- Getting Metadata --

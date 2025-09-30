@@ -1,10 +1,56 @@
 from rdkit import Chem
+from typing import List, Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from chem_mat_data import load_smiles_dataset
 
 DATASET_NAME: str = 'qm9_smiles'
+DESCRIPTION: str = (
+    'The QM9 dataset is a comprehensive collection of approximately 134,000 stable small '
+    'organic molecules composed of up to nine heavy atoms (including carbon, oxygen, nitrogen, '
+    'and fluorine). Each molecule in the dataset includes detailed geometric, energetic, electronic, '
+    'and thermodynamic properties calculated using density functional theory (DFT), '
+    'providing quantum-mechanical ground truth data'
+)
+
+# :param METADATA:
+#       A dictionary which will be used as the basis for the metadata that will be added 
+#       as additional information to the file share server.
+METADATA: dict = {
+    'tags': [
+        'Molecules', 
+        'SMILES', 
+        'Quantum Chemistry',
+        'DFT',
+        'Electronic Properties',
+    ],
+    'verbose': 'QM9 SMILES Dataset',
+    'sources': [
+        'https://www.nature.com/articles/sdata201422',
+        'https://moleculenet.org/datasets',
+        'https://pytorch-geometric.readthedocs.io/en/2.5.0/generated/torch_geometric.datasets.QM9.html'
+    ],
+    # TADF: Thermally Activated Delayed Fluorescence
+    'target_descriptions': {
+        '0': 'A - rotational constant in GHz',
+        '1': 'B - rotational constant in GHz',
+        '2': 'C - rotational constant in GHz',
+        '3': 'mu - dipole moment in Debye',
+        '4': 'alpha - isotropic polarizability in Bohr^3',
+        '5': 'homo - Highest occupied molecular orbit in eV',
+        '6': 'lumo - lowest unoccupied molecular orbit in eV',
+        '7': 'gap - Gap between HOMO and LUMO energies in eV',
+        '8': 'R^2 - Electronic spatial extent',
+        '9': 'ZPVE - Zero Point vibrational energy',
+        '10': 'U_0 - Internal energy at 0K in eV',
+        '11': 'U - Internal energy at 298.15K',
+        '12': 'H - Enthalpy at 298.15K',
+        '13': 'G - Free energy at 298.15K',
+        '14': 'Cv - Heat capacity at 298.15K',
+        '15': 'U_0 atom - Atomization energy at 0K',
+    }
+}
 
 __TESTING__ = False
 
@@ -25,7 +71,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     df = load_smiles_dataset('qm9_smiles')
 
     columns = [
@@ -50,7 +96,7 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
         'g298_atom',
     ]
 
-    dataset: dict[int, dict] = {}
+    dataset: Dict[int, dict] = {}
     index: int = 0
     for data in df.to_dict('records'):
         data['smiles'] = data['smiles']

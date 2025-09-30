@@ -917,13 +917,13 @@ class MoleculeProcessing():
         # First of all we iterate over all the atoms in the molecule and apply all the callback
         # functions on the atom objects which then calculate the actual attribute values for the final
         # node attribute vector.
-        node_indices: list[int] = []
-        node_attributes: list[list[float]] = []
+        node_indices: List[int] = []
+        node_attributes: List[List[float]] = []
         # Here we want to maintain a list of the the string atom symbols for each of the atom nodes as 
         # we process the molecule graph structure.
         # The goal is to have some kind of information such that a human could reconstruct 
         # the molecule from the graph structure later on as well.
-        node_atoms: list[str] = []
+        node_atoms: List[str] = []
         for atom in atoms:
             node_indices.append(atom.GetIdx())
 
@@ -947,14 +947,14 @@ class MoleculeProcessing():
 
         bonds = mol.GetBonds()
         # Next up is the same with the bonds
-        edge_indices: list[tuple[int, int]] = []
-        edge_attributes: list[list[float]] = []
+        edge_indices: List[Tuple[int, int]] = []
+        edge_attributes: List[List[float]] = []
         # Here we want to maintain a list of the bond types for each of the edge nodes as we process the
         # molecule graph structure. More specifically, we want to safe a human readable string representation 
         # of the bond type. 
         # The goal is to have some kind of information such that a human could reconstruct 
         # the molecule from the graph structure later on as well.
-        edge_bonds: list[str] = []
+        edge_bonds: List[str] = []
         for bond in bonds:
             i = int(bond.GetBeginAtomIdx())
             j = int(bond.GetEndAtomIdx())
@@ -1117,7 +1117,7 @@ class MoleculeProcessing():
     
     def get_attribute_map_descriptions(self, attribute_map: Dict) -> Dict[int, str]:
         
-        descriptions: dict[int, str] = {}
+        descriptions: Dict[int, str] = {}
         index: int = 0
         for name, info in attribute_map.items():
             
@@ -1154,8 +1154,8 @@ class MoleculeProcessing():
         # "get_attribute_map_descriptions" is a method which will return a dictionary which maps the
         # indices of the node and edge attributes values to their string and human-readable descriptions.
         # We do this for both nodes and edges.
-        node_descriptions: dict[int, str] = self.get_attribute_map_descriptions(self.node_attribute_map)
-        edge_descriptions: dict[int, str] = self.get_attribute_map_descriptions(self.edge_attribute_map)
+        node_descriptions: Dict[int, str] = self.get_attribute_map_descriptions(self.node_attribute_map)
+        edge_descriptions: Dict[int, str] = self.get_attribute_map_descriptions(self.edge_attribute_map)
         
         # Using that information we can then assemble the rich display object which we can then use to 
         # display that information in the console.

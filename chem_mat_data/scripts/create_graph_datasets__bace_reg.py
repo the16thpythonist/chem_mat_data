@@ -5,20 +5,49 @@ implementation of the "load_dataset" hook to load the BACE dataset instead from 
 nextcloud data storage.
 """
 import rdkit.Chem as Chem
+from typing import List, Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from chem_mat_data import load_smiles_dataset
 
 
-# Parameters are overwritten simply by overwriting them at the top of the script like this:
+DATASET_NAME: str = 'bace_reg'
+DESCRIPTION: str = (
+    'The BACE dataset contains quantitative IC50 and qualitative binary binding '
+    'results for 1522 inhibitors of human β-secretase 1 (BACE-1), an important enzyme '
+    'target for Alzheimers disease research. The dataset was originally compiled by '
+    'Subramanian et al. (2016) from experimental values reported in scientific literature '
+    'and integrated into MoleculeNet as a binary classification benchmark. All data represent '
+    'experimental values with some compounds having detailed crystal structures available, '
+    'making it valuable for drug discovery applications targeting neurodegeneration.'
+)
 
-# :param DATASET_NAME:
-#       This string determines the name of the message pack dataset file that is then 
-#       stored into the "results" folder of the experiment as the result of the 
-#       processing process. The corresponding file extensions will be added 
-#       automatically.
-DATASET_NAME: str = 'bace'
+# :param METADATA:
+#       A dictionary which will be used as the basis for the metadata that will be added 
+#       as additional information to the file share server.
+METADATA: dict = {
+    'tags': [
+        'Molecules', 
+        'SMILES', 
+        'Protein Target',
+        'Protein Binding',
+        'Inhibitors',
+    ],
+    'target_type': ['classification'],
+    'verbose': 'Beta Secretase 1 Inhibitors',
+    'sources': [
+        'https://pubs.acs.org/doi/full/10.1021/acs.jcim.6b00290',
+        'https://doi.org/10.1039/C7SC02664A'
+    ],
+    # TADF: Thermally Activated Delayed Fluorescence
+    'target_descriptions': {
+        '0': (
+            'pIC50 - Negative decadic logarithm of the IC50 value (in molar) indicating '
+            'the binding affinity to the BACE-1 protein'
+        )
+    }
+}
 
 __TESTING__ = False
 
@@ -45,7 +74,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     graph['graph_id'] = data['CID']
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     """
     In the experiment, this hook is invoked at the very beginning to obtain the actual 
     raw data of the dataset that should be processed. The output of this function should 
@@ -65,7 +94,7 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
     # instead load the raw dataset version from the nextcloud data storage as a dataframe.
     df = load_smiles_dataset('bace')
     
-    dataset: dict[int, dict] = {}
+    dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
         
         data['smiles'] = data['mol']
@@ -86,7 +115,7 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
         
         # For this dataset we specifically know that there are only 2 classes. The "Class" column is 
         # either "0" or "1"
-        data['targets'] = [data['Class'] == index for index in range(2)]
+        data['targets'] = [data['pIC50']]
         
         dataset[index] = data
     

@@ -1,9 +1,13 @@
 import os
 import sys
 import datetime
+import difflib
+import gzip
+import shutil
 import typing as t
 from typing import Any, List, Tuple, Dict, Union, Optional
 
+import rich
 import rich_click as click
 from rich import box
 from rich.console import Console, ConsoleOptions
@@ -15,6 +19,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.progress import Progress
 from rich.rule import Rule
+from rich.columns import Columns
 
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import TEMPLATE_PATH
@@ -40,19 +45,28 @@ if not server_url:
 # the object to the console using the rich library.
 
 
-class RichLogo(RichMixin):
+class RichLogo:
     """
-    Implements the "rich" console rendering of the ASCII art logo of the ChemMatDatabase.
+    A rich display which will show the ASlurmX logo in ASCII art when printed.
     """
-    STYLE = Style(bold=True, color='white')
-    
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
-        logo_path = os.path.join(TEMPLATE_PATH, 'logo.txt')
-        with open(logo_path, mode='r') as file:
-            logo = file.read()
-            text = Text(logo, style=self.STYLE)
-            pad = Padding(text, (1, 1))
-            yield pad
+
+    STYLE = Style(bold=True, color="white")
+
+    def __rich_console__(self, console, options):
+        text_path = os.path.join(TEMPLATE_PATH, "logo_text.txt")
+        with open(text_path) as file:
+            text_string: str = file.read()
+            text = Text(text_string, style=self.STYLE)
+            
+        image_path = os.path.join(TEMPLATE_PATH, "logo_image.txt")
+        with open(image_path) as file:
+            image_string: str = file.read()
+            # Replace \e with actual escape character and create Text from ANSI
+            ansi_string = image_string.replace('\\e', '\033')
+            image = Text.from_ansi(ansi_string)
+            
+        side_by_side = Columns([image, text], equal=True, padding=(0, 3))
+        yield Padding(side_by_side, (1, 3, 0, 3))
             
             
 class RichHelp(RichMixin):
@@ -89,44 +103,58 @@ class RichCommands(RichMixin):
         self.commands = commands
     
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
-        
-        table_commands = Table(title=None, box=None, show_header=False, leading=1)
-        table_commands.add_column(justify='left', style='bold cyan', no_wrap=True)
-        table_commands.add_column(justify='left', style='white', no_wrap=False)
-        
+
+        # Separate commands and groups
+        commands = {}
+        groups = {}
+
         for command_name, command in self.commands.items():
-            if isinstance(command, click.RichCommand) and not isinstance(command, click.RichGroup):
+            # A command group has subcommands, while a regular command doesn't
+            if hasattr(command, 'commands') and command.commands:
+                groups[command_name] = command
+            else:
+                # Regular commands don't have subcommands
+                commands[command_name] = command
+
+        # Display regular commands
+        if commands:
+            table_commands = Table(title=None, box=None, show_header=False, leading=1)
+            table_commands.add_column(justify='left', style='bold cyan', no_wrap=True)
+            table_commands.add_column(justify='left', style='white', no_wrap=False)
+
+            for command_name, command in commands.items():
                 table_commands.add_row(
                     command_name,
-                    command.short_help
+                    command.short_help or ''
                 )
-        
-        panel_commands = Panel(
-            table_commands, 
-            title='[bright_black]Commands[/bright_black]',
-            title_align='left', 
-            style='bright_black'
-        )
-        yield panel_commands
-        
-        table_groups = Table(title=None, box=None, show_header=False, leading=1)
-        table_groups.add_column(justify='left', style='bold cyan', no_wrap=True)
-        table_groups.add_column(justify='left', style='white', no_wrap=False)
-        
-        for command_name, command in self.commands.items():
-            if isinstance(command, click.RichGroup):
+
+            panel_commands = Panel(
+                table_commands,
+                title='[bright_black]Commands[/bright_black]',
+                title_align='left',
+                style='bright_black'
+            )
+            yield panel_commands
+
+        # Display command groups
+        if groups:
+            table_groups = Table(title=None, box=None, show_header=False, leading=1)
+            table_groups.add_column(justify='left', style='bold cyan', no_wrap=True)
+            table_groups.add_column(justify='left', style='white', no_wrap=False)
+
+            for command_name, command in groups.items():
                 table_groups.add_row(
-                    command_name, #click.style(command_name, fg='cyan', bold=True),
-                    command.help
+                    command_name,
+                    command.help or ''
                 )
-                
-        panel_groups = Panel(
-            table_groups, 
-            title='[bright_black]Command Groups[/bright_black]',
-            title_align='left', 
-            style='bright_black'
-        )
-        yield panel_groups
+
+            panel_groups = Panel(
+                table_groups,
+                title='[bright_black]Command Groups[/bright_black]',
+                title_align='left',
+                style='bright_black'
+            )
+            yield panel_groups
         
 
 class RichDatasetInfo(RichMixin):
@@ -152,7 +180,7 @@ class RichDatasetInfo(RichMixin):
         table.add_row('Name', f'[bold cyan]{self.name}[/bold cyan]')
         table.add_row('Type', ', '.join(self.info['target_type']))
         table.add_row('No. Elements', str(self.info['compounds']))
-        table.add_row('No. Targets', str(self.info['targets']))
+        table.add_row('No. Targets', str(self.info.get('targets', 'N/A')))
         panel = Panel(
             table, 
             title='[bright_black]Metadata[/bright_black]', 
@@ -171,6 +199,28 @@ class RichDatasetInfo(RichMixin):
             padding=(0, 1),
         )
         yield panel_description
+        
+        # Show target descriptions if they exist
+        if 'target_descriptions' in self.info and self.info['target_descriptions']:
+            
+            target_desc_table = Table(title=None, box=None, show_header=False, leading=1, padding=(0, 2), pad_edge=False)
+            target_desc_table.add_column(justify='left', style='magenta', no_wrap=True)
+            target_desc_table.add_column(justify='left', style='white', no_wrap=False)
+            
+            # Sort by target index for consistent display
+            target_descriptions = self.info['target_descriptions']
+            for target_idx in sorted(target_descriptions.keys(), key=int):
+                target_desc_table.add_row(f'{target_idx}', target_descriptions[target_idx])
+            
+            target_desc_panel = Panel(
+                target_desc_table,
+                title='[bright_black]Target Descriptions[/bright_black]',
+                title_align='left',
+                border_style='bright_black',
+                style='white',
+                padding=(0, 1),
+            )
+            yield target_desc_panel
         
         if 'sources' in self.info and self.info['sources']:
             
@@ -247,7 +297,7 @@ class RichDatasetList(RichMixin):
                 f'[bold]{name}[/bold]', 
                 details.get('verbose', '-'),
                 str(details['compounds']), 
-                str(details['targets']),
+                str(details.get('targets', 'N/A')),
                 ', '.join(details.get('target_type', '')), 
                 ', '.join(details.get('tags', '')),
             )
@@ -256,48 +306,121 @@ class RichDatasetList(RichMixin):
         
         
 class RichCacheList(RichMixin):
-    
+
     """
     Implements the "rich" console rendering of all the lists that are stored in the cache.
 
-    This display element will show a table which contains one row for each dataset and columns 
+    This display element will show a table which contains one row for each dataset and columns
     that contain various pieces of information about the datasets.
     """
-    def __init__(self, 
+    def __init__(self,
                  dataset_metadata_map: Dict[Tuple[str, str], Dict],
+                 dataset_sizes: Dict[Tuple[str, str], int],
+                 total_cache_size: int,
                  sort: bool = True,
                  show_hidden: bool = False,
                  ):
         self.dataset_metadata_map = dataset_metadata_map
+        self.dataset_sizes = dataset_sizes
+        self.total_cache_size = total_cache_size
         self.sort = sort
         self.show_hidden = show_hidden
         
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
-        
+
         table = Table(title='Dataset Cache', expand=True, box=box.HORIZONTALS)
-        
+
         table.add_column("Dataset", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Created",justify="left", style="bright_black")
-        
+        table.add_column("Created", justify="left", style="bright_black")
+        table.add_column("Size (MB)", justify="right", style="magenta")
+
         keys = list(self.dataset_metadata_map.keys())
         # potentially we want to sort the items depending on the "sort" argument
         if self.sort:
             keys.sort()
-        
+
         for key in keys:
-            
+
             info: dict = self.dataset_metadata_map[key]
             name, typ = key
-            
+
             dt = datetime.datetime.fromtimestamp(info['_cache_time'])
+
+            # Get dataset size in MB
+            size_bytes = self.dataset_sizes.get(key, 0)
+            size_mb = size_bytes / (1024 * 1024)
+
             table.add_row(
-                f'{name}.{typ}', 
-                f'{dt:%d.%b %Y, %H:%M}', 
+                f'{name}.{typ}',
+                f'{dt:%d.%b %Y, %H:%M}',
+                f'{size_mb:.2f}',
             )
-        
+
         yield table
-        
-        
+
+        # Add total cache size information
+        total_mb = self.total_cache_size / (1024 * 1024)
+        yield ''
+        yield Text(f'Total cache size: {total_mb:.2f} MB', style='bold green')
+
+
+class RichCacheInfo(RichMixin):
+    """
+    Implements the "rich" console rendering of cache information including location,
+    size, and dataset statistics.
+    """
+
+    def __init__(self,
+                 cache_path: str,
+                 total_size: int,
+                 total_datasets: int,
+                 total_files: int,
+                 ):
+        self.cache_path = cache_path
+        self.total_size = total_size
+        self.total_datasets = total_datasets
+        self.total_files = total_files
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+
+        table = Table(title=None, box=None, show_header=False, leading=1, padding=(0, 2), pad_edge=False)
+        table.add_column(justify='left', style='magenta', no_wrap=True)
+        table.add_column(justify='left', style='white', no_wrap=False)
+
+        # Cache location
+        table.add_row('Location', f'[cyan]{self.cache_path}[/cyan]')
+
+        # Total size
+        size_mb = self.total_size / (1024 * 1024)
+        size_gb = size_mb / 1024
+        if size_gb >= 1:
+            size_display = f'{size_gb:.2f} GB ({size_mb:.2f} MB)'
+        else:
+            size_display = f'{size_mb:.2f} MB'
+        table.add_row('Total Size', f'[green]{size_display}[/green]')
+
+        # Number of datasets
+        table.add_row('Datasets', f'[yellow]{self.total_datasets}[/yellow]')
+
+        # Total files
+        table.add_row('Total Files', f'[blue]{self.total_files}[/blue]')
+
+        # Check if cache directory exists
+        cache_exists = os.path.exists(self.cache_path)
+        status = '[green]✅ Available[/green]' if cache_exists else '[red]❌ Not found[/red]'
+        table.add_row('Status', status)
+
+        panel = Panel(
+            table,
+            title='[bright_black]Cache Information[/bright_black]',
+            title_align='left',
+            border_style='bright_black',
+        )
+
+        yield ''
+        yield panel
+
+
 class RichConfig(RichMixin):
     
     def __init__(self, config_file_path: str):
@@ -319,7 +442,125 @@ class RichConfig(RichMixin):
             
         rule_bottom = Rule(title=None, style='bright_black', end=' ')
         yield rule_bottom
+
+
+class RichRemoteInfo(RichMixin):
+    """
+    Rich display element that shows detailed information about the currently configured 
+    remote file share server.
+    """
+    def __init__(self, config, show_all: bool = False, metadata_available: bool = False, dataset_count: Optional[int] = None):
+        self.config = config
+        self.show_all = show_all
+        self.metadata_available = metadata_available
+        self.dataset_count = dataset_count
         
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+        
+        table = Table(title=None, expand=True, box=None)
+        table.add_column("Setting", justify="left", style="magenta", no_wrap=True)
+        table.add_column("Value", justify="left", style="white", no_wrap=False)
+        
+        # Basic configuration
+        table.add_row('Fileshare Type', f'[bold cyan]{self.config.get_fileshare_type()}[/bold cyan]')
+        table.add_row('Fileshare URL', f'[bold cyan]{self.config.get_fileshare_url()}[/bold cyan]')
+        
+        # Get fileshare parameters for the specific type
+        fileshare_params = self.config.get_fileshare_parameters(self.config.get_fileshare_type())
+        
+        # DAV Configuration (if available)
+        if 'dav_url' in fileshare_params:
+            table.add_row('DAV URL', f'[cyan]{fileshare_params["dav_url"]}[/cyan]')
+        else:
+            table.add_row('DAV URL', '[bright_black]Not configured[/bright_black]')
+            
+        if 'dav_username' in fileshare_params:
+            table.add_row('DAV Username', f'[cyan]{fileshare_params["dav_username"]}[/cyan]')
+        else:
+            table.add_row('DAV Username', '[bright_black]Not configured[/bright_black]')
+        
+        # Password handling - show masked unless --all flag is used
+        if 'dav_password' in fileshare_params:
+            if self.show_all:
+                table.add_row('DAV Password', f'[yellow]{fileshare_params["dav_password"]}[/yellow]')
+            else:
+                table.add_row('DAV Password', '[yellow]***[/yellow] [bright_black](use --all to show)[/bright_black]')
+        else:
+            table.add_row('DAV Password', '[bright_black]Not configured[/bright_black]')
+        
+        # Metadata availability
+        if self.metadata_available:
+            table.add_row('Metadata Available', '[green]✅ Available[/green]')
+        else:
+            table.add_row('Metadata Available', '[red]❌ Not accessible[/red]')
+        
+        # Dataset count
+        if self.dataset_count is not None:
+            table.add_row('Available Datasets', f'[green]{self.dataset_count}[/green]')
+        else:
+            table.add_row('Available Datasets', '[bright_black]Unknown[/bright_black]')
+            
+        panel = Panel(
+            table,
+            title='Remote Configuration',
+        )
+            
+        yield ''
+        yield panel
+        
+
+class RichDiffDisplay(RichMixin):
+    """
+    Rich display element that shows the diff between two metadata.yml files.
+    """
+    def __init__(self, local_file: str, remote_file: str, diff_lines: List[str], changed_lines: int):
+        self.local_file = local_file
+        self.remote_file = remote_file
+        self.diff_lines = diff_lines
+        self.changed_lines = changed_lines
+        
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+        
+        yield ''
+        
+        # Show file paths being compared
+        comparison_table = Table(box=None)
+        comparison_table.add_column("File", style="magenta", no_wrap=True)
+        comparison_table.add_column("Path", style="cyan", no_wrap=False)
+        comparison_table.add_row("Local", self.local_file)
+        comparison_table.add_row("Remote", "metadata.yml (from server)")
+        
+        yield comparison_table
+        
+        # Show the actual diff if there are changes
+        if self.changed_lines > 0 and self.diff_lines:
+            yield ""
+            
+            # Limit diff output to first 50 lines to avoid overwhelming display
+            display_lines = self.diff_lines[:50]
+            if len(self.diff_lines) > 50:
+                display_lines.append(f"... ({len(self.diff_lines) - 50} more lines truncated)")
+            
+            # Create a syntax-highlighted diff
+            diff_text = '\n'.join(display_lines)
+            syntax = Syntax(diff_text, "diff", theme="monokai", line_numbers=False)
+            
+            panel = Panel(
+                syntax,
+                title=f'File Differences (showing first {min(50, len(self.diff_lines))} lines)',
+                expand=True
+            )
+            
+            yield panel
+            
+        # Show diff summary
+        yield ""
+        if self.changed_lines == 0:
+            yield Text(f"✅ Files are identical", style="green")
+        else:
+            yield Text(f"📊 {self.changed_lines} lines differ between local and remote files", style="yellow")
+        
+
 
 # == ACTUAL CLI IMPLEMENTATION ==
 # The following class is the actual implementation of the command line interface for the ChemMatData
@@ -366,6 +607,8 @@ class CLI(click.RichGroup):
         self.add_command(self.cache_group)
         self.cache_group.add_command(self.cache_list_command)
         self.cache_group.add_command(self.cache_clear_command)
+        self.cache_group.add_command(self.cache_remove_command)
+        self.cache_group.add_command(self.cache_info_command)
         
         # config command group
         self.add_command(self.config_group)
@@ -374,6 +617,8 @@ class CLI(click.RichGroup):
 
         # remote command group
         self.add_command(self.remote_group)
+        self.remote_group.add_command(self.remote_show_command)
+        self.remote_group.add_command(self.remote_diff_command)
         self.remote_group.add_command(self.remote_upload_command)
         self.remote_group.add_command(self.remote_exists_command)
 
@@ -382,25 +627,26 @@ class CLI(click.RichGroup):
     # We override this here to add the custom behavior of prining the logo before actually
     # printing the help text.
     def format_help(self, ctx: t.Any, formatter: t.Any) -> None:
-        
-        formatter.config.command_groups.update({
-            'cache': self.cache_group
-        })
-        
+
         # Before printing the help text we want to print the logo
-        click.echo(self.rich_logo)
-        
+        rich.print(self.rich_logo)
+
         self.format_usage(ctx, formatter)
         click.echo(self.rich_help)
-        
+
         self.format_options(ctx, formatter)
-        self.format_epilog(ctx, formatter)
-        
-    def format_commands(self, ctx: Any, formatter: Any) -> None:
+
+        # Custom command display - only call this once
         rich_commands = RichCommands(self.commands)
         click.echo(rich_commands)
 
-    # -- commands
+        self.format_epilog(ctx, formatter)
+        
+    def format_commands(self, ctx: Any, formatter: Any) -> None:
+        # Override parent behavior - do nothing here since we handle it in format_help
+        pass
+
+    # --- commands ---
     # The following methods are actually the command implementations which are the specific commands 
     # that are part of the command group that is represented by the ExperimentCLI object instance itself.
 
@@ -431,12 +677,33 @@ class CLI(click.RichGroup):
             click.secho('Downloading raw dataset...')
             for file_extension in dataset_metadata['raw']:
                 file_name = f'{name}.{file_extension}'
-                file_path = self.file_share.download_file(
-                    file_name, 
-                    folder_path=path, 
-                    progress=progress
-                )
-                
+
+                # First try to download the gzipped version
+                try:
+                    file_name_compressed = f'{file_name}.gz'
+                    file_path_compressed = self.file_share.download_file(
+                        file_name_compressed,
+                        folder_path=path,
+                        progress=progress,
+                    )
+
+                    # Decompress the file
+                    file_path = os.path.join(path, file_name)
+                    with open(file_path, mode='wb') as file:
+                        with gzip.open(file_path_compressed, mode='rb') as compressed_file:
+                            shutil.copyfileobj(compressed_file, file)
+
+                    # Remove the compressed file after decompression
+                    os.remove(file_path_compressed)
+
+                # If gzipped version fails, download uncompressed version
+                except Exception:
+                    file_path = self.file_share.download_file(
+                        file_name,
+                        folder_path=path,
+                        progress=progress
+                    )
+
                 self.cache.add_dataset(
                     name=name,
                     typ=file_extension,
@@ -537,27 +804,40 @@ class CLI(click.RichGroup):
     @click.pass_obj
     def cache_list_command(self):
         """
-        Shows a list of all the datasets that are currently stored in the cache along with some of the metadata 
+        Shows a list of all the datasets that are currently stored in the cache along with some of the metadata
         that is stored along with the dataset.
         """
         if len(self.cache) == 0:
             click.secho('Cache is empty!', fg='yellow')
-        
+
         else:
             click.echo('')
-            
-            # This method will return all the datasets that are stored in the cache as a list of tuples where the 
+
+            # This method will return all the datasets that are stored in the cache as a list of tuples where the
             # first element of the tuple is the name of the dataset and the second element is the type of the dataset.
             datasets: List[Tuple[str, str]] = self.cache.list_datasets()
             dataset_metadata_map: Dict[Tuple[str, str], dict] = {}
+            dataset_sizes: Dict[Tuple[str, str], int] = {}
+
             for name, typ in datasets:
-                # Given the name and type of dataset, this function will simply read the metadata from the 
+                # Given the name and type of dataset, this function will simply read the metadata from the
                 # corresponding yml file.
                 metadata = self.cache.get_dataset_metadata(name, typ)
                 dataset_metadata_map[(name, typ)] = metadata
-                
 
-            rich_cache_list = RichCacheList(dataset_metadata_map, sort=True)
+                # Get the size of each dataset
+                size_bytes = self.cache.get_dataset_size(name, typ)
+                dataset_sizes[(name, typ)] = size_bytes
+
+            # Get total cache size
+            total_cache_size = self.cache.get_total_cache_size()
+
+            rich_cache_list = RichCacheList(
+                dataset_metadata_map,
+                dataset_sizes,
+                total_cache_size,
+                sort=True
+            )
             click.echo(rich_cache_list)
             
     @click.command('clear', short_help='Clear the entire cache')
@@ -575,6 +855,69 @@ class CLI(click.RichGroup):
             click.secho(f' > remove "{file_name}"...', fg='bright_black')
             
         click.secho(f'cleared {num_elements} elements', fg='green')
+
+    @click.command('remove', short_help='Remove a specific dataset from the cache')
+    @click.argument('name')
+    @click.option('--type', '-t', default='mpack', help='Type of dataset to remove (default: mpack)')
+    @click.pass_obj
+    def cache_remove_command(self, name: str, type: str):
+        """
+        Removes a specific dataset from the cache by NAME and optionally TYPE.
+
+        The NAME should be the dataset identifier (e.g., 'clintox').
+        The TYPE specifies the format of the dataset (e.g., 'mpack', 'csv').
+        """
+        if self.cache.contains_dataset(name, type):
+            success = self.cache.remove_dataset(name, type)
+            if success:
+                click.secho(f'Successfully removed "{name}.{type}" from cache', fg='green')
+            else:
+                click.secho(f'Failed to remove "{name}.{type}" from cache', fg='red')
+                return 1
+        else:
+            click.secho(f'Dataset "{name}.{type}" not found in cache', fg='yellow')
+
+            # Show available datasets for helpful suggestions
+            datasets = self.cache.list_datasets()
+            if datasets:
+                click.echo('\nAvailable datasets in cache:')
+                for dataset_name, dataset_type in datasets:
+                    click.echo(f'  - {dataset_name}.{dataset_type}')
+            else:
+                click.echo('Cache is empty.')
+            return 1
+
+    @click.command('info', short_help='Show information about the cache')
+    @click.pass_obj
+    def cache_info_command(self):
+        """
+        Displays detailed information about the cache including location, size,
+        and statistics about the datasets stored in it.
+        """
+        # Get cache statistics
+        total_size = self.cache.get_total_cache_size()
+        datasets = self.cache.list_datasets()
+        total_datasets = len(datasets)
+
+        # Count total files in cache directory
+        total_files = 0
+        if os.path.exists(self.cache.path):
+            for file_name in os.listdir(self.cache.path):
+                file_path = os.path.join(self.cache.path, file_name)
+                if os.path.isfile(file_path):
+                    total_files += 1
+                elif os.path.isdir(file_path):
+                    # Count files in subdirectories too
+                    for root, dirs, files in os.walk(file_path):
+                        total_files += len(files)
+
+        rich_cache_info = RichCacheInfo(
+            cache_path=self.cache.path,
+            total_size=total_size,
+            total_datasets=total_datasets,
+            total_files=total_files
+        )
+        click.echo(rich_cache_info)
 
     ## == CONFIG COMMAND GROUP ==
     # The following methods are the implementations of the commands that are part of the config command group
@@ -690,6 +1033,113 @@ class CLI(click.RichGroup):
         else:
             click.secho(f'⚠️ File "{file_name}" does not exist on the remote server!', fg='red')
             sys.exit(1)
+    
+    @click.command('show', short_help='Display remote configuration information')
+    @click.option('--all', is_flag=True, help='Show all information including sensitive data like passwords')
+    @click.pass_obj
+    def remote_show_command(self, all: bool) -> None:
+        """
+        Displays detailed information about the currently configured remote file share server,
+        including URLs, DAV configuration, and metadata availability.
+        """
+        
+        ## -- Check Metadata Availability --
+        metadata_available = False
+        dataset_count = None
+        
+        try:
+            # Try to fetch metadata to see if it exists
+            self.file_share.fetch_metadata(force=True)
+            metadata_available = True
+            
+            # Get dataset count if available
+            if 'datasets' in self.file_share.metadata:
+                dataset_count = len(self.file_share.metadata['datasets'])
+                
+        except Exception:
+            # Metadata is not accessible
+            metadata_available = False
+            dataset_count = None
+        
+        ## -- Creating Rich Display --
+        rich_remote_info = RichRemoteInfo(
+            self.config, 
+            show_all=all, 
+            metadata_available=metadata_available, 
+            dataset_count=dataset_count
+        )
+        click.echo(rich_remote_info)
+    
+    @click.command('diff', short_help='Compare local metadata.yml with remote version')
+    @click.argument('local_file', type=click.Path(exists=True, dir_okay=False, readable=True))
+    @click.pass_obj
+    def remote_diff_command(self, local_file: str) -> None:
+        """
+        Compares a local metadata.yml file with the remote metadata.yml file from the server.
+        Shows the number of different lines and displays a visual diff of the changes.
+        
+        LOCAL_FILE: Path to the local metadata.yml file to compare
+        """
+        
+        ## --- Fetch Remote Metadata ---
+        try:
+            # Try to fetch the remote metadata
+            self.file_share.fetch_metadata(force=True)
+            
+            if not hasattr(self.file_share, 'metadata') or self.file_share.metadata is None:
+                click.secho('❌ Could not fetch remote metadata.yml file', fg='red')
+                sys.exit(1)
+                
+        except Exception as e:
+            click.secho(f'❌ Error fetching remote metadata: {str(e)}', fg='red')
+            sys.exit(1)
+        
+        ## --- Read Local File ---
+        try:
+            with open(local_file, 'r', encoding='utf-8') as f:
+                local_content = f.read()
+        except Exception as e:
+            click.secho(f'❌ Error reading local file: {str(e)}', fg='red')
+            sys.exit(1)
+        
+        ## --- Normalize Both Files for Comparison ---
+        import yaml
+        try:
+            # Parse local file to normalize it
+            local_data = yaml.safe_load(local_content)
+            # Convert both to the same YAML format for fair comparison
+            local_normalized = yaml.dump(local_data, default_flow_style=False, sort_keys=True, indent=2)
+            remote_normalized = yaml.dump(self.file_share.metadata, default_flow_style=False, sort_keys=True, indent=2)
+        except Exception as e:
+            click.secho(f'❌ Error normalizing YAML data: {str(e)}', fg='red')
+            sys.exit(1)
+        
+        ## --- Calculate Diff ---
+        local_lines = local_normalized.splitlines(keepends=False)
+        remote_lines = remote_normalized.splitlines(keepends=False)
+        
+        # Generate unified diff
+        diff_lines = list(difflib.unified_diff(
+            local_lines,
+            remote_lines,
+            fromfile=f'local/{os.path.basename(local_file)}',
+            tofile='remote/metadata.yml',
+            lineterm=''
+        ))
+        
+        # Count changed lines (lines starting with + or - but not +++ or ---)
+        changed_lines = sum(1 for line in diff_lines 
+                           if (line.startswith('+') and not line.startswith('+++')) or
+                              (line.startswith('-') and not line.startswith('---')))
+        
+        ## --- Display Results ---
+        rich_diff = RichDiffDisplay(
+            local_file=local_file,
+            remote_file="remote/metadata.yml",
+            diff_lines=diff_lines,
+            changed_lines=changed_lines
+        )
+        click.echo(rich_diff)
 
 
 @click.group(cls=CLI)

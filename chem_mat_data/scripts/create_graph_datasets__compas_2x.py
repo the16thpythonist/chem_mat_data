@@ -1,4 +1,5 @@
 import io
+from typing import List, Dict
 import os
 import gzip
 import shutil
@@ -67,7 +68,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     
     # For the COMPAS 2 dataset the raw file is provided in the form of a CSV file that is hosted on Gitlab
     # here we download that file and then open the content as a pandas dataframe.
@@ -98,7 +99,7 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
         'aea',
     ]
 
-    dataset: dict[int, dict] = {}
+    dataset: Dict[int, dict] = {}
     index: int = 0
     for c, data in enumerate(df.to_dict('records')):
         data['smiles'] = data['smiles']

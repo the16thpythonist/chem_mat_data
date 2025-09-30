@@ -1,4 +1,5 @@
 """
+from typing import List, Dict
 This experiment module is the base module that handles the creation of a graph dataset from a 
 a representation of a TUDataset (https://chrsmrrs.github.io/datasets/docs/datasets/). TUDatasets 
 are a collection of datasets for graph-based machine learning tasks.
@@ -87,7 +88,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     """
     This hook should define the loading of the dataset and return the dataset as an index data map
     whose keys are the string indices and the values are the dictionaries that represent the graph 
@@ -167,7 +168,7 @@ def after_save(e: Experiment,
     # csv format.
     # To do this we loop over all the keys of an example element and check the types.
     example_data: dict = next(iter(index_data_map.values()))
-    keys: list[str] = []
+    keys: List[str] = []
     for key, value in example_data.items():
         
         # if the value is a primitive data type we use it for sure.

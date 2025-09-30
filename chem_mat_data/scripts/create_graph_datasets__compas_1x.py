@@ -1,4 +1,5 @@
 import io
+from typing import List, Dict
 import os
 import requests
 import pandas as pd
@@ -65,7 +66,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     
     e.log('downloading raw csv file...')
     raw_url = 'https://gitlab.com/porannegroup/compas/-/raw/main/COMPAS-1/compas-1x.csv?ref_type=heads&inline=false'
@@ -91,7 +92,7 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
         'n_rings',
     ]
 
-    dataset: dict[int, dict] = {}
+    dataset: Dict[int, dict] = {}
     index: int = 0
     for data in df.to_dict('records'):
         data['smiles'] = data['smiles']

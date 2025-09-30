@@ -4,7 +4,7 @@ by obtaining each dataset and attempting to use them for a simple GNN forward pa
 """
 import numpy as np
 import pytest
-from typing import Dict
+from typing import Dict, List
 
 from chem_mat_data.testing import ConfigIsolation
 from chem_mat_data.testing import assert_graph_dict
@@ -31,17 +31,21 @@ def fetch_datasets():
         # Now we also want to be prudent and filter datasets that are too large so we don't significantly slow 
         # down the testing.
         
-        dataset_names: list[str] = []
+        dataset_names: List[str] = []
         for dataset_name, dataset_info in datasets.items():
-            
+
             # Skip datasets that are too large and would take too long to process
             if dataset_info['compounds'] >= 200_000:
                 continue
-            
+
             # We also want to skip the hidden datasets that start with an underscore
             if dataset_name.startswith('_'):
                 continue
-            
+
+            # Only test datasets that have full graph data available (full: true)
+            if not dataset_info.get('full', False):
+                continue
+
             dataset_names.append(dataset_name)
             
         # Finally we return the list of the dataset names to be used as the basis of the individual test
@@ -65,7 +69,7 @@ def test_dataset_torch_forward_pass(dataset_name: str):
         dataset_info = metadata['datasets'][dataset_name]
         
         # ~ loading the graphs from the remote file share
-        graphs: list[dict] = load_graph_dataset(
+        graphs: List[dict] = load_graph_dataset(
             dataset_name=dataset_name,
             folder_path=iso.config.cache_path,
             config=iso.config,

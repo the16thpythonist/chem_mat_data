@@ -1,4 +1,5 @@
 import rdkit.Chem as Chem
+from typing import List, Dict
 import pandas as pd
 
 from pycomex.functional.experiment import Experiment
@@ -25,10 +26,10 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     pass
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     
     df = load_smiles_dataset('sider')
-    dataset: dict[int, dict] = {}
+    dataset: Dict[int, dict] = {}
     columns =[
         "Hepatobiliary disorders",
         "Metabolism and nutrition disorders",

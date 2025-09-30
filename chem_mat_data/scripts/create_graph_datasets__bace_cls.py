@@ -1,26 +1,51 @@
 """
-from typing import List, Dict
-This module implements the processing of the CLINTOX dataset. It is a sub experiment that 
+This module implements the processing of the BACE dataset. It is a sub experiment that 
 inherits from "create_graph_datasets.py" base experiment. It overwrites the default 
-implementation of the "load_dataset" hook to load the CLINTOX dataset instead from the 
+implementation of the "load_dataset" hook to load the BACE dataset instead from the 
 nextcloud data storage.
 """
 import rdkit.Chem as Chem
-from rich import print as pprint
+from typing import List, Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from chem_mat_data import load_smiles_dataset
 
 
-# Parameters are overwritten simply by overwriting them at the top of the script like this:
+DATASET_NAME: str = 'bace_cls'
+DESCRIPTION: str = (
+    'The BACE dataset contains quantitative IC50 and qualitative binary binding '
+    'results for 1522 inhibitors of human β-secretase 1 (BACE-1), an important enzyme '
+    'target for Alzheimers disease research. The dataset was originally compiled by '
+    'Subramanian et al. (2016) from experimental values reported in scientific literature '
+    'and integrated into MoleculeNet as a binary classification benchmark. All data represent '
+    'experimental values with some compounds having detailed crystal structures available, '
+    'making it valuable for drug discovery applications targeting neurodegeneration.'
+)
 
-# :param DATASET_NAME:
-#       This string determines the name of the message pack dataset file that is then 
-#       stored into the "results" folder of the experiment as the result of the 
-#       processing process. The corresponding file extensions will be added 
-#       automatically.
-DATASET_NAME: str = 'clintox'
+# :param METADATA:
+#       A dictionary which will be used as the basis for the metadata that will be added 
+#       as additional information to the file share server.
+METADATA: dict = {
+    'tags': [
+        'Molecules', 
+        'SMILES', 
+        'Protein Target',
+        'Protein Binding',
+        'Inhibitors',
+    ],
+    'target_type': ['classification'],
+    'verbose': 'Beta Secretase 1 Inhibitors',
+    'sources': [
+        'https://pubs.acs.org/doi/full/10.1021/acs.jcim.6b00290',
+        'https://doi.org/10.1039/C7SC02664A'
+    ],
+    # TADF: Thermally Activated Delayed Fluorescence
+    'target_descriptions': {
+        '0': 'Inactive class indicator - 1 if the compound is inactive',
+        '1': 'Active class indicator - 1 if the compound is a beta secretase 1 inhibitor',
+    }
+}
 
 __TESTING__ = False
 
@@ -41,9 +66,10 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     
     ---
     
-    In this experiment, there is no additional metadata
+    In this experiment, the CID is added as an additional metadata field to the graph dict 
+    as that ID might be useful to identify the molecule later on.
     """
-    pass
+    graph['graph_id'] = data['CID']
 
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
@@ -64,12 +90,12 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     # Instead of loading the dataset from a CSV file that is located in the local file system 
     # we can use the functionality that is already implemented in the chem_mat_data package to 
     # instead load the raw dataset version from the nextcloud data storage as a dataframe.
-    df = load_smiles_dataset('clintox', folder_path=e.path)
+    df = load_smiles_dataset('bace')
     
     dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
         
-        data['smiles'] = data['smiles']
+        data['smiles'] = data['mol']
         
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
@@ -85,14 +111,11 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         if len(mol.GetAtoms()) < 2:
             continue
         
-        # == TARGET VALUES ==
-        # For this dataset we specifically know that there are only 2 classes. 
-        # Either fda approved or toxic
-        data['targets'] = [data['FDA_APPROVED'], data['CT_TOX']]
+        # For this dataset we specifically know that there are only 2 classes. The "Class" column is 
+        # either "0" or "1"
+        data['targets'] = [data['Class'] == index for index in range(2)]
         
         dataset[index] = data
-        
-    pprint(data)
     
     return dataset
 

@@ -118,7 +118,7 @@ class NextcloudFileShare(AbstractFileShare):
                  dav_url: Optional[str] = None,
                  dav_username: Optional[str] = None,
                  dav_password: Optional[str] = None,
-                 verify: bool = False,
+                 verify: bool = True,
                  use_download_url_path: bool = True,
                  **kwargs,
                  ) -> None:
@@ -156,7 +156,7 @@ class NextcloudFileShare(AbstractFileShare):
         # This is the dictionary where the content of the metadata file will be stored after it has
         # been downloaded from the file share server. This is a dictionary representation of the
         # metadata file. This dictionary will be created by the fetch_metadata method.
-        self.metadata: dict[str, t.Any] = None
+        self.metadata: Dict[str, t.Any] = None
     
     def fetch_metadata(self, force: bool = True) -> dict:
         """

@@ -52,3 +52,42 @@ Changelog
 
 - Changed the default template for the `config.toml` file to include commented out example values for the 
   nextcloud remote file share configuration and to fix the default download location.
+
+1.2.0 - 04.09.2025
+==================
+
+General:
+
+- Set the default SSL verification in the `web.py` module to `True` to avoid security issues when downloading files from 
+  the internet.
+- Added the `CLAUDE.md` file which contains information that can be used by AI agents such as 
+  Claude to understand and work with the package
+
+Command line interface:
+
+- Added the `remote show` command which will display some useful information for the currently registered 
+  file share location such as the URL and additional parameters such as the DAV username and password if they
+  exist.
+- Added the `remote diff` command which allows to compare the local version and the remote file share version 
+  of the metadata.yml file and prints the difference to the console
+
+Manage CLI:
+
+- Added the `metadata diff` command which allows to compare the local version and the remote file share version 
+  of the metadata.yml file and prints the difference to the console
+  
+Datasets:
+
+- Added the `tadf` dataset associated with OLED design to the database
+
+
+1.2.1 - 22.09.2025
+==================
+
+- Modified the syntax of type annotations so that the package is now actually compatible with 
+  Python Version up to 3.8 at the lower end and Python 3.12 at the upper end.
+
+Testing
+
+- Using `nox` now for the testing sessions instead of `tox` due to the much faster uv backend to 
+  create the virtual environments.

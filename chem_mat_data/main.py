@@ -496,7 +496,7 @@ def jraph_from_graph(graph: GraphDict) -> 'GraphsTuple':  # noqa
                           'properly first!')
     
 
-def jraph_implicit_batch_from_graphs(graphs: list[GraphDict]) -> list['GraphsTuple']:  # noqa
+def jraph_implicit_batch_from_graphs(graphs: List[GraphDict]) -> List['GraphsTuple']:  # noqa
     """
     This function will convert a list of graph dict representations ``graphs`` into a list of Jraph
     "GraphsTuple" objects which can then be used to train a Jraph graph neural network model directly.

@@ -1,4 +1,5 @@
 from rdkit import Chem
+from typing import List, Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -22,7 +23,7 @@ SMILES_COLUMN: str = 'SMILES'
 #       for multi-target regression or classification tasks. For the final graph dataset
 #       the target values will be merged into a single numeric vector that contains the 
 #       corresponding values in the same order as the column names are defined here.
-TARGET_COLUMNS: list[str] = ['Log VP']
+TARGET_COLUMNS: List[str] = ['Log VP']
 # :param DATASET_TYPE:
 #       Either 'regression' or 'classification' to define the type of the dataset. This
 #       will also determine how the target values are processed.
@@ -69,7 +70,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
-def load_dataset(e: Experiment) -> dict[int, dict]:
+def load_dataset(e: Experiment) -> Dict[int, dict]:
     
     ## -- Load Dataset --
     e.log('Loading the CSV file from the remote file share server...')
@@ -80,7 +81,7 @@ def load_dataset(e: Experiment) -> dict[int, dict]:
     print(df.head())
 
     ## -- Processing Dataset --
-    dataset: dict[int, dict] = {}
+    dataset: Dict[int, dict] = {}
     index: int = 0
     for data in df.to_dict('records'):
         
