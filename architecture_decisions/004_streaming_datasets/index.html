@@ -16,7 +16,7 @@
     
     
       
-        <title>Custom Graph Representation - ChemMatData</title>
+        <title>Streaming Datasets - ChemMatData</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#custom-graph-representation" class="md-skip">
+        <a href="#streaming-datasets" class="md-skip">
           Skip to content
         </a>
       
@@ -93,7 +93,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Custom Graph Representation
+              Streaming Datasets
             
           </span>
         </div>
@@ -653,6 +653,57 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-smilesdataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. SmilesDataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-xyzdataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. XyzDataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-graphdataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. GraphDataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-shuffledataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. ShuffleDataset
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture Highlights
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -703,49 +754,76 @@
                   
 
 
-<h1 id="custom-graph-representation">Custom Graph Representation</h1>
+<h1 id="streaming-datasets">Streaming Datasets</h1>
 <h2 id="status">Status</h2>
 <p>implemented</p>
 <h2 id="context">Context</h2>
-<p>The package also provides the various datasets to be downloaded in a processed format where the 
-various molecules are in a generic graph representation. The question that arises in this situation 
-is how to structure this graph representation, especially since different datasets may have different 
-requirements.</p>
-<p>The main requirements for this graph representation are:
-- support for rich metadata at each level of the graph: node-, edge- and graph-level
-- support for graph-level feature and label annotations
-- support for node-level feature vectors
-- support for edge-level feature vectors</p>
+<p>The ChemMatData package provides molecular datasets for machine learning applications, particularly for training graph neural networks. As datasets grow larger (100k+ molecules), several challenges emerge:</p>
+<p><strong>Memory Constraints</strong>: Loading entire datasets into memory becomes problematic. A single molecular graph with features can require several kilobytes, meaning a 100k molecule dataset can easily consume multiple gigabytes of RAM. This limits the ability to work with large datasets on consumer hardware or to train multiple models concurrently on shared infrastructure.</p>
+<p><strong>Processing Bottlenecks</strong>: Converting molecular representations (SMILES strings or XYZ structures) to graph representations using RDKit is CPU-intensive (~0.5ms per molecule). For large datasets, processing all molecules upfront creates a significant startup delay before training can begin. Additionally, if users want to experiment with different featurization approaches, reprocessing the entire dataset each time is inefficient.</p>
+<p><strong>Training Requirements</strong>: Modern deep learning frameworks (PyTorch, JAX) use data loaders that iterate through datasets multiple times during training. These frameworks are designed to work efficiently with streaming data, loading and processing batches on-demand rather than requiring the entire dataset in memory.</p>
+<p><strong>Multiple Data Formats</strong>: Molecular datasets come in different formats:
+- SMILES strings represent 2D connectivity (compact, text-based)
+- XYZ files include 3D atomic coordinates (essential for conformer-dependent properties)</p>
+<p>Supporting both formats while maintaining a unified API is important for flexibility across different modeling tasks.</p>
+<p><strong>Use Case Flexibility</strong>: Different use cases have different requirements:
+- Quick prototyping benefits from fast iteration with small subsets
+- Large-scale experiments need to handle datasets that exceed available RAM
+- Custom featurization pipelines require processing flexibility without re-downloading datasets
+- 3D property prediction requires access to geometric information from XYZ datasets</p>
+<p>The existing approach of providing pre-processed datasets (ADR 001) works well for convenience but doesn't address these scalability challenges for large datasets, custom processing needs, or flexible format support.</p>
 <h2 id="decision">Decision</h2>
-<p>The decision is to use a custom graph representation specifically created by and for this package called 
-a GraphDict representation. This represents a graph as a simple python native dictionary structure where 
-special keys identify the various parts of the graph representation. The most important keys are the following:</p>
-<ul>
-<li><code>node_indices</code>: The integer indices of the nodes</li>
-<li><code>node_attributes</code>: A node feature vector for each node in the same order as the node indices</li>
-<li><code>edge_indices</code>: a list of node index tuples which define which nodes are connected by edges</li>
-<li><code>edge_attributes</code>: A edge feature vector for each edge in the same order as the edge indices</li>
-<li><code>graph_labels</code>: A list of label annotations for the graph as a whole</li>
-</ul>
-<p>Besides these main keys, the primary feature of the graph dict representation is that it is supposed to be 
-flexible and that additional properties can be added dynamically by using one of the special prefixes 
-<code>node_</code>, <code>edge_</code> and <code>graph_</code> to indicate at which level of the graph to attach the information 
-to.</p>
+<p>Implement a streaming dataset architecture with four main classes in <code>chem_mat_data/dataset.py</code>:</p>
+<h3 id="1-smilesdataset">1. SmilesDataset</h3>
+<p>A lazy-loading dataset that streams SMILES strings and properties from CSV files line-by-line using Python's <code>csv.DictReader</code>. Only one row is loaded into memory at a time, providing minimal memory footprint. Used for 2D molecular datasets where only connectivity matters.</p>
+<h3 id="2-xyzdataset">2. XyzDataset</h3>
+<p>A lazy-loading dataset that streams 3D molecular structures from XYZ file bundles. Iterates through individual .xyz files (one per molecule) stored in an xyz_bundle folder, yielding atomic coordinates, atomic numbers, and properties. Supports multiple XYZ format parsers (default, qm9, hopv15) to handle different XYZ file specifications. Essential for tasks requiring 3D geometric information.</p>
+<h3 id="3-graphdataset">3. GraphDataset</h3>
+<p>Extends the streaming approach to convert raw molecular representations (from either SmilesDataset or XyzDataset) into graph dict representations on-the-fly. Automatically detects which dataset type to use based on what's available (tries .csv first, then .xyz_bundle). Supports two processing modes:</p>
+<p><strong>Sequential Mode (num_workers=0)</strong>:
+- True streaming: processes one molecule at a time
+- Minimal memory usage
+- Single-threaded processing (~2000 mol/s for typical molecules)
+- Best for memory-constrained environments or simple molecules</p>
+<p><strong>Parallel Mode (num_workers&gt;0)</strong>:
+- Multi-process architecture for CPU-bound parallelism
+- Producer thread reads raw data (SMILES/XYZ) and distributes work to worker processes
+- Worker processes convert raw data to Mol objects then to graphs in parallel (bypasses Python GIL)
+- Collector thread reorders results to maintain dataset order
+- Results buffer allows main iterator to suspend at yield without deadlock
+- Better throughput for complex molecules or CPU-intensive custom processing</p>
+<p><strong>Auto-Detection Architecture</strong>:
+- Uses try-except approach: attempts SmilesDataset first, falls back to XyzDataset
+- Stores dataset_type string ('smiles' or 'xyz') for worker initialization
+- Workers receive raw data (SMILES strings or XYZ dicts) and convert in parallel
+- Transparent to users - same API regardless of underlying format</p>
+<h3 id="4-shuffledataset">4. ShuffleDataset</h3>
+<p>Wrapper that provides approximate shuffling using a fixed-size shuffle buffer. This enables training with shuffled data without loading the entire dataset into memory. The buffer size controls the trade-off between shuffling quality and memory usage.</p>
+<h3 id="architecture-highlights">Architecture Highlights</h3>
+<p><strong>Deadlock Prevention</strong>: The parallel mode uses a sophisticated producer-collector thread architecture where a separate collector thread continuously drains the result queue. This prevents deadlock when the main iterator suspends at yield, ensuring worker processes never block on a full queue.</p>
+<p><strong>Order Preservation</strong>: Workers may complete molecules out of order (due to varying complexity), but the collector thread uses a priority queue (heap) to reorder results before yielding them, maintaining the original dataset sequence.</p>
+<p><strong>Queue Design</strong>:
+- Input queue: bounded (provides backpressure)
+- Result queue: unbounded (critical for deadlock prevention)
+- Results buffer: thread-local queue (low overhead, no pickling)</p>
+<p><strong>Integration</strong>: Datasets work seamlessly with the existing <code>ensure_dataset()</code> function, automatically downloading and caching raw CSV files when needed.</p>
 <h2 id="consequences">Consequences</h2>
 <h3 id="advantages">Advantages</h3>
-<p><strong>Native.</strong> The major advantage of this graph representation is that it only relies on python native 
-datastructures such as dictionaries and lists and by extension is therefore also easily JSON encodable. 
-Being able to JSON encode is very important for the transfer of the datasets over the internet and 
-also the potential compatibility with other programming languages when compared to a pickle dump for 
-example. </p>
-<p><strong>Generic and Flexible.</strong> The flexible format allows to add additional information for datasets that 
-need it without having to over-complicate the core data structure.</p>
+<p><strong>Memory Efficiency</strong>: Streaming enables working with arbitrarily large datasets on limited hardware. Only the data currently being processed needs to be in memory, not the entire dataset. This is particularly important for cloud environments where memory is a cost factor.</p>
+<p><strong>Multiple Format Support</strong>: Unified API for both SMILES-based and XYZ-based datasets enables seamless handling of 2D connectivity and 3D geometric information. Auto-detection makes format handling transparent to users.</p>
+<p><strong>Flexible Processing</strong>: Users can apply custom featurization by subclassing <code>MoleculeProcessing</code> and providing it to GraphDataset. The streaming approach means custom processing happens on-demand rather than requiring reprocessing of stored datasets. Works identically for both SMILES and XYZ sources.</p>
+<p><strong>Faster Startup</strong>: Training can begin immediately as data is streamed and processed on-the-fly, rather than waiting for the entire dataset to be loaded and processed upfront.</p>
+<p><strong>True Parallelism</strong>: Multi-process architecture bypasses Python's GIL, enabling true CPU parallelism for graph processing. This scales effectively with CPU cores for complex molecules or custom processing. Raw data format (SMILES strings or XYZ dicts) minimizes pickling overhead.</p>
+<p><strong>Composability</strong>: The wrapper pattern (ShuffleDataset) allows building more complex data pipelines by composing simple components, similar to PyTorch's dataset philosophy.</p>
+<p><strong>API Consistency</strong>: Streaming datasets implement the standard Python iterator protocol (<code>__iter__</code> and <code>__len__</code>), making them compatible with existing code that expects iterable datasets. Same interface regardless of underlying format.</p>
 <h3 id="disadvantages">Disadvantages</h3>
-<p><strong>Custom Format.</strong> It is a custom format that most people will not be initially familiar with. This is 
-in contrast to using more common formats such as networkx Graph instances for example, which some 
-people might already have familarity with. However, we argue that the format is simple enough to 
-understand and also simple enough to convert to a more common format such as networkx - especially if 
-the necessary adapaters are provided as part of the package as well.</p>
+<p><strong>Complexity</strong>: The parallel processing implementation is significantly more complex than simple in-memory loading, particularly the deadlock prevention architecture with multiple threads and processes. Supporting multiple dataset formats (SMILES and XYZ) adds additional complexity with the auto-detection mechanism. This increases maintenance burden and makes debugging more challenging.</p>
+<p><strong>Parallel Overhead</strong>: For simple molecules, parallel processing is actually slower than sequential due to overhead (~0.6ms per molecule for pickling, queue operations, and thread coordination vs ~0.5ms processing time). The complexity of the parallel code only pays off for complex molecules or CPU-intensive custom processing.</p>
+<p><strong>No Random Access</strong>: Streaming datasets don't support index-based access (e.g., <code>dataset[42]</code>). This is incompatible with some training frameworks or use cases that require random access patterns. However, this is mitigated by the ShuffleDataset wrapper for common training scenarios.</p>
+<p><strong>Repeated Iteration Overhead</strong>: Each iteration through the dataset requires re-reading the raw data (CSV or XYZ files) and re-processing molecules. For training that requires multiple epochs, this processing cost is paid repeatedly. In contrast, pre-processed datasets only pay the cost once during download.</p>
+<p><strong>Format-Specific Parameters</strong>: XyzDataset requires additional parameters (parser_cls) that aren't needed for SmilesDataset. This creates some API inconsistency, though GraphDataset handles this through auto-detection and parameter forwarding.</p>
+<p><strong>Less Discoverable</strong>: Users familiar with the pre-processed datasets (ADR 001) may not immediately discover the streaming alternative. Documentation and examples are critical to guide users toward the appropriate solution for their use case, including when to use SMILES vs XYZ formats.</p>
+<p><strong>Processing Variance</strong>: Unlike pre-processed datasets where all users get identical featurization, streaming datasets with custom processing classes can lead to less comparable results across different experiments or research groups.</p>
 
 
 

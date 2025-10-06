@@ -482,9 +482,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#viewing-cache-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      Viewing Cache Information
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#viewing-the-cache-content" class="md-nav__link">
     <span class="md-ellipsis">
       Viewing the Cache Content
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-a-specific-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing a Specific Dataset
     </span>
   </a>
   
@@ -564,6 +582,27 @@
   
   <span class="md-ellipsis">
     Loading Datasets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_streaming_datasets/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Streaming Datasets
   </span>
   
 
@@ -670,9 +709,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#viewing-cache-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      Viewing Cache Information
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#viewing-the-cache-content" class="md-nav__link">
     <span class="md-ellipsis">
       Viewing the Cache Content
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#removing-a-specific-dataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      Removing a Specific Dataset
     </span>
   </a>
   
@@ -712,15 +769,28 @@ the remote server.</p>
 folder:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>--help
 </span></code></pre></div>
+<h2 id="viewing-cache-information">Viewing Cache Information</h2>
+<p>To view detailed information about the cache including its location, total size, and statistics, you can use the <code>cache info</code> command:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>info
+</span></code></pre></div>
+<p>This will display comprehensive information about the cache directory, including the cache path, total size in MB or GB, the number of datasets stored, and the total number of files in the cache.</p>
 <h2 id="viewing-the-cache-content">Viewing the Cache Content</h2>
 <p>To view all the files that are currently stored in the cache, you can use the <code>cache list</code> command:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>list
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>list
 </span></code></pre></div>
-<p>This will print a list view of all the files that are currently stored in the cache directory, divided 
+<p>This will print a list view of all the files that are currently stored in the cache directory, divided
 by the raw and processed dataset files.</p>
+<h2 id="removing-a-specific-dataset">Removing a Specific Dataset</h2>
+<p>To remove a specific dataset from the cache, you can use the <code>cache remove</code> command:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot;dataset_name&quot;</span>
+</span></code></pre></div>
+<p>By default, this removes the <code>.mpack</code> (processed) version of the dataset. You can specify a different format using the <code>--type</code> option:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>remove<span class="w"> </span><span class="s2">&quot;dataset_name&quot;</span><span class="w"> </span>--type<span class="w"> </span>csv
+</span></code></pre></div>
+<p>This command will remove only the specified dataset file from the cache, leaving all other cached datasets intact.</p>
 <h2 id="resetting-the-cache">Resetting the Cache</h2>
 <p>If you wich to reset the cache for some reason, you can use the <code>cache clear</code> command:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>clear
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cmdata<span class="w"> </span>cache<span class="w"> </span>clear
 </span></code></pre></div>
 <p>This command will delete all the files in the cache folder.</p>
 
