@@ -28,7 +28,7 @@ METADATA: dict = {
         'at different computational levels. The dataset supports data-driven analysis of structure-property trends and '
         'is useful for machine- and deep-learning studies in chemistry.'
     ),
-    'target_type': ['Regression'],
+    'target_type': ['regression'],
     'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties'],
     'sources': [
         'https://pubs.rsc.org/en/content/articlelanding/2024/cp/d4cp01027b',

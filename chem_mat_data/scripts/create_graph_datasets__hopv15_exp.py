@@ -33,7 +33,7 @@ METADATA: dict = {
         'Organic Electronics',
         'Solar Cells',
     ],
-    'verbose': 'Harvard Organic Photovoltaic Dataset',
+    'verbose': 'Harvard Organic Photovoltaic Dataset Experimental',
     'sources': [
         'https://chemrxiv.org/engage/chemrxiv/article-details/64be471cb605c6803b425da6'
     ],

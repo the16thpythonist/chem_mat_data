@@ -98,10 +98,10 @@ class RichHelp(RichMixin):
         
         
 class RichCommands(RichMixin):
-    
+
     def __init__(self, commands: Dict[str, Union[click.RichCommand, click.RichGroup]]):
         self.commands = commands
-    
+
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
 
         # Separate commands and groups
@@ -116,11 +116,18 @@ class RichCommands(RichMixin):
                 # Regular commands don't have subcommands
                 commands[command_name] = command
 
-        # Display regular commands
+        # Display regular commands in one panel
         if commands:
-            table_commands = Table(title=None, box=None, show_header=False, leading=1)
-            table_commands.add_column(justify='left', style='bold cyan', no_wrap=True)
-            table_commands.add_column(justify='left', style='white', no_wrap=False)
+            table_commands = Table(
+                title=None,
+                box=None,
+                show_header=False,
+                padding=(0, 1),
+                expand=True,
+            )
+            # Force fixed width by setting both min and max to the same value
+            table_commands.add_column("Command", style="bold cyan", min_width=20, max_width=20, no_wrap=True)
+            table_commands.add_column("Description", style="white", ratio=1)
 
             for command_name, command in commands.items():
                 table_commands.add_row(
@@ -130,31 +137,50 @@ class RichCommands(RichMixin):
 
             panel_commands = Panel(
                 table_commands,
-                title='[bright_black]Commands[/bright_black]',
+                title='[bold]Commands[/bold]',
                 title_align='left',
                 style='bright_black'
             )
             yield panel_commands
 
-        # Display command groups
-        if groups:
-            table_groups = Table(title=None, box=None, show_header=False, leading=1)
-            table_groups.add_column(justify='left', style='bold cyan', no_wrap=True)
-            table_groups.add_column(justify='left', style='white', no_wrap=False)
-
-            for command_name, command in groups.items():
-                table_groups.add_row(
-                    command_name,
-                    command.help or ''
-                )
-
-            panel_groups = Panel(
-                table_groups,
-                title='[bright_black]Command Groups[/bright_black]',
-                title_align='left',
-                style='bright_black'
+        # Display each command group in its own panel with subcommands
+        for group_name, group in groups.items():
+            # Create a table for this command group with fixed width for command column
+            table = Table(
+                title=None,
+                box=None,
+                show_header=False,
+                padding=(0, 1),
+                expand=True,
             )
-            yield panel_groups
+            # Force fixed width by setting both min and max to the same value
+            table.add_column("Command", style="bold cyan", min_width=20, max_width=20, no_wrap=True)
+            table.add_column("Description", style="white", ratio=1)
+
+            # Add all subcommands of this group to the table
+            for cmd_name, cmd in group.commands.items():
+                # Try to get help text from various sources
+                short_help = cmd.short_help
+                if not short_help and cmd.help:
+                    # Extract first meaningful line from the full help text
+                    help_lines = [line.strip() for line in cmd.help.split('\n') if line.strip()]
+                    short_help = help_lines[0] if help_lines else ''
+                if not short_help:
+                    short_help = ''
+
+                # Show composite command (e.g., "cache list" instead of just "list")
+                composite_cmd = f"{group_name} {cmd_name}"
+                table.add_row(composite_cmd, short_help)
+
+            # Wrap the table in a panel with the group name as title
+            panel = Panel(
+                table,
+                title=f'[bold]{group_name.capitalize()}[/bold]',
+                title_align='left',
+                style='bright_black',
+            )
+
+            yield panel
         
 
 class RichDatasetInfo(RichMixin):

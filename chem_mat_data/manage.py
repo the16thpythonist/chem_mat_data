@@ -87,6 +87,56 @@ class RichDiffDisplay(RichMixin):
             yield Text(f"📊 {self.changed_lines} lines differ between local and remote files", style="yellow")
 
 
+class RichCommandGroups(RichMixin):
+    """
+    Rich display element that shows command groups in separate panels.
+    Each panel contains all commands of that command group.
+    """
+    def __init__(self, command_groups: Dict[str, click.Group]):
+        self.command_groups = command_groups
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+        from rich.table import Table
+
+        for group_name, group in self.command_groups.items():
+            # Create a table for this command group with fixed width for command column
+            table = Table(
+                title=None,
+                box=None,
+                show_header=False,
+                padding=(0, 1),
+                expand=True,
+            )
+            # Force fixed width by setting both min and max to the same value
+            table.add_column("Command", style="bold cyan", min_width=25, max_width=25, no_wrap=True)
+            table.add_column("Description", style="white", ratio=1)
+
+            # Add all subcommands of this group to the table
+            for cmd_name, cmd in group.commands.items():
+                # Try to get help text from various sources
+                short_help = cmd.short_help
+                if not short_help and cmd.help:
+                    # Extract first meaningful line from the full help text
+                    help_lines = [line.strip() for line in cmd.help.split('\n') if line.strip()]
+                    short_help = help_lines[0] if help_lines else ''
+                if not short_help:
+                    short_help = ''
+
+                # Show composite command (e.g., "metadata collect" instead of just "collect")
+                composite_cmd = f"{group_name} {cmd_name}"
+                table.add_row(composite_cmd, short_help)
+
+            # Wrap the table in a panel with the group name as title
+            panel = Panel(
+                table,
+                title=f'[bold]{group_name.capitalize()}[/bold]',
+                title_align='left',
+                style='bright_black',
+            )
+
+            yield panel
+
+
 def is_experiment_archive(folder_path: str) -> bool:
     """
     Helper function to determine if a given ``folder_path`` represents a valid experiment archive.
@@ -152,6 +202,35 @@ class CLI(click.RichGroup):
         # docs command group
         self.add_command(self.docs_group)
         self.docs_group.add_command(self.docs_collect_datasets_command)
+
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        """
+        Custom help formatting that displays each command group in its own panel.
+        """
+        # First, let rich_click handle the standard parts (usage, description, options)
+        # We'll do this by temporarily removing the commands and then adding them back
+        commands_backup = self.commands.copy()
+        self.commands = {}
+
+        # Let the parent class format the basic help (usage, description, options)
+        super(CLI, self).format_help(ctx, formatter)
+
+        # Restore the commands
+        self.commands = commands_backup
+
+        # Now add our custom command groups display
+        console = Console()
+
+        # Collect command groups (skip regular commands if any)
+        command_groups = {}
+        for name, cmd in self.commands.items():
+            if isinstance(cmd, click.Group):
+                command_groups[name] = cmd
+
+        # Display the command groups using our custom rich display
+        if command_groups:
+            rich_display = RichCommandGroups(command_groups)
+            console.print(rich_display)
 
     ## == METADATA COMMAND GROUP ==
     # This command group is used to manage the metadata.yml file both locally and on the remote server 

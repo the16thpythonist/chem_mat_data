@@ -22,7 +22,7 @@ datasets:
         - Smiles
         - Molecules
         target_type:
-        - Regression
+        - regression
         targets: 1
     _test2:
         compounds: 3
@@ -34,7 +34,7 @@ datasets:
         - Smiles
         - Molecules
         target_type:
-        - Regression
+        - regression
         targets: 1
     ames:
         compounds: 6512
@@ -48,7 +48,7 @@ datasets:
         - Molecules
         - Toxicity
         target_type:
-        - Classification
+        - classification
         targets: 2
         verbose: Ames Mutagenicity Assays
     aqsoldb:
@@ -68,7 +68,7 @@ datasets:
         - Molecules
         - Solubility
         target_type:
-        - Regression
+        - regression
         targets: 1
         verbose: Aqueous Solubility
     bace_cls:
@@ -141,7 +141,7 @@ datasets:
         - Molecules
         - Physiology
         target_type:
-        - Classification
+        - classification
         targets: 1
         verbose: Blood-Brain Barrier Penetration
     beet:
@@ -165,7 +165,7 @@ datasets:
         - Physiology
         - Toxicity
         target_type:
-        - Classification
+        - classification
         targets: 2
         verbose: Honey Bee Toxicity
     clintox:
@@ -180,7 +180,7 @@ datasets:
         - Molecules
         - Physiology
         target_type:
-        - Classification
+        - classification
         targets: 2
         verbose: Clinical Toxicity
     compas_1x:
@@ -214,7 +214,7 @@ datasets:
             7: NFOD - fractional occupation density
             8: n_rings - number of rings in the molecule
         target_type:
-        - Regression
+        - regression
         targets: 9
     compas_3x:
         compounds: 39482
@@ -248,7 +248,7 @@ datasets:
             7: NFOD - fractional occupation density
             8: n_rings - number of rings in the molecule
         target_type:
-        - Regression
+        - regression
         targets: 9
     dpp4:
         compounds: 3933
@@ -269,7 +269,7 @@ datasets:
         - Smiles
         - Molecules
         target_type:
-        - Classification
+        - classification
         targets: 2
         verbose: DPP-4 inhibitors
     elanos_bp:
@@ -318,7 +318,7 @@ datasets:
         - Molecules
         - Physical Chemistry
         target_type:
-        - Regression
+        - regression
         targets: 1
         verbose: Water Solubility
     freesolv:
@@ -392,11 +392,11 @@ datasets:
         - Molecules
         - Biophysics
         target_type:
-        - Classification
+        - classification
         targets: 2
         verbose: HIV Inhibitors
     hopv15_exp:
-        compounds: 175
+        compounds: 176
         description: The Harvard Organic Photovoltaic Dataset (HOPV15) is a comprehensive
             collection of experimental photovoltaic data from the literature for 350
             different organic solar cell donor structures, combined with corresponding
@@ -427,7 +427,7 @@ datasets:
         target_type:
         - regression
         targets: 6
-        verbose: Harvard Organic Photovoltaic Dataset
+        verbose: Harvard Organic Photovoltaic Dataset Experimental
     lipophilicity:
         compounds: 4199
         description: Experimental results for the octanol/water distribution coefficient
@@ -462,7 +462,7 @@ datasets:
         - Molecules
         - Biophysics
         target_type:
-        - Classification
+        - classification
         targets: 17
         verbose: MUV Benchmark
     open_melting_point:
@@ -507,7 +507,7 @@ datasets:
         - Molecules
         - Quantum mechanics
         target_type:
-        - Regression
+        - regression
         targets: 1
     qm9:
         compounds: 134000
@@ -528,7 +528,7 @@ datasets:
         - Quantum mechanics
         - 3D coordinates
         target_type:
-        - Regression
+        - regression
         targets: 16
         verbose: DFT properties of small molecules
     qm9_smiles:
@@ -584,7 +584,7 @@ datasets:
         - Molecules
         - Physiology
         target_type:
-        - Classification
+        - classification
         targets: 27
         verbose: Drug Side Effects
     skin_irritation:
@@ -630,7 +630,7 @@ datasets:
         tags:
         - Molecules
         target_type:
-        - Classification
+        - classification
         targets: 2
     synth_binary_local:
         compounds: 249455
@@ -677,7 +677,7 @@ datasets:
         - Physiology
         - Toxicity
         target_type:
-        - Classification
+        - classification
         targets: 12
         verbose: Toxicology
     toxcast:
@@ -692,7 +692,7 @@ datasets:
         - Molecules
         - Physiology
         target_type:
-        - Classification
+        - classification
         targets: 617
         verbose: Toxicology
     zinc250k:

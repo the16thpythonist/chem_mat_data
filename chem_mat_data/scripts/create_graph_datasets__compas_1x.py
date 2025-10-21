@@ -28,7 +28,7 @@ METADATA: dict = {
         'of structure-property relationships and the design of novel functional compounds, with data '
         'generated at the GFN2-xTB and B3LYP-D3BJ/def2-SVP levels.'
     ),
-    'target_type': ['Regression'],
+    'target_type': ['regression'],
     'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties'],
     'sources': [
         'https://pubs.acs.org/doi/full/10.1021/acs.jcim.2c00503',

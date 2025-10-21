@@ -30,7 +30,7 @@ METADATA: dict = {
         'affinity are provided. Additionally, the dataset is benchmarked against a ~50k dataset calculated at the '
         'CAM-B3LYP-D3BJ/def2-SVP level, with a fitting scheme developed to correct the xTB values to higher accuracy.'
     ),
-    'target_type': ['Regression'],
+    'target_type': ['regression'],
     'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties'],
     'sources': [
         'https://chemrxiv.org/engage/chemrxiv/article-details/64bf8dd7b053dad33ad856cf',
