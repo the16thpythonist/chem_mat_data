@@ -153,3 +153,9 @@ Testing
 - Removed deprecated ``tests/test_datasets.py`` in favor of new dataset-specific test files
 - Updated existing tests (``test_docs.py``, ``test_main.py``, ``test_web.py``) to accommodate streaming dataset functionality
 
+1.5.0 - xx.xx.2025
+------------------
+
+Command Line Interface
+
+- Changed the way in which the `--help` string is being printed to be more informative
