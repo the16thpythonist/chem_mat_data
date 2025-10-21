@@ -120,24 +120,24 @@ Datasets
 Core Features
 
 - Implemented **StreamingDataset** architecture for memory-efficient access to large molecular datasets
-  - ``SmilesDataset``: Lazy-loading of SMILES strings from CSV files with minimal memory footprint
-  - ``XyzDataset``: Lazy-loading of 3D molecular structures from XYZ file bundles, supporting multiple format parsers (default, qm9, hopv15)
-  - ``GraphDataset``: On-the-fly conversion from raw molecular representations (SMILES or XYZ) to graph dicts
+  - `SmilesDataset`: Lazy-loading of SMILES strings from CSV files with minimal memory footprint
+  - `XyzDataset`: Lazy-loading of 3D molecular structures from XYZ file bundles, supporting multiple format parsers (default, qm9, hopv15)
+  - `GraphDataset`: On-the-fly conversion from raw molecular representations (SMILES or XYZ) to graph dicts
     - Automatic detection of dataset format (SMILES vs XYZ) for transparent handling
     - Sequential mode (num_workers=0) for optimal performance with typical molecules (~2000 mol/s)
     - Parallel mode (num_workers>0) with multi-process architecture for complex molecules or custom processing
     - Deadlock-free producer-collector-worker design that maintains dataset order while enabling true CPU parallelism
-  - ``ShuffleDataset``: Approximate shuffling using fixed-size buffer for training with shuffled data while maintaining low memory usage
+  - `ShuffleDataset`: Approximate shuffling using fixed-size buffer for training with shuffled data while maintaining low memory usage
 
 Documentation
 
-- Added comprehensive streaming datasets documentation (``docs/api_streaming_datasets.md``) covering:
+- Added comprehensive streaming datasets documentation (`docs/api_streaming_datasets.md`) covering:
   - Motivation and use cases for streaming vs pre-processed datasets
   - Detailed usage examples for all streaming dataset classes
   - Performance considerations and when to use sequential vs parallel processing
   - Integration with deep learning frameworks and training workflows
   - Guidance on choosing between SMILES and XYZ formats
-- Added Architecture Decision Record (``docs/architecture_decisions/004_streaming_datasets.md``) documenting:
+- Added Architecture Decision Record (`docs/architecture_decisions/004_streaming_datasets.md`) documenting:
   - Design rationale for streaming architecture
   - Detailed explanation of parallel processing implementation and deadlock prevention
   - Trade-offs between streaming and pre-processed datasets
@@ -146,12 +146,12 @@ Documentation
 Testing
 
 - Added comprehensive unit tests for streaming datasets:
-  - ``tests/test_dataset.py``: Core functionality tests for SmilesDataset, XyzDataset, GraphDataset, and ShuffleDataset
-  - ``tests/test_xyz_dataset.py``: XYZ-specific functionality and format parser tests
-  - ``tests/test_xyz_bundle.py``: XYZ bundle file handling tests
-  - ``tests/test_dataset_benchmark.py``: Performance benchmarks for sequential vs parallel processing modes
-- Removed deprecated ``tests/test_datasets.py`` in favor of new dataset-specific test files
-- Updated existing tests (``test_docs.py``, ``test_main.py``, ``test_web.py``) to accommodate streaming dataset functionality
+  - `tests/test_dataset.py`: Core functionality tests for SmilesDataset, XyzDataset, GraphDataset, and ShuffleDataset
+  - `tests/test_xyz_dataset.py`: XYZ-specific functionality and format parser tests
+  - `tests/test_xyz_bundle.py`: XYZ bundle file handling tests
+  - `tests/test_dataset_benchmark.py`: Performance benchmarks for sequential vs parallel processing modes
+- Removed deprecated `tests/test_datasets.py` in favor of new dataset-specific test files
+- Updated existing tests (`test_docs.py`, `test_main.py`, `test_web.py`) to accommodate streaming dataset functionality
 
 1.5.0 - xx.xx.2025
 ------------------
