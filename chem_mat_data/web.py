@@ -258,34 +258,35 @@ class NextcloudFileShare(AbstractFileShare):
     
     # ~ utility methods
     
-    def construct_download_url(self, 
+    def construct_download_url(self,
                                file_name: str,
                                ) -> str:
         """
-        Returns the direct download URL for a file stored on the file share server.
+        Returns the direct download URL for a file stored on the file share server using the
+        WebDAV public endpoint format.
 
         :param file_name: The name of the file to be downloaded, including any subdirectory structure
             and file extension, relative to the root of the shared folder.
-        
+
         :returns: The fully constructed download URL as a string. This URL can be used in a browser or
             with command-line tools (such as wget or curl) to download the file directly from the server.
-            The format is: ``{self.url}/{file_name}?files={file_name}``
-        
+            The format is: ``{self.base_url}/public.php/dav/files/{self.share_token}/{file_name}``
+
         Example::
-            
+
             share = NextcloudFileShare(url="https://nextcloud.example.com/s/abc123xyz456")
             url = share.construct_download_url("mydata.mpack.gz")
-            # url == 'https://nextcloud.example.com/s/abc123xyz456/mydata.mpack.gz?files=mydata.mpack.gz'
-        
+            # url == 'https://nextcloud.example.com/public.php/dav/files/abc123xyz456/mydata.mpack.gz'
+
         Note:
-            The exact format of the download URL may depend on the server's configuration and sharing mechanism.
-            This method assumes the server accepts the constructed URL for direct file downloads. If the server
-            uses a different API or requires additional parameters, this method may need to be adapted accordingly.
+            This method uses the WebDAV public endpoint format introduced in Nextcloud 29, which is
+            compatible with Nextcloud Hub 10 (Nextcloud 31) and newer versions. The old
+            /s/{token}/download endpoint format is deprecated and no longer works reliably.
         """
-        download_url = (
-            f'{self.url}/{file_name}?files={file_name}'
-        )
-        
+        # Use the new WebDAV public endpoint format (available since Nextcloud 29)
+        # This replaces the deprecated /s/{token}/download endpoint
+        download_url = f'{self.base_url}/public.php/dav/files/{self.share_token}/{file_name}'
+
         return download_url
     
     def download(self, 

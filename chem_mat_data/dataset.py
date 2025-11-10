@@ -103,9 +103,9 @@ def _convert_raw_to_mol(raw_data: Any, dataset_type: str) -> 'Chem.Mol':
     :param raw_data: Either a SMILES string (for 'smiles' type) or xyz_data dict (for 'xyz' type)
     :param dataset_type: Dataset type identifier ('smiles' or 'xyz')
 
-    :returns: RDKit Mol object
+    :returns: RDKit Mol object, or None if the SMILES string is invalid (with warning logged)
 
-    :raises ValueError: If SMILES string is invalid or dataset_type is unknown
+    :raises ValueError: If dataset_type is unknown
     """
     import rdkit.Chem as Chem
 
@@ -113,7 +113,9 @@ def _convert_raw_to_mol(raw_data: Any, dataset_type: str) -> 'Chem.Mol':
         # Convert SMILES string to Mol object
         mol = Chem.MolFromSmiles(raw_data)
         if mol is None:
-            raise ValueError(f"Invalid SMILES string: {raw_data}")
+            import logging
+            logging.warning(f"Skipping invalid SMILES string: {raw_data}")
+            return None
         return mol
 
     elif dataset_type == 'xyz':
@@ -202,6 +204,12 @@ def _graph_worker(
                 # Step 1: Convert raw data to Mol object
                 # This happens in parallel across workers, not in main process
                 mol = _convert_raw_to_mol(raw_data, dataset_type)
+
+                # Skip invalid molecules (mol is None)
+                if mol is None:
+                    # Send a special sentinel to indicate this molecule should be skipped
+                    result_queue.put((row_idx, 'SKIP'))
+                    continue
 
                 # Step 2: Apply mol_transform
                 mol = mol_transform(mol)
@@ -917,6 +925,9 @@ class GraphDataset(StreamingDataset):
             for raw_data, properties in self.raw_dataset:
                 # Convert raw data to Mol object
                 mol = _convert_raw_to_mol(raw_data, self.dataset_type)
+                # Skip invalid molecules (mol is None)
+                if mol is None:
+                    continue
                 yield self._process_one(mol, properties)
 
         else:
@@ -1040,6 +1051,11 @@ class GraphDataset(StreamingDataset):
                     # Handle worker shutdown sentinel
                     if result is None:
                         workers_done += 1
+                        continue
+
+                    # Handle skipped molecules (invalid SMILES, etc.)
+                    if result == 'SKIP':
+                        # Don't add to heap, just continue - this skips the molecule
                         continue
 
                     # Handle errors (propagate to main iterator)

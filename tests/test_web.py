@@ -67,7 +67,7 @@ class TestNextcloudFileShare:
         assert isinstance(metadata, dict)
         assert 'datasets' in file_share
         
-    @pytest.skip(reason="Requires DAV credentials to run")
+    @pytest.mark.skip(reason="Requires DAV credentials to run")
     def test_upload(self):
         """
         Given the DAV credentials, it should be possible to upload files to the nextcloud file share as well using 
