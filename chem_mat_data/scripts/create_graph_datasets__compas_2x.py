@@ -21,31 +21,41 @@ DATASET_NAME: str = 'compas_2x'
 #       A dictionary which will be used as the basis for the metadata that will be added 
 #       as additional information to the file share server.
 METADATA: dict = {
+    'verbose': 'Cata-Condensed Hetero-Polycyclic Aromatic Systems (COMPAS-2x)',
     'description': (
-        'This dataset is part of the COMputational database of Polycyclic Aromatic Systems (COMPAS) Project. '
-        'It contains geometries and properties of cata-condensed poly(hetero)cyclic aromatic molecules, '
-        'calculated at the GFN1-xTB level. The dataset includes approximately 500k molecules comprising 11 types '
-        'of aromatic and antiaromatic building blocks, representing a highly diverse chemical space. '
-        'Various electronic properties such as HOMO-LUMO gap, adiabatic ionization potential, and adiabatic electron '
-        'affinity are provided. Additionally, the dataset is benchmarked against a ~50k dataset calculated at the '
-        'CAM-B3LYP-D3BJ/def2-SVP level, with a fitting scheme developed to correct the xTB values to higher accuracy.'
+        'The COMPAS-2x dataset is the second installment of the COMPAS Project, presenting the largest freely '
+        'available dataset of geometries and properties of cata-condensed poly(hetero)cyclic aromatic systems. '
+        'This dataset contains optimized ground-state structures and molecular properties for approximately '
+        '524,392 unique molecules, computed at the GFN1-xTB level of theory. The molecules range in size from '
+        '2 to 10 rings and are constructed from a library of 11 diverse building blocks containing heteroatoms '
+        '(boron, nitrogen, oxygen, and sulfur) in aromatic and antiaromatic rings of varying sizes (4-6 membered). '
+        'This represents a highly diverse chemical space of hetero-polycyclic aromatic systems, expanding beyond '
+        'the pure hydrocarbon systems of COMPAS-1. Key quantum chemical properties include HOMO/LUMO energies, '
+        'energy gaps, dispersion energies, and electron affinities. The dataset is benchmarked against COMPAS-2D, '
+        'a ~52,000-molecule subset calculated at the CAM-B3LYP-D3BJ/def2-SVP level, with a fitting scheme developed '
+        'to correct the GFN1-xTB values to higher accuracy. This resource supports high-throughput screening, '
+        'generative models, and machine learning applications in organic electronics and optoelectronics.'
     ),
     'target_type': ['regression'],
-    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties'],
+    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties', 'Polycyclic Aromatic Systems', 'Heteroaromatic', 'GFN1-xTB', 'Cata-Condensed'],
     'sources': [
+        'https://www.nature.com/articles/s41597-024-02927-8',
+        'https://pubmed.ncbi.nlm.nih.gov/38242917/',
+        'https://pmc.ncbi.nlm.nih.gov/articles/PMC10799083/',
         'https://chemrxiv.org/engage/chemrxiv/article-details/64bf8dd7b053dad33ad856cf',
-        'https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-1?ref_type=heads',
+        'https://figshare.com/articles/dataset/The_b_COMPAS_Project_b_Phase_2_Cata-Condensed_Hetero-Polycyclic_Aromatic_Systems_COMPAS-2_/24347152',
+        'https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-2?ref_type=heads',
     ],
     'target_descriptions': {
-        0: 'homo - energy of the highest molecular orbit (HOMO) in electron volt (eV)',
-        1: 'lumo - energy of the lowest unoccupied molecular orbit (LUMO) in electron volt (eV)',
-        2: 'gap - energy gap between HOMO and LUMO in electron volt (eV)',
-        3: 'energy - total energy of the molecule in electron volt (eV)',
-        4: 'nfod - fractional occupation density',
-        5: 'rings - number of rings in the molecule',
-        6: 'dispersion - dispersion energy in Hartree (Eh)',
-        7: 'aip - adiabatic ionization potential in Hartree (Eh)',
-        8: 'aea - adiabatic electron affinity in Hartree (Eh)',
+        0: 'homo - Energy of the highest occupied molecular orbital (HOMO) in electron volts (eV)',
+        1: 'lumo - Energy of the lowest unoccupied molecular orbital (LUMO) in electron volts (eV)',
+        2: 'gap - HOMO-LUMO energy gap in electron volts (eV)',
+        3: 'energy - Total energy of the molecule in electron volts (eV)',
+        4: 'nfod - Fractional occupation density (indicator of polyradical character)',
+        5: 'rings - Number of aromatic rings in the molecule',
+        6: 'dispersion - Dispersion energy in Hartree (Eh)',
+        7: 'aip - Adiabatic ionization potential in Hartree (Eh)',
+        8: 'aea - Adiabatic electron affinity in Hartree (Eh)',
     }
 }
 

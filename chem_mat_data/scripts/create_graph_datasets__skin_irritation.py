@@ -35,25 +35,40 @@ DATASET_TYPE: str = 'classification'
 #       This is a string description of the dataset that will be stored in the experiment
 #       metadata.
 DESCRIPTION: str = (
-    'Curated dataset of roughly 1000 molecules focused on the skin irritation potential of small organic molecules.'
-    'Data were retrieved from the Registration, Evaluation, Authorization and Restriction of Chemicals (REACH) database, and were curated as part of the study by Borba et al.'    
+    'The skin irritation dataset contains 1,012 curated compounds focused on predicting the skin irritation '
+    'and corrosion potential of small organic molecules. Experimental animal data were retrieved from the '
+    'Registration, Evaluation, Authorization and Restriction of Chemicals (REACH) study results database and '
+    'curated as part of the STopTox study by Borba et al. (2022), published in Environmental Health Perspectives. '
+    'The dataset comprises 317 skin irritants and 695 non-irritants, providing a binary classification benchmark '
+    'for developing in silico alternatives to animal testing. This dataset supports the development of QSAR models '
+    'and machine learning approaches for predicting topical toxicity endpoints, contributing to the 3Rs principles '
+    '(Replacement, Reduction, and Refinement) in chemical safety assessment.'
 )
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'verbose': 'Skin Irritation and Corrosion',
     'tags': [
-        'Molecules', 
-        'SMILES', 
-        'Biology', 
+        'Molecules',
+        'SMILES',
+        'Biology',
+        'Toxicity',
+        'Skin Irritation',
+        'REACH',
+        'QSAR',
+        'Alternative Methods',
     ],
     'sources': [
         'https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds14',
-        'https://ehp.niehs.nih.gov/doi/10.1289/EHP9341',    
+        'https://ehp.niehs.nih.gov/doi/10.1289/EHP9341',
+        'https://pubmed.ncbi.nlm.nih.gov/35192406/',
+        'https://pmc.ncbi.nlm.nih.gov/articles/PMC8863177/',
+        'https://stoptox.mml.unc.edu/',
     ],
     'target_descriptions': {
-        '0': 'non-irritant',
-        '1': 'skin-irritant',
+        '0': 'Non-irritant - Compound does not cause skin irritation or corrosion',
+        '1': 'Skin irritant - Compound causes skin irritation or corrosion based on experimental data',
     }
 }
 

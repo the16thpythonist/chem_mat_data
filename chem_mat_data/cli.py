@@ -225,7 +225,23 @@ class RichDatasetInfo(RichMixin):
             padding=(0, 1),
         )
         yield panel_description
-        
+
+        # Show notes if they exist
+        if 'notes' in self.info and self.info['notes']:
+            notes_content = '\n'.join([
+                f'• {note}'
+                for note in self.info['notes']
+            ])
+            notes_panel = Panel(
+                notes_content,
+                title='[bright_black]:memo: Notes[/bright_black]',
+                title_align='left',
+                border_style='bright_black',
+                style='white',
+                padding=(0, 1),
+            )
+            yield notes_panel
+
         # Show target descriptions if they exist
         if 'target_descriptions' in self.info and self.info['target_descriptions']:
             

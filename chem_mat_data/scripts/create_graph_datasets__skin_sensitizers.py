@@ -35,25 +35,47 @@ DATASET_TYPE: str = 'classification'
 #       This is a string description of the dataset that will be stored in the experiment
 #       metadata.
 DESCRIPTION: str = (
-    'Curated dataset of roughly 1000 molecules focused on the skin irritation sensitization potential of small organic molecules.'
-    'Data were retrieved from the Registration, Evaluation, Authorization and Restriction of Chemicals (REACH) database, and were curated as part of the study by Borba et al.'    
+    'The skin sensitization dataset contains 1,000 curated compounds focused on predicting the skin sensitization '
+    'potential of small organic molecules. Data were sourced from the Interagency Coordinating Committee on the '
+    'Validation of Alternative Methods (ICCVAM) and the Registration, Evaluation, Authorization and Restriction '
+    'of Chemicals (REACH) study results databases. The dataset was curated as part of the STopTox study by Borba '
+    'et al. (2022), published in Environmental Health Perspectives, and is also integrated into the Pred-Skin web '
+    'portal (Borba et al., 2020). The dataset comprises 481 skin sensitizers and 519 non-sensitizers, providing '
+    'a binary classification benchmark for developing in silico alternatives to animal testing. This dataset '
+    'supports the development of QSAR models and machine learning approaches for predicting skin sensitization '
+    'hazard, contributing to the 3Rs principles (Replacement, Reduction, and Refinement) in chemical safety '
+    'assessment and aligning with the OECD adverse outcome pathway (AOP) framework for skin sensitization.'
 )
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'verbose': 'Skin Sensitization Hazard',
     'tags': [
-        'Molecules', 
-        'SMILES', 
-        'Biology', 
+        'Molecules',
+        'SMILES',
+        'Biology',
+        'Toxicity',
+        'Skin Sensitization',
+        'REACH',
+        'ICCVAM',
+        'QSAR',
+        'Alternative Methods',
+        'LLNA',
     ],
     'sources': [
         'https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds15',
-        'https://ehp.niehs.nih.gov/doi/10.1289/EHP9341',    
+        'https://ehp.niehs.nih.gov/doi/10.1289/EHP9341',
+        'https://pubmed.ncbi.nlm.nih.gov/35192406/',
+        'https://pmc.ncbi.nlm.nih.gov/articles/PMC8863177/',
+        'https://pubs.acs.org/doi/10.1021/acs.chemrestox.0c00186',
+        'https://pubmed.ncbi.nlm.nih.gov/32673477/',
+        'https://predskin.labmol.com.br/',
+        'https://stoptox.mml.unc.edu/',
     ],
     'target_descriptions': {
-        '0': 'non-sensitizer',
-        '1': 'skin-sensitizer',
+        '0': 'Non-sensitizer - Compound does not cause skin sensitization',
+        '1': 'Skin sensitizer - Compound causes skin sensitization based on experimental data (LLNA, human, or in vitro assays)',
     }
 }
 

@@ -168,6 +168,173 @@ datasets:
         - classification
         targets: 2
         verbose: Honey Bee Toxicity
+    bl_chembl_cls:
+        compounds: 8780
+        description: "The Briem & Lessel ChEMBL Multi-Target Classification Dataset\
+            \ is a modern recreation of the classic Briem and Lessel dataset (originally\
+            \ published in 2000) using ChEMBL25 data. This multi-label classification\
+            \ version contains two classes: (1) selected high-potency active compounds\
+            \ from the curated selected_actives file, and (2) decoy compounds assumed\
+            \ to be inactive. Each molecule has a 35-dimensional tri-state target\
+            \ activity vector where each position can have three values: 0 (not mentioned),\
+            \ 1 (active), or 2 (decoy). For selected actives, a 1 in position i indicates\
+            \ the molecule is a high-potency active (Ki \u2264 1nM) against target\
+            \ i. For decoys, all positions are set to 2, indicating the molecule is\
+            \ assumed to be inactive (a decoy) against all 35 targets. This tri-state\
+            \ encoding enables multi-label multi-target activity prediction where\
+            \ a single molecule can be active against multiple targets simultaneously,\
+            \ with explicit decoy identification."
+        notes:
+        - This is a virtual screening benchmark dataset derived from ChEMBL25 for
+            evaluating molecular similarity methods.
+        - "Target vectors use tri-state encoding: 0 = not mentioned for that target,\
+            \ 1 = active (high-potency, Ki \u2264 1nM) against that target, 2 = decoy\
+            \ for that target."
+        - Decoys are shared compounds assumed to be inactive against all 35 targets.
+        - All decoy molecules have value 2 for all target positions (assumed inactive
+            against all targets).
+        - "Active compounds are high-potency selected actives (Ki \u2264 1nM) from\
+            \ ChEMBL."
+        raw:
+        - csv
+        sources:
+        - https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html
+        - https://github.com/greglandrum/rdkit_blog/tree/master/data
+        - https://doi.org/10.1021/ci000197k
+        tags:
+        - Molecules
+        - SMILES
+        - Drug Discovery
+        - Virtual Screening
+        - Similarity
+        - Multi-Target
+        - ChEMBL
+        - Ki
+        - Bioactivity
+        - Classification
+        - Multi-Label Classification
+        - Multi-Task
+        target_descriptions:
+            '0': CHEMBL1862 - Tyrosine-protein kinase ABL (Homo sapiens)
+            '1': CHEMBL204 - Thrombin (Homo sapiens)
+            '10': CHEMBL229 - Alpha-1a adrenergic receptor (Homo sapiens)
+            '11': CHEMBL233 - Mu opioid receptor (Homo sapiens)
+            '12': CHEMBL234 - Dopamine D3 receptor (Homo sapiens)
+            '13': CHEMBL236 - Delta opioid receptor (Homo sapiens)
+            '14': CHEMBL237 - Kappa opioid receptor (Homo sapiens)
+            '15': CHEMBL2366517 - Protease (Human immunodeficiency virus 1)
+            '16': CHEMBL4409 - Phosphodiesterase 10A (Homo sapiens)
+            '17': CHEMBL2835 - Tyrosine-protein kinase JAK1 (Homo sapiens)
+            '18': CHEMBL2971 - Tyrosine-protein kinase JAK2 (Homo sapiens)
+            '19': CHEMBL3952 - Kappa opioid receptor (Cavia porcellus)
+            '2': CHEMBL205 - Carbonic anhydrase II (Homo sapiens)
+            '20': CHEMBL243 - Human immunodeficiency virus type 1 protease (Human
+                immunodeficiency virus 1)
+            '21': CHEMBL244 - Coagulation factor X (Homo sapiens)
+            '22': CHEMBL339 - Dopamine D2 receptor (Rattus norvegicus)
+            '23': CHEMBL245 - Muscarinic acetylcholine receptor M3 (Homo sapiens)
+            '24': CHEMBL251 - Adenosine A2a receptor (Homo sapiens)
+            '25': CHEMBL253 - Cannabinoid CB2 receptor (Homo sapiens)
+            '26': CHEMBL256 - Adenosine A3 receptor (Homo sapiens)
+            '27': CHEMBL269 - Delta opioid receptor (Rattus norvegicus)
+            '28': CHEMBL270 - Mu opioid receptor (Rattus norvegicus)
+            '29': CHEMBL1946 - Melatonin receptor 1B (Homo sapiens)
+            '3': CHEMBL4794 - Vanilloid receptor (Homo sapiens)
+            '30': CHEMBL273 - Serotonin 1a (5-HT1a) receptor (Rattus norvegicus)
+            '31': CHEMBL1907596 - Neuronal acetylcholine receptor; alpha4/beta2 (Rattus
+                norvegicus)
+            '32': CHEMBL3371 - Serotonin 6 (5-HT6) receptor (Homo sapiens)
+            '33': CHEMBL313 - Serotonin transporter (Rattus norvegicus)
+            '34': CHEMBL4860 - Apoptosis regulator Bcl-2 (Homo sapiens)
+            '4': CHEMBL264 - Histamine H3 receptor (Homo sapiens)
+            '5': CHEMBL214 - Serotonin 1a (5-HT1a) receptor (Homo sapiens)
+            '6': CHEMBL217 - Dopamine D2 receptor (Homo sapiens)
+            '7': CHEMBL4552 - Peripheral-type benzodiazepine receptor (Rattus norvegicus)
+            '8': CHEMBL2147 - Serine/threonine-protein kinase PIM1 (Homo sapiens)
+            '9': CHEMBL224 - Serotonin 2a (5-HT2a) receptor (Homo sapiens)
+        target_type:
+        - classification
+        targets: 35
+        verbose: Briem & Lessel ChEMBL Dataset (Multi-Target Classification)
+    bl_chembl_reg:
+        compounds: 52484
+        description: 'The Briem & Lessel ChEMBL Multi-Target Regression Dataset is
+            a modern recreation of the classic Briem and Lessel dataset (originally
+            published in 2000) using ChEMBL25 data. Each molecule has a 35-dimensional
+            target vector, where each dimension corresponds to one of 35 biological
+            targets (GPCRs, kinases, proteases, etc.) from ChEMBL. The values are
+            pKi (negative log of Ki binding affinity in molar units), with NaN indicating
+            missing measurements. This enables multi-task regression where a single
+            molecule can have measured affinities for multiple targets simultaneously.
+            Higher pKi values indicate stronger binding. Typical range: 4.0-12.0 for
+            measured values. This dataset is specifically designed for multi-task
+            QSAR modeling and validating similarity-based virtual screening methods.'
+        raw:
+        - csv
+        sources:
+        - https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html
+        - https://github.com/greglandrum/rdkit_blog/tree/master/data
+        - https://doi.org/10.1021/ci000197k
+        tags:
+        - Molecules
+        - SMILES
+        - Drug Discovery
+        - Virtual Screening
+        - Similarity
+        - Multi-Target
+        - ChEMBL
+        - Ki
+        - Bioactivity
+        - QSAR
+        - Multi-Task
+        - Regression
+        target_descriptions:
+            '0': CHEMBL1862 - Tyrosine-protein kinase ABL (Homo sapiens) - pKi value
+            '1': CHEMBL204 - Thrombin (Homo sapiens) - pKi value
+            '10': CHEMBL229 - Alpha-1a adrenergic receptor (Homo sapiens) - pKi value
+            '11': CHEMBL233 - Mu opioid receptor (Homo sapiens) - pKi value
+            '12': CHEMBL234 - Dopamine D3 receptor (Homo sapiens) - pKi value
+            '13': CHEMBL236 - Delta opioid receptor (Homo sapiens) - pKi value
+            '14': CHEMBL237 - Kappa opioid receptor (Homo sapiens) - pKi value
+            '15': CHEMBL2366517 - Protease (Human immunodeficiency virus 1) - pKi
+                value
+            '16': CHEMBL4409 - Phosphodiesterase 10A (Homo sapiens) - pKi value
+            '17': CHEMBL2835 - Tyrosine-protein kinase JAK1 (Homo sapiens) - pKi value
+            '18': CHEMBL2971 - Tyrosine-protein kinase JAK2 (Homo sapiens) - pKi value
+            '19': CHEMBL3952 - Kappa opioid receptor (Cavia porcellus) - pKi value
+            '2': CHEMBL205 - Carbonic anhydrase II (Homo sapiens) - pKi value
+            '20': CHEMBL243 - Human immunodeficiency virus type 1 protease (Human
+                immunodeficiency virus 1) - pKi value
+            '21': CHEMBL244 - Coagulation factor X (Homo sapiens) - pKi value
+            '22': CHEMBL339 - Dopamine D2 receptor (Rattus norvegicus) - pKi value
+            '23': CHEMBL245 - Muscarinic acetylcholine receptor M3 (Homo sapiens)
+                - pKi value
+            '24': CHEMBL251 - Adenosine A2a receptor (Homo sapiens) - pKi value
+            '25': CHEMBL253 - Cannabinoid CB2 receptor (Homo sapiens) - pKi value
+            '26': CHEMBL256 - Adenosine A3 receptor (Homo sapiens) - pKi value
+            '27': CHEMBL269 - Delta opioid receptor (Rattus norvegicus) - pKi value
+            '28': CHEMBL270 - Mu opioid receptor (Rattus norvegicus) - pKi value
+            '29': CHEMBL1946 - Melatonin receptor 1B (Homo sapiens) - pKi value
+            '3': CHEMBL4794 - Vanilloid receptor (Homo sapiens) - pKi value
+            '30': CHEMBL273 - Serotonin 1a (5-HT1a) receptor (Rattus norvegicus) -
+                pKi value
+            '31': CHEMBL1907596 - Neuronal acetylcholine receptor; alpha4/beta2 (Rattus
+                norvegicus) - pKi value
+            '32': CHEMBL3371 - Serotonin 6 (5-HT6) receptor (Homo sapiens) - pKi value
+            '33': CHEMBL313 - Serotonin transporter (Rattus norvegicus) - pKi value
+            '34': CHEMBL4860 - Apoptosis regulator Bcl-2 (Homo sapiens) - pKi value
+            '4': CHEMBL264 - Histamine H3 receptor (Homo sapiens) - pKi value
+            '5': CHEMBL214 - Serotonin 1a (5-HT1a) receptor (Homo sapiens) - pKi value
+            '6': CHEMBL217 - Dopamine D2 receptor (Homo sapiens) - pKi value
+            '7': CHEMBL4552 - Peripheral-type benzodiazepine receptor (Rattus norvegicus)
+                - pKi value
+            '8': CHEMBL2147 - Serine/threonine-protein kinase PIM1 (Homo sapiens)
+                - pKi value
+            '9': CHEMBL224 - Serotonin 2a (5-HT2a) receptor (Homo sapiens) - pKi value
+        target_type:
+        - regression
+        targets: 35
+        verbose: Briem & Lessel ChEMBL Dataset (Multi-Target Regression)
     clintox:
         compounds: 1465
         description: Qualitative data of drugs approved by the FDA and those that
@@ -185,71 +352,97 @@ datasets:
         verbose: Clinical Toxicity
     compas_1x:
         compounds: 34072
-        description: The COMPAS Project provides a computational database of polycyclic
-            aromatic systems, including optimized ground-state structures and molecular
-            properties of approximately 34k and 9k cata-condensed polybenzenoid hydrocarbons.
-            This dataset supports the investigation of structure-property relationships
-            and the design of novel functional compounds, with data generated at the
-            GFN2-xTB and B3LYP-D3BJ/def2-SVP levels.
+        description: The COMPAS-1x dataset is part of the COMPAS Project, a computational
+            database of polycyclic aromatic systems. This dataset contains optimized
+            ground-state structures and molecular properties for approximately 34,000
+            cata-condensed polybenzenoid hydrocarbons (also known as polycyclic aromatic
+            hydrocarbons or PAHs), computed at the GFN2-xTB level of theory. The dataset
+            covers molecules ranging from 1 to 11 rings and includes key quantum chemical
+            properties such as HOMO/LUMO energies, energy gaps, dipole moments, and
+            electron affinities. This resource supports data-driven investigation
+            of structure-property relationships in aromatic systems and facilitates
+            machine learning applications in organic electronics and materials design.
         raw:
         - csv
         sources:
         - https://pubs.acs.org/doi/full/10.1021/acs.jcim.2c00503
+        - https://pubmed.ncbi.nlm.nih.gov/35881922/
+        - https://chemrxiv.org/engage/chemrxiv/article-details/626836b8368ab655418e3c7f
+        - https://acs.figshare.com/collections/The_COMPAS_Project_A_Computational_Database_of_Polycyclic_Aromatic_Systems_Phase_1_i_cata_i_-Condensed_Polybenzenoid_Hydrocarbons/6118490
         - https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-1?ref_type=heads
         tags:
         - SMILES
         - Molecules
         - Quantum Chemistry
         - Molecular Properties
+        - Polycyclic Aromatic Hydrocarbons
+        - PAH
+        - GFN2-xTB
         target_descriptions:
-            0: HOMO_eV - energy of the highest molecular orbit (HOMO) in electron
-                volt (eV)
-            1: LUMO_eV - energy of the lowest unoccupied molecular orbit (LUMO) in
-                electron volt (eV)
-            2: GAP_eV - energy gap between HOMO and LUMO in electron volt (eV)
-            3: Dipmom_Debye - dipole moment in Debye
-            4: Etot_eV - total energy of the molecule in electron volt (eV)
-            5: aEA_eV - adiabatic electron affinity in electron volt (eV)
-            6: aIP_eV - adiabatic ionization potential in electron volt (eV)
-            7: NFOD - fractional occupation density
-            8: n_rings - number of rings in the molecule
+            0: HOMO_eV - Energy of the highest occupied molecular orbital (HOMO) in
+                electron volts (eV)
+            1: LUMO_eV - Energy of the lowest unoccupied molecular orbital (LUMO)
+                in electron volts (eV)
+            2: GAP_eV - HOMO-LUMO energy gap in electron volts (eV)
+            3: Dipmom_Debye - Dipole moment in Debye units
+            4: Etot_eV - Total energy of the molecule in electron volts (eV)
+            5: aEA_eV - Adiabatic electron affinity in electron volts (eV)
+            6: aIP_eV - Adiabatic ionization potential in electron volts (eV)
+            7: NFOD - Fractional occupation density (indicator of polyradical character)
+            8: n_rings - Number of aromatic rings in the molecule
         target_type:
         - regression
         targets: 9
+        verbose: Cata-Condensed Polybenzenoid Hydrocarbons (COMPAS-1x)
     compas_3x:
         compounds: 39482
-        description: The third installment of the COMPAS Project, a computational
-            database of polycyclic aromatic systems, focused on peri-condensed polybenzenoid
-            hydrocarbons. This dataset contains optimized ground-state structures
-            and a selection of molecular properties for approximately 39k and 9k peri-condensed
-            polybenzenoid hydrocarbons at different computational levels. The dataset
-            supports data-driven analysis of structure-property trends and is useful
-            for machine- and deep-learning studies in chemistry.
+        description: The COMPAS-3x dataset is the third installment of the COMPAS
+            Project, a computational database of polycyclic aromatic systems, focused
+            on peri-condensed polybenzenoid hydrocarbons. This dataset contains optimized
+            ground-state structures and molecular properties for approximately 39,482
+            peri-condensed polybenzenoid hydrocarbons, computed at the GFN2-xTB level
+            of theory. Peri-condensed systems differ from cata-condensed systems in
+            that they contain carbon atoms shared by three or more rings. The dataset
+            covers molecules ranging from 1 to 10 rings and includes key quantum chemical
+            properties such as HOMO/LUMO energies, energy gaps, dipole moments, and
+            electron affinities. Data-driven analysis reveals structure-property trends,
+            particularly the effect of peri-condensed island size and linearly annulated
+            rings on the HOMO-LUMO gap. This resource supports machine learning applications
+            in chemistry and the design of functional aromatic molecules for organic
+            electronics.
         raw:
         - csv
         sources:
         - https://pubs.rsc.org/en/content/articlelanding/2024/cp/d4cp01027b
+        - https://pubmed.ncbi.nlm.nih.gov/38758092/
+        - https://chemrxiv.org/engage/chemrxiv/article-details/65d8c60ae9ebbb4db90f6276
+        - https://www.research-collection.ethz.ch/handle/20.500.11850/674707
         - https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-3?ref_type=heads
         tags:
         - SMILES
         - Molecules
         - Quantum Chemistry
         - Molecular Properties
+        - Polycyclic Aromatic Hydrocarbons
+        - PAH
+        - GFN2-xTB
+        - Peri-Condensed
         target_descriptions:
-            0: HOMO_eV - energy of the highest molecular orbit (HOMO) in electron
-                volt (eV)
-            1: LUMO_eV - energy of the lowest unoccupied molecular orbit (LUMO) in
-                electron volt (eV)
-            2: GAP_eV - energy gap between HOMO and LUMO in electron volt (eV)
-            3: Dipmom_Debye - dipole moment in Debye
-            4: Etot_eV - total energy of the molecule in electron volt (eV)
-            5: aEA_eV - adiabatic electron affinity in electron volt (eV)
-            6: aIP_eV - adiabatic ionization potential in electron volt (eV)
-            7: NFOD - fractional occupation density
-            8: n_rings - number of rings in the molecule
+            0: HOMO_eV - Energy of the highest occupied molecular orbital (HOMO) in
+                electron volts (eV)
+            1: LUMO_eV - Energy of the lowest unoccupied molecular orbital (LUMO)
+                in electron volts (eV)
+            2: GAP_eV - HOMO-LUMO energy gap in electron volts (eV)
+            3: Dipmom_Debye - Dipole moment in Debye units
+            4: Etot_eV - Total energy of the molecule in electron volts (eV)
+            5: aEA_eV - Adiabatic electron affinity in electron volts (eV)
+            6: aIP_eV - Adiabatic ionization potential in electron volts (eV)
+            7: NFOD - Fractional occupation density (indicator of polyradical character)
+            8: n_rings - Number of aromatic rings in the molecule
         target_type:
         - regression
         targets: 9
+        verbose: Peri-Condensed Polybenzenoid Hydrocarbons (COMPAS-3x)
     dpp4:
         compounds: 3933
         description: DPP-4 inhibitors (DPP4) was extract from ChEMBL with DPP-4 target.
@@ -396,7 +589,7 @@ datasets:
         targets: 2
         verbose: HIV Inhibitors
     hopv15_exp:
-        compounds: 176
+        compounds: 175
         description: The Harvard Organic Photovoltaic Dataset (HOPV15) is a comprehensive
             collection of experimental photovoltaic data from the literature for 350
             different organic solar cell donor structures, combined with corresponding
@@ -427,7 +620,7 @@ datasets:
         target_type:
         - regression
         targets: 6
-        verbose: Harvard Organic Photovoltaic Dataset Experimental
+        verbose: Harvard Organic Photovoltaic Dataset
     lipophilicity:
         compounds: 4199
         description: Experimental results for the octanol/water distribution coefficient
@@ -572,6 +765,366 @@ datasets:
         - regression
         targets: 19
         verbose: QM9 SMILES Dataset
+    riniker_1:
+        compounds: 168326
+        description: 'The RDKit Benchmarking Platform Subset I is a comprehensive
+            multi-target classification dataset containing 88 biological targets from
+            three public data sources: MUV (Maximum Unbiased Validation, 17 targets),
+            DUD (Directory of Useful Decoys, 21 targets), and ChEMBL (50 targets).
+            Originally published by Riniker & Landrum (2013), this dataset is designed
+            for evaluating molecular similarity methods and virtual screening approaches.
+            Each molecule has an 88-dimensional target vector where each position
+            can have three values: 0 (not mentioned for that target), 1 (active against
+            that target), or 2 (decoy for that target). This tri-state encoding properly
+            captures the per-target nature of the decoy selection, where a molecule
+            can be active against one target while serving as a decoy for another.
+            Decoys are specifically selected for each target using methods like DUD
+            (Directory of Useful Decoys) which matches physical properties while avoiding
+            structural similarity to actives. This enables both multi-task learning
+            and proper evaluation of similarity-based virtual screening methods with
+            target-specific negative examples.'
+        notes:
+        - This is a virtual screening benchmark dataset designed for evaluating molecular
+            similarity methods.
+        - 'Target vectors use tri-state encoding: 0 = not mentioned for that target,
+            1 = active against that target, 2 = decoy for that target.'
+        - Decoys are specifically selected for each target to match physical properties
+            while avoiding structural similarity to actives.
+        - A molecule can be active against some targets while serving as a decoy for
+            others, capturing the per-target nature of the data.
+        raw:
+        - csv
+        sources:
+        - https://github.com/rdkit/benchmarking_platform
+        - https://doi.org/10.1186/1758-2946-5-26
+        - http://www.jcheminf.com/content/5/1/26
+        tags:
+        - Molecules
+        - SMILES
+        - Drug Discovery
+        - Virtual Screening
+        - Similarity
+        - Multi-Target
+        - Multi-Label Classification
+        - Multi-Task
+        - Bioactivity
+        - Classification
+        - MUV
+        - DUD
+        - ChEMBL
+        - QSAR
+        - Benchmark
+        target_descriptions:
+            '0': MUV_466 - MUV AID 466 (MUV)
+            '1': MUV_548 - MUV AID 548 (MUV)
+            '10': MUV_737 - MUV AID 737 (MUV)
+            '11': MUV_810 - MUV AID 810 (MUV)
+            '12': MUV_832 - MUV AID 832 (MUV)
+            '13': MUV_846 - MUV AID 846 (MUV)
+            '14': MUV_852 - MUV AID 852 (MUV)
+            '15': MUV_858 - MUV AID 858 (MUV)
+            '16': MUV_859 - MUV AID 859 (MUV)
+            '17': DUD_ace - DUD ace (DUD)
+            '18': DUD_ache - DUD ache (DUD)
+            '19': DUD_ar - DUD ar (DUD)
+            '2': MUV_600 - MUV AID 600 (MUV)
+            '20': DUD_cdk2 - DUD cdk2 (DUD)
+            '21': DUD_cox2 - DUD cox2 (DUD)
+            '22': DUD_dhfr - DUD dhfr (DUD)
+            '23': DUD_egfr - DUD egfr (DUD)
+            '24': DUD_er_agonist - DUD er_agonist (DUD)
+            '25': DUD_fgfr1 - DUD fgfr1 (DUD)
+            '26': DUD_fxa - DUD fxa (DUD)
+            '27': DUD_gpb - DUD gpb (DUD)
+            '28': DUD_gr - DUD gr (DUD)
+            '29': DUD_hivrt - DUD hivrt (DUD)
+            '3': MUV_644 - MUV AID 644 (MUV)
+            '30': DUD_inha - DUD inha (DUD)
+            '31': DUD_na - DUD na (DUD)
+            '32': DUD_p38 - DUD p38 (DUD)
+            '33': DUD_parp - DUD parp (DUD)
+            '34': DUD_pdgfrb - DUD pdgfrb (DUD)
+            '35': DUD_sahh - DUD sahh (DUD)
+            '36': DUD_src - DUD src (DUD)
+            '37': DUD_vegfr2 - DUD vegfr2 (DUD)
+            '38': ChEMBL_11359 - ChEMBL 11359 (ChEMBL)
+            '39': ChEMBL_28 - ChEMBL 28 (ChEMBL)
+            '4': MUV_652 - MUV AID 652 (MUV)
+            '40': ChEMBL_11536 - ChEMBL 11536 (ChEMBL)
+            '41': ChEMBL_8 - ChEMBL 8 (ChEMBL)
+            '42': ChEMBL_10434 - ChEMBL 10434 (ChEMBL)
+            '43': ChEMBL_12670 - ChEMBL 12670 (ChEMBL)
+            '44': ChEMBL_20014 - ChEMBL 20014 (ChEMBL)
+            '45': ChEMBL_234 - ChEMBL 234 (ChEMBL)
+            '46': ChEMBL_12261 - ChEMBL 12261 (ChEMBL)
+            '47': ChEMBL_12209 - ChEMBL 12209 (ChEMBL)
+            '48': ChEMBL_25 - ChEMBL 25 (ChEMBL)
+            '49': ChEMBL_36 - ChEMBL 36 (ChEMBL)
+            '5': MUV_689 - MUV AID 689 (MUV)
+            '50': ChEMBL_43 - ChEMBL 43 (ChEMBL)
+            '51': ChEMBL_219 - ChEMBL 219 (ChEMBL)
+            '52': ChEMBL_130 - ChEMBL 130 (ChEMBL)
+            '53': ChEMBL_105 - ChEMBL 105 (ChEMBL)
+            '54': ChEMBL_11336 - ChEMBL 11336 (ChEMBL)
+            '55': ChEMBL_20174 - ChEMBL 20174 (ChEMBL)
+            '56': ChEMBL_126 - ChEMBL 126 (ChEMBL)
+            '57': ChEMBL_11225 - ChEMBL 11225 (ChEMBL)
+            '58': ChEMBL_12252 - ChEMBL 12252 (ChEMBL)
+            '59': ChEMBL_11682 - ChEMBL 11682 (ChEMBL)
+            '6': MUV_692 - MUV AID 692 (MUV)
+            '60': ChEMBL_134 - ChEMBL 134 (ChEMBL)
+            '61': ChEMBL_116 - ChEMBL 116 (ChEMBL)
+            '62': ChEMBL_11265 - ChEMBL 11265 (ChEMBL)
+            '63': ChEMBL_10475 - ChEMBL 10475 (ChEMBL)
+            '64': ChEMBL_12679 - ChEMBL 12679 (ChEMBL)
+            '65': ChEMBL_10579 - ChEMBL 10579 (ChEMBL)
+            '66': ChEMBL_11575 - ChEMBL 11575 (ChEMBL)
+            '67': ChEMBL_18061 - ChEMBL 18061 (ChEMBL)
+            '68': ChEMBL_237 - ChEMBL 237 (ChEMBL)
+            '69': ChEMBL_276 - ChEMBL 276 (ChEMBL)
+            '7': MUV_712 - MUV AID 712 (MUV)
+            '70': ChEMBL_11534 - ChEMBL 11534 (ChEMBL)
+            '71': ChEMBL_10198 - ChEMBL 10198 (ChEMBL)
+            '72': ChEMBL_10498 - ChEMBL 10498 (ChEMBL)
+            '73': ChEMBL_12911 - ChEMBL 12911 (ChEMBL)
+            '74': ChEMBL_12968 - ChEMBL 12968 (ChEMBL)
+            '75': ChEMBL_100579 - ChEMBL 100579 (ChEMBL)
+            '76': ChEMBL_100126 - ChEMBL 100126 (ChEMBL)
+            '77': ChEMBL_10378 - ChEMBL 10378 (ChEMBL)
+            '78': ChEMBL_10417 - ChEMBL 10417 (ChEMBL)
+            '79': ChEMBL_10752 - ChEMBL 10752 (ChEMBL)
+            '8': MUV_713 - MUV AID 713 (MUV)
+            '80': ChEMBL_10773 - ChEMBL 10773 (ChEMBL)
+            '81': ChEMBL_11631 - ChEMBL 11631 (ChEMBL)
+            '82': ChEMBL_10927 - ChEMBL 10927 (ChEMBL)
+            '83': ChEMBL_11085 - ChEMBL 11085 (ChEMBL)
+            '84': ChEMBL_11442 - ChEMBL 11442 (ChEMBL)
+            '85': ChEMBL_11279 - ChEMBL 11279 (ChEMBL)
+            '86': ChEMBL_11488 - ChEMBL 11488 (ChEMBL)
+            '87': ChEMBL_12840 - ChEMBL 12840 (ChEMBL)
+            '9': MUV_733 - MUV AID 733 (MUV)
+        target_type:
+        - classification
+        targets: 88
+        verbose: RDKit Benchmarking Platform Subset I (Multi-Target Classification)
+    riniker_1_filtered:
+        compounds: 105294
+        description: 'The RDKit Benchmarking Platform Subset I Filtered is a difficulty-filtered
+            multi-target classification dataset containing 69 biological targets from
+            three public data sources: MUV (Maximum Unbiased Validation, 16 targets),
+            DUD (Directory of Useful Decoys, 3 targets), and ChEMBL (50 targets).
+            Originally published by Riniker & Landrum (2013) and filtered in Riniker,
+            Fechner & Landrum (2013), this dataset keeps only targets with AUC(ECFC0)
+            < 0.8 to focus on more challenging virtual screening scenarios. Each molecule
+            has a 69-dimensional target vector where each position can have three
+            values: 0 (not mentioned for that target), 1 (active against that target),
+            or 2 (decoy for that target). This tri-state encoding properly captures
+            the per-target nature of the decoy selection, where a molecule can be
+            active against one target while serving as a decoy for another. Decoys
+            are specifically selected for each target using methods like DUD which
+            matches physical properties while avoiding structural similarity to actives.
+            This enables both multi-task learning and proper evaluation of similarity-based
+            virtual screening methods on more difficult targets with target-specific
+            negative examples.'
+        notes:
+        - This is a virtual screening benchmark dataset designed for evaluating molecular
+            similarity methods.
+        - 'Target vectors use tri-state encoding: 0 = not mentioned for that target,
+            1 = active against that target, 2 = decoy for that target.'
+        - Decoys are specifically selected for each target to match physical properties
+            while avoiding structural similarity to actives.
+        - A molecule can be active against some targets while serving as a decoy for
+            others, capturing the per-target nature of the data.
+        - This filtered subset contains only difficult targets (AUC(ECFC0) < 0.8)
+            for more challenging virtual screening scenarios.
+        raw:
+        - csv
+        sources:
+        - https://github.com/rdkit/benchmarking_platform
+        - https://doi.org/10.1186/1758-2946-5-26
+        - https://doi.org/10.1021/ci400466r
+        - http://www.jcheminf.com/content/5/1/26
+        tags:
+        - Molecules
+        - SMILES
+        - Drug Discovery
+        - Virtual Screening
+        - Similarity
+        - Multi-Target
+        - Multi-Label Classification
+        - Multi-Task
+        - Bioactivity
+        - Classification
+        - MUV
+        - DUD
+        - ChEMBL
+        - QSAR
+        - Benchmark
+        - Filtered
+        - Difficult
+        target_descriptions:
+            '0': MUV_466 - MUV AID 466 (MUV)
+            '1': MUV_548 - MUV AID 548 (MUV)
+            '10': MUV_737 - MUV AID 737 (MUV)
+            '11': MUV_810 - MUV AID 810 (MUV)
+            '12': MUV_832 - MUV AID 832 (MUV)
+            '13': MUV_852 - MUV AID 852 (MUV)
+            '14': MUV_858 - MUV AID 858 (MUV)
+            '15': MUV_859 - MUV AID 859 (MUV)
+            '16': DUD_cdk2 - DUD cdk2 (DUD)
+            '17': DUD_hivrt - DUD hivrt (DUD)
+            '18': DUD_vegfr2 - DUD vegfr2 (DUD)
+            '19': ChEMBL_11359 - ChEMBL 11359 (ChEMBL)
+            '2': MUV_600 - MUV AID 600 (MUV)
+            '20': ChEMBL_8 - ChEMBL 8 (ChEMBL)
+            '21': ChEMBL_10434 - ChEMBL 10434 (ChEMBL)
+            '22': ChEMBL_12670 - ChEMBL 12670 (ChEMBL)
+            '23': ChEMBL_12261 - ChEMBL 12261 (ChEMBL)
+            '24': ChEMBL_12209 - ChEMBL 12209 (ChEMBL)
+            '25': ChEMBL_25 - ChEMBL 25 (ChEMBL)
+            '26': ChEMBL_36 - ChEMBL 36 (ChEMBL)
+            '27': ChEMBL_43 - ChEMBL 43 (ChEMBL)
+            '28': ChEMBL_219 - ChEMBL 219 (ChEMBL)
+            '29': ChEMBL_130 - ChEMBL 130 (ChEMBL)
+            '3': MUV_644 - MUV AID 644 (MUV)
+            '30': ChEMBL_105 - ChEMBL 105 (ChEMBL)
+            '31': ChEMBL_126 - ChEMBL 126 (ChEMBL)
+            '32': ChEMBL_12252 - ChEMBL 12252 (ChEMBL)
+            '33': ChEMBL_11575 - ChEMBL 11575 (ChEMBL)
+            '34': ChEMBL_11534 - ChEMBL 11534 (ChEMBL)
+            '35': ChEMBL_10498 - ChEMBL 10498 (ChEMBL)
+            '36': ChEMBL_12911 - ChEMBL 12911 (ChEMBL)
+            '37': ChEMBL_100579 - ChEMBL 100579 (ChEMBL)
+            '38': ChEMBL_10378 - ChEMBL 10378 (ChEMBL)
+            '39': ChEMBL_11631 - ChEMBL 11631 (ChEMBL)
+            '4': MUV_652 - MUV AID 652 (MUV)
+            '40': ChEMBL_165 - ChEMBL 165 (ChEMBL)
+            '41': ChEMBL_10193 - ChEMBL 10193 (ChEMBL)
+            '42': ChEMBL_15 - ChEMBL 15 (ChEMBL)
+            '43': ChEMBL_11489 - ChEMBL 11489 (ChEMBL)
+            '44': ChEMBL_121 - ChEMBL 121 (ChEMBL)
+            '45': ChEMBL_72 - ChEMBL 72 (ChEMBL)
+            '46': ChEMBL_259 - ChEMBL 259 (ChEMBL)
+            '47': ChEMBL_10188 - ChEMBL 10188 (ChEMBL)
+            '48': ChEMBL_108 - ChEMBL 108 (ChEMBL)
+            '49': ChEMBL_12952 - ChEMBL 12952 (ChEMBL)
+            '5': MUV_689 - MUV AID 689 (MUV)
+            '50': ChEMBL_93 - ChEMBL 93 (ChEMBL)
+            '51': ChEMBL_10980 - ChEMBL 10980 (ChEMBL)
+            '52': ChEMBL_19905 - ChEMBL 19905 (ChEMBL)
+            '53': ChEMBL_107 - ChEMBL 107 (ChEMBL)
+            '54': ChEMBL_87 - ChEMBL 87 (ChEMBL)
+            '55': ChEMBL_17045 - ChEMBL 17045 (ChEMBL)
+            '56': ChEMBL_11140 - ChEMBL 11140 (ChEMBL)
+            '57': ChEMBL_114 - ChEMBL 114 (ChEMBL)
+            '58': ChEMBL_90 - ChEMBL 90 (ChEMBL)
+            '59': ChEMBL_13001 - ChEMBL 13001 (ChEMBL)
+            '6': MUV_692 - MUV AID 692 (MUV)
+            '60': ChEMBL_104 - ChEMBL 104 (ChEMBL)
+            '61': ChEMBL_65 - ChEMBL 65 (ChEMBL)
+            '62': ChEMBL_61 - ChEMBL 61 (ChEMBL)
+            '63': ChEMBL_10280 - ChEMBL 10280 (ChEMBL)
+            '64': ChEMBL_51 - ChEMBL 51 (ChEMBL)
+            '65': ChEMBL_100 - ChEMBL 100 (ChEMBL)
+            '66': ChEMBL_10260 - ChEMBL 10260 (ChEMBL)
+            '67': ChEMBL_52 - ChEMBL 52 (ChEMBL)
+            '68': ChEMBL_11365 - ChEMBL 11365 (ChEMBL)
+            '7': MUV_712 - MUV AID 712 (MUV)
+            '8': MUV_713 - MUV AID 713 (MUV)
+            '9': MUV_733 - MUV AID 733 (MUV)
+        target_type:
+        - classification
+        targets: 69
+        verbose: RDKit Benchmarking Platform Subset I Filtered (Difficulty-Filtered
+            Multi-Target Classification)
+    riniker_2:
+        compounds: 20922
+        description: 'The RDKit Benchmarking Platform Subset II is a multi-target
+            classification dataset containing 37 biological targets from ChEMBL. This
+            extended version was published by Riniker, Fechner & Landrum (2013) to
+            evaluate a different virtual screening use case with diverse active sets
+            (100 actives per target). Each molecule has a 37-dimensional target vector
+            where each position can have three values: 0 (not mentioned for that target),
+            1 (active against that target), or 2 (decoy for that target). This tri-state
+            encoding properly captures the per-target nature of the decoy selection,
+            where a molecule can be active against one target while serving as a decoy
+            for another. Decoys are shared ZINC compounds (10,000 total) selected
+            for all ChEMBL targets to match physical properties while avoiding structural
+            similarity to actives. This enables both multi-task learning and proper
+            evaluation of similarity-based virtual screening methods with target-specific
+            negative examples.'
+        notes:
+        - This is a virtual screening benchmark dataset designed for evaluating molecular
+            similarity methods.
+        - 'Target vectors use tri-state encoding: 0 = not mentioned for that target,
+            1 = active against that target, 2 = decoy for that target.'
+        - Decoys are shared ZINC compounds selected to match physical properties while
+            avoiding structural similarity to actives.
+        - All decoy molecules have value 2 for all 37 ChEMBL targets (assumed inactive
+            against all targets).
+        raw:
+        - csv
+        sources:
+        - https://github.com/rdkit/benchmarking_platform
+        - https://doi.org/10.1186/1758-2946-5-26
+        - https://doi.org/10.1021/ci400466r
+        - http://www.jcheminf.com/content/5/1/26
+        tags:
+        - Molecules
+        - SMILES
+        - Drug Discovery
+        - Virtual Screening
+        - Similarity
+        - Multi-Target
+        - Multi-Label Classification
+        - Multi-Task
+        - Bioactivity
+        - Classification
+        - ChEMBL
+        - QSAR
+        - Benchmark
+        target_descriptions:
+            '0': ChEMBL_10434 - ChEMBL 10434 (ChEMBL)
+            '1': ChEMBL_12209 - ChEMBL 12209 (ChEMBL)
+            '10': ChEMBL_165 - ChEMBL 165 (ChEMBL)
+            '11': ChEMBL_10193 - ChEMBL 10193 (ChEMBL)
+            '12': ChEMBL_15 - ChEMBL 15 (ChEMBL)
+            '13': ChEMBL_11489 - ChEMBL 11489 (ChEMBL)
+            '14': ChEMBL_121 - ChEMBL 121 (ChEMBL)
+            '15': ChEMBL_72 - ChEMBL 72 (ChEMBL)
+            '16': ChEMBL_259 - ChEMBL 259 (ChEMBL)
+            '17': ChEMBL_10188 - ChEMBL 10188 (ChEMBL)
+            '18': ChEMBL_108 - ChEMBL 108 (ChEMBL)
+            '19': ChEMBL_12952 - ChEMBL 12952 (ChEMBL)
+            '2': ChEMBL_25 - ChEMBL 25 (ChEMBL)
+            '20': ChEMBL_93 - ChEMBL 93 (ChEMBL)
+            '21': ChEMBL_10980 - ChEMBL 10980 (ChEMBL)
+            '22': ChEMBL_19905 - ChEMBL 19905 (ChEMBL)
+            '23': ChEMBL_107 - ChEMBL 107 (ChEMBL)
+            '24': ChEMBL_87 - ChEMBL 87 (ChEMBL)
+            '25': ChEMBL_17045 - ChEMBL 17045 (ChEMBL)
+            '26': ChEMBL_11140 - ChEMBL 11140 (ChEMBL)
+            '27': ChEMBL_114 - ChEMBL 114 (ChEMBL)
+            '28': ChEMBL_90 - ChEMBL 90 (ChEMBL)
+            '29': ChEMBL_13001 - ChEMBL 13001 (ChEMBL)
+            '3': ChEMBL_43 - ChEMBL 43 (ChEMBL)
+            '30': ChEMBL_65 - ChEMBL 65 (ChEMBL)
+            '31': ChEMBL_61 - ChEMBL 61 (ChEMBL)
+            '32': ChEMBL_10280 - ChEMBL 10280 (ChEMBL)
+            '33': ChEMBL_51 - ChEMBL 51 (ChEMBL)
+            '34': ChEMBL_100 - ChEMBL 100 (ChEMBL)
+            '35': ChEMBL_10260 - ChEMBL 10260 (ChEMBL)
+            '36': ChEMBL_11365 - ChEMBL 11365 (ChEMBL)
+            '4': ChEMBL_130 - ChEMBL 130 (ChEMBL)
+            '5': ChEMBL_126 - ChEMBL 126 (ChEMBL)
+            '6': ChEMBL_12252 - ChEMBL 12252 (ChEMBL)
+            '7': ChEMBL_11575 - ChEMBL 11575 (ChEMBL)
+            '8': ChEMBL_11534 - ChEMBL 11534 (ChEMBL)
+            '9': ChEMBL_11631 - ChEMBL 11631 (ChEMBL)
+        target_type:
+        - classification
+        targets: 37
+        verbose: RDKit Benchmarking Platform Subset II (Multi-Target Classification)
     sider:
         compounds: 1220
         description: Database of marketed drugs and adverse drug reactions (ADR),
@@ -589,38 +1142,89 @@ datasets:
         verbose: Drug Side Effects
     skin_irritation:
         compounds: 1263
+        description: The skin irritation dataset contains 1,012 curated compounds
+            focused on predicting the skin irritation and corrosion potential of small
+            organic molecules. Experimental animal data were retrieved from the Registration,
+            Evaluation, Authorization and Restriction of Chemicals (REACH) study results
+            database and curated as part of the STopTox study by Borba et al. (2022),
+            published in Environmental Health Perspectives. The dataset comprises
+            317 skin irritants and 695 non-irritants, providing a binary classification
+            benchmark for developing in silico alternatives to animal testing. This
+            dataset supports the development of QSAR models and machine learning approaches
+            for predicting topical toxicity endpoints, contributing to the 3Rs principles
+            (Replacement, Reduction, and Refinement) in chemical safety assessment.
         raw:
         - csv
         sources:
         - https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds14
         - https://ehp.niehs.nih.gov/doi/10.1289/EHP9341
+        - https://pubmed.ncbi.nlm.nih.gov/35192406/
+        - https://pmc.ncbi.nlm.nih.gov/articles/PMC8863177/
+        - https://stoptox.mml.unc.edu/
         tags:
         - Molecules
         - SMILES
         - Biology
+        - Toxicity
+        - Skin Irritation
+        - REACH
+        - QSAR
+        - Alternative Methods
         target_descriptions:
-            '0': non-irritant
-            '1': skin-irritant
+            '0': Non-irritant - Compound does not cause skin irritation or corrosion
+            '1': Skin irritant - Compound causes skin irritation or corrosion based
+                on experimental data
         target_type:
         - classification
         targets: 2
+        verbose: Skin Irritation and Corrosion
     skin_sensitizers:
         compounds: 1263
+        description: The skin sensitization dataset contains 1,000 curated compounds
+            focused on predicting the skin sensitization potential of small organic
+            molecules. Data were sourced from the Interagency Coordinating Committee
+            on the Validation of Alternative Methods (ICCVAM) and the Registration,
+            Evaluation, Authorization and Restriction of Chemicals (REACH) study results
+            databases. The dataset was curated as part of the STopTox study by Borba
+            et al. (2022), published in Environmental Health Perspectives, and is
+            also integrated into the Pred-Skin web portal (Borba et al., 2020). The
+            dataset comprises 481 skin sensitizers and 519 non-sensitizers, providing
+            a binary classification benchmark for developing in silico alternatives
+            to animal testing. This dataset supports the development of QSAR models
+            and machine learning approaches for predicting skin sensitization hazard,
+            contributing to the 3Rs principles (Replacement, Reduction, and Refinement)
+            in chemical safety assessment and aligning with the OECD adverse outcome
+            pathway (AOP) framework for skin sensitization.
         raw:
         - csv
         sources:
         - https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds15
         - https://ehp.niehs.nih.gov/doi/10.1289/EHP9341
+        - https://pubmed.ncbi.nlm.nih.gov/35192406/
+        - https://pmc.ncbi.nlm.nih.gov/articles/PMC8863177/
+        - https://pubs.acs.org/doi/10.1021/acs.chemrestox.0c00186
+        - https://pubmed.ncbi.nlm.nih.gov/32673477/
+        - https://predskin.labmol.com.br/
+        - https://stoptox.mml.unc.edu/
         tags:
         - Molecules
         - SMILES
         - Biology
+        - Toxicity
+        - Skin Sensitization
+        - REACH
+        - ICCVAM
+        - QSAR
+        - Alternative Methods
+        - LLNA
         target_descriptions:
-            '0': non-sensitizer
-            '1': skin-sensitizer
+            '0': Non-sensitizer - Compound does not cause skin sensitization
+            '1': Skin sensitizer - Compound causes skin sensitization based on experimental
+                data (LLNA, human, or in vitro assays)
         target_type:
         - classification
         targets: 2
+        verbose: Skin Sensitization Hazard
     synth_binary_global:
         compounds: 249455
         description: synthetic binary classification task based on global properties

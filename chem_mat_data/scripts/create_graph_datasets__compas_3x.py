@@ -21,29 +21,38 @@ DATASET_NAME: str = 'compas_3x'
 #       A dictionary which will be used as the basis for the metadata that will be added 
 #       as additional information to the file share server.
 METADATA: dict = {
+    'verbose': 'Peri-Condensed Polybenzenoid Hydrocarbons (COMPAS-3x)',
     'description': (
-        'The third installment of the COMPAS Project, a computational database of polycyclic aromatic systems, '
-        'focused on peri-condensed polybenzenoid hydrocarbons. This dataset contains optimized ground-state structures '
-        'and a selection of molecular properties for approximately 39k and 9k peri-condensed polybenzenoid hydrocarbons '
-        'at different computational levels. The dataset supports data-driven analysis of structure-property trends and '
-        'is useful for machine- and deep-learning studies in chemistry.'
+        'The COMPAS-3x dataset is the third installment of the COMPAS Project, a computational database of '
+        'polycyclic aromatic systems, focused on peri-condensed polybenzenoid hydrocarbons. This dataset contains '
+        'optimized ground-state structures and molecular properties for approximately 39,482 peri-condensed '
+        'polybenzenoid hydrocarbons, computed at the GFN2-xTB level of theory. Peri-condensed systems differ from '
+        'cata-condensed systems in that they contain carbon atoms shared by three or more rings. The dataset covers '
+        'molecules ranging from 1 to 10 rings and includes key quantum chemical properties such as HOMO/LUMO energies, '
+        'energy gaps, dipole moments, and electron affinities. Data-driven analysis reveals structure-property trends, '
+        'particularly the effect of peri-condensed island size and linearly annulated rings on the HOMO-LUMO gap. '
+        'This resource supports machine learning applications in chemistry and the design of functional aromatic '
+        'molecules for organic electronics.'
     ),
     'target_type': ['regression'],
-    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties'],
+    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties', 'Polycyclic Aromatic Hydrocarbons', 'PAH', 'GFN2-xTB', 'Peri-Condensed'],
     'sources': [
         'https://pubs.rsc.org/en/content/articlelanding/2024/cp/d4cp01027b',
+        'https://pubmed.ncbi.nlm.nih.gov/38758092/',
+        'https://chemrxiv.org/engage/chemrxiv/article-details/65d8c60ae9ebbb4db90f6276',
+        'https://www.research-collection.ethz.ch/handle/20.500.11850/674707',
         'https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-3?ref_type=heads',
     ],
     'target_descriptions': {
-        0: 'HOMO_eV - energy of the highest molecular orbit (HOMO) in electron volt (eV)',
-        1: 'LUMO_eV - energy of the lowest unoccupied molecular orbit (LUMO) in electron volt (eV)',
-        2: 'GAP_eV - energy gap between HOMO and LUMO in electron volt (eV)',
-        3: 'Dipmom_Debye - dipole moment in Debye',
-        4: 'Etot_eV - total energy of the molecule in electron volt (eV)',
-        5: 'aEA_eV - adiabatic electron affinity in electron volt (eV)',
-        6: 'aIP_eV - adiabatic ionization potential in electron volt (eV)',
-        7: 'NFOD - fractional occupation density',
-        8: 'n_rings - number of rings in the molecule',
+        0: 'HOMO_eV - Energy of the highest occupied molecular orbital (HOMO) in electron volts (eV)',
+        1: 'LUMO_eV - Energy of the lowest unoccupied molecular orbital (LUMO) in electron volts (eV)',
+        2: 'GAP_eV - HOMO-LUMO energy gap in electron volts (eV)',
+        3: 'Dipmom_Debye - Dipole moment in Debye units',
+        4: 'Etot_eV - Total energy of the molecule in electron volts (eV)',
+        5: 'aEA_eV - Adiabatic electron affinity in electron volts (eV)',
+        6: 'aIP_eV - Adiabatic ionization potential in electron volts (eV)',
+        7: 'NFOD - Fractional occupation density (indicator of polyradical character)',
+        8: 'n_rings - Number of aromatic rings in the molecule',
     }
 }
 

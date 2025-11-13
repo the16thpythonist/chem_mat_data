@@ -21,29 +21,36 @@ DATASET_NAME: str = 'compas_1x'
 #       A dictionary which will be used as the basis for the metadata that will be added 
 #       as additional information to the file share server.
 METADATA: dict = {
+    'verbose': 'Cata-Condensed Polybenzenoid Hydrocarbons (COMPAS-1x)',
     'description': (
-        'The COMPAS Project provides a computational database of polycyclic aromatic systems, '
-        'including optimized ground-state structures and molecular properties of approximately '
-        '34k and 9k cata-condensed polybenzenoid hydrocarbons. This dataset supports the investigation '
-        'of structure-property relationships and the design of novel functional compounds, with data '
-        'generated at the GFN2-xTB and B3LYP-D3BJ/def2-SVP levels.'
+        'The COMPAS-1x dataset is part of the COMPAS Project, a computational database of polycyclic '
+        'aromatic systems. This dataset contains optimized ground-state structures and molecular properties '
+        'for approximately 34,000 cata-condensed polybenzenoid hydrocarbons (also known as polycyclic aromatic '
+        'hydrocarbons or PAHs), computed at the GFN2-xTB level of theory. The dataset covers molecules ranging '
+        'from 1 to 11 rings and includes key quantum chemical properties such as HOMO/LUMO energies, energy gaps, '
+        'dipole moments, and electron affinities. This resource supports data-driven investigation of '
+        'structure-property relationships in aromatic systems and facilitates machine learning applications '
+        'in organic electronics and materials design.'
     ),
     'target_type': ['regression'],
-    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties'],
+    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties', 'Polycyclic Aromatic Hydrocarbons', 'PAH', 'GFN2-xTB'],
     'sources': [
         'https://pubs.acs.org/doi/full/10.1021/acs.jcim.2c00503',
+        'https://pubmed.ncbi.nlm.nih.gov/35881922/',
+        'https://chemrxiv.org/engage/chemrxiv/article-details/626836b8368ab655418e3c7f',
+        'https://acs.figshare.com/collections/The_COMPAS_Project_A_Computational_Database_of_Polycyclic_Aromatic_Systems_Phase_1_i_cata_i_-Condensed_Polybenzenoid_Hydrocarbons/6118490',
         'https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-1?ref_type=heads',
     ],
     'target_descriptions': {
-        0: 'HOMO_eV - energy of the highest molecular orbit (HOMO) in electron volt (eV)',
-        1: 'LUMO_eV - energy of the lowest unoccupied molecular orbit (LUMO) in electron volt (eV)',
-        2: 'GAP_eV - energy gap between HOMO and LUMO in electron volt (eV)',
-        3: 'Dipmom_Debye - dipole moment in Debye',
-        4: 'Etot_eV - total energy of the molecule in electron volt (eV)',
-        5: 'aEA_eV - adiabatic electron affinity in electron volt (eV)',
-        6: 'aIP_eV - adiabatic ionization potential in electron volt (eV)',
-        7: 'NFOD - fractional occupation density',
-        8: 'n_rings - number of rings in the molecule',
+        0: 'HOMO_eV - Energy of the highest occupied molecular orbital (HOMO) in electron volts (eV)',
+        1: 'LUMO_eV - Energy of the lowest unoccupied molecular orbital (LUMO) in electron volts (eV)',
+        2: 'GAP_eV - HOMO-LUMO energy gap in electron volts (eV)',
+        3: 'Dipmom_Debye - Dipole moment in Debye units',
+        4: 'Etot_eV - Total energy of the molecule in electron volts (eV)',
+        5: 'aEA_eV - Adiabatic electron affinity in electron volts (eV)',
+        6: 'aIP_eV - Adiabatic ionization potential in electron volts (eV)',
+        7: 'NFOD - Fractional occupation density (indicator of polyradical character)',
+        8: 'n_rings - Number of aromatic rings in the molecule',
     }
 }
 
