@@ -4,8 +4,16 @@ import datetime
 import difflib
 import gzip
 import shutil
+import tempfile
 import typing as t
 from typing import Any, List, Tuple, Dict, Union, Optional
+from collections import Counter
+
+import numpy as np
+import pandas as pd
+from rdkit import Chem
+from rdkit.Chem import Descriptors
+from rdkit.Chem.Scaffolds import MurckoScaffold
 
 import rich
 import rich_click as click
@@ -601,7 +609,395 @@ class RichDiffDisplay(RichMixin):
             yield Text(f"✅ Files are identical", style="green")
         else:
             yield Text(f"📊 {self.changed_lines} lines differ between local and remote files", style="yellow")
-        
+
+
+def calculate_dataset_stats(
+    df: pd.DataFrame,
+    smiles_column: str,
+    sample_size: Optional[int] = None,
+    progress: Optional[Progress] = None,
+) -> dict:
+    """
+    Calculate comprehensive statistics for a SMILES dataset.
+
+    This function processes each molecule in the dataset and computes various
+    statistics including molecular size, element composition, ring systems,
+    drug-likeness metrics, and structural diversity.
+
+    :param df: DataFrame containing SMILES data
+    :param smiles_column: Name of the column containing SMILES strings
+    :param sample_size: Optional limit on number of molecules to process
+    :param progress: Optional Rich Progress instance for progress display
+
+    :returns: Dictionary with statistics organized by category
+    """
+    # Sample if requested
+    if sample_size is not None and sample_size < len(df):
+        df = df.sample(n=sample_size, random_state=42)
+
+    total_count = len(df)
+    valid_count = 0
+    invalid_count = 0
+
+    # Molecule size statistics
+    heavy_atom_counts = []
+    total_atom_counts = []
+    bond_counts = []
+    mol_weights = []
+
+    # Element composition
+    element_counter: Counter = Counter()
+
+    # Ring statistics
+    molecules_with_rings = 0
+    aromatic_molecules = 0
+    ring_sizes: Counter = Counter()
+
+    # Drug-likeness metrics
+    logp_values = []
+    hbd_values = []
+    hba_values = []
+    tpsa_values = []
+    rotatable_bond_values = []
+    lipinski_passes = 0
+
+    # Structural diversity
+    scaffolds: set = set()
+    chiral_center_counts = []
+
+    # Functional groups (simplified detection via SMARTS patterns)
+    functional_groups: Counter = Counter()
+    fg_patterns = {
+        'Hydroxyl (-OH)': '[OX2H]',
+        'Primary Amine (-NH2)': '[NX3H2]',
+        'Carboxylic Acid (-COOH)': '[CX3](=O)[OX2H1]',
+        'Aldehyde (-CHO)': '[CX3H1](=O)[#6]',
+        'Ketone (C=O)': '[#6][CX3](=O)[#6]',
+        'Ester (-COO-)': '[#6][CX3](=O)[OX2H0][#6]',
+        'Amide (-CONH-)': '[NX3][CX3](=[OX1])[#6]',
+        'Nitro (-NO2)': '[$([NX3](=O)=O),$([NX3+](=O)[O-])]',
+        'Sulfonyl (-SO2-)': '[#16X4](=[OX1])(=[OX1])',
+        'Halogen (F/Cl/Br/I)': '[F,Cl,Br,I]',
+    }
+    compiled_patterns = {name: Chem.MolFromSmarts(smarts) for name, smarts in fg_patterns.items()}
+
+    # Progress tracking
+    task_id = None
+    if progress is not None:
+        task_id = progress.add_task("Analyzing molecules...", total=total_count)
+
+    for idx, row in df.iterrows():
+        smiles = row[smiles_column]
+
+        try:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                invalid_count += 1
+                if progress is not None:
+                    progress.update(task_id, advance=1)
+                continue
+
+            valid_count += 1
+
+            # Size metrics
+            heavy_atoms = Descriptors.HeavyAtomCount(mol)
+            heavy_atom_counts.append(heavy_atoms)
+
+            mol_with_h = Chem.AddHs(mol)
+            total_atom_counts.append(mol_with_h.GetNumAtoms())
+            bond_counts.append(mol.GetNumBonds())
+            mol_weights.append(Descriptors.ExactMolWt(mol))
+
+            # Element composition
+            for atom in mol.GetAtoms():
+                element_counter[atom.GetSymbol()] += 1
+
+            # Ring statistics
+            ring_info = mol.GetRingInfo()
+            num_rings = ring_info.NumRings()
+            if num_rings > 0:
+                molecules_with_rings += 1
+                for ring in ring_info.AtomRings():
+                    ring_sizes[len(ring)] += 1
+
+            if Descriptors.NumAromaticRings(mol) > 0:
+                aromatic_molecules += 1
+
+            # Drug-likeness
+            logp = Descriptors.MolLogP(mol)
+            mw = Descriptors.ExactMolWt(mol)
+            hbd = Descriptors.NumHDonors(mol)
+            hba = Descriptors.NumHAcceptors(mol)
+            tpsa = Descriptors.TPSA(mol)
+            rotatable = Descriptors.NumRotatableBonds(mol)
+
+            logp_values.append(logp)
+            hbd_values.append(hbd)
+            hba_values.append(hba)
+            tpsa_values.append(tpsa)
+            rotatable_bond_values.append(rotatable)
+
+            # Lipinski Rule of 5
+            if mw <= 500 and logp <= 5 and hbd <= 5 and hba <= 10:
+                lipinski_passes += 1
+
+            # Scaffold
+            try:
+                core = MurckoScaffold.GetScaffoldForMol(mol)
+                scaffold_smiles = Chem.MolToSmiles(core)
+                scaffolds.add(scaffold_smiles)
+            except Exception:
+                pass
+
+            # Chiral centers
+            chiral_centers = Chem.FindMolChiralCenters(mol, includeUnassigned=True)
+            chiral_center_counts.append(len(chiral_centers))
+
+            # Functional groups
+            for fg_name, pattern in compiled_patterns.items():
+                if pattern is not None and mol.HasSubstructMatch(pattern):
+                    functional_groups[fg_name] += 1
+
+        except Exception:
+            invalid_count += 1
+
+        if progress is not None:
+            progress.update(task_id, advance=1)
+
+    # Compute summary statistics
+    def safe_stats(values):
+        if not values:
+            return {'min': 0, 'max': 0, 'mean': 0, 'std': 0}
+        arr = np.array(values)
+        return {
+            'min': float(np.min(arr)),
+            'max': float(np.max(arr)),
+            'mean': float(np.mean(arr)),
+            'std': float(np.std(arr)),
+        }
+
+    return {
+        'basic': {
+            'total_count': total_count,
+            'valid_count': valid_count,
+            'invalid_count': invalid_count,
+            'sampled': sample_size is not None,
+        },
+        'size': {
+            'heavy_atoms': safe_stats(heavy_atom_counts),
+            'total_atoms': safe_stats(total_atom_counts),
+            'bonds': safe_stats(bond_counts),
+            'molecular_weight': safe_stats(mol_weights),
+        },
+        'elements': dict(element_counter.most_common()),
+        'rings': {
+            'molecules_with_rings': molecules_with_rings,
+            'molecules_with_rings_pct': (molecules_with_rings / valid_count * 100) if valid_count > 0 else 0,
+            'aromatic_molecules': aromatic_molecules,
+            'aromatic_molecules_pct': (aromatic_molecules / valid_count * 100) if valid_count > 0 else 0,
+            'ring_size_distribution': dict(ring_sizes),
+        },
+        'druglikeness': {
+            'logp': safe_stats(logp_values),
+            'hbd': safe_stats(hbd_values),
+            'hba': safe_stats(hba_values),
+            'tpsa': safe_stats(tpsa_values),
+            'rotatable_bonds': safe_stats(rotatable_bond_values),
+            'lipinski_pass_count': lipinski_passes,
+            'lipinski_pass_pct': (lipinski_passes / valid_count * 100) if valid_count > 0 else 0,
+        },
+        'diversity': {
+            'unique_scaffolds': len(scaffolds),
+            'scaffold_ratio': (len(scaffolds) / valid_count) if valid_count > 0 else 0,
+            'functional_groups': dict(functional_groups),
+            'chiral_centers': safe_stats(chiral_center_counts),
+        },
+    }
+
+
+class RichDatasetStats(RichMixin):
+    """
+    Implements the "rich" console rendering of dataset statistics.
+
+    This display element shows comprehensive statistics about a molecular dataset
+    organized into multiple panels covering size, composition, rings, drug-likeness,
+    and structural diversity.
+    """
+
+    def __init__(self, name: str, stats: dict):
+        self.name = name
+        self.stats = stats
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+
+        yield ''
+
+        # == Panel 1: Basic Dataset Info ==
+        basic = self.stats['basic']
+        basic_table = Table(title=None, box=None, show_header=False, padding=(0, 2), expand=True)
+        basic_table.add_column(justify='left', style='magenta', no_wrap=True)
+        basic_table.add_column(justify='left', style='white', no_wrap=False, ratio=1)
+
+        basic_table.add_row('Dataset', f'[bold cyan]{self.name}[/bold cyan]')
+        basic_table.add_row('Total Compounds', str(basic['total_count']))
+        basic_table.add_row('Valid SMILES', f"[green]{basic['valid_count']}[/green]")
+        if basic['invalid_count'] > 0:
+            basic_table.add_row('Invalid SMILES', f"[red]{basic['invalid_count']}[/red]")
+        if basic['sampled']:
+            basic_table.add_row('', '[bright_black](sampled)[/bright_black]')
+
+        yield Panel(basic_table, title='[bright_black]Basic Info[/bright_black]',
+                   title_align='left', border_style='bright_black')
+
+        # == Panel 2: Molecule Size Statistics ==
+        size = self.stats['size']
+        size_table = Table(box=box.SIMPLE, padding=(0, 1), expand=True)
+        size_table.add_column("Metric", style="cyan", no_wrap=True, ratio=2)
+        size_table.add_column("Min", justify="right", style="white", ratio=1)
+        size_table.add_column("Mean", justify="right", style="green", ratio=1)
+        size_table.add_column("Max", justify="right", style="white", ratio=1)
+        size_table.add_column("Std", justify="right", style="bright_black", ratio=1)
+
+        size_table.add_row(
+            "Heavy Atoms",
+            f"{size['heavy_atoms']['min']:.0f}",
+            f"{size['heavy_atoms']['mean']:.1f}",
+            f"{size['heavy_atoms']['max']:.0f}",
+            f"{size['heavy_atoms']['std']:.1f}",
+        )
+        size_table.add_row(
+            "Total Atoms (incl. H)",
+            f"{size['total_atoms']['min']:.0f}",
+            f"{size['total_atoms']['mean']:.1f}",
+            f"{size['total_atoms']['max']:.0f}",
+            f"{size['total_atoms']['std']:.1f}",
+        )
+        size_table.add_row(
+            "Bonds",
+            f"{size['bonds']['min']:.0f}",
+            f"{size['bonds']['mean']:.1f}",
+            f"{size['bonds']['max']:.0f}",
+            f"{size['bonds']['std']:.1f}",
+        )
+        size_table.add_row(
+            "Molecular Weight",
+            f"{size['molecular_weight']['min']:.1f}",
+            f"{size['molecular_weight']['mean']:.1f}",
+            f"{size['molecular_weight']['max']:.1f}",
+            f"{size['molecular_weight']['std']:.1f}",
+        )
+
+        yield Panel(size_table, title='[bright_black]Molecule Size[/bright_black]',
+                   title_align='left', border_style='bright_black')
+
+        # == Panel 3: Element Composition ==
+        elements = self.stats['elements']
+        if elements:
+            total_atoms = sum(elements.values())
+            elem_table = Table(box=box.SIMPLE, padding=(0, 1), expand=True)
+            elem_table.add_column("Element", style="cyan", no_wrap=True, ratio=1)
+            elem_table.add_column("Count", justify="right", style="white", ratio=1)
+            elem_table.add_column("Percentage", justify="right", style="green", ratio=1)
+
+            for elem, count in list(elements.items())[:12]:  # Top 12 elements
+                pct = count / total_atoms * 100
+                elem_table.add_row(elem, str(count), f"{pct:.1f}%")
+
+            yield Panel(elem_table, title='[bright_black]Element Composition[/bright_black]',
+                       title_align='left', border_style='bright_black')
+
+        # == Panel 4: Ring Statistics ==
+        rings = self.stats['rings']
+        ring_table = Table(box=box.SIMPLE, padding=(0, 1), expand=True)
+        ring_table.add_column("Metric", style="cyan", no_wrap=True, ratio=2)
+        ring_table.add_column("Count", justify="right", style="white", ratio=1)
+        ring_table.add_column("Percentage", justify="right", style="green", ratio=1)
+
+        ring_table.add_row(
+            'Molecules with Rings',
+            str(rings['molecules_with_rings']),
+            f"{rings['molecules_with_rings_pct']:.1f}%"
+        )
+        ring_table.add_row(
+            'Aromatic Molecules',
+            str(rings['aromatic_molecules']),
+            f"{rings['aromatic_molecules_pct']:.1f}%"
+        )
+
+        yield Panel(ring_table, title='[bright_black]Ring Statistics[/bright_black]',
+                   title_align='left', border_style='bright_black')
+
+        # Ring size distribution as separate panel
+        if rings['ring_size_distribution']:
+            total_rings = sum(rings['ring_size_distribution'].values())
+            ring_dist_table = Table(box=box.SIMPLE, padding=(0, 1), expand=True)
+            ring_dist_table.add_column("Ring Size", style="cyan", no_wrap=True, ratio=1)
+            ring_dist_table.add_column("Count", justify="right", style="white", ratio=1)
+            ring_dist_table.add_column("Percentage", justify="right", style="green", ratio=1)
+
+            # Sort by count descending and take top 5
+            top_ring_sizes = sorted(rings['ring_size_distribution'].items(), key=lambda x: -x[1])[:5]
+            for size, count in sorted(top_ring_sizes, key=lambda x: x[0]):  # Display sorted by ring size
+                pct = count / total_rings * 100 if total_rings > 0 else 0
+                ring_dist_table.add_row(f"{size}-membered", str(count), f"{pct:.1f}%")
+
+            yield Panel(ring_dist_table, title='[bright_black]Ring Size Distribution[/bright_black]',
+                       title_align='left', border_style='bright_black')
+
+        # == Panel 5: Drug-likeness Metrics ==
+        dl = self.stats['druglikeness']
+        dl_table = Table(box=box.SIMPLE, padding=(0, 1), expand=True)
+        dl_table.add_column("Property", style="cyan", no_wrap=True, ratio=2)
+        dl_table.add_column("Min", justify="right", style="white", ratio=1)
+        dl_table.add_column("Mean", justify="right", style="green", ratio=1)
+        dl_table.add_column("Max", justify="right", style="white", ratio=1)
+        dl_table.add_column("Lipinski", justify="right", style="yellow", ratio=1)
+
+        dl_table.add_row("LogP", f"{dl['logp']['min']:.2f}", f"{dl['logp']['mean']:.2f}",
+                        f"{dl['logp']['max']:.2f}", "≤5")
+        dl_table.add_row("MW", f"{self.stats['size']['molecular_weight']['min']:.0f}",
+                        f"{self.stats['size']['molecular_weight']['mean']:.0f}",
+                        f"{self.stats['size']['molecular_weight']['max']:.0f}", "≤500")
+        dl_table.add_row("H-Bond Donors", f"{dl['hbd']['min']:.0f}", f"{dl['hbd']['mean']:.1f}",
+                        f"{dl['hbd']['max']:.0f}", "≤5")
+        dl_table.add_row("H-Bond Acceptors", f"{dl['hba']['min']:.0f}", f"{dl['hba']['mean']:.1f}",
+                        f"{dl['hba']['max']:.0f}", "≤10")
+        dl_table.add_row("TPSA", f"{dl['tpsa']['min']:.1f}", f"{dl['tpsa']['mean']:.1f}",
+                        f"{dl['tpsa']['max']:.1f}", "≤140")
+        dl_table.add_row("Rotatable Bonds", f"{dl['rotatable_bonds']['min']:.0f}",
+                        f"{dl['rotatable_bonds']['mean']:.1f}",
+                        f"{dl['rotatable_bonds']['max']:.0f}", "≤10")
+
+        yield Panel(dl_table, title='[bright_black]Drug-likeness Metrics[/bright_black]',
+                   title_align='left', border_style='bright_black')
+
+        # == Panel 6: Structural Diversity ==
+        div = self.stats['diversity']
+        div_table = Table(title=None, box=None, show_header=False, padding=(0, 2), expand=True)
+        div_table.add_column(justify='left', style='magenta', no_wrap=True)
+        div_table.add_column(justify='left', style='white', no_wrap=False, ratio=1)
+
+        div_table.add_row('Unique Murcko Scaffolds', str(div['unique_scaffolds']))
+        div_table.add_row('Scaffold Diversity Ratio', f"{div['scaffold_ratio']:.3f}")
+        div_table.add_row('Avg. Chiral Centers', f"{div['chiral_centers']['mean']:.2f}")
+
+        yield Panel(div_table, title='[bright_black]Structural Diversity[/bright_black]',
+                   title_align='left', border_style='bright_black')
+
+        # Functional groups as separate panel
+        if div['functional_groups']:
+            fg_table = Table(box=box.SIMPLE, padding=(0, 1), expand=True)
+            fg_table.add_column("Functional Group", style="cyan", no_wrap=True, ratio=2)
+            fg_table.add_column("Molecules", justify="right", style="white", ratio=1)
+            fg_table.add_column("Percentage", justify="right", style="green", ratio=1)
+
+            valid_count = self.stats['basic']['valid_count']
+            for fg_name, count in sorted(div['functional_groups'].items(), key=lambda x: -x[1]):
+                pct = count / valid_count * 100 if valid_count > 0 else 0
+                fg_table.add_row(fg_name, str(count), f"{pct:.1f}%")
+
+            yield Panel(fg_table, title='[bright_black]Functional Groups[/bright_black]',
+                       title_align='left', border_style='bright_black')
 
 
 # == ACTUAL CLI IMPLEMENTATION ==
@@ -644,7 +1040,8 @@ class CLI(click.RichGroup):
         self.add_command(self.download_command)
         self.add_command(self.list_command)
         self.add_command(self.info_command)
-        
+        self.add_command(self.stats_command)
+
         # cache command group
         self.add_command(self.cache_group)
         self.cache_group.add_command(self.cache_list_command)
@@ -819,9 +1216,118 @@ class CLI(click.RichGroup):
         dataset_info: dict = self.file_share['datasets'][name]
         rich_info = RichDatasetInfo(name, dataset_info)
         click.echo(rich_info)
-        
+
         return 0
-    
+
+    @click.command('stats', short_help='Show statistical analysis of a dataset')
+    @click.argument('name')
+    @click.option('--sample', '-s', type=int, default=None,
+                  help='Sample N molecules for analysis (default: all)')
+    @click.pass_obj
+    def stats_command(self, name: str, sample: Optional[int]):
+        """
+        Download and analyze a dataset, showing molecular statistics.
+
+        This command downloads the specified dataset to a temporary folder,
+        calculates comprehensive statistics about the molecules, and displays
+        them in a formatted output. Statistics include molecule sizes, element
+        composition, ring systems, drug-likeness metrics (Lipinski Rule of 5),
+        and structural diversity measures.
+
+        Use the --sample flag to limit analysis to a random subset of molecules
+        for faster processing on large datasets.
+        """
+        click.secho('Connecting to server...')
+        self.file_share.fetch_metadata(force=True)
+
+        # Check if the dataset exists
+        if name not in self.file_share['datasets']:
+            click.secho('Dataset not found! Use the "list" command to see available datasets...', fg='red')
+            return 1
+
+        dataset_metadata: dict = self.file_share['datasets'][name]
+
+        # Download to temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            click.secho(f'Downloading dataset to temporary folder...')
+
+            # Find the SMILES column name - datasets use different conventions
+            smiles_column = None
+
+            with Progress() as progress:
+                # Download the raw CSV dataset
+                for file_extension in dataset_metadata.get('raw', []):
+                    if file_extension == 'csv':
+                        file_name = f'{name}.{file_extension}'
+
+                        # Try gzipped version first
+                        try:
+                            file_name_compressed = f'{file_name}.gz'
+                            file_path_compressed = self.file_share.download_file(
+                                file_name_compressed,
+                                folder_path=temp_dir,
+                                progress=progress,
+                            )
+
+                            # Decompress the file
+                            file_path = os.path.join(temp_dir, file_name)
+                            with open(file_path, mode='wb') as file:
+                                with gzip.open(file_path_compressed, mode='rb') as compressed_file:
+                                    shutil.copyfileobj(compressed_file, file)
+
+                            os.remove(file_path_compressed)
+
+                        except Exception:
+                            file_path = self.file_share.download_file(
+                                file_name,
+                                folder_path=temp_dir,
+                                progress=progress
+                            )
+
+                        break
+                else:
+                    click.secho('No CSV format available for this dataset!', fg='red')
+                    return 1
+
+            # Load the dataset
+            click.secho('Loading dataset...')
+            df = pd.read_csv(file_path)
+
+            # Try to find the SMILES column
+            possible_smiles_columns = ['smiles', 'SMILES', 'Smiles', 'Canonical_Smiles',
+                                       'canonical_smiles', 'mol', 'molecule']
+            for col in possible_smiles_columns:
+                if col in df.columns:
+                    smiles_column = col
+                    break
+
+            if smiles_column is None:
+                # Try to find any column containing 'smiles' in its name
+                for col in df.columns:
+                    if 'smiles' in col.lower():
+                        smiles_column = col
+                        break
+
+            if smiles_column is None:
+                click.secho(f'Could not find SMILES column. Available columns: {list(df.columns)}', fg='red')
+                return 1
+
+            # Calculate statistics
+            click.secho(f'Analyzing {len(df)} molecules...')
+            with Progress() as progress:
+                stats = calculate_dataset_stats(
+                    df=df,
+                    smiles_column=smiles_column,
+                    sample_size=sample,
+                    progress=progress,
+                )
+
+            # Display results
+            rich_stats = RichDatasetStats(name, stats)
+            click.echo(rich_stats)
+
+        return 0
+
     @click.command('about', short_help='print additional information about the command line interface')
     @click.pass_obj
     def about(self):

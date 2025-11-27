@@ -164,3 +164,11 @@ Critical Fixes
 
 - Changed the way in which the Nextcloud remote accesses the public endpoint which has changed for 
   the transition to NextcloudHub 10.0. This has been a breaking change, which prevented accessing the remote file share location at all.
+
+1.5.0 - 27.11.2025
+------------------
+
+Command Line Interface
+
+- Added the new `cmdata stats` command which will actually download a given dataset to compute some common
+  statistics on it such as the distribution of elements, graph sizes, the most common motifs in there etc.

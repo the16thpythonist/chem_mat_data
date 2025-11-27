@@ -465,6 +465,168 @@ datasets:
         - classification
         targets: 2
         verbose: DPP-4 inhibitors
+    dud_e:
+        compounds: 1111394
+        description: 'The DUD-E (Directory of Useful Decoys - Enhanced) dataset is
+            a comprehensive multi-target virtual screening benchmark containing 102
+            protein targets with 22,886 active compounds and over 1 million carefully
+            selected decoys. Published by Mysinger et al. (2012), this dataset is
+            designed to benchmark molecular docking programs and similarity-based
+            virtual screening methods. Each molecule has a 102-dimensional target
+            vector where each position can have three values: 0 (not mentioned for
+            that target), 1 (active against that target), or 2 (decoy for that target).
+            This tri-state encoding properly captures the per-target nature of the
+            decoy selection, where a molecule can be active against one target while
+            serving as a decoy for another. Decoys are specifically selected for each
+            target with a 50:1 ratio, matched for physicochemical properties while
+            maintaining 2-D structural dissimilarity to actives. This enables both
+            multi-task learning and proper evaluation of similarity-based virtual
+            screening methods with target-specific negative examples.'
+        notes:
+        - This is a virtual screening benchmark dataset designed for evaluating molecular
+            docking and similarity methods.
+        - 'Target vectors use tri-state encoding: 0 = not mentioned for that target,
+            1 = active against that target, 2 = decoy for that target.'
+        - Decoys are specifically selected for each target (50:1 ratio) to match physicochemical
+            properties while avoiding 2-D structural similarity to actives.
+        - A molecule can be active against some targets while serving as a decoy for
+            others, capturing the per-target nature of the data.
+        - "Active compounds have measured affinities \u22641 \u03BCM against their\
+            \ targets, extracted from ChEMBL09 database."
+        raw:
+        - csv
+        sources:
+        - https://dude.docking.org/
+        - https://doi.org/10.1021/jm300687e
+        - http://jmc.acs.org/content/55/14/6582
+        tags:
+        - Molecules
+        - SMILES
+        - Drug Discovery
+        - Virtual Screening
+        - Similarity
+        - Multi-Target
+        - Multi-Label Classification
+        - Multi-Task
+        - Bioactivity
+        - Classification
+        - DUD-E
+        - QSAR
+        - Benchmark
+        - Molecular Docking
+        target_descriptions:
+            '0': 'AA2AR - Adenosine A2a receptor (PDB: 3eml)'
+            '1': 'ABL1 - Tyrosine-protein kinase ABL (PDB: 2hzi)'
+            '10': 'ALDR - Aldose reductase (PDB: 2hv5)'
+            '100': 'WEE1 - Serine/threonine-protein kinase WEE1 (PDB: 3biz)'
+            '101': 'XIAP - Inhibitor of apoptosis protein 3 (PDB: 3hl5)'
+            '11': 'AMPC - Beta-lactamase (PDB: 1l2s)'
+            '12': 'ANDR - Androgen Receptor (PDB: 2am9)'
+            '13': 'AOFB - Monoamine oxidase B (PDB: 1s3b)'
+            '14': 'BACE1 - Beta-secretase 1 (PDB: 3l5d)'
+            '15': 'BRAF - Serine/threonine-protein kinase B-raf (PDB: 3d4q)'
+            '16': 'CAH2 - Carbonic anhydrase II (PDB: 1bcd)'
+            '17': 'CASP3 - Caspase-3 (PDB: 2cnk)'
+            '18': 'CDK2 - Cyclin-dependent kinase 2 (PDB: 1h00)'
+            '19': 'COMT - Catechol O-methyltransferase (PDB: 3bwm)'
+            '2': 'ACE - Angiotensin-converting enzyme (PDB: 3bkl)'
+            '20': 'CP2C9 - Cytochrome P450 2C9 (PDB: 1r9o)'
+            '21': 'CP3A4 - Cytochrome P450 3A4 (PDB: 3nxu)'
+            '22': 'CSF1R - Macrophage colony stimulating factor receptor (PDB: 3krj)'
+            '23': 'CXCR4 - C-X-C chemokine receptor type 4 (PDB: 3odu)'
+            '24': 'DEF - Peptide deformylase (PDB: 1lru)'
+            '25': 'DHI1 - 11-beta-hydroxysteroid dehydrogenase 1 (PDB: 3frj)'
+            '26': 'DPP4 - Dipeptidyl peptidase IV (PDB: 2i78)'
+            '27': 'DRD3 - Dopamine D3 receptor (PDB: 3pbl)'
+            '28': 'DYR - Dihydrofolate reductase (PDB: 3nxo)'
+            '29': 'EGFR - Epidermal growth factor receptor erbB1 (PDB: 2rgp)'
+            '3': 'ACES - Acetylcholinesterase (PDB: 1e66)'
+            '30': 'ESR1 - Estrogen receptor alpha (PDB: 1sj0)'
+            '31': 'ESR2 - Estrogen receptor beta (PDB: 2fsz)'
+            '32': 'FA10 - Coagulation factor X (PDB: 3kl6)'
+            '33': 'FA7 - Coagulation factor VII (PDB: 1w7x)'
+            '34': 'FABP4 - Fatty acid binding protein adipocyte (PDB: 2nnq)'
+            '35': 'FAK1 - Focal adhesion kinase 1 (PDB: 3bz3)'
+            '36': 'FGFR1 - Fibroblast growth factor receptor 1 (PDB: 3c4f)'
+            '37': 'FKB1A - FK506-binding protein 1A (PDB: 1j4h)'
+            '38': 'FNTA - Protein farnesyltransferase/geranylgeranyltransferase type
+                I alpha subunit (PDB: 3e37)'
+            '39': 'FPPS - Farnesyl diphosphate synthase (PDB: 1zw5)'
+            '4': 'ADA - Adenosine deaminase (PDB: 2e1w)'
+            '40': 'GCR - Glucocorticoid receptor (PDB: 3bqd)'
+            '41': 'GLCM - Beta-glucocerebrosidase (PDB: 2v3f)'
+            '42': 'GRIA2 - Glutamate receptor ionotropic, AMPA 2 (PDB: 3kgc)'
+            '43': 'GRIK1 - Glutamate receptor ionotropic kainate 1 (PDB: 1vso)'
+            '44': 'HDAC2 - Histone deacetylase 2 (PDB: 3max)'
+            '45': 'HDAC8 - Histone deacetylase 8 (PDB: 3f07)'
+            '46': 'HIVINT - Human immunodeficiency virus type 1 integrase (PDB: 3nf7)'
+            '47': 'HIVPR - Human immunodeficiency virus type 1 protease (PDB: 1xl2)'
+            '48': 'HIVRT - Human immunodeficiency virus type 1 reverse transcriptase
+                (PDB: 3lan)'
+            '49': 'HMDH - HMG-CoA reductase (PDB: 3ccw)'
+            '5': 'ADA17 - ADAM17 (PDB: 2oi0)'
+            '50': 'HS90A - Heat shock protein HSP 90-alpha (PDB: 1uyg)'
+            '51': 'HXK4 - Hexokinase type IV (PDB: 3f9m)'
+            '52': 'IGF1R - Insulin-like growth factor I receptor (PDB: 2oj9)'
+            '53': 'INHA - Enoyl-[acyl-carrier-protein] reductase (PDB: 2h7l)'
+            '54': 'ITAL - Leukocyte adhesion glycoprotein LFA-1 alpha (PDB: 2ica)'
+            '55': 'JAK2 - Tyrosine-protein kinase JAK2 (PDB: 3lpb)'
+            '56': 'KIF11 - Kinesin-like protein 1 (PDB: 3cjo)'
+            '57': 'KIT - Stem cell growth factor receptor (PDB: 3g0e)'
+            '58': 'KITH - Thymidine kinase (PDB: 2b8t)'
+            '59': 'KPCB - Protein kinase C beta (PDB: 2i0e)'
+            '6': 'ADRB1 - Beta-1 adrenergic receptor (PDB: 2vt4)'
+            '60': 'LCK - Tyrosine-protein kinase LCK (PDB: 2of2)'
+            '61': 'LKHA4 - Leukotriene A4 hydrolase (PDB: 3chp)'
+            '62': 'MAPK2 - MAP kinase-activated protein kinase 2 (PDB: 3m2w)'
+            '63': 'MCR - Mineralocorticoid receptor (PDB: 2aa2)'
+            '64': 'MET - Hepatocyte growth factor receptor (PDB: 3lq8)'
+            '65': 'MK01 - MAP kinase ERK2 (PDB: 2ojg)'
+            '66': 'MK10 - c-Jun N-terminal kinase 3 (PDB: 2zdt)'
+            '67': 'MK14 - MAP kinase p38 alpha (PDB: 2qd9)'
+            '68': 'MMP13 - Matrix metalloproteinase 13 (PDB: 830c)'
+            '69': 'MP2K1 - Dual specificity mitogen-activated protein kinase kinase
+                1 (PDB: 3eqh)'
+            '7': 'ADRB2 - Beta-2 adrenergic receptor (PDB: 3ny8)'
+            '70': 'NOS1 - Nitric-oxide synthase, brain (PDB: 1qw6)'
+            '71': 'NRAM - Neuraminidase (PDB: 1b9v)'
+            '72': 'PA2GA - Phospholipase A2 group IIA (PDB: 1kvo)'
+            '73': 'PARP1 - Poly [ADP-ribose] polymerase-1 (PDB: 3l3m)'
+            '74': 'PDE5A - Phosphodiesterase 5A (PDB: 1udt)'
+            '75': 'PGH1 - Cyclooxygenase-1 (PDB: 2oyu)'
+            '76': 'PGH2 - Cyclooxygenase-2 (PDB: 3ln1)'
+            '77': 'PLK1 - Serine/threonine-protein kinase PLK1 (PDB: 2owb)'
+            '78': 'PNPH - Purine nucleoside phosphorylase (PDB: 3bgs)'
+            '79': 'PPARA - Peroxisome proliferator-activated receptor alpha (PDB:
+                2p54)'
+            '8': 'AKT1 - Serine/threonine-protein kinase AKT (PDB: 3cqw)'
+            '80': 'PPARD - Peroxisome proliferator-activated receptor delta (PDB:
+                2znp)'
+            '81': 'PPARG - Peroxisome proliferator-activated receptor gamma (PDB:
+                2gtk)'
+            '82': 'PRGR - Progesterone receptor (PDB: 3kba)'
+            '83': 'PTN1 - Protein-tyrosine phosphatase 1B (PDB: 2azr)'
+            '84': 'PUR2 - GAR transformylase (PDB: 1njs)'
+            '85': 'PYGM - Muscle glycogen phosphorylase (PDB: 1c8k)'
+            '86': 'PYRD - Dihydroorotate dehydrogenase (PDB: 1d3g)'
+            '87': 'RENI - Renin (PDB: 3g6z)'
+            '88': 'ROCK1 - Rho-associated protein kinase 1 (PDB: 2etr)'
+            '89': 'RXRA - Retinoid X receptor alpha (PDB: 1mv9)'
+            '9': 'AKT2 - Serine/threonine-protein kinase AKT2 (PDB: 3d0e)'
+            '90': 'SAHH - Adenosylhomocysteinase (PDB: 1li4)'
+            '91': 'SRC - Tyrosine-protein kinase SRC (PDB: 3el8)'
+            '92': 'TGFR1 - TGF-beta receptor type I (PDB: 3hmm)'
+            '93': 'THB - Thyroid hormone receptor beta-1 (PDB: 1q4x)'
+            '94': 'THRB - Thrombin (PDB: 1ype)'
+            '95': 'TRY1 - Trypsin I (PDB: 2ayw)'
+            '96': 'TRYB1 - Tryptase beta-1 (PDB: 2zec)'
+            '97': 'TYSY - Thymidylate synthase (PDB: 1syn)'
+            '98': 'UROK - Urokinase-type plasminogen activator (PDB: 1sqt)'
+            '99': 'VGFR2 - Vascular endothelial growth factor receptor 2 (PDB: 2p2i)'
+        target_type:
+        - classification
+        targets: 102
+        verbose: DUD-E (Directory of Useful Decoys - Enhanced) Multi-Target Classification
     elanos_bp:
         compounds: 5431
         raw:
@@ -642,22 +804,78 @@ datasets:
         targets: 1
         verbose: Octanol-Water Distribution Coefficient
     muv:
-        compounds: 93087
-        description: Subset of PubChem BioAssay by applying a refined nearest neighbor
-            analysis, designed for validation of virtual screening techniques.
-        full: true
+        compounds: 93111
+        description: 'The MUV (Maximum Unbiased Validation) dataset is a carefully
+            designed multi-target virtual screening benchmark containing 17 biological
+            targets from PubChem BioAssay data. Published by Rohrer & Baumann (2009),
+            this dataset addresses critical issues in virtual screening benchmarks
+            by avoiding analogue bias and artificial enrichment through refined nearest
+            neighbor analysis from spatial statistics. Each molecule has a 17-dimensional
+            target vector where each position can have three values: 0 (not mentioned
+            for that target), 1 (active against that target), or 2 (decoy for that
+            target). This tri-state encoding properly captures the per-target nature
+            of the decoy selection, where a molecule can be active against one target
+            while serving as a decoy for another. With 30 carefully selected diverse
+            actives and 15,000 embedded decoys per target (500:1 ratio), MUV provides
+            a truly challenging and unbiased benchmark for evaluating similarity-based
+            virtual screening methods and molecular fingerprints.'
+        notes:
+        - This is an unbiased virtual screening benchmark dataset designed to avoid
+            analogue bias and artificial enrichment.
+        - 'Target vectors use tri-state encoding: 0 = not mentioned for that target,
+            1 = active against that target, 2 = decoy for that target.'
+        - Actives are maximally spread (diverse) to avoid analogue bias, with 30 actives
+            per target.
+        - Decoys are embedded around actives using refined nearest neighbor analysis
+            (500:1 ratio, 15,000 per target).
+        - A molecule can be active against some targets while serving as a decoy for
+            others, capturing the per-target nature of the data.
+        - All targets are based on PubChem BioAssay confirmatory screens.
         raw:
         - csv
         sources:
-        - https://moleculenet.org/datasets
+        - https://github.com/rdkit/benchmarking_platform
+        - https://doi.org/10.1021/ci8002649
+        - https://pubs.acs.org/doi/10.1021/ci8002649
+        - https://www.tu-braunschweig.de/en/pharmchem/forschung/baumann/translate-to-english-muv
         tags:
-        - Smiles
         - Molecules
-        - Biophysics
+        - SMILES
+        - Drug Discovery
+        - Virtual Screening
+        - Similarity
+        - Multi-Target
+        - Multi-Label Classification
+        - Multi-Task
+        - Bioactivity
+        - Classification
+        - MUV
+        - PubChem
+        - QSAR
+        - Benchmark
+        - Unbiased
+        target_descriptions:
+            '0': MUV_466 - MUV AID 466 (PubChem BioAssay)
+            '1': MUV_548 - MUV AID 548 (PubChem BioAssay)
+            '10': MUV_737 - MUV AID 737 (PubChem BioAssay)
+            '11': MUV_810 - MUV AID 810 (PubChem BioAssay)
+            '12': MUV_832 - MUV AID 832 (PubChem BioAssay)
+            '13': MUV_846 - MUV AID 846 (PubChem BioAssay)
+            '14': MUV_852 - MUV AID 852 (PubChem BioAssay)
+            '15': MUV_858 - MUV AID 858 (PubChem BioAssay)
+            '16': MUV_859 - MUV AID 859 (PubChem BioAssay)
+            '2': MUV_600 - MUV AID 600 (PubChem BioAssay)
+            '3': MUV_644 - MUV AID 644 (PubChem BioAssay)
+            '4': MUV_652 - MUV AID 652 (PubChem BioAssay)
+            '5': MUV_689 - MUV AID 689 (PubChem BioAssay)
+            '6': MUV_692 - MUV AID 692 (PubChem BioAssay)
+            '7': MUV_712 - MUV AID 712 (PubChem BioAssay)
+            '8': MUV_713 - MUV AID 713 (PubChem BioAssay)
+            '9': MUV_733 - MUV AID 733 (PubChem BioAssay)
         target_type:
         - classification
         targets: 17
-        verbose: MUV Benchmark
+        verbose: MUV (Maximum Unbiased Validation) Multi-Target Classification
     open_melting_point:
         compounds: 27965
         description: "The Jean-Claude Bradley Open Melting Point Dataset contains\
