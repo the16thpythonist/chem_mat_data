@@ -466,7 +466,7 @@ datasets:
         targets: 2
         verbose: DPP-4 inhibitors
     dud_e:
-        compounds: 1111394
+        compounds: 400040
         description: 'The DUD-E (Directory of Useful Decoys - Enhanced) dataset is
             a comprehensive multi-target virtual screening benchmark containing 102
             protein targets with 22,886 active compounds and over 1 million carefully
@@ -1529,6 +1529,7 @@ datasets:
         raw:
         - csv
         sources:
+        - https://pubs.acs.org/doi/10.1021/ci049714%2B
         - https://pubs.acs.org/doi/10.1021/acscentsci.7b00572
         - https://www.kaggle.com/datasets/basu369victor/zinc250k
         tags:

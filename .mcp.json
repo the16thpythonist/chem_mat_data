@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "web-search": {
+      "command": "node",
+      "args": [
+        "/home/jonas/Private/web-search-mcp/dist/index.js"
+      ],
+      "env": {}
+    },
+    "file-download": {
+      "command": "node",
+      "args": [
+        "/home/jonas/Private/mcp-file-downloader/download-server.js"
+      ],
+      "env": {}
+    }
+  }
+}
