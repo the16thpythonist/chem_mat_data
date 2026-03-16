@@ -203,6 +203,11 @@ class CLI(click.RichGroup):
         self.add_command(self.docs_group)
         self.docs_group.add_command(self.docs_collect_datasets_command)
 
+        # agent command group
+        self.add_command(self.agent_group)
+        self.agent_group.add_command(self.agent_process_command)
+        self.agent_group.add_command(self.agent_generate_command)
+
     def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
         """
         Custom help formatting that displays each command group in its own panel.
@@ -722,6 +727,64 @@ class CLI(click.RichGroup):
 
         click.secho('✅ datasets uploaded', fg='green')
         click.secho()
+
+    ## == AGENT COMMAND GROUP ==
+    # Commands to interact with the opencode-powered agent workflow.
+
+    @click.group('agent', help='Commands for running the LLM dataset discovery agent.')
+    @click.pass_obj
+    def agent_group(self,
+                    ) -> None:
+        """
+        This command group exposes utilities to run the opencode agent that discovers dataset download
+        links from publication URLs.
+        """
+        pass
+
+    @click.command('process', short_help='Find dataset download links for a publication URL.')
+    @click.argument('link', type=str)
+    @click.pass_obj
+    def agent_process_command(self,
+                              link: str,
+                              ) -> None:
+        """
+        Runs the dataset discovery agent on the provided publication URL and downloads
+        all discovered files.
+
+        :param link: Publication link that should be processed
+        """
+        from chem_mat_data.agent.extraction_agent import discover_and_download
+
+        try:
+            result = discover_and_download(link)
+        except Exception as exc:
+            click.secho(f'❌ agent run failed: {exc}', fg='red')
+            sys.exit(1)
+
+        click.secho('✅ agent run finished', fg='green')
+        click.echo(f'Response: {result}')
+
+    @click.command('generate', short_help='Generate a processing script for the downloaded dataset.')
+    @click.pass_obj
+    def agent_generate_command(self,
+                               ) -> None:
+        """
+        Generates a dataset processing script based on the downloaded dataset in
+        ``agent/artifacts/downloads`` and saves it to ``agent/artifacts/scripts``.
+        """
+        from chem_mat_data.agent.extraction_agent import generate_processing_script
+
+        try:
+            script_path = generate_processing_script()
+        except FileNotFoundError as exc:
+            click.secho(f'❌ agent generate failed: {exc}', fg='red')
+            sys.exit(1)
+        except Exception as exc:
+            click.secho(f'❌ agent generate failed: {exc}', fg='red')
+            sys.exit(1)
+
+        click.secho('✅ script generation finished', fg='green')
+        click.echo(f'Generated script: {script_path}')
 
     ## == DOCS COMMAND GROUP ==
     # This command group is used to manage the documentation of the package.
