@@ -1,4 +1,4 @@
-|made-with-python| |python-version| |ruff| 
+|made-with-python| |python-version| |ruff| |zenodo|
 
 
 .. |made-with-python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
@@ -9,6 +9,9 @@
 
 .. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
    :target: https://github.com/astral-sh/ruff
+
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.19234789.svg
+   :target: https://doi.org/10.5281/zenodo.19234789
 
 .. |pypi| image:: https://img.shields.io/pypi/v/chem_mat_data.svg
    :target: https://pypi.org/project/ruff/
