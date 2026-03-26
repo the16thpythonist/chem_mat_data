@@ -398,6 +398,7 @@ class TestDataConsistency:
 class TestErrorHandling:
     """Test error handling for various edge cases."""
 
+    @pytest.mark.network
     def test_nonexistent_dataset(self):
         """
         Requesting a nonexistent dataset should raise an error.

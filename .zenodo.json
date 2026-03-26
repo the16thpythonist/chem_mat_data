@@ -1,0 +1,39 @@
+{
+    "title": "ChemMatData: Unified Chemistry and Material Science Datasets for Graph Neural Networks",
+    "upload_type": "software",
+    "access_right": "open",
+    "license": "MIT",
+    "language": "eng",
+    "creators": [
+        {
+            "name": "Teufel, Jonas",
+            "orcid": "0000-0002-9228-9395",
+            "affiliation": "Karlsruhe Institute of Technology"
+        },
+        {
+            "name": "Zeller, Jana",
+            "affiliation": "ETH Zurich / Max Planck Institute for Intelligent Systems"
+        },
+        {
+            "name": "Singh, Mohit",
+            "affiliation": "Karlsruhe Institute of Technology"
+        }
+    ],
+    "keywords": [
+        "chemistry",
+        "materials science",
+        "dataset",
+        "machine learning",
+        "graph neural network",
+        "molecular property prediction",
+        "Python"
+    ],
+    "description": "A Python package providing unified access to chemistry and material science datasets for machine learning applications, specifically designed for training graph neural networks (GNNs). Provides simple CLI and API interfaces to download datasets in raw (CSV/pandas) or processed (graph) format.",
+    "related_identifiers": [
+        {
+            "identifier": "https://github.com/the16thpythonist/chem_mat_data",
+            "relation": "isSupplementTo",
+            "scheme": "url"
+        }
+    ]
+}

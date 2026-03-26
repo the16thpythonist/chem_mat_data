@@ -1,24 +1,12 @@
 requires = ["tox>=4"]
 env_list = [
-    "3.8",
-    "3.9", 
+    "3.9",
     "3.10", 
     "3.11", 
     "3.12", 
     # The current problem for Python 3.13 support seems to be that RDKit library
     # is not yet available for 3.13..
     #"3.13"
-]
-
-# Python 3.8 Unit Tests
-# ===================== 
-[env."3.8"]
-descrpition = "Install pytest in a venv and run unit tests for python 3.8"
-deps = [
-    "pytest>=8.0.0"
-]
-commands = [
-    ["pytest", "tests", {replace="posargs", extend=true}]
 ]
 
 # Python 3.9 Unit Tests

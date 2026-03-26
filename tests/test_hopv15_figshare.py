@@ -3,11 +3,14 @@ import tempfile
 import unittest
 from unittest import TestCase
 
+import pytest
+
 import rdkit.Chem as Chem
 from chem_mat_data.connectors import FileDownloadSource
 from chem_mat_data.data import HOPV15Parser
 
 
+@pytest.mark.network
 class TestHOPV15FigshareDownload(TestCase):
     """
     Test suite for downloading HOPV15 dataset from Figshare and applying the HOPV15Parser.

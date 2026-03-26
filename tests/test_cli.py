@@ -1,3 +1,4 @@
+import pytest
 from click.testing import CliRunner
 
 from chem_mat_data.cli import cli
@@ -9,6 +10,7 @@ def test_help_command_basically_works():
     assert result.exit_code == 0
 
 
+@pytest.mark.network
 def test_list_command_basically_works():
     """
     The "list" command is supposed to simply print a list of all the available datasets on the 
@@ -23,6 +25,7 @@ def test_list_command_basically_works():
     assert 'TypeError' not in result.output
 
     
+@pytest.mark.network
 def test_list_command_hidden_datasets_omitted():
     """
     The "list" command sources the list of available datasts from the metadata yml file which
@@ -42,6 +45,7 @@ def test_list_command_hidden_datasets_omitted():
     assert '_test' in result.output.lower()
     
     
+@pytest.mark.network
 def test_download_command_basically_works():
     """
     The "download" command should be able to download a dataset from the remote file share server 

@@ -4,7 +4,7 @@
 .. |made-with-python| image:: https://img.shields.io/badge/Made%20with-Python-1f425f.svg
    :target: https://www.python.org/
 
-.. |python-version| image:: https://img.shields.io/badge/python-3.8%20|%203.9%20|%203.10%20|%203.11%20|%203.12-blue
+.. |python-version| image:: https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue
    :target: https://www.python.org/
 
 .. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json

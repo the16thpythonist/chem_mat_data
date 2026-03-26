@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 # Project Metadata
 # ================
 name = "chem_mat_database"
-version = "1.5.0"
+version = "1.6.0"
 description = "Command Line Interface for projects"
 readme = "README.rst"
 authors = [
@@ -31,7 +31,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -40,7 +39,7 @@ classifiers = [
 
 # Project Dependencies
 # ====================
-requires-python = ">=3.8,<=3.12"
+requires-python = ">=3.9,<=3.12"
 dependencies = [
     "numpy>=1.21.0,<2.0",
     "matplotlib>=3.4.0",
@@ -105,6 +104,14 @@ dev = [
 cmdata = "chem_mat_data.cli:cli"
 cmmanage = "chem_mat_data.manage:cli"
 
+# Pytest Configuration
+# ====================
+
+[tool.pytest.ini_options]
+markers = [
+    "network: marks tests that require network access to external servers (deselect with '-m \"not network\"')",
+]
+
 # Configuration of Build System (Hatchling)
 # =========================================
 
@@ -118,7 +125,7 @@ packages = ["chem_mat_data"]
 # ===============
 
 [tool.bumpversion]
-current_version = "1.5.0"
+current_version = "1.6.0"
 parse = "(?<![=<>])(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"

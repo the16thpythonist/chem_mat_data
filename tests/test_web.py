@@ -13,6 +13,7 @@ from chem_mat_data.web import NextcloudFileShare
 from .utils import ASSETS_PATH
 
 
+@pytest.mark.network
 class TestNextcloudFileShare:
     """
     The ``NextcloudFileShare`` class is a wrapper around the Nextcloud API which is one option to 

@@ -3,10 +3,10 @@
 import nox
 
 # Python versions to test against
-PYTHON_VERSIONS = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12"]
 
 
-@nox.session(python=PYTHON_VERSIONS[0], venv_backend="uv")
+@nox.session(python=PYTHON_VERSIONS, venv_backend="uv")
 def test(session):
     """Run unit tests with pytest."""
     session.install(".[dev]")
@@ -16,7 +16,8 @@ def test(session):
         "tests/",
         "-v",
         "--ignore=tests/test_datasets.py",     # Network timeouts
-        "-k", "not localonly"  # Skip local-only tests
+        "-k", "not localonly",  # Skip local-only tests
+        "-m", "not network",  # Skip tests requiring network access
     )
 
 @nox.session(python="3.11", venv_backend="uv")
