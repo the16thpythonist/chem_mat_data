@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChemMatData - Dataset Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow-y: scroll;
+        }
+
+        body {
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 3rem 1rem 2rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #222;
+            margin-bottom: 0.4rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 0.8rem;
+        }
+
+        .version-badge {
+            display: inline-block;
+            padding: 3px 14px;
+            background: #f0f0f0;
+            color: #999;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            margin-bottom: 1.5rem;
+        }
+
+        .install-snippet {
+            display: inline-flex;
+            align-items: center;
+            background: #2d2d3d;
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem 0.6rem 1.4rem;
+            margin-bottom: 0.8rem;
+            width: auto;
+            gap: 0.75rem;
+        }
+
+        .install-snippet code {
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #cdd6f4;
+            white-space: nowrap;
+            user-select: all;
+        }
+
+        .install-snippet .prompt {
+            color: #FF6B6B;
+        }
+
+        .install-snippet .install-pkg {
+            font-style: italic;
+            color: #ff8a8a;
+        }
+
+        .install-copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .install-copy-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .install-copy-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: #888;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke 0.2s;
+        }
+
+        .install-copy-btn:hover svg {
+            stroke: #cdd6f4;
+        }
+
+        .install-copy-btn.copied svg {
+            stroke: #a6e3a1;
+        }
+
+        .btn-docs {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.45rem 1rem;
+            background: #f5f5f5;
+            color: #666;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn-docs:hover {
+            background: #eaeaea;
+            color: #333;
+        }
+
+        .btn-docs svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.2s;
+        }
+
+        .btn-docs:hover svg {
+            transform: translateX(3px);
+        }
+
+        /* Controls */
+        .controls {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 2rem 1rem;
+        }
+
+        .search-wrapper {
+            margin-bottom: 1rem;
+        }
+
+        #search {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+            color: #333;
+        }
+
+        #search:focus {
+            border-color: #FF6B6B;
+        }
+
+        #search::placeholder {
+            color: #bbb;
+        }
+
+        .filters-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .filter-group + .filter-group {
+            margin-left: 20px;
+            padding-left: 20px;
+            border-left: 1px solid #e0e0e0;
+        }
+
+        .filter-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #bbb;
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+
+        .filter-options {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .filter-pill {
+            display: inline-block;
+            padding: 5px 14px;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: transparent;
+            color: #888;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .filter-pill:hover {
+            color: #555;
+            background: #eee;
+        }
+
+        .filter-pill.active {
+            background: #fff;
+            color: #333;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Table */
+        .table-container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 2rem 3rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        /* Column widths */
+        thead th:nth-child(1) { width: 16%; }
+        thead th:nth-child(2) { width: 18%; }
+        thead th:nth-child(3) { width: 9%; }
+        thead th:nth-child(4) { width: 9%; }
+        thead th:nth-child(5) { width: 11%; }
+        thead th:nth-child(6) { width: 8%; }
+        thead th:nth-child(7) { width: 29%; }
+
+        thead th {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #999;
+            border-bottom: 2px solid #eee;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        thead th:hover {
+            color: #FF6B6B;
+        }
+
+        thead th .sort-indicator {
+            margin-left: 4px;
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+
+        thead th.sorted .sort-indicator {
+            color: #FF6B6B;
+        }
+
+        /* Data rows */
+        .data-row {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .data-row:hover {
+            background: #fafafa;
+        }
+
+        .data-row td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        .data-row.expanded {
+            background: #fafafa;
+        }
+
+        .data-row.expanded td {
+            border-bottom: none;
+        }
+
+        .id-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .dataset-id {
+            font-weight: 600;
+            color: #222;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dataset-verbose {
+            font-size: 0.82rem;
+            color: #666;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .expand-icon {
+            flex-shrink: 0;
+            font-size: 0.65rem;
+            color: #bbb;
+            transition: transform 0.2s;
+        }
+
+        .data-row.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .category-pill {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .category-pill.cat-organic {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .category-pill.cat-tmc {
+            background: #f3e5f5;
+            color: #9c27b0;
+        }
+
+        .category-pill.cat-default {
+            background: #e0f7fa;
+            color: #00838f;
+        }
+
+        .format-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            margin: 1px 2px;
+            white-space: nowrap;
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .elements-count {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .target-type {
+            font-size: 0.85rem;
+            color: #555;
+            text-transform: capitalize;
+        }
+
+        /* Tag badges */
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            background: #FFF0F0;
+            color: #FF6B6B;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            margin: 1px 2px;
+            white-space: nowrap;
+        }
+
+        .tags-cell {
+            overflow: hidden;
+        }
+
+        /* Expanded detail row */
+        .detail-row td {
+            padding: 12px 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .detail-content {
+            padding: 4px 0;
+        }
+
+        .detail-description {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 1.2rem;
+            line-height: 1.7;
+        }
+
+        .code-blocks {
+            display: flex;
+            gap: 16px;
+            margin-top: 1.2rem;
+        }
+
+        .code-block {
+            flex: 1;
+            position: relative;
+            min-width: 0;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .code-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #999;
+        }
+
+        .code-block pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .copy-btn {
+            background: none;
+            color: #999;
+            border: none;
+            padding: 4px;
+            font-size: 0;
+            cursor: pointer;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .copy-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .copy-btn:hover {
+            color: #FF6B6B;
+        }
+
+        .copy-btn.copied {
+            color: #4caf50;
+        }
+
+        /* Detail metadata */
+        .detail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 24px;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            font-size: 0.82rem;
+        }
+
+        .meta-label {
+            color: #999;
+            display: block;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2px;
+        }
+
+        .meta-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Sources */
+        .detail-sources {
+            margin-top: 0.8rem;
+        }
+
+        .detail-sources ul {
+            list-style: disc;
+            padding-left: 1.2em;
+            margin-top: 4px;
+        }
+
+        .detail-sources li {
+            color: #ccc;
+            margin-top: 2px;
+        }
+
+        .detail-sources a {
+            color: #FF6B6B;
+            font-size: 0.8rem;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .detail-sources a:hover {
+            text-decoration: underline;
+        }
+
+        /* Related datasets */
+        .related-section {
+            margin-top: 1.2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .related-section .meta-label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .related-cards {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .related-card {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 6px 12px;
+            background: #f8f8f8;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .related-card:hover {
+            border-color: #FF6B6B;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.15);
+        }
+
+        .related-card-name {
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .related-card-meta {
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .related-card .category-pill {
+            font-size: 0.7rem;
+            padding: 1px 8px;
+        }
+
+        /* Download buttons */
+        .detail-downloads {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+
+        .download-btn:hover {
+            border-color: #FF6B6B;
+            color: #FF6B6B;
+        }
+
+        .download-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .download-btn .fmt-label {
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 0.72rem;
+            background: #f0f0f0;
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #bbb;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        .empty-state code {
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        /* Results count */
+        .results-info {
+            font-size: 0.8rem;
+            color: #bbb;
+            padding: 4px 0 8px;
+            min-height: 1.6em;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .code-blocks {
+                flex-direction: column;
+            }
+
+            thead th, .data-row td {
+                padding: 8px 6px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid #eee;
+            margin-top: 3rem;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: #999;
+        }
+
+        .footer-initiative {
+            font-size: 0.95rem;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .footer-institution {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 1.2rem;
+        }
+
+        .footer-logo {
+            height: 40px;
+            width: auto;
+            margin-bottom: 1rem;
+            opacity: 1;
+        }
+
+        .footer-contacts {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-contact {
+            font-size: 0.82rem;
+        }
+
+        .footer-contact-name {
+            color: #555;
+            font-weight: 500;
+        }
+
+        .footer-contact a {
+            color: #FF6B6B;
+            text-decoration: none;
+        }
+
+        .footer-contact a:hover {
+            text-decoration: underline;
+        }
+
+        /* Dark mode toggle */
+        .top-bar {
+            position: fixed;
+            top: 1rem;
+            right: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        .theme-toggle {
+            background: #f5f5f5;
+            border: none;
+            border-radius: 6px;
+            padding: 0.45rem 0.6rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .theme-toggle:hover {
+            background: #eaeaea;
+        }
+
+        .theme-toggle .icon-sun,
+        .theme-toggle .icon-moon { display: none; }
+        .theme-toggle .icon-sun { display: inline; }
+        [data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+        [data-theme="dark"] .theme-toggle .icon-moon { display: inline; }
+
+        /* Dark theme */
+        [data-theme="dark"] body {
+            background: #232336;
+            color: #cdd6f4;
+        }
+
+        [data-theme="dark"] h1 {
+            color: #e0e0e0;
+        }
+
+        [data-theme="dark"] .subtitle {
+            color: #888;
+        }
+
+        [data-theme="dark"] .version-badge {
+            background: #33334a;
+            color: #777;
+        }
+
+        [data-theme="dark"] .install-snippet {
+            background: #1e1e30;
+        }
+
+        [data-theme="dark"] .btn-docs {
+            background: #33334a;
+            color: #999;
+        }
+
+        [data-theme="dark"] .btn-docs:hover {
+            background: #3d3d56;
+            color: #cdd6f4;
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: #33334a;
+        }
+
+        [data-theme="dark"] .theme-toggle:hover {
+            background: #3d3d56;
+        }
+
+        [data-theme="dark"] #search {
+            background: #2b2b42;
+            border-color: #3d3d56;
+            color: #cdd6f4;
+        }
+
+        [data-theme="dark"] #search::placeholder {
+            color: #555;
+        }
+
+        [data-theme="dark"] .filter-options {
+            background: #2b2b42;
+        }
+
+        [data-theme="dark"] .filter-pill {
+            color: #777;
+        }
+
+        [data-theme="dark"] .filter-pill:hover {
+            color: #aaa;
+            background: #33334a;
+        }
+
+        [data-theme="dark"] .filter-pill.active {
+            background: #3d3d56;
+            color: #cdd6f4;
+            box-shadow: none;
+        }
+
+        [data-theme="dark"] .filter-group + .filter-group {
+            border-left-color: #3d3d56;
+        }
+
+        [data-theme="dark"] thead th {
+            color: #666;
+            border-bottom-color: #33334a;
+        }
+
+        [data-theme="dark"] thead th:hover {
+            color: #FF6B6B;
+        }
+
+        [data-theme="dark"] thead th .sort-indicator {
+            color: #444;
+        }
+
+        [data-theme="dark"] .data-row:hover {
+            background: #2b2b42;
+        }
+
+        [data-theme="dark"] .data-row td {
+            border-bottom-color: #33334a;
+        }
+
+        [data-theme="dark"] .data-row.expanded {
+            background: #2b2b42;
+        }
+
+        [data-theme="dark"] .dataset-id {
+            color: #e0e0e0;
+        }
+
+        [data-theme="dark"] .dataset-verbose {
+            color: #888;
+        }
+
+        [data-theme="dark"] .expand-icon {
+            color: #555;
+        }
+
+        [data-theme="dark"] .category-pill.cat-organic {
+            background: #1b3a1e;
+            color: #66bb6a;
+        }
+
+        [data-theme="dark"] .category-pill.cat-tmc {
+            background: #2e1a35;
+            color: #ce93d8;
+        }
+
+        [data-theme="dark"] .category-pill.cat-default {
+            background: #1a2e30;
+            color: #4dd0e1;
+        }
+
+        [data-theme="dark"] .format-badge {
+            background: #33334a;
+            color: #999;
+        }
+
+        [data-theme="dark"] .target-type {
+            color: #999;
+        }
+
+        [data-theme="dark"] .tag {
+            background: #2e1a1e;
+            color: #ff8a8a;
+        }
+
+        [data-theme="dark"] .detail-row td {
+            background: #2b2b42;
+            border-bottom-color: #33334a;
+        }
+
+        [data-theme="dark"] .detail-description {
+            color: #999;
+        }
+
+        [data-theme="dark"] .meta-value {
+            color: #cdd6f4;
+        }
+
+        [data-theme="dark"] .code-block pre {
+            background: #1e1e30;
+        }
+
+        [data-theme="dark"] .download-btn {
+            background: #33334a;
+            color: #cdd6f4;
+            border-color: #3d3d56;
+        }
+
+        [data-theme="dark"] .download-btn:hover {
+            border-color: #FF6B6B;
+            color: #FF6B6B;
+        }
+
+        [data-theme="dark"] .download-btn .fmt-label {
+            background: #3d3d56;
+        }
+
+        [data-theme="dark"] .related-card {
+            background: #33334a;
+            border-color: #3d3d56;
+        }
+
+        [data-theme="dark"] .related-card:hover {
+            border-color: #FF6B6B;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+        }
+
+        [data-theme="dark"] .related-card-name {
+            color: #cdd6f4;
+        }
+
+        [data-theme="dark"] .related-section {
+            border-top-color: #3d3d56;
+        }
+
+        [data-theme="dark"] .empty-state code {
+            background: #33334a;
+            color: #999;
+        }
+
+        [data-theme="dark"] footer {
+            border-top-color: #33334a;
+        }
+
+        [data-theme="dark"] .footer-initiative {
+            color: #cdd6f4;
+        }
+
+        [data-theme="dark"] .footer-institution {
+            color: #777;
+        }
+
+        [data-theme="dark"] .footer-contact-name {
+            color: #cdd6f4;
+        }
+
+        [data-theme="dark"] .footer-logo {
+            filter: brightness(0.85);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="logo.svg" alt="ChemMatData" class="logo">
+    <h1>ChemMatData</h1>
+    <p class="subtitle">Unified datasets for chemistry and materials science Graph Machine Learning</p>
+    <div class="install-snippet">
+        <code><span class="prompt">$</span> uv pip install <span class="install-pkg">chem_mat_database</span></code>
+        <button class="install-copy-btn" onclick="copyInstall(this)" title="Copy to clipboard">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+    </div>
+    <br>
+    <span class="version-badge" id="version-badge"></span>
+</header>
+
+<div class="top-bar">
+    <a href="docs/" class="btn-docs">Docs <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+        <span class="icon-sun">&#9788;</span>
+        <span class="icon-moon">&#9790;</span>
+    </button>
+</div>
+
+<main>
+    <section class="controls">
+        <div class="search-wrapper">
+            <input type="text" id="search" placeholder="Search datasets by name, description, or tags...">
+        </div>
+        <div class="filters-bar">
+            <div class="filter-group" id="category-filters"></div>
+            <div class="filter-group" id="type-filters"></div>
+            <div class="filter-group" id="format-filters"></div>
+        </div>
+    </section>
+
+    <section class="table-container">
+        <div class="results-info" id="results-info"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th data-sort="name">ID <span class="sort-indicator"></span></th>
+                    <th data-sort="verbose">Name <span class="sort-indicator"></span></th>
+                    <th data-sort="category">Category <span class="sort-indicator"></span></th>
+                    <th data-sort="compounds">Elements <span class="sort-indicator"></span></th>
+                    <th data-sort="target_type">Target Type <span class="sort-indicator"></span></th>
+                    <th data-sort="raw">Format <span class="sort-indicator"></span></th>
+                    <th>Tags</th>
+                </tr>
+            </thead>
+            <tbody id="dataset-tbody"></tbody>
+        </table>
+    </section>
+</main>
+
+<footer>
+    <p class="footer-initiative">An initiative by the AiMat Group</p>
+    <p class="footer-institution">Karlsruhe Institute of Technology (KIT)</p>
+    <img src="aimat_logo.png" alt="AiMat" class="footer-logo">
+    <div class="footer-contacts">
+        <div class="footer-contact">
+            <span class="footer-contact-name">Prof. Dr. Pascal Friederich</span><br>
+            <a href="mailto:pascal.friederich@kit.edu">pascal.friederich@kit.edu</a>
+        </div>
+        <div class="footer-contact">
+            <span class="footer-contact-name">Jonas Teufel</span><br>
+            <a href="mailto:jonas.teufel@kit.edu">jonas.teufel@kit.edu</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+(function() {
+    'use strict';
+
+    let allDatasets = [];
+    let downloadBase = '';
+    let currentSort = { key: 'name', ascending: true };
+    let activeCategory = 'all';
+    let activeTargetType = 'all';
+    let activeFormat = 'all';
+    let searchTimeout = null;
+
+    // Load data
+    fetch('datasets.json')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            allDatasets = data.datasets || [];
+            downloadBase = data.download_base || '';
+            if (data.version) {
+                document.getElementById('version-badge').textContent = 'v' + data.version;
+            }
+            initCategoryFilters();
+            initTargetTypeFilters();
+            initFormatFilters();
+            initSortHeaders();
+            initSearch();
+            renderTable();
+        })
+        .catch(function() {
+            document.getElementById('dataset-tbody').innerHTML =
+                '<tr><td colspan="7" class="empty-state">' +
+                '<p>Could not load dataset information.</p>' +
+                '<p>Run <code>cmmanage docs compile</code> to generate the dataset catalog.</p>' +
+                '</td></tr>';
+        });
+
+    // Category filter pills
+    function initCategoryFilters() {
+        var categories = [];
+        var seen = {};
+        allDatasets.forEach(function(d) {
+            if (!seen[d.category]) {
+                seen[d.category] = true;
+                categories.push(d.category);
+            }
+        });
+        categories.sort();
+
+        var container = document.getElementById('category-filters');
+        container.innerHTML = '';
+
+        var label = document.createElement('span');
+        label.className = 'filter-label';
+        label.textContent = 'Category';
+        container.appendChild(label);
+
+        var options = document.createElement('div');
+        options.className = 'filter-options';
+
+        var allPill = document.createElement('span');
+        allPill.className = 'filter-pill active';
+        allPill.textContent = 'All';
+        allPill.setAttribute('data-category', 'all');
+        allPill.addEventListener('click', function() { setCategory('all'); });
+        options.appendChild(allPill);
+
+        categories.forEach(function(cat) {
+            var pill = document.createElement('span');
+            pill.className = 'filter-pill';
+            pill.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+            pill.setAttribute('data-category', cat);
+            pill.addEventListener('click', function() { setCategory(cat); });
+            options.appendChild(pill);
+        });
+
+        container.appendChild(options);
+    }
+
+    function setCategory(cat) {
+        activeCategory = cat;
+        var pills = document.querySelectorAll('#category-filters .filter-pill');
+        pills.forEach(function(p) {
+            p.classList.toggle('active', p.getAttribute('data-category') === cat);
+        });
+        renderTable();
+    }
+
+    // Target type filter pills
+    function initTargetTypeFilters() {
+        var types = [];
+        var seen = {};
+        allDatasets.forEach(function(d) {
+            (d.target_type || []).forEach(function(t) {
+                if (!seen[t]) {
+                    seen[t] = true;
+                    types.push(t);
+                }
+            });
+        });
+        types.sort();
+
+        var container = document.getElementById('type-filters');
+        container.innerHTML = '';
+
+        var label = document.createElement('span');
+        label.className = 'filter-label';
+        label.textContent = 'Task';
+        container.appendChild(label);
+
+        var options = document.createElement('div');
+        options.className = 'filter-options';
+
+        var allPill = document.createElement('span');
+        allPill.className = 'filter-pill active';
+        allPill.textContent = 'All';
+        allPill.setAttribute('data-type', 'all');
+        allPill.addEventListener('click', function() { setTargetType('all'); });
+        options.appendChild(allPill);
+
+        types.forEach(function(t) {
+            var pill = document.createElement('span');
+            pill.className = 'filter-pill';
+            pill.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+            pill.setAttribute('data-type', t);
+            pill.addEventListener('click', function() { setTargetType(t); });
+            options.appendChild(pill);
+        });
+
+        container.appendChild(options);
+    }
+
+    function setTargetType(t) {
+        activeTargetType = t;
+        var pills = document.querySelectorAll('#type-filters .filter-pill');
+        pills.forEach(function(p) {
+            p.classList.toggle('active', p.getAttribute('data-type') === t);
+        });
+        renderTable();
+    }
+
+    // Format filter pills
+    function initFormatFilters() {
+        var formats = [];
+        var seen = {};
+        allDatasets.forEach(function(d) {
+            (d.raw || []).forEach(function(f) {
+                if (!seen[f]) {
+                    seen[f] = true;
+                    formats.push(f);
+                }
+            });
+        });
+        formats.sort();
+
+        var container = document.getElementById('format-filters');
+        container.innerHTML = '';
+
+        var label = document.createElement('span');
+        label.className = 'filter-label';
+        label.textContent = 'Format';
+        container.appendChild(label);
+
+        var options = document.createElement('div');
+        options.className = 'filter-options';
+
+        var allPill = document.createElement('span');
+        allPill.className = 'filter-pill active';
+        allPill.textContent = 'All';
+        allPill.setAttribute('data-format', 'all');
+        allPill.addEventListener('click', function() { setFormat('all'); });
+        options.appendChild(allPill);
+
+        formats.forEach(function(f) {
+            var pill = document.createElement('span');
+            pill.className = 'filter-pill';
+            pill.textContent = f.toUpperCase();
+            pill.setAttribute('data-format', f);
+            pill.addEventListener('click', function() { setFormat(f); });
+            options.appendChild(pill);
+        });
+
+        container.appendChild(options);
+    }
+
+    function setFormat(f) {
+        activeFormat = f;
+        var pills = document.querySelectorAll('#format-filters .filter-pill');
+        pills.forEach(function(p) {
+            p.classList.toggle('active', p.getAttribute('data-format') === f);
+        });
+        renderTable();
+    }
+
+    // Sort headers
+    function initSortHeaders() {
+        var headers = document.querySelectorAll('thead th[data-sort]');
+        headers.forEach(function(th) {
+            th.addEventListener('click', function() {
+                var key = th.getAttribute('data-sort');
+                if (currentSort.key === key) {
+                    currentSort.ascending = !currentSort.ascending;
+                } else {
+                    currentSort.key = key;
+                    currentSort.ascending = true;
+                }
+                updateSortIndicators();
+                renderTable();
+            });
+        });
+        updateSortIndicators();
+    }
+
+    function updateSortIndicators() {
+        var headers = document.querySelectorAll('thead th[data-sort]');
+        headers.forEach(function(th) {
+            var key = th.getAttribute('data-sort');
+            var indicator = th.querySelector('.sort-indicator');
+            if (key === currentSort.key) {
+                th.classList.add('sorted');
+                indicator.textContent = currentSort.ascending ? '\u25B2' : '\u25BC';
+            } else {
+                th.classList.remove('sorted');
+                indicator.textContent = '\u2195';
+            }
+        });
+    }
+
+    // Search
+    function initSearch() {
+        var input = document.getElementById('search');
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(renderTable, 150);
+        });
+    }
+
+    // Main render
+    function renderTable() {
+        var query = document.getElementById('search').value.toLowerCase().trim();
+        var tbody = document.getElementById('dataset-tbody');
+
+        // Filter
+        var filtered = allDatasets.filter(function(d) {
+            if (activeCategory !== 'all' && d.category !== activeCategory) return false;
+            if (activeTargetType !== 'all' && d.target_type.indexOf(activeTargetType) === -1) return false;
+            if (activeFormat !== 'all' && (d.raw || []).indexOf(activeFormat) === -1) return false;
+            if (!query) return true;
+
+            var searchable = [
+                d.name, d.verbose, d.description,
+                d.category, d.target_type.join(' ')
+            ].concat(d.tags).join(' ').toLowerCase();
+            return searchable.indexOf(query) !== -1;
+        });
+
+        // Sort
+        filtered.sort(function(a, b) {
+            var key = currentSort.key;
+            var valA = a[key];
+            var valB = b[key];
+
+            if (Array.isArray(valA)) valA = valA.join(', ');
+            if (Array.isArray(valB)) valB = valB.join(', ');
+
+            var cmp;
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                cmp = valA - valB;
+            } else {
+                cmp = String(valA || '').localeCompare(String(valB || ''));
+            }
+            return currentSort.ascending ? cmp : -cmp;
+        });
+
+        // Update results info
+        var info = document.getElementById('results-info');
+        if (query || activeCategory !== 'all') {
+            info.textContent = filtered.length + ' of ' + allDatasets.length + ' datasets';
+        } else {
+            info.textContent = filtered.length + ' datasets';
+        }
+
+        // Render
+        tbody.innerHTML = '';
+
+        if (filtered.length === 0) {
+            tbody.innerHTML =
+                '<tr><td colspan="7" class="empty-state">' +
+                '<p>No datasets match your search.</p></td></tr>';
+            return;
+        }
+
+        filtered.forEach(function(dataset) {
+            var row = document.createElement('tr');
+            row.className = 'data-row';
+
+            // ID
+            var tdId = document.createElement('td');
+            tdId.innerHTML = '<div class="id-cell"><span class="dataset-id">' + escapeHtml(dataset.name) +
+                '</span><span class="expand-icon">\u25BC</span></div>';
+            row.appendChild(tdId);
+
+            // Verbose name
+            var tdVerbose = document.createElement('td');
+            tdVerbose.innerHTML = '<span class="dataset-verbose">' + escapeHtml(dataset.verbose || dataset.name) + '</span>';
+            row.appendChild(tdVerbose);
+
+            // Category
+            var tdCat = document.createElement('td');
+            var catClass = 'cat-' + dataset.category;
+            if (catClass !== 'cat-organic' && catClass !== 'cat-tmc') catClass = 'cat-default';
+            tdCat.innerHTML = '<span class="category-pill ' + catClass + '">' + escapeHtml(dataset.category) + '</span>';
+            row.appendChild(tdCat);
+
+            // Elements
+            var tdElem = document.createElement('td');
+            tdElem.className = 'elements-count';
+            tdElem.textContent = dataset.compounds.toLocaleString();
+            row.appendChild(tdElem);
+
+            // Target type
+            var tdTarget = document.createElement('td');
+            tdTarget.innerHTML = '<span class="target-type">' +
+                escapeHtml(dataset.target_type.join(', ')) + '</span>';
+            row.appendChild(tdTarget);
+
+            // Format
+            var tdFormat = document.createElement('td');
+            (dataset.raw || []).forEach(function(fmt) {
+                tdFormat.innerHTML += '<span class="format-badge">' + escapeHtml(fmt) + '</span>';
+            });
+            row.appendChild(tdFormat);
+
+            // Tags
+            var tdTags = document.createElement('td');
+            tdTags.className = 'tags-cell';
+            (dataset.tags || []).forEach(function(tag) {
+                tdTags.innerHTML += '<span class="tag">' + escapeHtml(tag) + '</span>';
+            });
+            row.appendChild(tdTags);
+
+            tbody.appendChild(row);
+
+            // Detail row (hidden)
+            var detailRow = document.createElement('tr');
+            detailRow.className = 'detail-row';
+            detailRow.style.display = 'none';
+
+            var detailTd = document.createElement('td');
+            detailTd.setAttribute('colspan', '7');
+            detailTd.innerHTML = buildDetailHTML(dataset);
+            detailRow.appendChild(detailTd);
+
+            tbody.appendChild(detailRow);
+
+            // Click to toggle
+            row.addEventListener('click', function() {
+                var isOpen = detailRow.style.display !== 'none';
+                // Close all other expanded rows
+                document.querySelectorAll('.data-row.expanded').forEach(function(r) {
+                    if (r !== row) {
+                        r.classList.remove('expanded');
+                        r.nextElementSibling.style.display = 'none';
+                    }
+                });
+                row.classList.toggle('expanded', !isOpen);
+                detailRow.style.display = isOpen ? 'none' : 'table-row';
+            });
+        });
+    }
+
+    // Find related datasets by similarity scoring
+    function getRelatedDatasets(dataset, count) {
+        var scored = allDatasets
+            .filter(function(other) { return other.name !== dataset.name; })
+            .map(function(other) {
+                var score = 0;
+                // Same category is a strong signal
+                if (other.category === dataset.category) score += 3;
+                // Same task type
+                dataset.target_type.forEach(function(t) {
+                    if (other.target_type.indexOf(t) !== -1) score += 2;
+                });
+                // Shared tags
+                (dataset.tags || []).forEach(function(tag) {
+                    if ((other.tags || []).indexOf(tag) !== -1) score += 1;
+                });
+                // Similar compound count (within 3x range)
+                var ratio = other.compounds / Math.max(dataset.compounds, 1);
+                if (ratio >= 1/3 && ratio <= 3) score += 1;
+                // Shared formats
+                (dataset.raw || []).forEach(function(fmt) {
+                    if ((other.raw || []).indexOf(fmt) !== -1) score += 0.5;
+                });
+                return { dataset: other, score: score };
+            });
+
+        scored.sort(function(a, b) { return b.score - a.score; });
+        return scored.slice(0, count).map(function(s) { return s.dataset; });
+    }
+
+    // Navigate to and expand a dataset row by name
+    window.goToDataset = function(name) {
+        // Close any currently expanded row
+        document.querySelectorAll('.data-row.expanded').forEach(function(r) {
+            r.classList.remove('expanded');
+            r.nextElementSibling.style.display = 'none';
+        });
+        // Find the row with the matching dataset name
+        var rows = document.querySelectorAll('.data-row');
+        for (var i = 0; i < rows.length; i++) {
+            var idSpan = rows[i].querySelector('.dataset-id');
+            if (idSpan && idSpan.textContent === name) {
+                rows[i].classList.add('expanded');
+                rows[i].nextElementSibling.style.display = 'table-row';
+                rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                break;
+            }
+        }
+    };
+
+    // Build expanded detail HTML
+    function buildDetailHTML(d) {
+        var html = '<div class="detail-content">';
+
+        // Description
+        var desc = d.description || 'No description available.';
+        html += '<p class="detail-description">' + escapeHtml(desc) + '</p>';
+
+        // Metadata
+        html += '<div class="detail-meta">';
+        html += metaItem('Compounds', d.compounds.toLocaleString());
+        html += metaItem('Targets', d.targets);
+        html += metaItem('Target Type', d.target_type.join(', '));
+        html += metaItem('Raw Formats', d.raw.join(', ') || '-');
+        if (d.min_version) {
+            html += metaItem('Min Version', 'v' + d.min_version);
+        }
+
+        // Download buttons (inline with metadata)
+        if (downloadBase && d.raw && d.raw.length > 0) {
+            var dlIcon = '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+            html += '<div class="detail-downloads">';
+            d.raw.forEach(function(fmt) {
+                var ext = fmt;
+                if (fmt === 'xyz') ext = 'xyz_bundle';
+                var url = downloadBase + '/' + d.name + '.' + ext;
+                html += '<a class="download-btn" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' +
+                    dlIcon + ' Download <span class="fmt-label">' + escapeHtml(fmt) + '</span></a>';
+            });
+            html += '</div>';
+        }
+
+        html += '</div>';
+
+        // Sources
+        if (d.sources && d.sources.length > 0) {
+            html += '<div class="detail-sources">';
+            html += '<span class="meta-label">Sources</span>';
+            html += '<ul>';
+            d.sources.forEach(function(url) {
+                html += '<li><a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(url) + '</a></li>';
+            });
+            html += '</ul>';
+            html += '</div>';
+        }
+
+        // Code blocks
+        var cliCode = 'cmdata download ' + d.name;
+        var pyCode;
+        if (d.category === 'tmc') {
+            pyCode = 'from chem_mat_data import (\n    load_graph_dataset\n)\n\ngraphs = load_graph_dataset(\'' + d.name + '\')';
+        } else {
+            pyCode = 'from chem_mat_data import (\n    load_smiles_dataset\n)\n\ndf = load_smiles_dataset(\'' + d.name + '\')';
+        }
+
+        html += '<div class="code-blocks">';
+        html += buildCodeBlock('Command Line', cliCode, 'cli-' + d.name);
+        html += buildCodeBlock('Python', pyCode, 'py-' + d.name);
+        html += '</div>';
+
+        // Related datasets
+        var related = getRelatedDatasets(d, 5);
+        if (related.length > 0) {
+            html += '<div class="related-section">';
+            html += '<span class="meta-label">Related Datasets</span>';
+            html += '<div class="related-cards">';
+            related.forEach(function(r) {
+                var catClass = 'cat-' + r.category;
+                if (catClass !== 'cat-organic' && catClass !== 'cat-tmc') catClass = 'cat-default';
+                html += '<div class="related-card" onclick="goToDataset(\'' + escapeHtml(r.name) + '\')">';
+                html += '<span class="related-card-name">' + escapeHtml(r.name) + '</span>';
+                html += '<span class="category-pill ' + catClass + '">' + escapeHtml(r.category) + '</span>';
+                html += '</div>';
+            });
+            html += '</div>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    var ICON_COPY = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    var ICON_CHECK = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    function buildCodeBlock(label, code, id) {
+        return '<div class="code-block">' +
+            '<div class="code-header">' +
+            '<span class="code-label">' + label + '</span>' +
+            '<button class="copy-btn" onclick="copyCode(this, \'' + id + '\')" title="Copy to clipboard">' + ICON_COPY + '</button>' +
+            '</div>' +
+            '<pre id="' + id + '">' + escapeHtml(code) + '</pre>' +
+            '</div>';
+    }
+
+    function metaItem(label, value) {
+        return '<div class="meta-item">' +
+            '<span class="meta-label">' + label + '</span>' +
+            '<span class="meta-value">' + escapeHtml(String(value)) + '</span>' +
+            '</div>';
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // Dark mode toggle
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }
+
+    window.toggleTheme = function() {
+        var current = document.documentElement.getAttribute('data-theme');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    };
+
+    // Initialize theme from localStorage or system preference
+    (function() {
+        var saved = localStorage.getItem('theme');
+        if (saved) {
+            applyTheme(saved);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            applyTheme('dark');
+        }
+    })();
+
+    // Copy install command
+    window.copyInstall = function(btn) {
+        navigator.clipboard.writeText('uv pip install chem_mat_database').then(function() {
+            var origSvg = btn.innerHTML;
+            btn.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+            btn.classList.add('copied');
+            setTimeout(function() {
+                btn.innerHTML = origSvg;
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    };
+
+    // Copy to clipboard (global)
+    window.copyCode = function(btn, id) {
+        var pre = document.getElementById(id);
+        var text = pre.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+            btn.innerHTML = ICON_CHECK;
+            btn.classList.add('copied');
+            setTimeout(function() {
+                btn.innerHTML = ICON_COPY;
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    };
+
+})();
+</script>
+
+</body>
+</html>

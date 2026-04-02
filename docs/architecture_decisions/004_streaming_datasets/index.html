@@ -1,0 +1,1052 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the16thpythonist.github.io/chem_mat_data/docs/architecture_decisions/004_streaming_datasets/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Streaming Datasets - ChemMatData</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#streaming-datasets" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ChemMatData" class="md-header__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChemMatData
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Streaming Datasets
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ChemMatData" class="md-nav__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    ChemMatData
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../first_steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First steps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Command Line Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List Available Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_info/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Show Dataset Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download Dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Configuration File
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local File Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Programming Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Programming Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loading Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api_streaming_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../graph_representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Representation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../processing_graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processing New Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom_pre_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Pre-Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-smilesdataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. SmilesDataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-xyzdataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. XyzDataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-graphdataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. GraphDataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-shuffledataset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. ShuffleDataset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Highlights
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#advantages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advantages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disadvantages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disadvantages
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="streaming-datasets">Streaming Datasets</h1>
+<h2 id="status">Status</h2>
+<p>implemented</p>
+<h2 id="context">Context</h2>
+<p>The ChemMatData package provides molecular datasets for machine learning applications, particularly for training graph neural networks. As datasets grow larger (100k+ molecules), several challenges emerge:</p>
+<p><strong>Memory Constraints</strong>: Loading entire datasets into memory becomes problematic. A single molecular graph with features can require several kilobytes, meaning a 100k molecule dataset can easily consume multiple gigabytes of RAM. This limits the ability to work with large datasets on consumer hardware or to train multiple models concurrently on shared infrastructure.</p>
+<p><strong>Processing Bottlenecks</strong>: Converting molecular representations (SMILES strings or XYZ structures) to graph representations using RDKit is CPU-intensive (~0.5ms per molecule). For large datasets, processing all molecules upfront creates a significant startup delay before training can begin. Additionally, if users want to experiment with different featurization approaches, reprocessing the entire dataset each time is inefficient.</p>
+<p><strong>Training Requirements</strong>: Modern deep learning frameworks (PyTorch, JAX) use data loaders that iterate through datasets multiple times during training. These frameworks are designed to work efficiently with streaming data, loading and processing batches on-demand rather than requiring the entire dataset in memory.</p>
+<p><strong>Multiple Data Formats</strong>: Molecular datasets come in different formats:
+- SMILES strings represent 2D connectivity (compact, text-based)
+- XYZ files include 3D atomic coordinates (essential for conformer-dependent properties)</p>
+<p>Supporting both formats while maintaining a unified API is important for flexibility across different modeling tasks.</p>
+<p><strong>Use Case Flexibility</strong>: Different use cases have different requirements:
+- Quick prototyping benefits from fast iteration with small subsets
+- Large-scale experiments need to handle datasets that exceed available RAM
+- Custom featurization pipelines require processing flexibility without re-downloading datasets
+- 3D property prediction requires access to geometric information from XYZ datasets</p>
+<p>The existing approach of providing pre-processed datasets (ADR 001) works well for convenience but doesn't address these scalability challenges for large datasets, custom processing needs, or flexible format support.</p>
+<h2 id="decision">Decision</h2>
+<p>Implement a streaming dataset architecture with four main classes in <code>chem_mat_data/dataset.py</code>:</p>
+<h3 id="1-smilesdataset">1. SmilesDataset</h3>
+<p>A lazy-loading dataset that streams SMILES strings and properties from CSV files line-by-line using Python's <code>csv.DictReader</code>. Only one row is loaded into memory at a time, providing minimal memory footprint. Used for 2D molecular datasets where only connectivity matters.</p>
+<h3 id="2-xyzdataset">2. XyzDataset</h3>
+<p>A lazy-loading dataset that streams 3D molecular structures from XYZ file bundles. Iterates through individual .xyz files (one per molecule) stored in an xyz_bundle folder, yielding atomic coordinates, atomic numbers, and properties. Supports multiple XYZ format parsers (default, qm9, hopv15) to handle different XYZ file specifications. Essential for tasks requiring 3D geometric information.</p>
+<h3 id="3-graphdataset">3. GraphDataset</h3>
+<p>Extends the streaming approach to convert raw molecular representations (from either SmilesDataset or XyzDataset) into graph dict representations on-the-fly. Automatically detects which dataset type to use based on what's available (tries .csv first, then .xyz_bundle). Supports two processing modes:</p>
+<p><strong>Sequential Mode (num_workers=0)</strong>:
+- True streaming: processes one molecule at a time
+- Minimal memory usage
+- Single-threaded processing (~2000 mol/s for typical molecules)
+- Best for memory-constrained environments or simple molecules</p>
+<p><strong>Parallel Mode (num_workers&gt;0)</strong>:
+- Multi-process architecture for CPU-bound parallelism
+- Producer thread reads raw data (SMILES/XYZ) and distributes work to worker processes
+- Worker processes convert raw data to Mol objects then to graphs in parallel (bypasses Python GIL)
+- Collector thread reorders results to maintain dataset order
+- Results buffer allows main iterator to suspend at yield without deadlock
+- Better throughput for complex molecules or CPU-intensive custom processing</p>
+<p><strong>Auto-Detection Architecture</strong>:
+- Uses try-except approach: attempts SmilesDataset first, falls back to XyzDataset
+- Stores dataset_type string ('smiles' or 'xyz') for worker initialization
+- Workers receive raw data (SMILES strings or XYZ dicts) and convert in parallel
+- Transparent to users - same API regardless of underlying format</p>
+<h3 id="4-shuffledataset">4. ShuffleDataset</h3>
+<p>Wrapper that provides approximate shuffling using a fixed-size shuffle buffer. This enables training with shuffled data without loading the entire dataset into memory. The buffer size controls the trade-off between shuffling quality and memory usage.</p>
+<h3 id="architecture-highlights">Architecture Highlights</h3>
+<p><strong>Deadlock Prevention</strong>: The parallel mode uses a sophisticated producer-collector thread architecture where a separate collector thread continuously drains the result queue. This prevents deadlock when the main iterator suspends at yield, ensuring worker processes never block on a full queue.</p>
+<p><strong>Order Preservation</strong>: Workers may complete molecules out of order (due to varying complexity), but the collector thread uses a priority queue (heap) to reorder results before yielding them, maintaining the original dataset sequence.</p>
+<p><strong>Queue Design</strong>:
+- Input queue: bounded (provides backpressure)
+- Result queue: unbounded (critical for deadlock prevention)
+- Results buffer: thread-local queue (low overhead, no pickling)</p>
+<p><strong>Integration</strong>: Datasets work seamlessly with the existing <code>ensure_dataset()</code> function, automatically downloading and caching raw CSV files when needed.</p>
+<h2 id="consequences">Consequences</h2>
+<h3 id="advantages">Advantages</h3>
+<p><strong>Memory Efficiency</strong>: Streaming enables working with arbitrarily large datasets on limited hardware. Only the data currently being processed needs to be in memory, not the entire dataset. This is particularly important for cloud environments where memory is a cost factor.</p>
+<p><strong>Multiple Format Support</strong>: Unified API for both SMILES-based and XYZ-based datasets enables seamless handling of 2D connectivity and 3D geometric information. Auto-detection makes format handling transparent to users.</p>
+<p><strong>Flexible Processing</strong>: Users can apply custom featurization by subclassing <code>MoleculeProcessing</code> and providing it to GraphDataset. The streaming approach means custom processing happens on-demand rather than requiring reprocessing of stored datasets. Works identically for both SMILES and XYZ sources.</p>
+<p><strong>Faster Startup</strong>: Training can begin immediately as data is streamed and processed on-the-fly, rather than waiting for the entire dataset to be loaded and processed upfront.</p>
+<p><strong>True Parallelism</strong>: Multi-process architecture bypasses Python's GIL, enabling true CPU parallelism for graph processing. This scales effectively with CPU cores for complex molecules or custom processing. Raw data format (SMILES strings or XYZ dicts) minimizes pickling overhead.</p>
+<p><strong>Composability</strong>: The wrapper pattern (ShuffleDataset) allows building more complex data pipelines by composing simple components, similar to PyTorch's dataset philosophy.</p>
+<p><strong>API Consistency</strong>: Streaming datasets implement the standard Python iterator protocol (<code>__iter__</code> and <code>__len__</code>), making them compatible with existing code that expects iterable datasets. Same interface regardless of underlying format.</p>
+<h3 id="disadvantages">Disadvantages</h3>
+<p><strong>Complexity</strong>: The parallel processing implementation is significantly more complex than simple in-memory loading, particularly the deadlock prevention architecture with multiple threads and processes. Supporting multiple dataset formats (SMILES and XYZ) adds additional complexity with the auto-detection mechanism. This increases maintenance burden and makes debugging more challenging.</p>
+<p><strong>Parallel Overhead</strong>: For simple molecules, parallel processing is actually slower than sequential due to overhead (~0.6ms per molecule for pickling, queue operations, and thread coordination vs ~0.5ms processing time). The complexity of the parallel code only pays off for complex molecules or CPU-intensive custom processing.</p>
+<p><strong>No Random Access</strong>: Streaming datasets don't support index-based access (e.g., <code>dataset[42]</code>). This is incompatible with some training frameworks or use cases that require random access patterns. However, this is mitigated by the ShuffleDataset wrapper for common training scenarios.</p>
+<p><strong>Repeated Iteration Overhead</strong>: Each iteration through the dataset requires re-reading the raw data (CSV or XYZ files) and re-processing molecules. For training that requires multiple epochs, this processing cost is paid repeatedly. In contrast, pre-processed datasets only pay the cost once during download.</p>
+<p><strong>Format-Specific Parameters</strong>: XyzDataset requires additional parameters (parser_cls) that aren't needed for SmilesDataset. This creates some API inconsistency, though GraphDataset handles this through auto-detection and parameter forwarding.</p>
+<p><strong>Less Discoverable</strong>: Users familiar with the pre-processed datasets (ADR 001) may not immediately discover the streaming alternative. Documentation and examples are critical to guide users toward the appropriate solution for their use case, including when to use SMILES vs XYZ formats.</p>
+<p><strong>Processing Variance</strong>: Unlike pre-processed datasets where all users get identical featurization, streaming datasets with custom processing classes can lead to less comparable results across different experiments or research groups.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.expand"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
