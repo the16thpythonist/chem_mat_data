@@ -49,6 +49,17 @@
         .subtitle {
             font-size: 1rem;
             color: #888;
+            margin-bottom: 0.8rem;
+        }
+
+        .version-badge {
+            display: inline-block;
+            padding: 3px 14px;
+            background: #f0f0f0;
+            color: #999;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
             margin-bottom: 1.5rem;
         }
 
@@ -586,6 +597,60 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid #eee;
+            margin-top: 3rem;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: #999;
+        }
+
+        .footer-initiative {
+            font-size: 0.95rem;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .footer-institution {
+            font-size: 0.85rem;
+            color: #999;
+            margin-bottom: 1.2rem;
+        }
+
+        .footer-logo {
+            height: 40px;
+            width: auto;
+            margin-bottom: 1rem;
+            opacity: 1;
+        }
+
+        .footer-contacts {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-contact {
+            font-size: 0.82rem;
+        }
+
+        .footer-contact-name {
+            color: #555;
+            font-weight: 500;
+        }
+
+        .footer-contact a {
+            color: #FF6B6B;
+            text-decoration: none;
+        }
+
+        .footer-contact a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -594,6 +659,8 @@
     <img src="logo.svg" alt="ChemMatData" class="logo">
     <h1>ChemMatData</h1>
     <p class="subtitle">Unified datasets for chemistry and materials science Graph Machine Learning</p>
+    <span class="version-badge" id="version-badge"></span>
+    <br>
     <a href="docs/" class="btn-docs">View Documentation <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
 </header>
 
@@ -628,6 +695,22 @@
     </section>
 </main>
 
+<footer>
+    <p class="footer-initiative">An initiative by the AiMat Group</p>
+    <p class="footer-institution">Karlsruhe Institute of Technology (KIT)</p>
+    <img src="aimat_logo.png" alt="AiMat" class="footer-logo">
+    <div class="footer-contacts">
+        <div class="footer-contact">
+            <span class="footer-contact-name">Prof. Dr. Pascal Friederich</span><br>
+            <a href="mailto:pascal.friederich@kit.edu">pascal.friederich@kit.edu</a>
+        </div>
+        <div class="footer-contact">
+            <span class="footer-contact-name">Jonas Teufel</span><br>
+            <a href="mailto:jonas.teufel@kit.edu">jonas.teufel@kit.edu</a>
+        </div>
+    </div>
+</footer>
+
 <script>
 (function() {
     'use strict';
@@ -646,6 +729,9 @@
         .then(function(data) {
             allDatasets = data.datasets || [];
             downloadBase = data.download_base || '';
+            if (data.version) {
+                document.getElementById('version-badge').textContent = 'v' + data.version;
+            }
             initCategoryFilters();
             initTargetTypeFilters();
             initFormatFilters();
