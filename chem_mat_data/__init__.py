@@ -13,6 +13,9 @@ from chem_mat_data.dataset import SmilesDataset as SmilesDataset
 from chem_mat_data.dataset import XyzDataset as XyzDataset
 from chem_mat_data.dataset import GraphDataset as GraphDataset
 from chem_mat_data.dataset import ShuffleDataset as ShuffleDataset
+# Transition metal complex support
+from chem_mat_data.tmc import load_tmc_dataset as load_tmc_dataset
+from chem_mat_data.tmc_processing import MetalOrganicProcessing as MetalOrganicProcessing
 # Also the config and the web related functionality
 from chem_mat_data.config import Config as Config
 from chem_mat_data.web import NextcloudFileShare as NextcloudFileShare

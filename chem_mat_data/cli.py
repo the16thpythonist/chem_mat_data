@@ -30,6 +30,7 @@ from rich.rule import Rule
 from rich.columns import Columns
 
 from chem_mat_data.utils import get_version
+from chem_mat_data.utils import check_version_compatible
 from chem_mat_data.utils import TEMPLATE_PATH
 from chem_mat_data.utils import RichMixin
 from chem_mat_data.utils import open_file_in_editor
@@ -212,9 +213,18 @@ class RichDatasetInfo(RichMixin):
         table.add_column(justify='left', style='magenta', no_wrap=True)
         table.add_column(justify='left', style='white', no_wrap=False)
         table.add_row('Name', f'[bold cyan]{self.name}[/bold cyan]')
+        table.add_row('Category', self.info.get('category', 'organic'))
         table.add_row('Type', ', '.join(self.info['target_type']))
         table.add_row('No. Elements', str(self.info['compounds']))
         table.add_row('No. Targets', str(self.info.get('targets', 'N/A')))
+
+        min_ver = self.info.get('min_version')
+        if min_ver:
+            compatible = check_version_compatible(min_ver)
+            if compatible:
+                table.add_row('Min Version', f'[green]{min_ver}[/green]')
+            else:
+                table.add_row('Min Version', f'[bold red]{min_ver} (installed: {get_version()})[/bold red]')
         panel = Panel(
             table, 
             title='[bright_black]Metadata[/bright_black]', 
@@ -325,6 +335,7 @@ class RichDatasetList(RichMixin):
         table = Table(title='Available Datasets', expand=True, box=box.HORIZONTALS)
         
         table.add_column("Name", justify="left", style="cyan", no_wrap=True)
+        table.add_column("Category", justify="left", style="blue", no_wrap=True)
         table.add_column("Description", justify="left", style="white", no_wrap=False)
         table.add_column("No. Elements",justify="left", style="magenta")
         table.add_column("No. Targets", justify="left", style="green")
@@ -343,13 +354,27 @@ class RichDatasetList(RichMixin):
                 continue
             
             details = self.datasets[name]
+
+            # Check version compatibility — dim incompatible datasets
+            min_ver = details.get('min_version')
+            compatible = True
+            if min_ver:
+                compatible = check_version_compatible(min_ver)
+
+            name_display = f'[bold]{name}[/bold]'
+            if not compatible:
+                name_display = f'[dim]{name} (requires >={min_ver})[/dim]'
+
+            style = None if compatible else 'dim'
             table.add_row(
-                f'[bold]{name}[/bold]', 
+                name_display,
+                details.get('category', 'organic'),
                 details.get('verbose', '-'),
-                str(details['compounds']), 
+                str(details['compounds']),
                 str(details.get('targets', 'N/A')),
-                ', '.join(details.get('target_type', '')), 
+                ', '.join(details.get('target_type', '')),
                 ', '.join(details.get('tags', '')),
+                style=style,
             )
         
         yield table

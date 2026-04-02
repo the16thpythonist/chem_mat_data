@@ -764,6 +764,7 @@ class CLI(click.RichGroup):
         table.align = 'l'
         table.field_names = [
             "Name",
+            "Category",
             "Description",
             "No. Elements",
             "Target Type",
@@ -771,6 +772,7 @@ class CLI(click.RichGroup):
         for dataset_name, dataset_info in metadata['datasets'].items():
             table.add_row([
                 f'**{dataset_name}**',
+                dataset_info.get('category', 'organic'),
                 dataset_info.get('verbose', '-'),
                 str(dataset_info.get('compounds', 0)),
                 ', '.join(dataset_info.get('target_type', [])),

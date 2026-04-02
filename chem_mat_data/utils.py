@@ -71,7 +71,25 @@ def get_version(path: str = os.path.join(PATH, 'VERSION')) -> str:
     return version
 
 
-def config_file_from_template(output_path: str, 
+def check_version_compatible(min_version: str) -> bool:
+    """
+    Check whether the installed package version satisfies a minimum version requirement.
+
+    Uses ``packaging.version.Version`` for proper semantic version comparison, so that
+    e.g. ``"1.7.0" >= "1.7.0"`` is True and ``"1.6.0" >= "1.7.0"`` is False.
+
+    :param min_version: The minimum required version string (e.g., ``"1.7.0"``).
+
+    :returns: True if the installed version is greater than or equal to ``min_version``.
+    """
+    from packaging.version import Version
+
+    current = Version(get_version())
+    required = Version(min_version)
+    return current >= required
+
+
+def config_file_from_template(output_path: str,
                               template_name: str = 'config.toml.j2', 
                               context: dict = {},
                               ) -> None:

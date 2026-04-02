@@ -1,6 +1,7 @@
 import os
 import gzip
 import shutil
+import logging
 import zipfile
 import tempfile
 from typing import Dict, Optional
@@ -20,9 +21,31 @@ from chem_mat_data._typing import GraphDict
 from typing import Union
 from typing import List
 
+logger = logging.getLogger(__name__)
+
 FILE_SHARE_CLASS_MAP: Dict[str, type] = {
     'nextcloud': NextcloudFileShare,
 }
+
+
+def _warn_if_version_incompatible(dataset_name: str, config: Optional[Config] = None) -> None:
+    """
+    Check dataset metadata for a ``min_version`` field and log a warning if the
+    installed package version is older than required. This is a soft check that
+    never raises or blocks loading.
+    """
+    try:
+        from chem_mat_data.utils import check_version_compatible, get_version
+
+        metadata = load_dataset_metadata(dataset_name, config=config)
+        min_ver = metadata.get('min_version')
+        if min_ver and not check_version_compatible(min_ver):
+            logger.warning(
+                f'Dataset "{dataset_name}" requires chem_mat_data >= {min_ver}, '
+                f'but you have {get_version()}. The dataset may not load correctly.'
+            )
+    except Exception:
+        pass
 
 
 def get_file_share(config: Config) -> AbstractFileShare:
@@ -323,19 +346,21 @@ def load_smiles_dataset(dataset_name: str,
     :returns: A data frame containing the SMILES strings of the dataset molecules and 
         the target value annotations.
     """
-    # The "ensure_dataset" function is a utility function which will make sure that the dataset 
-    # in question just generally exists. To do this, the function first checks if the dataset 
-    # file already eixsts in the given folder. If that is not the case it will attempt to download 
-    # the dataset from the remote file share server. Either way, the function WILL return a path 
+    _warn_if_version_incompatible(dataset_name, config=config)
+
+    # The "ensure_dataset" function is a utility function which will make sure that the dataset
+    # in question just generally exists. To do this, the function first checks if the dataset
+    # file already eixsts in the given folder. If that is not the case it will attempt to download
+    # the dataset from the remote file share server. Either way, the function WILL return a path
     # towards the requested dataset file in the end.
     file_path = ensure_dataset(
-        dataset_name, 
-        extension='csv', 
+        dataset_name,
+        extension='csv',
         folder_path=folder_path,
         config=config,
         use_cache=use_cache,
     )
-    
+
     # Then we simply have to load that csv file into a pandas DataFrame and return it.
     df = pd.read_csv(file_path)
     return df
@@ -359,6 +384,8 @@ def load_graph_dataset(dataset_name: str,
 
     :returns: A list of dictionaries where each dictionary represents a single graph.
     """
+    _warn_if_version_incompatible(dataset_name, config=config)
+
     # The "ensure_dataset" function is a utility function which will make sure that the dataset
     # in question just generally exists. To do this, the function first checks if the dataset
     # file already eixsts in the given folder. If that is not the case it will attempt to download
@@ -371,10 +398,10 @@ def load_graph_dataset(dataset_name: str,
         config=config,
         use_cache=use_cache,
     )
-    
+
     # Then we simply have to load the graphs from that file and return them
     graphs = load_graphs(file_path)
-    
+
     return graphs
 
 

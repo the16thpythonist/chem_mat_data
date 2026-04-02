@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - Unreleased
+
+### Added
+
+- **Transition metal complex (TMC) support.** New `MetalOrganicProcessing` class in `tmc_processing.py`
+  for converting decomposed TMC representations (metal + ligand SMILES + connecting atom indices) into
+  graph dicts with 91-dim node features, 18-dim edge features, and 5-dim graph features. Includes
+  dative bond encoding, metal-specific features (d-electron count, electronegativity, covalent radius),
+  and lenient RDKit sanitization for ligand fragments with unusual valences.
+- New `load_tmc_dataset()` function in `tmc.py` for loading TMC datasets in the decomposed tabular
+  format with automatic JSON column parsing.
+- Dataset processing script for **tmQMg** (~63,000 mononuclear TMCs with 20 QM properties). Downloads
+  from the ELECTRUM validation repository, infers donor atoms heuristically, and produces CSV + mpack
+  output following the standard PyComex experiment pattern.
+- Custom encoder classes for TMC features: `LookupEncoder`, `PeriodicTableEncoder`, `MetalFlagEncoder`,
+  `DElectronCountEncoder`, with bundled Pauling electronegativity and periodic table group lookup tables.
+- `check_version_compatible()` utility function in `utils.py` for semantic version comparison against the
+  installed package version.
+- **Dataset `category` metadata field.** Optional field (default: `"organic"`) to distinguish dataset
+  types. TMC datasets use `category: "tmc"`. Displayed in CLI list and detail views. Soft validation
+  warning in `load_tmc_dataset()` when category doesn't match.
+- **Dataset `min_version` metadata field.** Optional minimum package version requirement per dataset.
+  Incompatible datasets are shown dimmed with a version marker in `cmdata list`. Python loaders
+  (`load_smiles_dataset`, `load_graph_dataset`, `load_tmc_dataset`) log warnings when the installed
+  version is below the requirement. Non-blocking by design.
+- Architecture Decision Records: ADR 006 (TMC support) and ADR 007 (category and version compatibility).
+- Comprehensive unit tests for TMC processing (28 tests covering encoders, feature dimensions, dative
+  bonds, multiple metal types, and error handling).
+
+### Changed
+
+- `cmdata list` now shows a "Category" column for all datasets.
+- `cmdata info` now shows "Category" and "Min Version" in the dataset detail view.
+- `cmmanage docs collect-datasets` includes a "Category" column in the generated documentation table.
+
 ## [1.6.0] - 2026-03-26
 
 ### Added
