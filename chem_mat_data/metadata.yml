@@ -1,7 +1,11 @@
 datasets:
     MCF_7:
         compounds: 26776
-        description: Dataset related to cancer
+        description: Molecular graph dataset derived from the TU dataset collection
+            for breast cancer research. Contains 26,776 molecular graphs with binary
+            class labels indicating activity against the MCF-7 human breast cancer cell
+            line, a widely used benchmark in drug discovery and anticancer compound screening.
+        verbose: MCF-7 Cancer Cell Line
         raw:
         - csv
         sources: []
@@ -629,6 +633,12 @@ datasets:
         verbose: DUD-E (Directory of Useful Decoys - Enhanced) Multi-Target Classification
     elanos_bp:
         compounds: 5431
+        verbose: ELANOS Boiling Points
+        description: Curated dataset of 5,431 small organic molecules with experimentally
+            measured boiling points in degrees Celsius. Originally sourced from the US
+            EPA EPI Suite and filtered following Zang et al. (2017). Each compound is
+            enriched with 777 molecular descriptors derived from 2D chemical structures
+            via the EnalosMold2 KNIME node.
         raw:
         - csv
         sources:
@@ -644,6 +654,12 @@ datasets:
         targets: 1
     elanos_vp:
         compounds: 2704
+        verbose: ELANOS Vapor Pressures
+        description: Curated dataset of 2,704 small organic molecules with log-transformed
+            vapor pressure values measured at 24 degrees Celsius in log10(Pa). Originally sourced
+            from the US EPA EPI Suite and filtered following Zang et al. (2017). Each
+            compound is enriched with 777 molecular descriptors derived from 2D chemical
+            structures via the EnalosMold2 KNIME node.
         raw:
         - csv
         sources:
@@ -975,6 +991,7 @@ datasets:
         verbose: Melting Point
     pcqm4mv2:
         compounds: 3378606
+        verbose: PubChemQC HOMO-LUMO Gap
         description: Based on the PubChemQC, we define a meaningful ML task of predicting
             DFT-calculated HOMO-LUMO energy gap of molecules given their 2D molecular
             graphs. The HOMO-LUMO gap is one of the most practically-relevant quantum
@@ -1515,7 +1532,13 @@ datasets:
         verbose: Skin Sensitization Hazard
     synth_binary_global:
         compounds: 249455
-        description: synthetic binary classification task based on global properties
+        verbose: Synthetic Binary Classification (Global)
+        description: Synthetic binary classification benchmark based on global molecular
+            properties. Labels are derived from drug-likeness criteria including molecular
+            weight, LogP, hydrogen bond donors/acceptors, topological polar surface area,
+            rotatable bonds, and QED score. Designed as a companion to synth_binary_local
+            to evaluate whether a model can learn global molecular descriptors rather
+            than local substructure patterns.
         raw:
         - csv
         sources: []
@@ -1526,6 +1549,13 @@ datasets:
         targets: 2
     synth_binary_local:
         compounds: 249455
+        verbose: Synthetic Binary Classification (Local)
+        description: Synthetic binary classification benchmark based on local substructure
+            patterns. Labels are derived from rule-based detection of specific SMARTS
+            motifs such as benzene rings, nitro groups, halogens, and other functional
+            groups. Designed as a companion to synth_binary_global to evaluate whether
+            a model can learn local structural features rather than global molecular
+            descriptors.
         raw:
         - csv
         sources: []
@@ -1536,6 +1566,7 @@ datasets:
         targets: 2
     tadf:
         compounds: 460199
+        verbose: TADF OLED
         description: Set of organic molecules used in a high-throughput virtual screening
             approach of to find candidates for more efficient molecular organic light-emitting
             diodes.

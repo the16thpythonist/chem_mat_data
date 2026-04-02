@@ -102,12 +102,12 @@ TARGET_COLUMNS: List[str] = [
 DATASET_TYPE: str = 'regression'
 
 DESCRIPTION: str = (
-    'Graph dataset of ~74,000 mononuclear transition metal complexes from tmQMg* '
-    '(Kneiding et al., Digital Discovery 2024) with 26 TD-DFT excited-state properties: '
-    'ground-state HOMO-LUMO gap, dipole moment, and metal charge; first 10 excitation '
-    'wavelengths and oscillator strengths; UV band maximum; and gas-to-acetone '
-    'solvatochromic shift. Processed using MetalOrganicProcessing with decomposed '
-    'metal + ligand SMILES from the ELECTRUM tmQMg dataset.'
+    'Dataset of ~74,000 mononuclear transition metal complexes from tmQMg* '
+    '(Kneiding et al., Digital Discovery 2024) with 26 TD-DFT excited-state properties. '
+    'Targets include ground-state HOMO-LUMO gap, dipole moment, and metal charge; '
+    'the first 10 excitation wavelengths and oscillator strengths; UV absorption band '
+    'maximum; and gas-to-acetone solvatochromic shifts. Useful for predicting '
+    'photophysical and spectroscopic properties of metal complexes.'
 )
 
 METADATA: dict = {

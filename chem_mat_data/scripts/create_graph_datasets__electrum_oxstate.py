@@ -65,12 +65,12 @@ OS_CLASSES: List[int] = [0, 1, 2, 3, 4, 5, 6]
 DATASET_TYPE: str = 'classification'
 
 DESCRIPTION: str = (
-    'Graph dataset of ~39,000 mononuclear transition metal complexes from the CSD, '
-    'curated by Orsi & Frei (Digital Discovery 2025) for the ELECTRUM paper. '
-    'Multi-class classification of metal oxidation state (0 to +6, 7 classes). '
-    'Processed using MetalOrganicProcessing with decomposed metal + ligand SMILES '
-    'and heuristic donor atom detection. Oxidation state is also passed to the '
-    'processing for accurate d-electron count encoding.'
+    'Classification dataset of ~39,000 mononuclear transition metal complexes from '
+    'the Cambridge Structural Database, curated by Orsi & Frei (Digital Discovery 2025) '
+    'for the ELECTRUM benchmark. The task is to predict the metal oxidation state as one '
+    'of 7 classes (0 to +6). The dataset is imbalanced, with OS +2 accounting for ~52% '
+    'of samples. Useful for evaluating models on chemical property prediction from '
+    'molecular structure.'
 )
 
 METADATA: dict = {

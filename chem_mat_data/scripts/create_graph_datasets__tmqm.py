@@ -94,11 +94,11 @@ DATASET_TYPE: str = 'regression'
 #       A human-readable description of the dataset that will be stored in the
 #       metadata.yml file alongside the processed dataset.
 DESCRIPTION: str = (
-    'Graph dataset of ~100,000 mononuclear transition metal complexes from the tmQM '
-    'dataset (Balcells & Skjelstad, JCIM 2020; 2024 release) with 8 DFT-computed '
-    'quantum-mechanical properties (TPSSh-D3BJ/def2-SVP). Whole-complex SMILES are '
-    'decomposed into metal + ligand fragments using decompose_complex_smiles() and '
-    'processed using MetalOrganicProcessing.'
+    'Dataset of ~100,000 mononuclear transition metal complexes from the tmQM dataset '
+    '(Balcells & Skjelstad, JCIM 2020). Each complex has 8 DFT-computed quantum-mechanical '
+    'properties calculated at the TPSSh-D3BJ/def2-SVP level of theory, including '
+    'electronic energy, dispersion energy, dipole moment, and HOMO-LUMO gap. Covers '
+    'complexes with 30 different metals across a wide range of ligand environments.'
 )
 
 # :param METADATA:

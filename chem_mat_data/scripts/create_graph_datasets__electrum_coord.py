@@ -68,11 +68,12 @@ DATASET_TYPE: str = 'classification'
 # :param DESCRIPTION:
 #       Human-readable description stored in metadata.yml.
 DESCRIPTION: str = (
-    'Graph dataset of ~217,000 mononuclear transition metal complexes from the CSD, '
-    'curated by Orsi & Frei (Digital Discovery 2025) for the ELECTRUM paper. '
-    'Multi-class classification of coordination number (CN 2-12, 11 classes). '
-    'Processed using MetalOrganicProcessing with decomposed metal + ligand SMILES '
-    'and heuristic donor atom detection.'
+    'Classification dataset of ~217,000 mononuclear transition metal complexes from '
+    'the Cambridge Structural Database, curated by Orsi & Frei (Digital Discovery 2025) '
+    'for the ELECTRUM benchmark. The task is to predict the coordination number as one '
+    'of 11 classes (CN 2 through 12). CN 6 and CN 4 are the most common. The largest '
+    'TMC classification dataset available, useful for benchmarking graph neural networks '
+    'on coordination chemistry tasks.'
 )
 
 # :param METADATA:

@@ -80,12 +80,13 @@ TARGET_COLUMNS: List[str] = [
 DATASET_TYPE: str = 'regression'
 
 DESCRIPTION: str = (
-    'Graph dataset of 2,125 computationally generated octahedral transition metal '
-    'complexes (Co, Cr, Fe, Mn) with 7 DFT-computed spin-state properties: spin splitting '
-    'energy, HOMO/LUMO energies and HOMO-LUMO gaps for both low-spin and high-spin states. '
-    'From Meyer, Chu & Kulik (J. Chem. Phys. 2024), expanding the original Nandy et al. '
-    '(IECR 2018) dataset. Processed using MetalOrganicProcessing with ligand SMILES '
-    'extracted via a molSimplify ligand dictionary.'
+    'Dataset of 2,125 computationally generated octahedral transition metal complexes '
+    'with metals Co, Cr, Fe, and Mn in oxidation states +2/+3. Contains 7 DFT-computed '
+    'spin-state properties: spin splitting energy (kcal/mol), HOMO and LUMO energies '
+    'for both low-spin and high-spin states, and the corresponding HOMO-LUMO gaps (eV). '
+    'Originally from Nandy et al. (IECR 2018), expanded by Meyer, Chu & Kulik '
+    '(J. Chem. Phys. 2024). Useful for predicting spin-state energetics in open-shell '
+    'transition metal chemistry.'
 )
 
 METADATA: dict = {
