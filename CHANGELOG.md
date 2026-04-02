@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] - Unreleased
+
+### Changed
+
+- **Redesigned `cmdata info` view.** Modern card-style layout with a colored hero panel driven by
+  dataset category (green for organic, magenta for TMC). The panel title shows the dataset name as
+  a colored badge with the category separated by dashes. Includes a short description line, compound
+  count with size indicator, and two selector widgets (Task and Data) that highlight active values
+  against all options. Sections below (Description, Notes, Targets, References, Tags) use lightweight
+  rules instead of nested panels. Tags render as emoji-prefixed badges with subtle backgrounds.
+- **Redesigned `cmdata list` view.** Cleaner table with fewer columns (dropped Tags), formatted
+  compound counts with comma separators, right-aligned numeric columns, abbreviated type badges
+  (REG/CLS), and a dataset count in the centered title bar. Each row includes a `LevelIndicator`
+  widget showing dataset size at a glance.
+- **Category-driven color theming.** Both list and info views color dataset names and accents based
+  on the dataset category (`organic` = green, `tmc` = magenta, fallback = cyan).
+
+### Added
+
+- **`LevelIndicator` widget.** Reusable Rich display component that renders a numeric value as
+  filled/empty squares (e.g. `■■■□□`) against configurable thresholds. Used in both the info hero
+  panel and the list table's Compounds column.
+- **Task type selector widget** in `cmdata info` showing regression, classification, and bioactivity
+  as highlighted/dimmed badges. Bioactivity is auto-inferred from dataset tags.
+- **Data format selector widget** in `cmdata info` showing CSV, XYZ, TMC, and Graph availability
+  as highlighted/dimmed badges.
+
 ## [1.7.0] - Unreleased
 
 ### Added

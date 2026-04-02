@@ -865,6 +865,153 @@ class MetalOrganicProcessing(AbstractProcessing):
 # UTILITY FUNCTIONS
 # ======================================================================================
 
+def decompose_complex_smiles(
+    smiles: str,
+) -> Optional[Tuple[str, List[str], List[List[int]], int]]:
+    """
+    Decompose a whole-complex SMILES into its metal center and ligand components.
+
+    Takes a SMILES string representing an entire transition metal complex — typically
+    containing dative bond notation (``->`` / ``<-``) — and splits it into the metal
+    element symbol, individual ligand SMILES strings, and the exact atom indices in each
+    ligand that coordinate to the metal. This is the inverse of what
+    :meth:`MetalOrganicProcessing.process` does: it goes from a unified representation
+    back to the decomposed (metal + ligands) format.
+
+    The decomposition tracks atom indices through the fragmentation and SMILES
+    canonicalization steps so that the returned ``connecting_atom_indices`` are correct
+    with respect to the canonical ligand SMILES (i.e., they match what
+    ``Chem.MolFromSmiles(ligand_smi)`` would produce).
+
+    Only mononuclear complexes (exactly one transition metal atom) are supported.
+    Multinuclear complexes return ``None``.
+
+    Example:
+
+    .. code-block:: python
+
+        result = decompose_complex_smiles('Cl[Pt](Cl)(<-[NH3])<-[NH3]')
+        if result is not None:
+            metal, lig_smiles, conn_indices, charge = result
+            # metal = 'Pt'
+            # lig_smiles = ['Cl', 'Cl', 'N', 'N']  (canonical SMILES)
+            # conn_indices = [[0], [0], [0], [0]]
+            # charge = 0
+
+    :param smiles: A SMILES string representing a mononuclear transition metal complex.
+    :returns: A tuple of ``(metal_symbol, ligand_smiles, connecting_atom_indices, total_charge)``
+        or ``None`` if parsing or decomposition fails.
+    """
+    # -- Parse with lenient sanitization (skip valence check for metals) --
+    mol = Chem.MolFromSmiles(smiles, sanitize=False)
+    if mol is None:
+        return None
+
+    try:
+        Chem.SanitizeMol(
+            mol,
+            Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES,
+        )
+    except Exception:
+        pass  # Continue with unsanitized mol
+
+    # -- Compute total charge from formal charges --
+    total_charge = sum(atom.GetFormalCharge() for atom in mol.GetAtoms())
+
+    # -- Find the single transition metal atom --
+    metal_idx = None
+    metal_symbol = None
+    for atom in mol.GetAtoms():
+        if atom.GetAtomicNum() in TRANSITION_METAL_ATOMIC_NUMBERS:
+            if metal_idx is not None:
+                return None  # Multinuclear complex — not supported
+            metal_idx = atom.GetIdx()
+            metal_symbol = atom.GetSymbol()
+
+    if metal_idx is None:
+        return None  # No metal found
+
+    # -- Record metal's neighbors (the connecting atoms in the full complex) --
+    metal_atom = mol.GetAtomWithIdx(metal_idx)
+    neighbor_indices = [n.GetIdx() for n in metal_atom.GetNeighbors()]
+
+    if not neighbor_indices:
+        return None  # Metal with no bonds
+
+    # -- Remove the metal atom and fragment the remainder into individual ligands --
+    rwmol = Chem.RWMol(mol)
+    for nbr_idx in neighbor_indices:
+        rwmol.RemoveBond(metal_idx, nbr_idx)
+    rwmol.RemoveAtom(metal_idx)
+
+    # Removing an atom shifts all higher indices by -1
+    adjusted_neighbors = set()
+    for idx in neighbor_indices:
+        adjusted_neighbors.add(idx - 1 if idx > metal_idx else idx)
+
+    frag_mol = rwmol.GetMol()
+    try:
+        frag_atom_indices = Chem.GetMolFrags(frag_mol)
+        frag_mols = Chem.GetMolFrags(frag_mol, asMols=True, sanitizeFrags=False)
+    except Exception:
+        return None
+
+    # -- For each fragment, produce canonical SMILES and map connecting atom indices --
+    ligand_smiles: List[str] = []
+    connecting_atom_indices: List[List[int]] = []
+
+    for fi, fm in zip(frag_atom_indices, frag_mols):
+        # Map parent-mol indices (post-metal-removal) → fragment-local indices.
+        # fi[local_idx] = parent_idx, so invert it.
+        parent_to_local = {parent: local for local, parent in enumerate(fi)}
+
+        # Which atoms in this fragment were bonded to the metal?
+        local_conn = [parent_to_local[adj] for adj in adjusted_neighbors
+                      if adj in parent_to_local]
+
+        if not local_conn:
+            continue  # Fragment was not bonded to the metal (counter-ion / solvent)
+
+        # Produce canonical SMILES and get the atom reordering applied by RDKit.
+        # After MolToSmiles, _smilesAtomOutputOrder maps canonical position → local index.
+        try:
+            smi = Chem.MolToSmiles(fm)
+        except Exception:
+            continue
+
+        if not smi:
+            continue
+
+        # Retrieve the atom order mapping set by MolToSmiles
+        try:
+            output_order = list(fm.GetPropsAsDict()['_smilesAtomOutputOrder'])
+        except (KeyError, TypeError):
+            # Fallback: try string-based parsing
+            try:
+                order_str = fm.GetProp('_smilesAtomOutputOrder')
+                order_str = order_str.strip('[]').rstrip(',')
+                output_order = [int(x) for x in order_str.split(',') if x.strip()]
+            except Exception:
+                output_order = list(range(fm.GetNumAtoms()))
+
+        # Invert: local_index → canonical_index (position in re-parsed SMILES)
+        local_to_canonical = {local: canon for canon, local in enumerate(output_order)}
+
+        canonical_conn = []
+        for c in local_conn:
+            if c in local_to_canonical:
+                canonical_conn.append(local_to_canonical[c])
+
+        if canonical_conn:
+            ligand_smiles.append(smi)
+            connecting_atom_indices.append(canonical_conn)
+
+    if not ligand_smiles:
+        return None
+
+    return metal_symbol, ligand_smiles, connecting_atom_indices, total_charge
+
+
 def _mol_from_smiles_lenient(smiles: str) -> Optional[Chem.Mol]:
     """
     Parse a SMILES string with partial sanitization that skips only the valence check.

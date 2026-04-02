@@ -18,7 +18,7 @@ from rdkit.Chem.Scaffolds import MurckoScaffold
 import rich
 import rich_click as click
 from rich import box
-from rich.console import Console, ConsoleOptions
+from rich.console import Console, ConsoleOptions, Group
 from rich.panel import Panel
 from rich.style import Style
 from rich.padding import Padding
@@ -45,6 +45,50 @@ load_dotenv()
 server_url = os.getenv("url")
 if not server_url:
     raise ValueError("Server URL not found in environment variables")
+
+
+# == RICH WIDGETS ==
+# Reusable small display components used across multiple views.
+
+
+class LevelIndicator:
+    """
+    A small bar widget that visualizes a numeric value as filled/empty squares
+    against a set of thresholds.
+
+    Renders as e.g. ``■■■□□`` where filled squares are colored with ``color``
+    and empty squares are dim grey. The number of levels equals
+    ``len(thresholds) + 1``.
+
+    :param value: The numeric value to visualize.
+    :param thresholds: Sorted list of boundary values between levels.
+    :param color: Rich color name for filled squares.
+    """
+
+    def __init__(self, value: int, thresholds: list, color: str = 'green'):
+        self.value = value
+        self.thresholds = thresholds
+        self.color = color
+
+    @property
+    def level(self) -> int:
+        return sum(1 for t in self.thresholds if self.value >= t) + 1
+
+    @property
+    def total(self) -> int:
+        return len(self.thresholds) + 1
+
+    def __rich__(self) -> Text:
+        filled = Text('■' * self.level, style=self.color)
+        empty = Text('□' * (self.total - self.level), style='grey30')
+        result = Text()
+        result.append_text(filled)
+        result.append_text(empty)
+        return result
+
+
+#: Default thresholds for dataset compound counts.
+COMPOUND_THRESHOLDS = [1_000, 10_000, 50_000, 500_000]
 
 
 # == RICH DISPLAY ELEMENTS ==
@@ -195,122 +239,195 @@ class RichCommands(RichMixin):
 class RichDatasetInfo(RichMixin):
     """
     Implements the "rich" console rendering of the specific information about a single dataset.
-    
-    This display element will essentially show all the available information about the particular 
-    dataset in a two-column format, where the first column contains the identifying names of the 
-    different information fields and the second column contains the actual values of those fields.
+
+    Uses a modern card-style layout with a colored hero panel whose appearance is driven
+    by the dataset category, followed by lightweight rule-delimited sections for
+    description, references, and tags.
     """
-    
+
+    # Maps dataset categories to their accent color used for borders, badges, etc.
+    CATEGORY_COLORS: dict = {
+        'organic':   'green',
+        'tmc':       'magenta',
+    }
+    DEFAULT_COLOR: str = 'cyan'
+
     def __init__(self, name: str, info: dict):
         self.name = name
         self.info = info
-    
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
-        
-        yield ''
-        
-        table = Table(title=None, box=None, show_header=False, leading=1, padding=(0, 2), pad_edge=False)
-        table.add_column(justify='left', style='magenta', no_wrap=True)
-        table.add_column(justify='left', style='white', no_wrap=False)
-        table.add_row('Name', f'[bold cyan]{self.name}[/bold cyan]')
-        table.add_row('Category', self.info.get('category', 'organic'))
-        table.add_row('Type', ', '.join(self.info['target_type']))
-        table.add_row('No. Elements', str(self.info['compounds']))
-        table.add_row('No. Targets', str(self.info.get('targets', 'N/A')))
 
+    def _color(self) -> str:
+        """Return the accent color for the current dataset's category."""
+        category = self.info.get('category', 'organic')
+        return self.CATEGORY_COLORS.get(category, self.DEFAULT_COLOR)
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
+
+        color = self._color()
+        category = self.info.get('category', 'organic')
+
+        yield ''
+
+        # -- Hero panel -------------------------------------------------------
+        # Title (left): dataset name as a colored badge (background color, black text)
+        # Subtitle (right): category in accent color text
+
+        # Build the stats line: "9,889 ■■□□□ compounds  ·  1 target"
+        compounds = self.info.get('compounds', 0)
+        indicator = LevelIndicator(compounds, COMPOUND_THRESHOLDS, color=color)
+
+        stats_line = Text.from_markup(f'[bold]{compounds:,}[/bold] ')
+        stats_line.append_text(indicator.__rich__())
+        stats_line.append(' compounds')
+
+        targets = self.info.get('targets')
+        if targets is not None:
+            stats_line.append_text(Text.from_markup(
+                f'  ·  [bold]{targets}[/bold] {"target" if str(targets) == "1" else "targets"}'
+            ))
+
+        # Type selector widget: shows all possible types with the active one(s) highlighted
+        all_types = ['regression', 'classification', 'bioactivity']
+        active_types = set(self.info.get('target_type', []))
+        # Infer bioactivity from tags
+        tags_lower = {t.lower() for t in self.info.get('tags', [])}
+        if 'bioactivity' in tags_lower or 'virtual screening' in tags_lower:
+            active_types.add('bioactivity')
+
+        type_parts = Text()
+        type_parts.append('Task ', style='dim')
+        for i, t in enumerate(all_types):
+            if i > 0:
+                type_parts.append(' ')
+            if t in active_types:
+                type_parts.append_text(Text.from_markup(f'[{color} on grey23] {t} [/{color} on grey23]'))
+            else:
+                type_parts.append_text(Text.from_markup(f'[dim on grey15] {t} [/dim on grey15]'))
+
+        # Format selector widget: shows all possible formats with available ones highlighted
+        all_formats = ['csv', 'xyz', 'tmc', 'graph']
+        raw_formats = set(self.info.get('raw', []))
+        has_graph = self.info.get('full', False)
+        active_formats = set()
+        for fmt in raw_formats:
+            if fmt in ('xyz', 'xyz_bundle'):
+                active_formats.add('xyz')
+            else:
+                active_formats.add(fmt)
+        if has_graph:
+            active_formats.add('graph')
+        if category == 'tmc':
+            active_formats.add('tmc')
+
+        format_parts = Text()
+        format_parts.append('Data ', style='dim')
+        for i, fmt in enumerate(all_formats):
+            if i > 0:
+                format_parts.append(' ')
+            label = fmt.upper()
+            if fmt in active_formats:
+                format_parts.append_text(Text.from_markup(f'[{color} on grey23] {label} [/{color} on grey23]'))
+            else:
+                format_parts.append_text(Text.from_markup(f'[dim on grey15] {label} [/dim on grey15]'))
+
+        # Version compatibility warning (if applicable)
         min_ver = self.info.get('min_version')
+        version_line = None
         if min_ver:
             compatible = check_version_compatible(min_ver)
-            if compatible:
-                table.add_row('Min Version', f'[green]{min_ver}[/green]')
-            else:
-                table.add_row('Min Version', f'[bold red]{min_ver} (installed: {get_version()})[/bold red]')
-        panel = Panel(
-            table, 
-            title='[bright_black]Metadata[/bright_black]', 
-            title_align='left',
-            border_style='bright_black',
-        )
-        
-        yield panel
-        
-        panel_description = Panel(
-            self.info['description'],
-            title='[bright_black]Description[/bright_black]',
-            title_align='left',
-            border_style='bright_black',
-            style='white',
-            padding=(0, 1),
-        )
-        yield panel_description
+            if not compatible:
+                version_line = Text.from_markup(
+                    f'[bold red]requires >= {min_ver}  (installed: {get_version()})[/bold red]'
+                )
 
-        # Show notes if they exist
-        if 'notes' in self.info and self.info['notes']:
-            notes_content = '\n'.join([
-                f'• {note}'
-                for note in self.info['notes']
-            ])
-            notes_panel = Panel(
-                notes_content,
-                title='[bright_black]:memo: Notes[/bright_black]',
-                title_align='left',
-                border_style='bright_black',
-                style='white',
-                padding=(0, 1),
-            )
-            yield notes_panel
+        # Compose hero content — use a table for the selector rows to get
+        # tighter vertical spacing (leading=0, no extra blank lines).
+        selector_table = Table(box=None, show_header=False, padding=(0, 0, 1, 0), pad_edge=False)
+        selector_table.add_column()
+        selector_table.add_row(type_parts)
+        selector_table.add_row(format_parts)
 
-        # Show target descriptions if they exist
-        if 'target_descriptions' in self.info and self.info['target_descriptions']:
-            
-            target_desc_table = Table(title=None, box=None, show_header=False, leading=1, padding=(0, 2), pad_edge=False)
-            target_desc_table.add_column(justify='left', style='magenta', no_wrap=True)
-            target_desc_table.add_column(justify='left', style='white', no_wrap=False)
-            
-            # Sort by target index for consistent display
-            target_descriptions = self.info['target_descriptions']
-            for target_idx in sorted(target_descriptions.keys(), key=int):
-                target_desc_table.add_row(f'{target_idx}', target_descriptions[target_idx])
-            
-            target_desc_panel = Panel(
-                target_desc_table,
-                title='[bright_black]Target Descriptions[/bright_black]',
-                title_align='left',
-                border_style='bright_black',
-                style='white',
-                padding=(0, 1),
-            )
-            yield target_desc_panel
-        
-        if 'sources' in self.info and self.info['sources']:
-            
-            sources_content = '\n'.join([
-                f':left_arrow_curving_right: [yellow]{s}[/yellow]' 
-                for s in self.info['sources']
-            ])
-            sources_panel = Panel(
-                sources_content,
-                title='[bright_black]References[/bright_black]',
-                title_align='left',
-                border_style='bright_black',
-                style='white',
-                padding=(0, 1),
-            )
-            yield sources_panel
-        
-        tags_content = ', '.join([
-            f':label:  {s}' 
-            for s in self.info['tags']
-        ])
-        tags_panel = Panel(
-            tags_content,
-            title='[bright_black]Tags[/bright_black]',
+        verbose = self.info.get('verbose', '')
+        hero_lines = []
+        if verbose:
+            hero_lines.append(Text(verbose, style='dim italic'))
+        hero_lines.extend([stats_line, Text(''), selector_table])
+        if version_line:
+            hero_lines.append(Text(''))
+            hero_lines.append(version_line)
+
+        hero = Panel(
+            Group(*hero_lines),
+            title=f'[bold black on {color}] {self.name} [/bold black on {color}] [{color}]──[/{color}] [{color}]{category}[/{color}]',
             title_align='left',
-            border_style='bright_black',
-            style='bright_black',
-            padding=(0, 1),
+            border_style=color,
+            padding=(1, 1, 1, 2),
         )
-        yield tags_panel
+        yield hero
+
+        # -- Description ------------------------------------------------------
+        yield Padding(
+            Text(self.info['description'], style='white'),
+            (1, 3),
+        )
+
+        # -- Notes (optional) -------------------------------------------------
+        if self.info.get('notes'):
+            yield Padding(
+                Rule(title='Notes', style='dim', align='left'),
+                (1, 1),
+            )
+            for note in self.info['notes']:
+                yield Padding(
+                    Text.from_markup(f'[dim]•[/dim]  {note}'),
+                    (0, 3),
+                )
+
+        # -- Target descriptions (optional) -----------------------------------
+        if self.info.get('target_descriptions'):
+            yield Padding(
+                Rule(title='Targets', style='dim', align='left'),
+                (1, 1),
+            )
+            target_table = Table(
+                box=None, show_header=False, padding=(0, 2), pad_edge=False,
+            )
+            target_table.add_column(justify='right', style=f'bold {color}', no_wrap=True)
+            target_table.add_column(justify='left', style='white', no_wrap=False)
+
+            for idx in sorted(self.info['target_descriptions'].keys(), key=int):
+                target_table.add_row(str(idx), self.info['target_descriptions'][idx])
+
+            yield Padding(target_table, (0, 3))
+
+        # -- References (optional) --------------------------------------------
+        if self.info.get('sources'):
+            yield Padding(
+                Rule(title='References', style='dim', align='left'),
+                (1, 1),
+            )
+            for source in self.info['sources']:
+                yield Padding(
+                    Text.from_markup(f'[yellow]▸  {source}[/yellow]'),
+                    (0, 3),
+                )
+
+        # -- Tags -------------------------------------------------------------
+        if self.info.get('tags'):
+            yield Padding(
+                Rule(title='Tags', style='dim', align='left'),
+                (1, 1),
+            )
+            tag_texts = [
+                f'[on grey23] :label:  {tag} [/on grey23]'
+                for tag in self.info['tags']
+            ]
+            yield Padding(
+                Text.from_markup('  '.join(tag_texts)),
+                (0, 3),
+            )
+
+        yield ''
         
         
 class RichDatasetList(RichMixin):
@@ -330,56 +447,96 @@ class RichDatasetList(RichMixin):
         self.sort = sort
         self.show_hidden = show_hidden
         
+    # Category color mapping (shared with RichDatasetInfo)
+    CATEGORY_COLORS: dict = {
+        'organic':   'green',
+        'tmc':       'magenta',
+    }
+    DEFAULT_COLOR: str = 'cyan'
+
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
-        
-        table = Table(title='Available Datasets', expand=True, box=box.HORIZONTALS)
-        
-        table.add_column("Name", justify="left", style="cyan", no_wrap=True)
-        table.add_column("Category", justify="left", style="blue", no_wrap=True)
-        table.add_column("Description", justify="left", style="white", no_wrap=False)
-        table.add_column("No. Elements",justify="left", style="magenta")
-        table.add_column("No. Targets", justify="left", style="green")
-        table.add_column("Target type", justify="left", style="yellow")
-        table.add_column("Tags", justify="left", style="bright_black")
-        
+
+        # Count visible datasets for the title
+        visible = [
+            n for n in self.datasets
+            if self.show_hidden or not n.startswith('_')
+        ]
+        count = len(visible)
+
+        yield ''
+        yield Rule(
+            title=f'[bold black on white] Available Datasets ({count}) [/bold black on white]',
+            style='bold white',
+            align='center',
+        )
+
+        table = Table(expand=True, box=box.SIMPLE_HEAVY, padding=(0, 1), show_edge=False)
+
+        table.add_column("Name", justify="left", no_wrap=True, min_width=12)
+        table.add_column("Cat.", justify="left", no_wrap=True, max_width=10)
+        table.add_column("Description", justify="left", style="white", no_wrap=True, ratio=1)
+        table.add_column("Compounds", justify="right", style="white", no_wrap=True)
+        table.add_column("Targets", justify="right", style="white", no_wrap=True)
+        table.add_column("Type", justify="center", no_wrap=True)
+
         names = list(self.datasets.keys())
-        # potentially we want to sort the items depending on the "sort" argument
         if self.sort:
             names.sort(key=lambda value: value.lower())
-        
+
         for name in names:
-            # Most importantly, if the name of the datasets starts with an underscore, we will consider
-            # that a hidden dataset and dont want to show it unless the "show-hidden" flag is set as well
             if not self.show_hidden and name.startswith('_'):
                 continue
-            
-            details = self.datasets[name]
 
-            # Check version compatibility — dim incompatible datasets
+            details = self.datasets[name]
+            category = details.get('category', 'organic')
+            color = self.CATEGORY_COLORS.get(category, self.DEFAULT_COLOR)
+
+            # Check version compatibility
             min_ver = details.get('min_version')
             compatible = True
             if min_ver:
                 compatible = check_version_compatible(min_ver)
 
-            name_display = f'[bold]{name}[/bold]'
-            if not compatible:
-                name_display = f'[dim]{name} (requires >={min_ver})[/dim]'
+            if compatible:
+                name_display = f'[bold {color}]{name}[/bold {color}]'
+            else:
+                name_display = f'[dim]{name} (>={min_ver})[/dim]'
 
-            style = None if compatible else 'dim'
+            category_display = f'[{color}]{category}[/{color}]'
+
+            # Abbreviated type badges
+            type_badges = []
+            for tt in details.get('target_type', []):
+                if tt == 'regression':
+                    type_badges.append(f'[yellow on grey15] REG  [/yellow on grey15]')
+                elif tt == 'classification':
+                    type_badges.append(f'[blue on grey15] CLS  [/blue on grey15]')
+                else:
+                    type_badges.append(f'[white on grey15] {tt[:3].upper()}  [/white on grey15]')
+
+            compounds = details.get('compounds', 0)
+            targets = details.get('targets', 'N/A')
+
+            # Size indicator: 5 levels based on compound count thresholds
+            indicator = LevelIndicator(compounds, COMPOUND_THRESHOLDS, color=color)
+            size_text = Text(f'{compounds:,}  ' if isinstance(compounds, int) else str(compounds))
+            size_text.append_text(indicator.__rich__())
+
+            row_style = None if compatible else 'dim'
             table.add_row(
                 name_display,
-                details.get('category', 'organic'),
+                category_display,
                 details.get('verbose', '-'),
-                str(details['compounds']),
-                str(details.get('targets', 'N/A')),
-                ', '.join(details.get('target_type', '')),
-                ', '.join(details.get('tags', '')),
-                style=style,
+                size_text,
+                str(targets),
+                ' '.join(type_badges),
+                style=row_style,
             )
-        
+
         yield table
-        
-        
+        yield Rule(style='bold')
+
+
 class RichCacheList(RichMixin):
 
     """

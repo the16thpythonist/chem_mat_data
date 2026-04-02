@@ -108,6 +108,7 @@ cmmanage = "chem_mat_data.manage:cli"
 # ====================
 
 [tool.pytest.ini_options]
+addopts = "-m 'not network'"
 markers = [
     "network: marks tests that require network access to external servers (deselect with '-m \"not network\"')",
 ]

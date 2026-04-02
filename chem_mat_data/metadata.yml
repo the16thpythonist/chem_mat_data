@@ -28,7 +28,6 @@ datasets:
         compounds: 3
         description: A datasets purely for testing of the xyz raw format
         full: true
-        min_version: '1.1.0'
         raw:
         - xyz
         tags:
@@ -1487,6 +1486,84 @@ datasets:
         target_type:
         - regression
         targets: 3
+    tmqm:
+        category: tmc
+        compounds: 100847
+        description: Graph dataset of ~100,000 mononuclear transition metal complexes
+            from the tmQM dataset (Balcells & Skjelstad, JCIM 2020; 2024 release)
+            with 8 DFT-computed quantum-mechanical properties (TPSSh-D3BJ/def2-SVP).
+            Whole-complex SMILES are decomposed into metal + ligand fragments using
+            decompose_complex_smiles() and processed using MetalOrganicProcessing.
+        min_version: 1.7.0
+        raw:
+        - csv
+        sources:
+        - https://doi.org/10.1021/acs.jcim.0c01041
+        - https://github.com/uiocompcat/tmQM
+        tags:
+        - Molecules
+        - TransitionMetals
+        - TMC
+        - QM
+        - DFT
+        target_descriptions:
+            '0': Electronic_E
+            '1': Dispersion_E
+            '2': Dipole_M
+            '3': Metal_q
+            '4': HL_Gap
+            '5': HOMO_Energy
+            '6': LUMO_Energy
+            '7': Polarizability
+        target_type:
+        - regression
+        targets: 8
+        verbose: tmQM Transition Metal Complex QM Properties
+    tmqmg:
+        category: tmc
+        compounds: 63466
+        description: Graph dataset of ~63,000 mononuclear transition metal complexes
+            from the tmQMg dataset (Kneiding et al., Digital Discovery 2023) with
+            20 DFT-computed quantum-mechanical properties. Processed using MetalOrganicProcessing
+            with decomposed metal + ligand SMILES representation and heuristic donor
+            atom detection.
+        min_version: 1.7.0
+        raw:
+        - csv
+        sources:
+        - https://doi.org/10.1039/D2DD00129B
+        - https://github.com/TheFreiLab/electrum_val
+        tags:
+        - Molecules
+        - TransitionMetals
+        - TMC
+        - QM
+        - DFT
+        target_descriptions:
+            '0': tzvp_lumo_energy
+            '1': tzvp_homo_energy
+            '10': gibbs_energy
+            '11': gibbs_energy_correction
+            '12': zpe_correction
+            '13': heat_capacity
+            '14': entropy
+            '15': tzvp_dipole_moment
+            '16': dipole_moment_delta
+            '17': polarisability
+            '18': lowest_vibrational_frequency
+            '19': highest_vibrational_frequency
+            '2': tzvp_homo_lumo_gap
+            '3': homo_lumo_gap_delta
+            '4': tzvp_electronic_energy
+            '5': electronic_energy_delta
+            '6': tzvp_dispersion_energy
+            '7': dispersion_energy_delta
+            '8': enthalpy_energy
+            '9': enthalpy_energy_correction
+        target_type:
+        - regression
+        targets: 20
+        verbose: tmQMg Transition Metal Complex QM Properties
     tox21:
         compounds: 7570
         description: Qualitative toxicity measurements on 12 biological targets, including
