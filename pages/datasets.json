@@ -1,0 +1,1750 @@
+{
+  "generated_at": "2026-04-02T14:54:41.244829+00:00",
+  "version": "1.7.1",
+  "download_base": "https://bwsyncandshare.kit.edu/public.php/dav/files/98NgmGCDty54kik",
+  "datasets": [
+    {
+      "name": "MCF_7",
+      "verbose": "Mcf 7",
+      "category": "organic",
+      "compounds": 26776,
+      "targets": 2,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Dataset related to cancer",
+      "tags": [
+        "Molecules"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "ames",
+      "verbose": "Ames Mutagenicity Assays",
+      "category": "organic",
+      "compounds": 6512,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Ames mutagenicity. The dataset includes 6512 compounds and corresponding binary labels from Ames mutagenicity assay results.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Toxicity"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "aqsoldb",
+      "verbose": "Aqueous Solubility",
+      "category": "organic",
+      "compounds": 9889,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "A curated reference set of aqueous solubility, created by the Autonomous Energy Materials Discovery [AMD] research group, consists of aqueous solubility values of 9,982 unique compounds curated from 9 different publicly available aqueous solubility datasets.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Solubility"
+      ],
+      "sources": [
+        "https://www.nature.com/articles/s41597-019-0151-1",
+        "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OVHAW8"
+      ],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "bace_cls",
+      "verbose": "Beta Secretase 1 Inhibitors",
+      "category": "organic",
+      "compounds": 1513,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The BACE dataset contains quantitative IC50 and qualitative binary binding results for 1522 inhibitors of human β-secretase 1 (BACE-1), an important enzyme target for Alzheimers disease research. The dataset was originally compiled by Subramanian et al. (2016) from experimental values reported in scientific literature and integrated into MoleculeNet as a binary classification benchmark. All data represent experimental values with some compounds having detailed crystal structures available, making it valuable for drug discovery applications targeting neurodegeneration.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Protein Target",
+        "Protein Binding",
+        "Inhibitors"
+      ],
+      "sources": [
+        "https://pubs.acs.org/doi/full/10.1021/acs.jcim.6b00290",
+        "https://doi.org/10.1039/C7SC02664A"
+      ],
+      "target_descriptions": {
+        "0": "Inactive class indicator - 1 if the compound is inactive",
+        "1": "Active class indicator - 1 if the compound is a beta secretase 1 inhibitor"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "bace_reg",
+      "verbose": "Beta Secretase 1 Inhibitors",
+      "category": "organic",
+      "compounds": 1513,
+      "targets": 1,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The BACE dataset contains quantitative IC50 and qualitative binary binding results for 1522 inhibitors of human β-secretase 1 (BACE-1), an important enzyme target for Alzheimers disease research. The dataset was originally compiled by Subramanian et al. (2016) from experimental values reported in scientific literature and integrated into MoleculeNet as a binary classification benchmark. All data represent experimental values with some compounds having detailed crystal structures available, making it valuable for drug discovery applications targeting neurodegeneration.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Protein Target",
+        "Protein Binding",
+        "Inhibitors"
+      ],
+      "sources": [
+        "https://pubs.acs.org/doi/full/10.1021/acs.jcim.6b00290",
+        "https://doi.org/10.1039/C7SC02664A"
+      ],
+      "target_descriptions": {
+        "0": "pIC50 - Negative decadic logarithm of the IC50 value (in molar) indicating the binding affinity to the BACE-1 protein"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "bbbp",
+      "verbose": "Blood-Brain Barrier Penetration",
+      "category": "organic",
+      "compounds": 1934,
+      "targets": 1,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Binary labels of blood-brain barrier penetration(permeability).",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Physiology"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "beet",
+      "verbose": "Honey Bee Toxicity",
+      "category": "organic",
+      "compounds": 254,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The toxicity in honey bees (beet) dataset was extract from a study on the prediction of acute contact toxicity of pesticides in honeybees. The data set contains 254 compounds with their experimental values. Each element is associated with two target values (threshold_1, threshold_100) where the value is the binary label if the compound is toxic at concentration 1 and the second value is the binary label if the compound is toxic at concentration 100.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Physiology",
+        "Toxicity"
+      ],
+      "sources": [
+        "https://weilab.math.msu.edu/DataLibrary/2D/",
+        "https://pubs.acs.org/doi/10.1021/acs.jpclett.1c03058"
+      ],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "bl_chembl_cls",
+      "verbose": "Briem & Lessel ChEMBL Dataset (Multi-Target Classification)",
+      "category": "organic",
+      "compounds": 8780,
+      "targets": 35,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The Briem & Lessel ChEMBL Multi-Target Classification Dataset is a modern recreation of the classic Briem and Lessel dataset (originally published in 2000) using ChEMBL25 data. This multi-label classification version contains two classes: (1) selected high-potency active compounds from the curated selected_actives file, and (2) decoy compounds assumed to be inactive. Each molecule has a 35-dimensional tri-state target activity vector where each position can have three values: 0 (not mentioned), 1 (active), or 2 (decoy). For selected actives, a 1 in position i indicates the molecule is a high-potency active (Ki ≤ 1nM) against target i. For decoys, all positions are set to 2, indicating the molecule is assumed to be inactive (a decoy) against all 35 targets. This tri-state encoding enables multi-label multi-target activity prediction where a single molecule can be active against multiple targets simultaneously, with explicit decoy identification.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Drug Discovery",
+        "Virtual Screening",
+        "Similarity",
+        "Multi-Target",
+        "ChEMBL",
+        "Ki",
+        "Bioactivity",
+        "Classification",
+        "Multi-Label Classification",
+        "Multi-Task"
+      ],
+      "sources": [
+        "https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html",
+        "https://github.com/greglandrum/rdkit_blog/tree/master/data",
+        "https://doi.org/10.1021/ci000197k"
+      ],
+      "target_descriptions": {
+        "0": "CHEMBL1862 - Tyrosine-protein kinase ABL (Homo sapiens)",
+        "1": "CHEMBL204 - Thrombin (Homo sapiens)",
+        "10": "CHEMBL229 - Alpha-1a adrenergic receptor (Homo sapiens)",
+        "11": "CHEMBL233 - Mu opioid receptor (Homo sapiens)",
+        "12": "CHEMBL234 - Dopamine D3 receptor (Homo sapiens)",
+        "13": "CHEMBL236 - Delta opioid receptor (Homo sapiens)",
+        "14": "CHEMBL237 - Kappa opioid receptor (Homo sapiens)",
+        "15": "CHEMBL2366517 - Protease (Human immunodeficiency virus 1)",
+        "16": "CHEMBL4409 - Phosphodiesterase 10A (Homo sapiens)",
+        "17": "CHEMBL2835 - Tyrosine-protein kinase JAK1 (Homo sapiens)",
+        "18": "CHEMBL2971 - Tyrosine-protein kinase JAK2 (Homo sapiens)",
+        "19": "CHEMBL3952 - Kappa opioid receptor (Cavia porcellus)",
+        "2": "CHEMBL205 - Carbonic anhydrase II (Homo sapiens)",
+        "20": "CHEMBL243 - Human immunodeficiency virus type 1 protease (Human immunodeficiency virus 1)",
+        "21": "CHEMBL244 - Coagulation factor X (Homo sapiens)",
+        "22": "CHEMBL339 - Dopamine D2 receptor (Rattus norvegicus)",
+        "23": "CHEMBL245 - Muscarinic acetylcholine receptor M3 (Homo sapiens)",
+        "24": "CHEMBL251 - Adenosine A2a receptor (Homo sapiens)",
+        "25": "CHEMBL253 - Cannabinoid CB2 receptor (Homo sapiens)",
+        "26": "CHEMBL256 - Adenosine A3 receptor (Homo sapiens)",
+        "27": "CHEMBL269 - Delta opioid receptor (Rattus norvegicus)",
+        "28": "CHEMBL270 - Mu opioid receptor (Rattus norvegicus)",
+        "29": "CHEMBL1946 - Melatonin receptor 1B (Homo sapiens)",
+        "3": "CHEMBL4794 - Vanilloid receptor (Homo sapiens)",
+        "30": "CHEMBL273 - Serotonin 1a (5-HT1a) receptor (Rattus norvegicus)",
+        "31": "CHEMBL1907596 - Neuronal acetylcholine receptor; alpha4/beta2 (Rattus norvegicus)",
+        "32": "CHEMBL3371 - Serotonin 6 (5-HT6) receptor (Homo sapiens)",
+        "33": "CHEMBL313 - Serotonin transporter (Rattus norvegicus)",
+        "34": "CHEMBL4860 - Apoptosis regulator Bcl-2 (Homo sapiens)",
+        "4": "CHEMBL264 - Histamine H3 receptor (Homo sapiens)",
+        "5": "CHEMBL214 - Serotonin 1a (5-HT1a) receptor (Homo sapiens)",
+        "6": "CHEMBL217 - Dopamine D2 receptor (Homo sapiens)",
+        "7": "CHEMBL4552 - Peripheral-type benzodiazepine receptor (Rattus norvegicus)",
+        "8": "CHEMBL2147 - Serine/threonine-protein kinase PIM1 (Homo sapiens)",
+        "9": "CHEMBL224 - Serotonin 2a (5-HT2a) receptor (Homo sapiens)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": [
+        "This is a virtual screening benchmark dataset derived from ChEMBL25 for evaluating molecular similarity methods.",
+        "Target vectors use tri-state encoding: 0 = not mentioned for that target, 1 = active (high-potency, Ki ≤ 1nM) against that target, 2 = decoy for that target.",
+        "Decoys are shared compounds assumed to be inactive against all 35 targets.",
+        "All decoy molecules have value 2 for all target positions (assumed inactive against all targets).",
+        "Active compounds are high-potency selected actives (Ki ≤ 1nM) from ChEMBL."
+      ]
+    },
+    {
+      "name": "bl_chembl_reg",
+      "verbose": "Briem & Lessel ChEMBL Dataset (Multi-Target Regression)",
+      "category": "organic",
+      "compounds": 52484,
+      "targets": 35,
+      "target_type": [
+        "regression"
+      ],
+      "description": "The Briem & Lessel ChEMBL Multi-Target Regression Dataset is a modern recreation of the classic Briem and Lessel dataset (originally published in 2000) using ChEMBL25 data. Each molecule has a 35-dimensional target vector, where each dimension corresponds to one of 35 biological targets (GPCRs, kinases, proteases, etc.) from ChEMBL. The values are pKi (negative log of Ki binding affinity in molar units), with NaN indicating missing measurements. This enables multi-task regression where a single molecule can have measured affinities for multiple targets simultaneously. Higher pKi values indicate stronger binding. Typical range: 4.0-12.0 for measured values. This dataset is specifically designed for multi-task QSAR modeling and validating similarity-based virtual screening methods.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Drug Discovery",
+        "Virtual Screening",
+        "Similarity",
+        "Multi-Target",
+        "ChEMBL",
+        "Ki",
+        "Bioactivity",
+        "QSAR",
+        "Multi-Task",
+        "Regression"
+      ],
+      "sources": [
+        "https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html",
+        "https://github.com/greglandrum/rdkit_blog/tree/master/data",
+        "https://doi.org/10.1021/ci000197k"
+      ],
+      "target_descriptions": {
+        "0": "CHEMBL1862 - Tyrosine-protein kinase ABL (Homo sapiens) - pKi value",
+        "1": "CHEMBL204 - Thrombin (Homo sapiens) - pKi value",
+        "10": "CHEMBL229 - Alpha-1a adrenergic receptor (Homo sapiens) - pKi value",
+        "11": "CHEMBL233 - Mu opioid receptor (Homo sapiens) - pKi value",
+        "12": "CHEMBL234 - Dopamine D3 receptor (Homo sapiens) - pKi value",
+        "13": "CHEMBL236 - Delta opioid receptor (Homo sapiens) - pKi value",
+        "14": "CHEMBL237 - Kappa opioid receptor (Homo sapiens) - pKi value",
+        "15": "CHEMBL2366517 - Protease (Human immunodeficiency virus 1) - pKi value",
+        "16": "CHEMBL4409 - Phosphodiesterase 10A (Homo sapiens) - pKi value",
+        "17": "CHEMBL2835 - Tyrosine-protein kinase JAK1 (Homo sapiens) - pKi value",
+        "18": "CHEMBL2971 - Tyrosine-protein kinase JAK2 (Homo sapiens) - pKi value",
+        "19": "CHEMBL3952 - Kappa opioid receptor (Cavia porcellus) - pKi value",
+        "2": "CHEMBL205 - Carbonic anhydrase II (Homo sapiens) - pKi value",
+        "20": "CHEMBL243 - Human immunodeficiency virus type 1 protease (Human immunodeficiency virus 1) - pKi value",
+        "21": "CHEMBL244 - Coagulation factor X (Homo sapiens) - pKi value",
+        "22": "CHEMBL339 - Dopamine D2 receptor (Rattus norvegicus) - pKi value",
+        "23": "CHEMBL245 - Muscarinic acetylcholine receptor M3 (Homo sapiens) - pKi value",
+        "24": "CHEMBL251 - Adenosine A2a receptor (Homo sapiens) - pKi value",
+        "25": "CHEMBL253 - Cannabinoid CB2 receptor (Homo sapiens) - pKi value",
+        "26": "CHEMBL256 - Adenosine A3 receptor (Homo sapiens) - pKi value",
+        "27": "CHEMBL269 - Delta opioid receptor (Rattus norvegicus) - pKi value",
+        "28": "CHEMBL270 - Mu opioid receptor (Rattus norvegicus) - pKi value",
+        "29": "CHEMBL1946 - Melatonin receptor 1B (Homo sapiens) - pKi value",
+        "3": "CHEMBL4794 - Vanilloid receptor (Homo sapiens) - pKi value",
+        "30": "CHEMBL273 - Serotonin 1a (5-HT1a) receptor (Rattus norvegicus) - pKi value",
+        "31": "CHEMBL1907596 - Neuronal acetylcholine receptor; alpha4/beta2 (Rattus norvegicus) - pKi value",
+        "32": "CHEMBL3371 - Serotonin 6 (5-HT6) receptor (Homo sapiens) - pKi value",
+        "33": "CHEMBL313 - Serotonin transporter (Rattus norvegicus) - pKi value",
+        "34": "CHEMBL4860 - Apoptosis regulator Bcl-2 (Homo sapiens) - pKi value",
+        "4": "CHEMBL264 - Histamine H3 receptor (Homo sapiens) - pKi value",
+        "5": "CHEMBL214 - Serotonin 1a (5-HT1a) receptor (Homo sapiens) - pKi value",
+        "6": "CHEMBL217 - Dopamine D2 receptor (Homo sapiens) - pKi value",
+        "7": "CHEMBL4552 - Peripheral-type benzodiazepine receptor (Rattus norvegicus) - pKi value",
+        "8": "CHEMBL2147 - Serine/threonine-protein kinase PIM1 (Homo sapiens) - pKi value",
+        "9": "CHEMBL224 - Serotonin 2a (5-HT2a) receptor (Homo sapiens) - pKi value"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "clintox",
+      "verbose": "Clinical Toxicity",
+      "category": "organic",
+      "compounds": 1465,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Qualitative data of drugs approved by the FDA and those that have failed clinical trials for toxicity reasons.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Physiology"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "compas_1x",
+      "verbose": "Cata-Condensed Polybenzenoid Hydrocarbons (COMPAS-1x)",
+      "category": "organic",
+      "compounds": 34072,
+      "targets": 9,
+      "target_type": [
+        "regression"
+      ],
+      "description": "The COMPAS-1x dataset is part of the COMPAS Project, a computational database of polycyclic aromatic systems. This dataset contains optimized ground-state structures and molecular properties for approximately 34,000 cata-condensed polybenzenoid hydrocarbons (also known as polycyclic aromatic hydrocarbons or PAHs), computed at the GFN2-xTB level of theory. The dataset covers molecules ranging from 1 to 11 rings and includes key quantum chemical properties such as HOMO/LUMO energies, energy gaps, dipole moments, and electron affinities. This resource supports data-driven investigation of structure-property relationships in aromatic systems and facilitates machine learning applications in organic electronics and materials design.",
+      "tags": [
+        "SMILES",
+        "Molecules",
+        "Quantum Chemistry",
+        "Molecular Properties",
+        "Polycyclic Aromatic Hydrocarbons",
+        "PAH",
+        "GFN2-xTB"
+      ],
+      "sources": [
+        "https://pubs.acs.org/doi/full/10.1021/acs.jcim.2c00503",
+        "https://pubmed.ncbi.nlm.nih.gov/35881922/",
+        "https://chemrxiv.org/engage/chemrxiv/article-details/626836b8368ab655418e3c7f",
+        "https://acs.figshare.com/collections/The_COMPAS_Project_A_Computational_Database_of_Polycyclic_Aromatic_Systems_Phase_1_i_cata_i_-Condensed_Polybenzenoid_Hydrocarbons/6118490",
+        "https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-1?ref_type=heads"
+      ],
+      "target_descriptions": {
+        "0": "HOMO_eV - Energy of the highest occupied molecular orbital (HOMO) in electron volts (eV)",
+        "1": "LUMO_eV - Energy of the lowest unoccupied molecular orbital (LUMO) in electron volts (eV)",
+        "2": "GAP_eV - HOMO-LUMO energy gap in electron volts (eV)",
+        "3": "Dipmom_Debye - Dipole moment in Debye units",
+        "4": "Etot_eV - Total energy of the molecule in electron volts (eV)",
+        "5": "aEA_eV - Adiabatic electron affinity in electron volts (eV)",
+        "6": "aIP_eV - Adiabatic ionization potential in electron volts (eV)",
+        "7": "NFOD - Fractional occupation density (indicator of polyradical character)",
+        "8": "n_rings - Number of aromatic rings in the molecule"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "compas_3x",
+      "verbose": "Peri-Condensed Polybenzenoid Hydrocarbons (COMPAS-3x)",
+      "category": "organic",
+      "compounds": 39482,
+      "targets": 9,
+      "target_type": [
+        "regression"
+      ],
+      "description": "The COMPAS-3x dataset is the third installment of the COMPAS Project, a computational database of polycyclic aromatic systems, focused on peri-condensed polybenzenoid hydrocarbons. This dataset contains optimized ground-state structures and molecular properties for approximately 39,482 peri-condensed polybenzenoid hydrocarbons, computed at the GFN2-xTB level of theory. Peri-condensed systems differ from cata-condensed systems in that they contain carbon atoms shared by three or more rings. The dataset covers molecules ranging from 1 to 10 rings and includes key quantum chemical properties such as HOMO/LUMO energies, energy gaps, dipole moments, and electron affinities. Data-driven analysis reveals structure-property trends, particularly the effect of peri-condensed island size and linearly annulated rings on the HOMO-LUMO gap. This resource supports machine learning applications in chemistry and the design of functional aromatic molecules for organic electronics.",
+      "tags": [
+        "SMILES",
+        "Molecules",
+        "Quantum Chemistry",
+        "Molecular Properties",
+        "Polycyclic Aromatic Hydrocarbons",
+        "PAH",
+        "GFN2-xTB",
+        "Peri-Condensed"
+      ],
+      "sources": [
+        "https://pubs.rsc.org/en/content/articlelanding/2024/cp/d4cp01027b",
+        "https://pubmed.ncbi.nlm.nih.gov/38758092/",
+        "https://chemrxiv.org/engage/chemrxiv/article-details/65d8c60ae9ebbb4db90f6276",
+        "https://www.research-collection.ethz.ch/handle/20.500.11850/674707",
+        "https://gitlab.com/porannegroup/compas/-/tree/main/COMPAS-3?ref_type=heads"
+      ],
+      "target_descriptions": {
+        "0": "HOMO_eV - Energy of the highest occupied molecular orbital (HOMO) in electron volts (eV)",
+        "1": "LUMO_eV - Energy of the lowest unoccupied molecular orbital (LUMO) in electron volts (eV)",
+        "2": "GAP_eV - HOMO-LUMO energy gap in electron volts (eV)",
+        "3": "Dipmom_Debye - Dipole moment in Debye units",
+        "4": "Etot_eV - Total energy of the molecule in electron volts (eV)",
+        "5": "aEA_eV - Adiabatic electron affinity in electron volts (eV)",
+        "6": "aIP_eV - Adiabatic ionization potential in electron volts (eV)",
+        "7": "NFOD - Fractional occupation density (indicator of polyradical character)",
+        "8": "n_rings - Number of aromatic rings in the molecule"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "dpp4",
+      "verbose": "DPP-4 inhibitors",
+      "category": "organic",
+      "compounds": 3933,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "DPP-4 inhibitors (DPP4) was extract from ChEMBL with DPP-4 target. The data was processed by removing salt and normalizing molecular structure, with molecular duplication examination, leaving 3933 molecules.Each molecule is associated with two target values (Activity(IC50), Activity(pIC50)) where the value is the binary label if the compound is active for IC50 or not. The second value is the binary label if the compound is active for pIC50 or not.",
+      "tags": [
+        "Smiles",
+        "Molecules"
+      ],
+      "sources": [
+        "https://weilab.math.msu.edu/DataLibrary/2D/",
+        "https://pubs.acs.org/doi/10.1021/acs.jpclett.1c03058"
+      ],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "dud_e",
+      "verbose": "DUD-E (Directory of Useful Decoys - Enhanced) Multi-Target Classification",
+      "category": "organic",
+      "compounds": 400040,
+      "targets": 102,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The DUD-E (Directory of Useful Decoys - Enhanced) dataset is a comprehensive multi-target virtual screening benchmark containing 102 protein targets with 22,886 active compounds and over 1 million carefully selected decoys. Published by Mysinger et al. (2012), this dataset is designed to benchmark molecular docking programs and similarity-based virtual screening methods. Each molecule has a 102-dimensional target vector where each position can have three values: 0 (not mentioned for that target), 1 (active against that target), or 2 (decoy for that target). This tri-state encoding properly captures the per-target nature of the decoy selection, where a molecule can be active against one target while serving as a decoy for another. Decoys are specifically selected for each target with a 50:1 ratio, matched for physicochemical properties while maintaining 2-D structural dissimilarity to actives. This enables both multi-task learning and proper evaluation of similarity-based virtual screening methods with target-specific negative examples.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Drug Discovery",
+        "Virtual Screening",
+        "Similarity",
+        "Multi-Target",
+        "Multi-Label Classification",
+        "Multi-Task",
+        "Bioactivity",
+        "Classification",
+        "DUD-E",
+        "QSAR",
+        "Benchmark",
+        "Molecular Docking"
+      ],
+      "sources": [
+        "https://dude.docking.org/",
+        "https://doi.org/10.1021/jm300687e",
+        "http://jmc.acs.org/content/55/14/6582"
+      ],
+      "target_descriptions": {
+        "0": "AA2AR - Adenosine A2a receptor (PDB: 3eml)",
+        "1": "ABL1 - Tyrosine-protein kinase ABL (PDB: 2hzi)",
+        "10": "ALDR - Aldose reductase (PDB: 2hv5)",
+        "100": "WEE1 - Serine/threonine-protein kinase WEE1 (PDB: 3biz)",
+        "101": "XIAP - Inhibitor of apoptosis protein 3 (PDB: 3hl5)",
+        "11": "AMPC - Beta-lactamase (PDB: 1l2s)",
+        "12": "ANDR - Androgen Receptor (PDB: 2am9)",
+        "13": "AOFB - Monoamine oxidase B (PDB: 1s3b)",
+        "14": "BACE1 - Beta-secretase 1 (PDB: 3l5d)",
+        "15": "BRAF - Serine/threonine-protein kinase B-raf (PDB: 3d4q)",
+        "16": "CAH2 - Carbonic anhydrase II (PDB: 1bcd)",
+        "17": "CASP3 - Caspase-3 (PDB: 2cnk)",
+        "18": "CDK2 - Cyclin-dependent kinase 2 (PDB: 1h00)",
+        "19": "COMT - Catechol O-methyltransferase (PDB: 3bwm)",
+        "2": "ACE - Angiotensin-converting enzyme (PDB: 3bkl)",
+        "20": "CP2C9 - Cytochrome P450 2C9 (PDB: 1r9o)",
+        "21": "CP3A4 - Cytochrome P450 3A4 (PDB: 3nxu)",
+        "22": "CSF1R - Macrophage colony stimulating factor receptor (PDB: 3krj)",
+        "23": "CXCR4 - C-X-C chemokine receptor type 4 (PDB: 3odu)",
+        "24": "DEF - Peptide deformylase (PDB: 1lru)",
+        "25": "DHI1 - 11-beta-hydroxysteroid dehydrogenase 1 (PDB: 3frj)",
+        "26": "DPP4 - Dipeptidyl peptidase IV (PDB: 2i78)",
+        "27": "DRD3 - Dopamine D3 receptor (PDB: 3pbl)",
+        "28": "DYR - Dihydrofolate reductase (PDB: 3nxo)",
+        "29": "EGFR - Epidermal growth factor receptor erbB1 (PDB: 2rgp)",
+        "3": "ACES - Acetylcholinesterase (PDB: 1e66)",
+        "30": "ESR1 - Estrogen receptor alpha (PDB: 1sj0)",
+        "31": "ESR2 - Estrogen receptor beta (PDB: 2fsz)",
+        "32": "FA10 - Coagulation factor X (PDB: 3kl6)",
+        "33": "FA7 - Coagulation factor VII (PDB: 1w7x)",
+        "34": "FABP4 - Fatty acid binding protein adipocyte (PDB: 2nnq)",
+        "35": "FAK1 - Focal adhesion kinase 1 (PDB: 3bz3)",
+        "36": "FGFR1 - Fibroblast growth factor receptor 1 (PDB: 3c4f)",
+        "37": "FKB1A - FK506-binding protein 1A (PDB: 1j4h)",
+        "38": "FNTA - Protein farnesyltransferase/geranylgeranyltransferase type I alpha subunit (PDB: 3e37)",
+        "39": "FPPS - Farnesyl diphosphate synthase (PDB: 1zw5)",
+        "4": "ADA - Adenosine deaminase (PDB: 2e1w)",
+        "40": "GCR - Glucocorticoid receptor (PDB: 3bqd)",
+        "41": "GLCM - Beta-glucocerebrosidase (PDB: 2v3f)",
+        "42": "GRIA2 - Glutamate receptor ionotropic, AMPA 2 (PDB: 3kgc)",
+        "43": "GRIK1 - Glutamate receptor ionotropic kainate 1 (PDB: 1vso)",
+        "44": "HDAC2 - Histone deacetylase 2 (PDB: 3max)",
+        "45": "HDAC8 - Histone deacetylase 8 (PDB: 3f07)",
+        "46": "HIVINT - Human immunodeficiency virus type 1 integrase (PDB: 3nf7)",
+        "47": "HIVPR - Human immunodeficiency virus type 1 protease (PDB: 1xl2)",
+        "48": "HIVRT - Human immunodeficiency virus type 1 reverse transcriptase (PDB: 3lan)",
+        "49": "HMDH - HMG-CoA reductase (PDB: 3ccw)",
+        "5": "ADA17 - ADAM17 (PDB: 2oi0)",
+        "50": "HS90A - Heat shock protein HSP 90-alpha (PDB: 1uyg)",
+        "51": "HXK4 - Hexokinase type IV (PDB: 3f9m)",
+        "52": "IGF1R - Insulin-like growth factor I receptor (PDB: 2oj9)",
+        "53": "INHA - Enoyl-[acyl-carrier-protein] reductase (PDB: 2h7l)",
+        "54": "ITAL - Leukocyte adhesion glycoprotein LFA-1 alpha (PDB: 2ica)",
+        "55": "JAK2 - Tyrosine-protein kinase JAK2 (PDB: 3lpb)",
+        "56": "KIF11 - Kinesin-like protein 1 (PDB: 3cjo)",
+        "57": "KIT - Stem cell growth factor receptor (PDB: 3g0e)",
+        "58": "KITH - Thymidine kinase (PDB: 2b8t)",
+        "59": "KPCB - Protein kinase C beta (PDB: 2i0e)",
+        "6": "ADRB1 - Beta-1 adrenergic receptor (PDB: 2vt4)",
+        "60": "LCK - Tyrosine-protein kinase LCK (PDB: 2of2)",
+        "61": "LKHA4 - Leukotriene A4 hydrolase (PDB: 3chp)",
+        "62": "MAPK2 - MAP kinase-activated protein kinase 2 (PDB: 3m2w)",
+        "63": "MCR - Mineralocorticoid receptor (PDB: 2aa2)",
+        "64": "MET - Hepatocyte growth factor receptor (PDB: 3lq8)",
+        "65": "MK01 - MAP kinase ERK2 (PDB: 2ojg)",
+        "66": "MK10 - c-Jun N-terminal kinase 3 (PDB: 2zdt)",
+        "67": "MK14 - MAP kinase p38 alpha (PDB: 2qd9)",
+        "68": "MMP13 - Matrix metalloproteinase 13 (PDB: 830c)",
+        "69": "MP2K1 - Dual specificity mitogen-activated protein kinase kinase 1 (PDB: 3eqh)",
+        "7": "ADRB2 - Beta-2 adrenergic receptor (PDB: 3ny8)",
+        "70": "NOS1 - Nitric-oxide synthase, brain (PDB: 1qw6)",
+        "71": "NRAM - Neuraminidase (PDB: 1b9v)",
+        "72": "PA2GA - Phospholipase A2 group IIA (PDB: 1kvo)",
+        "73": "PARP1 - Poly [ADP-ribose] polymerase-1 (PDB: 3l3m)",
+        "74": "PDE5A - Phosphodiesterase 5A (PDB: 1udt)",
+        "75": "PGH1 - Cyclooxygenase-1 (PDB: 2oyu)",
+        "76": "PGH2 - Cyclooxygenase-2 (PDB: 3ln1)",
+        "77": "PLK1 - Serine/threonine-protein kinase PLK1 (PDB: 2owb)",
+        "78": "PNPH - Purine nucleoside phosphorylase (PDB: 3bgs)",
+        "79": "PPARA - Peroxisome proliferator-activated receptor alpha (PDB: 2p54)",
+        "8": "AKT1 - Serine/threonine-protein kinase AKT (PDB: 3cqw)",
+        "80": "PPARD - Peroxisome proliferator-activated receptor delta (PDB: 2znp)",
+        "81": "PPARG - Peroxisome proliferator-activated receptor gamma (PDB: 2gtk)",
+        "82": "PRGR - Progesterone receptor (PDB: 3kba)",
+        "83": "PTN1 - Protein-tyrosine phosphatase 1B (PDB: 2azr)",
+        "84": "PUR2 - GAR transformylase (PDB: 1njs)",
+        "85": "PYGM - Muscle glycogen phosphorylase (PDB: 1c8k)",
+        "86": "PYRD - Dihydroorotate dehydrogenase (PDB: 1d3g)",
+        "87": "RENI - Renin (PDB: 3g6z)",
+        "88": "ROCK1 - Rho-associated protein kinase 1 (PDB: 2etr)",
+        "89": "RXRA - Retinoid X receptor alpha (PDB: 1mv9)",
+        "9": "AKT2 - Serine/threonine-protein kinase AKT2 (PDB: 3d0e)",
+        "90": "SAHH - Adenosylhomocysteinase (PDB: 1li4)",
+        "91": "SRC - Tyrosine-protein kinase SRC (PDB: 3el8)",
+        "92": "TGFR1 - TGF-beta receptor type I (PDB: 3hmm)",
+        "93": "THB - Thyroid hormone receptor beta-1 (PDB: 1q4x)",
+        "94": "THRB - Thrombin (PDB: 1ype)",
+        "95": "TRY1 - Trypsin I (PDB: 2ayw)",
+        "96": "TRYB1 - Tryptase beta-1 (PDB: 2zec)",
+        "97": "TYSY - Thymidylate synthase (PDB: 1syn)",
+        "98": "UROK - Urokinase-type plasminogen activator (PDB: 1sqt)",
+        "99": "VGFR2 - Vascular endothelial growth factor receptor 2 (PDB: 2p2i)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": [
+        "This is a virtual screening benchmark dataset designed for evaluating molecular docking and similarity methods.",
+        "Target vectors use tri-state encoding: 0 = not mentioned for that target, 1 = active against that target, 2 = decoy for that target.",
+        "Decoys are specifically selected for each target (50:1 ratio) to match physicochemical properties while avoiding 2-D structural similarity to actives.",
+        "A molecule can be active against some targets while serving as a decoy for others, capturing the per-target nature of the data.",
+        "Active compounds have measured affinities ≤1 μM against their targets, extracted from ChEMBL09 database."
+      ]
+    },
+    {
+      "name": "elanos_bp",
+      "verbose": "Elanos Bp",
+      "category": "organic",
+      "compounds": 5431,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Molecular Properties",
+        "Boiling Point"
+      ],
+      "sources": [
+        "https://zenodo.org/records/14392754",
+        "https://link.springer.com/article/10.1007/s11030-025-11196-5"
+      ],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "elanos_vp",
+      "verbose": "Elanos Vp",
+      "category": "organic",
+      "compounds": 2704,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Molecular Properties",
+        "Vapor Pressure"
+      ],
+      "sources": [
+        "https://zenodo.org/records/14364265",
+        "https://link.springer.com/article/10.1007/s11030-025-11196-5"
+      ],
+      "target_descriptions": {
+        "0": "Log VP (Vapor Pressure) in log10(Pa)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "electrum_oxstate",
+      "verbose": "ELECTRUM CSD Oxidation State Classification",
+      "category": "tmc",
+      "compounds": 39166,
+      "targets": 7,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Graph dataset of ~39,000 mononuclear transition metal complexes from the CSD, curated by Orsi & Frei (Digital Discovery 2025) for the ELECTRUM paper. Multi-class classification of metal oxidation state (0 to +6, 7 classes). Processed using MetalOrganicProcessing with decomposed metal + ligand SMILES and heuristic donor atom detection. Oxidation state is also passed to the processing for accurate d-electron count encoding.",
+      "tags": [
+        "Molecules",
+        "TransitionMetals",
+        "TMC",
+        "OxidationState",
+        "Classification",
+        "CSD"
+      ],
+      "sources": [
+        "https://doi.org/10.1039/D5DD00145E",
+        "https://github.com/TheFreiLab/electrum_val"
+      ],
+      "target_descriptions": {
+        "0": "OS=0 class indicator",
+        "1": "OS=+1 class indicator",
+        "2": "OS=+2 class indicator",
+        "3": "OS=+3 class indicator",
+        "4": "OS=+4 class indicator",
+        "5": "OS=+5 class indicator",
+        "6": "OS=+6 class indicator"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": "1.7.0",
+      "notes": []
+    },
+    {
+      "name": "esol",
+      "verbose": "Water Solubility",
+      "category": "organic",
+      "compounds": 1127,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Water solubility data(log solubility in mols per litre) for common organic small molecules.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Physical Chemistry"
+      ],
+      "sources": [
+        "https://pubs.acs.org/doi/10.1021/ci034243x"
+      ],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "freesolv",
+      "verbose": "Hydration Free Energy",
+      "category": "organic",
+      "compounds": 639,
+      "targets": 2,
+      "target_type": [
+        "regression"
+      ],
+      "description": "A collection of experimental and calculated hydration free energies for small molecules in water. The calculated values are derived from alchemical free energy calculations using molecular dynamics simulations. Each molecule is associated with 2 target values (experimental, calculated) where the first value is the experimental hydration free energy and the second value is the calculated hydration free energy.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Experimental",
+        "Hydration Free Energy",
+        "Molecular Dynamics",
+        "Hydration"
+      ],
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/24928188/",
+        "https://pubs.acs.org/doi/10.1021/acs.jcim.8b00180",
+        "https://github.com/MobleyLab/FreeSolv"
+      ],
+      "target_descriptions": {
+        "0": "HDF expt - Experimentally determined hydration free energy",
+        "1": "HDF calc - hydration free energy calculated using molecular dynamics simulations"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "half_life",
+      "verbose": "Half-Life Biotransformation",
+      "category": "organic",
+      "compounds": 892,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "The dataset consists of 6,309 experimental soil biotransformation half-life values for 893 pesticides and pesticide transformation products, extracted from publicly available regulatory reports via the EAWAG-SOIL package on enviPath. Each substance can have multiple reported half-life values obtained from different experiments conducted under varying environmental conditions (different soils, temperatures, pH levels, etc.) and calculated using different kinetic models, resulting in substantial variability spanning several orders of magnitude for the same chemical. The dataset includes both uncensored half-life measurements and censored values (311 total) that fall beyond reliable quantification limits, either as very fast degradation (<0.1 days) or very slow degradation (>1000 days).",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Environment",
+        "Half-Life"
+      ],
+      "sources": [
+        "https://chemrxiv.org/engage/chemrxiv/article-details/64be471cb605c6803b425da6"
+      ],
+      "target_descriptions": {
+        "0": "DT50 - Mean Experimental half-life (DT50) in days under aerobic soil conditions"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "hiv",
+      "verbose": "HIV Inhibitors",
+      "category": "organic",
+      "compounds": 38040,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Experimentally measured abilities to inhibit HIV replication.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Biophysics"
+      ],
+      "sources": [
+        "https://moleculenet.org/datasets"
+      ],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "hopv15_exp",
+      "verbose": "Harvard Organic Photovoltaic Dataset",
+      "category": "organic",
+      "compounds": 175,
+      "targets": 6,
+      "target_type": [
+        "regression"
+      ],
+      "description": "The Harvard Organic Photovoltaic Dataset (HOPV15) is a comprehensive collection of experimental photovoltaic data from the literature for 350 different organic solar cell donor structures, combined with corresponding quantum-chemical calculations performed over multiple molecular conformers. The dataset includes both experimental measurements (such as power conversion efficiency, HOMO/LUMO energies, and other photovoltaic characteristics) and computational results using various density functionals and basis sets. This resource is designed to enable calibration of quantum chemical calculations to experimental observations, support the development of new computational methodologies, and benchmark current and future model chemistries for organic electronic applications.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Organic Electronics",
+        "Solar Cells"
+      ],
+      "sources": [
+        "https://chemrxiv.org/engage/chemrxiv/article-details/64be471cb605c6803b425da6"
+      ],
+      "target_descriptions": {
+        "0": "homo - Highest occupied molecular orbit in eV",
+        "1": "lumo - Lowest unoccupied molecular orbit in eV",
+        "2": "gap - Gap between HOMO and LUMO energy levels in eV",
+        "3": "JSC - Closed circuit current in mA/cm2",
+        "4": "VOC - Open circuit voltage in V",
+        "5": "PCE - Power conversion efficience in percent"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "lipophilicity",
+      "verbose": "Octanol-Water Distribution Coefficient",
+      "category": "organic",
+      "compounds": 4199,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Experimental results for the octanol/water distribution coefficient (logD at pH7.4) for a set of 4200 drug-like compounds.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Experimental",
+        "Partition Coefficient"
+      ],
+      "sources": [
+        "https://doi.org/10.1039/C7SC02664A",
+        "https://moleculenet.org/datasets-1"
+      ],
+      "target_descriptions": {
+        "0": "logD - Experimental logD (pH 7.4) octanol-water distribution coefficient"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "muv",
+      "verbose": "MUV (Maximum Unbiased Validation) Multi-Target Classification",
+      "category": "organic",
+      "compounds": 93111,
+      "targets": 17,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The MUV (Maximum Unbiased Validation) dataset is a carefully designed multi-target virtual screening benchmark containing 17 biological targets from PubChem BioAssay data. Published by Rohrer & Baumann (2009), this dataset addresses critical issues in virtual screening benchmarks by avoiding analogue bias and artificial enrichment through refined nearest neighbor analysis from spatial statistics. Each molecule has a 17-dimensional target vector where each position can have three values: 0 (not mentioned for that target), 1 (active against that target), or 2 (decoy for that target). This tri-state encoding properly captures the per-target nature of the decoy selection, where a molecule can be active against one target while serving as a decoy for another. With 30 carefully selected diverse actives and 15,000 embedded decoys per target (500:1 ratio), MUV provides a truly challenging and unbiased benchmark for evaluating similarity-based virtual screening methods and molecular fingerprints.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Drug Discovery",
+        "Virtual Screening",
+        "Similarity",
+        "Multi-Target",
+        "Multi-Label Classification",
+        "Multi-Task",
+        "Bioactivity",
+        "Classification",
+        "MUV",
+        "PubChem",
+        "QSAR",
+        "Benchmark",
+        "Unbiased"
+      ],
+      "sources": [
+        "https://github.com/rdkit/benchmarking_platform",
+        "https://doi.org/10.1021/ci8002649",
+        "https://pubs.acs.org/doi/10.1021/ci8002649",
+        "https://www.tu-braunschweig.de/en/pharmchem/forschung/baumann/translate-to-english-muv"
+      ],
+      "target_descriptions": {
+        "0": "MUV_466 - MUV AID 466 (PubChem BioAssay)",
+        "1": "MUV_548 - MUV AID 548 (PubChem BioAssay)",
+        "10": "MUV_737 - MUV AID 737 (PubChem BioAssay)",
+        "11": "MUV_810 - MUV AID 810 (PubChem BioAssay)",
+        "12": "MUV_832 - MUV AID 832 (PubChem BioAssay)",
+        "13": "MUV_846 - MUV AID 846 (PubChem BioAssay)",
+        "14": "MUV_852 - MUV AID 852 (PubChem BioAssay)",
+        "15": "MUV_858 - MUV AID 858 (PubChem BioAssay)",
+        "16": "MUV_859 - MUV AID 859 (PubChem BioAssay)",
+        "2": "MUV_600 - MUV AID 600 (PubChem BioAssay)",
+        "3": "MUV_644 - MUV AID 644 (PubChem BioAssay)",
+        "4": "MUV_652 - MUV AID 652 (PubChem BioAssay)",
+        "5": "MUV_689 - MUV AID 689 (PubChem BioAssay)",
+        "6": "MUV_692 - MUV AID 692 (PubChem BioAssay)",
+        "7": "MUV_712 - MUV AID 712 (PubChem BioAssay)",
+        "8": "MUV_713 - MUV AID 713 (PubChem BioAssay)",
+        "9": "MUV_733 - MUV AID 733 (PubChem BioAssay)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": [
+        "This is an unbiased virtual screening benchmark dataset designed to avoid analogue bias and artificial enrichment.",
+        "Target vectors use tri-state encoding: 0 = not mentioned for that target, 1 = active against that target, 2 = decoy for that target.",
+        "Actives are maximally spread (diverse) to avoid analogue bias, with 30 actives per target.",
+        "Decoys are embedded around actives using refined nearest neighbor analysis (500:1 ratio, 15,000 per target).",
+        "A molecule can be active against some targets while serving as a decoy for others, capturing the per-target nature of the data.",
+        "All targets are based on PubChem BioAssay confirmatory screens."
+      ]
+    },
+    {
+      "name": "open_melting_point",
+      "verbose": "Melting Point",
+      "category": "organic",
+      "compounds": 27965,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "The Jean-Claude Bradley Open Melting Point Dataset contains 28k melting point measurements for organic compounds. A highly curated subset of 3,041 validated measurements is also available, containing only data with multiple measurements and temperature ranges between 0.01°C and 5°C. Released as open data under a CC0 license, this dataset is widely used in machine learning and computational chemistry research for developing models to predict melting points from molecular structure.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Physical Property",
+        "Melting Point"
+      ],
+      "sources": [
+        "https://www.nature.com/articles/npre.2011.6229.1",
+        "http://dx.doi.org/10.6084/m9.figshare.1031638",
+        "https://figshare.com/articles/dataset/Jean_Claude_Bradley_Open_Melting_Point_Datset/1031637?file=1503990"
+      ],
+      "target_descriptions": {
+        "0": "mpC - Experimental melting point in Celsius degrees"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "pcqm4mv2",
+      "verbose": "Pcqm4Mv2",
+      "category": "organic",
+      "compounds": 3378606,
+      "targets": 1,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Based on the PubChemQC, we define a meaningful ML task of predicting DFT-calculated HOMO-LUMO energy gap of molecules given their 2D molecular graphs. The HOMO-LUMO gap is one of the most practically-relevant quantum chemical properties of molecules since it is related to reactivity, photoexcitation, and charge transport.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Quantum mechanics"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "qm9",
+      "verbose": "DFT properties of small molecules",
+      "category": "organic",
+      "compounds": 134000,
+      "targets": 16,
+      "target_type": [
+        "regression"
+      ],
+      "description": "QM9 is a comprehensive dataset that provides geometric, energetic, electronic and thermodynamic properties for a subset of GDB-17 database, comprising 134 thousand stable organic molecules with up to nine heavy atoms. All molecules are modeled using density functional theory.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Quantum mechanics",
+        "3D coordinates"
+      ],
+      "sources": [
+        "https://www.nature.com/articles/sdata201422",
+        "https://paperswithcode.com/dataset/qm9",
+        "https://pytorch-geometric.readthedocs.io/en/2.5.0/generated/torch_geometric.datasets.QM9.html"
+      ],
+      "target_descriptions": {},
+      "raw": [
+        "xyz_bundle"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "qm9_smiles",
+      "verbose": "QM9 SMILES Dataset",
+      "category": "organic",
+      "compounds": 133882,
+      "targets": 19,
+      "target_type": [
+        "regression"
+      ],
+      "description": "The QM9 dataset is a comprehensive collection of approximately 134,000 stable small organic molecules composed of up to nine heavy atoms (including carbon, oxygen, nitrogen, and fluorine). Each molecule in the dataset includes detailed geometric, energetic, electronic, and thermodynamic properties calculated using density functional theory (DFT), providing quantum-mechanical ground truth data",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Quantum Chemistry",
+        "DFT",
+        "Electronic Properties"
+      ],
+      "sources": [
+        "https://www.nature.com/articles/sdata201422",
+        "https://moleculenet.org/datasets",
+        "https://pytorch-geometric.readthedocs.io/en/2.5.0/generated/torch_geometric.datasets.QM9.html"
+      ],
+      "target_descriptions": {
+        "0": "A - rotational constant in GHz",
+        "1": "B - rotational constant in GHz",
+        "10": "U_0 - Internal energy at 0K in eV",
+        "11": "U - Internal energy at 298.15K",
+        "12": "H - Enthalpy at 298.15K",
+        "13": "G - Free energy at 298.15K",
+        "14": "Cv - Heat capacity at 298.15K",
+        "15": "U_0 atom - Atomization energy at 0K",
+        "2": "C - rotational constant in GHz",
+        "3": "mu - dipole moment in Debye",
+        "4": "alpha - isotropic polarizability in Bohr^3",
+        "5": "homo - Highest occupied molecular orbit in eV",
+        "6": "lumo - lowest unoccupied molecular orbit in eV",
+        "7": "gap - Gap between HOMO and LUMO energies in eV",
+        "8": "R^2 - Electronic spatial extent",
+        "9": "ZPVE - Zero Point vibrational energy"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "riniker_1",
+      "verbose": "RDKit Benchmarking Platform Subset I (Multi-Target Classification)",
+      "category": "organic",
+      "compounds": 168326,
+      "targets": 88,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The RDKit Benchmarking Platform Subset I is a comprehensive multi-target classification dataset containing 88 biological targets from three public data sources: MUV (Maximum Unbiased Validation, 17 targets), DUD (Directory of Useful Decoys, 21 targets), and ChEMBL (50 targets). Originally published by Riniker & Landrum (2013), this dataset is designed for evaluating molecular similarity methods and virtual screening approaches. Each molecule has an 88-dimensional target vector where each position can have three values: 0 (not mentioned for that target), 1 (active against that target), or 2 (decoy for that target). This tri-state encoding properly captures the per-target nature of the decoy selection, where a molecule can be active against one target while serving as a decoy for another. Decoys are specifically selected for each target using methods like DUD (Directory of Useful Decoys) which matches physical properties while avoiding structural similarity to actives. This enables both multi-task learning and proper evaluation of similarity-based virtual screening methods with target-specific negative examples.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Drug Discovery",
+        "Virtual Screening",
+        "Similarity",
+        "Multi-Target",
+        "Multi-Label Classification",
+        "Multi-Task",
+        "Bioactivity",
+        "Classification",
+        "MUV",
+        "DUD",
+        "ChEMBL",
+        "QSAR",
+        "Benchmark"
+      ],
+      "sources": [
+        "https://github.com/rdkit/benchmarking_platform",
+        "https://doi.org/10.1186/1758-2946-5-26",
+        "http://www.jcheminf.com/content/5/1/26"
+      ],
+      "target_descriptions": {
+        "0": "MUV_466 - MUV AID 466 (MUV)",
+        "1": "MUV_548 - MUV AID 548 (MUV)",
+        "10": "MUV_737 - MUV AID 737 (MUV)",
+        "11": "MUV_810 - MUV AID 810 (MUV)",
+        "12": "MUV_832 - MUV AID 832 (MUV)",
+        "13": "MUV_846 - MUV AID 846 (MUV)",
+        "14": "MUV_852 - MUV AID 852 (MUV)",
+        "15": "MUV_858 - MUV AID 858 (MUV)",
+        "16": "MUV_859 - MUV AID 859 (MUV)",
+        "17": "DUD_ace - DUD ace (DUD)",
+        "18": "DUD_ache - DUD ache (DUD)",
+        "19": "DUD_ar - DUD ar (DUD)",
+        "2": "MUV_600 - MUV AID 600 (MUV)",
+        "20": "DUD_cdk2 - DUD cdk2 (DUD)",
+        "21": "DUD_cox2 - DUD cox2 (DUD)",
+        "22": "DUD_dhfr - DUD dhfr (DUD)",
+        "23": "DUD_egfr - DUD egfr (DUD)",
+        "24": "DUD_er_agonist - DUD er_agonist (DUD)",
+        "25": "DUD_fgfr1 - DUD fgfr1 (DUD)",
+        "26": "DUD_fxa - DUD fxa (DUD)",
+        "27": "DUD_gpb - DUD gpb (DUD)",
+        "28": "DUD_gr - DUD gr (DUD)",
+        "29": "DUD_hivrt - DUD hivrt (DUD)",
+        "3": "MUV_644 - MUV AID 644 (MUV)",
+        "30": "DUD_inha - DUD inha (DUD)",
+        "31": "DUD_na - DUD na (DUD)",
+        "32": "DUD_p38 - DUD p38 (DUD)",
+        "33": "DUD_parp - DUD parp (DUD)",
+        "34": "DUD_pdgfrb - DUD pdgfrb (DUD)",
+        "35": "DUD_sahh - DUD sahh (DUD)",
+        "36": "DUD_src - DUD src (DUD)",
+        "37": "DUD_vegfr2 - DUD vegfr2 (DUD)",
+        "38": "ChEMBL_11359 - ChEMBL 11359 (ChEMBL)",
+        "39": "ChEMBL_28 - ChEMBL 28 (ChEMBL)",
+        "4": "MUV_652 - MUV AID 652 (MUV)",
+        "40": "ChEMBL_11536 - ChEMBL 11536 (ChEMBL)",
+        "41": "ChEMBL_8 - ChEMBL 8 (ChEMBL)",
+        "42": "ChEMBL_10434 - ChEMBL 10434 (ChEMBL)",
+        "43": "ChEMBL_12670 - ChEMBL 12670 (ChEMBL)",
+        "44": "ChEMBL_20014 - ChEMBL 20014 (ChEMBL)",
+        "45": "ChEMBL_234 - ChEMBL 234 (ChEMBL)",
+        "46": "ChEMBL_12261 - ChEMBL 12261 (ChEMBL)",
+        "47": "ChEMBL_12209 - ChEMBL 12209 (ChEMBL)",
+        "48": "ChEMBL_25 - ChEMBL 25 (ChEMBL)",
+        "49": "ChEMBL_36 - ChEMBL 36 (ChEMBL)",
+        "5": "MUV_689 - MUV AID 689 (MUV)",
+        "50": "ChEMBL_43 - ChEMBL 43 (ChEMBL)",
+        "51": "ChEMBL_219 - ChEMBL 219 (ChEMBL)",
+        "52": "ChEMBL_130 - ChEMBL 130 (ChEMBL)",
+        "53": "ChEMBL_105 - ChEMBL 105 (ChEMBL)",
+        "54": "ChEMBL_11336 - ChEMBL 11336 (ChEMBL)",
+        "55": "ChEMBL_20174 - ChEMBL 20174 (ChEMBL)",
+        "56": "ChEMBL_126 - ChEMBL 126 (ChEMBL)",
+        "57": "ChEMBL_11225 - ChEMBL 11225 (ChEMBL)",
+        "58": "ChEMBL_12252 - ChEMBL 12252 (ChEMBL)",
+        "59": "ChEMBL_11682 - ChEMBL 11682 (ChEMBL)",
+        "6": "MUV_692 - MUV AID 692 (MUV)",
+        "60": "ChEMBL_134 - ChEMBL 134 (ChEMBL)",
+        "61": "ChEMBL_116 - ChEMBL 116 (ChEMBL)",
+        "62": "ChEMBL_11265 - ChEMBL 11265 (ChEMBL)",
+        "63": "ChEMBL_10475 - ChEMBL 10475 (ChEMBL)",
+        "64": "ChEMBL_12679 - ChEMBL 12679 (ChEMBL)",
+        "65": "ChEMBL_10579 - ChEMBL 10579 (ChEMBL)",
+        "66": "ChEMBL_11575 - ChEMBL 11575 (ChEMBL)",
+        "67": "ChEMBL_18061 - ChEMBL 18061 (ChEMBL)",
+        "68": "ChEMBL_237 - ChEMBL 237 (ChEMBL)",
+        "69": "ChEMBL_276 - ChEMBL 276 (ChEMBL)",
+        "7": "MUV_712 - MUV AID 712 (MUV)",
+        "70": "ChEMBL_11534 - ChEMBL 11534 (ChEMBL)",
+        "71": "ChEMBL_10198 - ChEMBL 10198 (ChEMBL)",
+        "72": "ChEMBL_10498 - ChEMBL 10498 (ChEMBL)",
+        "73": "ChEMBL_12911 - ChEMBL 12911 (ChEMBL)",
+        "74": "ChEMBL_12968 - ChEMBL 12968 (ChEMBL)",
+        "75": "ChEMBL_100579 - ChEMBL 100579 (ChEMBL)",
+        "76": "ChEMBL_100126 - ChEMBL 100126 (ChEMBL)",
+        "77": "ChEMBL_10378 - ChEMBL 10378 (ChEMBL)",
+        "78": "ChEMBL_10417 - ChEMBL 10417 (ChEMBL)",
+        "79": "ChEMBL_10752 - ChEMBL 10752 (ChEMBL)",
+        "8": "MUV_713 - MUV AID 713 (MUV)",
+        "80": "ChEMBL_10773 - ChEMBL 10773 (ChEMBL)",
+        "81": "ChEMBL_11631 - ChEMBL 11631 (ChEMBL)",
+        "82": "ChEMBL_10927 - ChEMBL 10927 (ChEMBL)",
+        "83": "ChEMBL_11085 - ChEMBL 11085 (ChEMBL)",
+        "84": "ChEMBL_11442 - ChEMBL 11442 (ChEMBL)",
+        "85": "ChEMBL_11279 - ChEMBL 11279 (ChEMBL)",
+        "86": "ChEMBL_11488 - ChEMBL 11488 (ChEMBL)",
+        "87": "ChEMBL_12840 - ChEMBL 12840 (ChEMBL)",
+        "9": "MUV_733 - MUV AID 733 (MUV)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": [
+        "This is a virtual screening benchmark dataset designed for evaluating molecular similarity methods.",
+        "Target vectors use tri-state encoding: 0 = not mentioned for that target, 1 = active against that target, 2 = decoy for that target.",
+        "Decoys are specifically selected for each target to match physical properties while avoiding structural similarity to actives.",
+        "A molecule can be active against some targets while serving as a decoy for others, capturing the per-target nature of the data."
+      ]
+    },
+    {
+      "name": "riniker_1_filtered",
+      "verbose": "RDKit Benchmarking Platform Subset I Filtered (Difficulty-Filtered Multi-Target Classification)",
+      "category": "organic",
+      "compounds": 105294,
+      "targets": 69,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The RDKit Benchmarking Platform Subset I Filtered is a difficulty-filtered multi-target classification dataset containing 69 biological targets from three public data sources: MUV (Maximum Unbiased Validation, 16 targets), DUD (Directory of Useful Decoys, 3 targets), and ChEMBL (50 targets). Originally published by Riniker & Landrum (2013) and filtered in Riniker, Fechner & Landrum (2013), this dataset keeps only targets with AUC(ECFC0) < 0.8 to focus on more challenging virtual screening scenarios. Each molecule has a 69-dimensional target vector where each position can have three values: 0 (not mentioned for that target), 1 (active against that target), or 2 (decoy for that target). This tri-state encoding properly captures the per-target nature of the decoy selection, where a molecule can be active against one target while serving as a decoy for another. Decoys are specifically selected for each target using methods like DUD which matches physical properties while avoiding structural similarity to actives. This enables both multi-task learning and proper evaluation of similarity-based virtual screening methods on more difficult targets with target-specific negative examples.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Drug Discovery",
+        "Virtual Screening",
+        "Similarity",
+        "Multi-Target",
+        "Multi-Label Classification",
+        "Multi-Task",
+        "Bioactivity",
+        "Classification",
+        "MUV",
+        "DUD",
+        "ChEMBL",
+        "QSAR",
+        "Benchmark",
+        "Filtered",
+        "Difficult"
+      ],
+      "sources": [
+        "https://github.com/rdkit/benchmarking_platform",
+        "https://doi.org/10.1186/1758-2946-5-26",
+        "https://doi.org/10.1021/ci400466r",
+        "http://www.jcheminf.com/content/5/1/26"
+      ],
+      "target_descriptions": {
+        "0": "MUV_466 - MUV AID 466 (MUV)",
+        "1": "MUV_548 - MUV AID 548 (MUV)",
+        "10": "MUV_737 - MUV AID 737 (MUV)",
+        "11": "MUV_810 - MUV AID 810 (MUV)",
+        "12": "MUV_832 - MUV AID 832 (MUV)",
+        "13": "MUV_852 - MUV AID 852 (MUV)",
+        "14": "MUV_858 - MUV AID 858 (MUV)",
+        "15": "MUV_859 - MUV AID 859 (MUV)",
+        "16": "DUD_cdk2 - DUD cdk2 (DUD)",
+        "17": "DUD_hivrt - DUD hivrt (DUD)",
+        "18": "DUD_vegfr2 - DUD vegfr2 (DUD)",
+        "19": "ChEMBL_11359 - ChEMBL 11359 (ChEMBL)",
+        "2": "MUV_600 - MUV AID 600 (MUV)",
+        "20": "ChEMBL_8 - ChEMBL 8 (ChEMBL)",
+        "21": "ChEMBL_10434 - ChEMBL 10434 (ChEMBL)",
+        "22": "ChEMBL_12670 - ChEMBL 12670 (ChEMBL)",
+        "23": "ChEMBL_12261 - ChEMBL 12261 (ChEMBL)",
+        "24": "ChEMBL_12209 - ChEMBL 12209 (ChEMBL)",
+        "25": "ChEMBL_25 - ChEMBL 25 (ChEMBL)",
+        "26": "ChEMBL_36 - ChEMBL 36 (ChEMBL)",
+        "27": "ChEMBL_43 - ChEMBL 43 (ChEMBL)",
+        "28": "ChEMBL_219 - ChEMBL 219 (ChEMBL)",
+        "29": "ChEMBL_130 - ChEMBL 130 (ChEMBL)",
+        "3": "MUV_644 - MUV AID 644 (MUV)",
+        "30": "ChEMBL_105 - ChEMBL 105 (ChEMBL)",
+        "31": "ChEMBL_126 - ChEMBL 126 (ChEMBL)",
+        "32": "ChEMBL_12252 - ChEMBL 12252 (ChEMBL)",
+        "33": "ChEMBL_11575 - ChEMBL 11575 (ChEMBL)",
+        "34": "ChEMBL_11534 - ChEMBL 11534 (ChEMBL)",
+        "35": "ChEMBL_10498 - ChEMBL 10498 (ChEMBL)",
+        "36": "ChEMBL_12911 - ChEMBL 12911 (ChEMBL)",
+        "37": "ChEMBL_100579 - ChEMBL 100579 (ChEMBL)",
+        "38": "ChEMBL_10378 - ChEMBL 10378 (ChEMBL)",
+        "39": "ChEMBL_11631 - ChEMBL 11631 (ChEMBL)",
+        "4": "MUV_652 - MUV AID 652 (MUV)",
+        "40": "ChEMBL_165 - ChEMBL 165 (ChEMBL)",
+        "41": "ChEMBL_10193 - ChEMBL 10193 (ChEMBL)",
+        "42": "ChEMBL_15 - ChEMBL 15 (ChEMBL)",
+        "43": "ChEMBL_11489 - ChEMBL 11489 (ChEMBL)",
+        "44": "ChEMBL_121 - ChEMBL 121 (ChEMBL)",
+        "45": "ChEMBL_72 - ChEMBL 72 (ChEMBL)",
+        "46": "ChEMBL_259 - ChEMBL 259 (ChEMBL)",
+        "47": "ChEMBL_10188 - ChEMBL 10188 (ChEMBL)",
+        "48": "ChEMBL_108 - ChEMBL 108 (ChEMBL)",
+        "49": "ChEMBL_12952 - ChEMBL 12952 (ChEMBL)",
+        "5": "MUV_689 - MUV AID 689 (MUV)",
+        "50": "ChEMBL_93 - ChEMBL 93 (ChEMBL)",
+        "51": "ChEMBL_10980 - ChEMBL 10980 (ChEMBL)",
+        "52": "ChEMBL_19905 - ChEMBL 19905 (ChEMBL)",
+        "53": "ChEMBL_107 - ChEMBL 107 (ChEMBL)",
+        "54": "ChEMBL_87 - ChEMBL 87 (ChEMBL)",
+        "55": "ChEMBL_17045 - ChEMBL 17045 (ChEMBL)",
+        "56": "ChEMBL_11140 - ChEMBL 11140 (ChEMBL)",
+        "57": "ChEMBL_114 - ChEMBL 114 (ChEMBL)",
+        "58": "ChEMBL_90 - ChEMBL 90 (ChEMBL)",
+        "59": "ChEMBL_13001 - ChEMBL 13001 (ChEMBL)",
+        "6": "MUV_692 - MUV AID 692 (MUV)",
+        "60": "ChEMBL_104 - ChEMBL 104 (ChEMBL)",
+        "61": "ChEMBL_65 - ChEMBL 65 (ChEMBL)",
+        "62": "ChEMBL_61 - ChEMBL 61 (ChEMBL)",
+        "63": "ChEMBL_10280 - ChEMBL 10280 (ChEMBL)",
+        "64": "ChEMBL_51 - ChEMBL 51 (ChEMBL)",
+        "65": "ChEMBL_100 - ChEMBL 100 (ChEMBL)",
+        "66": "ChEMBL_10260 - ChEMBL 10260 (ChEMBL)",
+        "67": "ChEMBL_52 - ChEMBL 52 (ChEMBL)",
+        "68": "ChEMBL_11365 - ChEMBL 11365 (ChEMBL)",
+        "7": "MUV_712 - MUV AID 712 (MUV)",
+        "8": "MUV_713 - MUV AID 713 (MUV)",
+        "9": "MUV_733 - MUV AID 733 (MUV)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": [
+        "This is a virtual screening benchmark dataset designed for evaluating molecular similarity methods.",
+        "Target vectors use tri-state encoding: 0 = not mentioned for that target, 1 = active against that target, 2 = decoy for that target.",
+        "Decoys are specifically selected for each target to match physical properties while avoiding structural similarity to actives.",
+        "A molecule can be active against some targets while serving as a decoy for others, capturing the per-target nature of the data.",
+        "This filtered subset contains only difficult targets (AUC(ECFC0) < 0.8) for more challenging virtual screening scenarios."
+      ]
+    },
+    {
+      "name": "riniker_2",
+      "verbose": "RDKit Benchmarking Platform Subset II (Multi-Target Classification)",
+      "category": "organic",
+      "compounds": 20922,
+      "targets": 37,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The RDKit Benchmarking Platform Subset II is a multi-target classification dataset containing 37 biological targets from ChEMBL. This extended version was published by Riniker, Fechner & Landrum (2013) to evaluate a different virtual screening use case with diverse active sets (100 actives per target). Each molecule has a 37-dimensional target vector where each position can have three values: 0 (not mentioned for that target), 1 (active against that target), or 2 (decoy for that target). This tri-state encoding properly captures the per-target nature of the decoy selection, where a molecule can be active against one target while serving as a decoy for another. Decoys are shared ZINC compounds (10,000 total) selected for all ChEMBL targets to match physical properties while avoiding structural similarity to actives. This enables both multi-task learning and proper evaluation of similarity-based virtual screening methods with target-specific negative examples.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Drug Discovery",
+        "Virtual Screening",
+        "Similarity",
+        "Multi-Target",
+        "Multi-Label Classification",
+        "Multi-Task",
+        "Bioactivity",
+        "Classification",
+        "ChEMBL",
+        "QSAR",
+        "Benchmark"
+      ],
+      "sources": [
+        "https://github.com/rdkit/benchmarking_platform",
+        "https://doi.org/10.1186/1758-2946-5-26",
+        "https://doi.org/10.1021/ci400466r",
+        "http://www.jcheminf.com/content/5/1/26"
+      ],
+      "target_descriptions": {
+        "0": "ChEMBL_10434 - ChEMBL 10434 (ChEMBL)",
+        "1": "ChEMBL_12209 - ChEMBL 12209 (ChEMBL)",
+        "10": "ChEMBL_165 - ChEMBL 165 (ChEMBL)",
+        "11": "ChEMBL_10193 - ChEMBL 10193 (ChEMBL)",
+        "12": "ChEMBL_15 - ChEMBL 15 (ChEMBL)",
+        "13": "ChEMBL_11489 - ChEMBL 11489 (ChEMBL)",
+        "14": "ChEMBL_121 - ChEMBL 121 (ChEMBL)",
+        "15": "ChEMBL_72 - ChEMBL 72 (ChEMBL)",
+        "16": "ChEMBL_259 - ChEMBL 259 (ChEMBL)",
+        "17": "ChEMBL_10188 - ChEMBL 10188 (ChEMBL)",
+        "18": "ChEMBL_108 - ChEMBL 108 (ChEMBL)",
+        "19": "ChEMBL_12952 - ChEMBL 12952 (ChEMBL)",
+        "2": "ChEMBL_25 - ChEMBL 25 (ChEMBL)",
+        "20": "ChEMBL_93 - ChEMBL 93 (ChEMBL)",
+        "21": "ChEMBL_10980 - ChEMBL 10980 (ChEMBL)",
+        "22": "ChEMBL_19905 - ChEMBL 19905 (ChEMBL)",
+        "23": "ChEMBL_107 - ChEMBL 107 (ChEMBL)",
+        "24": "ChEMBL_87 - ChEMBL 87 (ChEMBL)",
+        "25": "ChEMBL_17045 - ChEMBL 17045 (ChEMBL)",
+        "26": "ChEMBL_11140 - ChEMBL 11140 (ChEMBL)",
+        "27": "ChEMBL_114 - ChEMBL 114 (ChEMBL)",
+        "28": "ChEMBL_90 - ChEMBL 90 (ChEMBL)",
+        "29": "ChEMBL_13001 - ChEMBL 13001 (ChEMBL)",
+        "3": "ChEMBL_43 - ChEMBL 43 (ChEMBL)",
+        "30": "ChEMBL_65 - ChEMBL 65 (ChEMBL)",
+        "31": "ChEMBL_61 - ChEMBL 61 (ChEMBL)",
+        "32": "ChEMBL_10280 - ChEMBL 10280 (ChEMBL)",
+        "33": "ChEMBL_51 - ChEMBL 51 (ChEMBL)",
+        "34": "ChEMBL_100 - ChEMBL 100 (ChEMBL)",
+        "35": "ChEMBL_10260 - ChEMBL 10260 (ChEMBL)",
+        "36": "ChEMBL_11365 - ChEMBL 11365 (ChEMBL)",
+        "4": "ChEMBL_130 - ChEMBL 130 (ChEMBL)",
+        "5": "ChEMBL_126 - ChEMBL 126 (ChEMBL)",
+        "6": "ChEMBL_12252 - ChEMBL 12252 (ChEMBL)",
+        "7": "ChEMBL_11575 - ChEMBL 11575 (ChEMBL)",
+        "8": "ChEMBL_11534 - ChEMBL 11534 (ChEMBL)",
+        "9": "ChEMBL_11631 - ChEMBL 11631 (ChEMBL)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": [
+        "This is a virtual screening benchmark dataset designed for evaluating molecular similarity methods.",
+        "Target vectors use tri-state encoding: 0 = not mentioned for that target, 1 = active against that target, 2 = decoy for that target.",
+        "Decoys are shared ZINC compounds selected to match physical properties while avoiding structural similarity to actives.",
+        "All decoy molecules have value 2 for all 37 ChEMBL targets (assumed inactive against all targets)."
+      ]
+    },
+    {
+      "name": "sider",
+      "verbose": "Drug Side Effects",
+      "category": "organic",
+      "compounds": 1220,
+      "targets": 27,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Database of marketed drugs and adverse drug reactions (ADR), grouped into 27 system organ classes.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Physiology"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "skin_irritation",
+      "verbose": "Skin Irritation and Corrosion",
+      "category": "organic",
+      "compounds": 1263,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The skin irritation dataset contains 1,012 curated compounds focused on predicting the skin irritation and corrosion potential of small organic molecules. Experimental animal data were retrieved from the Registration, Evaluation, Authorization and Restriction of Chemicals (REACH) study results database and curated as part of the STopTox study by Borba et al. (2022), published in Environmental Health Perspectives. The dataset comprises 317 skin irritants and 695 non-irritants, providing a binary classification benchmark for developing in silico alternatives to animal testing. This dataset supports the development of QSAR models and machine learning approaches for predicting topical toxicity endpoints, contributing to the 3Rs principles (Replacement, Reduction, and Refinement) in chemical safety assessment.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Biology",
+        "Toxicity",
+        "Skin Irritation",
+        "REACH",
+        "QSAR",
+        "Alternative Methods"
+      ],
+      "sources": [
+        "https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds14",
+        "https://ehp.niehs.nih.gov/doi/10.1289/EHP9341",
+        "https://pubmed.ncbi.nlm.nih.gov/35192406/",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC8863177/",
+        "https://stoptox.mml.unc.edu/"
+      ],
+      "target_descriptions": {
+        "0": "Non-irritant - Compound does not cause skin irritation or corrosion",
+        "1": "Skin irritant - Compound causes skin irritation or corrosion based on experimental data"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "skin_sensitizers",
+      "verbose": "Skin Sensitization Hazard",
+      "category": "organic",
+      "compounds": 1263,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "The skin sensitization dataset contains 1,000 curated compounds focused on predicting the skin sensitization potential of small organic molecules. Data were sourced from the Interagency Coordinating Committee on the Validation of Alternative Methods (ICCVAM) and the Registration, Evaluation, Authorization and Restriction of Chemicals (REACH) study results databases. The dataset was curated as part of the STopTox study by Borba et al. (2022), published in Environmental Health Perspectives, and is also integrated into the Pred-Skin web portal (Borba et al., 2020). The dataset comprises 481 skin sensitizers and 519 non-sensitizers, providing a binary classification benchmark for developing in silico alternatives to animal testing. This dataset supports the development of QSAR models and machine learning approaches for predicting skin sensitization hazard, contributing to the 3Rs principles (Replacement, Reduction, and Refinement) in chemical safety assessment and aligning with the OECD adverse outcome pathway (AOP) framework for skin sensitization.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Biology",
+        "Toxicity",
+        "Skin Sensitization",
+        "REACH",
+        "ICCVAM",
+        "QSAR",
+        "Alternative Methods",
+        "LLNA"
+      ],
+      "sources": [
+        "https://db.chempharos.eu/datasets/Datasets.zul?datasetID=ds15",
+        "https://ehp.niehs.nih.gov/doi/10.1289/EHP9341",
+        "https://pubmed.ncbi.nlm.nih.gov/35192406/",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC8863177/",
+        "https://pubs.acs.org/doi/10.1021/acs.chemrestox.0c00186",
+        "https://pubmed.ncbi.nlm.nih.gov/32673477/",
+        "https://predskin.labmol.com.br/",
+        "https://stoptox.mml.unc.edu/"
+      ],
+      "target_descriptions": {
+        "0": "Non-sensitizer - Compound does not cause skin sensitization",
+        "1": "Skin sensitizer - Compound causes skin sensitization based on experimental data (LLNA, human, or in vitro assays)"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "synth_binary_global",
+      "verbose": "Synth Binary Global",
+      "category": "organic",
+      "compounds": 249455,
+      "targets": 2,
+      "target_type": [
+        "classification"
+      ],
+      "description": "synthetic binary classification task based on global properties",
+      "tags": [
+        "Molecules"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "synth_binary_local",
+      "verbose": "Synth Binary Local",
+      "category": "organic",
+      "compounds": 249455,
+      "targets": 2,
+      "target_type": [
+        "regression"
+      ],
+      "description": "",
+      "tags": [
+        "Molecules"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "tadf",
+      "verbose": "Tadf",
+      "category": "organic",
+      "compounds": 460199,
+      "targets": 3,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Set of organic molecules used in a high-throughput virtual screening approach of to find candidates for more efficient molecular organic light-emitting diodes.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "DFT",
+        "Electronic Properties",
+        "OLED"
+      ],
+      "sources": [
+        "https://www.nature.com/articles/nmat4717#Sec16"
+      ],
+      "target_descriptions": {
+        "0": "tadf_rate - Thermally activated delayed fluorescence (TADF) rate",
+        "1": "splitting_energy - Singlet-triplet splitting energy",
+        "2": "oscillator_strength - Oscillator strength"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "tmqm",
+      "verbose": "tmQM Transition Metal Complex QM Properties",
+      "category": "tmc",
+      "compounds": 100847,
+      "targets": 8,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Graph dataset of ~100,000 mononuclear transition metal complexes from the tmQM dataset (Balcells & Skjelstad, JCIM 2020; 2024 release) with 8 DFT-computed quantum-mechanical properties (TPSSh-D3BJ/def2-SVP). Whole-complex SMILES are decomposed into metal + ligand fragments using decompose_complex_smiles() and processed using MetalOrganicProcessing.",
+      "tags": [
+        "Molecules",
+        "TransitionMetals",
+        "TMC",
+        "QM",
+        "DFT"
+      ],
+      "sources": [
+        "https://doi.org/10.1021/acs.jcim.0c01041",
+        "https://github.com/uiocompcat/tmQM"
+      ],
+      "target_descriptions": {
+        "0": "Electronic_E",
+        "1": "Dispersion_E",
+        "2": "Dipole_M",
+        "3": "Metal_q",
+        "4": "HL_Gap",
+        "5": "HOMO_Energy",
+        "6": "LUMO_Energy",
+        "7": "Polarizability"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": "1.7.0",
+      "notes": []
+    },
+    {
+      "name": "tmqmg",
+      "verbose": "tmQMg Transition Metal Complex QM Properties",
+      "category": "tmc",
+      "compounds": 63466,
+      "targets": 20,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Graph dataset of ~63,000 mononuclear transition metal complexes from the tmQMg dataset (Kneiding et al., Digital Discovery 2023) with 20 DFT-computed quantum-mechanical properties. Processed using MetalOrganicProcessing with decomposed metal + ligand SMILES representation and heuristic donor atom detection.",
+      "tags": [
+        "Molecules",
+        "TransitionMetals",
+        "TMC",
+        "QM",
+        "DFT"
+      ],
+      "sources": [
+        "https://doi.org/10.1039/D2DD00129B",
+        "https://github.com/TheFreiLab/electrum_val"
+      ],
+      "target_descriptions": {
+        "0": "tzvp_lumo_energy",
+        "1": "tzvp_homo_energy",
+        "10": "gibbs_energy",
+        "11": "gibbs_energy_correction",
+        "12": "zpe_correction",
+        "13": "heat_capacity",
+        "14": "entropy",
+        "15": "tzvp_dipole_moment",
+        "16": "dipole_moment_delta",
+        "17": "polarisability",
+        "18": "lowest_vibrational_frequency",
+        "19": "highest_vibrational_frequency",
+        "2": "tzvp_homo_lumo_gap",
+        "3": "homo_lumo_gap_delta",
+        "4": "tzvp_electronic_energy",
+        "5": "electronic_energy_delta",
+        "6": "tzvp_dispersion_energy",
+        "7": "dispersion_energy_delta",
+        "8": "enthalpy_energy",
+        "9": "enthalpy_energy_correction"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": "1.7.0",
+      "notes": []
+    },
+    {
+      "name": "tox21",
+      "verbose": "Toxicology",
+      "category": "organic",
+      "compounds": 7570,
+      "targets": 12,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Qualitative toxicity measurements on 12 biological targets, including nuclear receptors and stress response pathways.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Physiology",
+        "Toxicity"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "toxcast",
+      "verbose": "Toxicology",
+      "category": "organic",
+      "compounds": 6842,
+      "targets": 617,
+      "target_type": [
+        "classification"
+      ],
+      "description": "Toxicology data for a large library of compounds based on in vitro high-throughput screening, including experiments on over 600 tasks.",
+      "tags": [
+        "Smiles",
+        "Molecules",
+        "Physiology"
+      ],
+      "sources": [],
+      "target_descriptions": {},
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    },
+    {
+      "name": "zinc250k",
+      "verbose": "ZINC250K Subset of Drug-like Molecules",
+      "category": "organic",
+      "compounds": 249455,
+      "targets": 3,
+      "target_type": [
+        "regression"
+      ],
+      "description": "Curated subset of approximately 250000 drug-like, commercially available small organic molecules selected for virtual screening and molecular generation benchmarks, each represented as a molecular graph of up to 38 heavy atoms.Data were retrieved from the ZINC database (ZINC15), filtered for molecular size and drug-likeness, and were processed as part of the \"Automatic Chemical Design Using a Data-Driven Continuous Representation of Molecules\" study by Gómez-Bombarelli et al.",
+      "tags": [
+        "Molecules",
+        "SMILES",
+        "Biology",
+        "Drug Discovery"
+      ],
+      "sources": [
+        "https://pubs.acs.org/doi/10.1021/ci049714%2B",
+        "https://pubs.acs.org/doi/10.1021/acscentsci.7b00572",
+        "https://www.kaggle.com/datasets/basu369victor/zinc250k"
+      ],
+      "target_descriptions": {
+        "0": "logP - Octanol-water partition coefficient",
+        "1": "QED - Quantitative Estimation of Drug-likeness",
+        "2": "SAS - Synthetic Accessibility Score"
+      },
+      "raw": [
+        "csv"
+      ],
+      "min_version": null,
+      "notes": []
+    }
+  ]
+}

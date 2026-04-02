@@ -1,4 +1,5 @@
 site_name: ChemMatData
+site_url: https://the16thpythonist.github.io/chem_mat_data/docs/
 nav:
   - Introduction: index.md
   - Datasets: datasets.md

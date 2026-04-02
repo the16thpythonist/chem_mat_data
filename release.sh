@@ -166,7 +166,7 @@ ok "Package built"
 step "Publishing package"
 
 info "Executing: uv publish"
-uv publish dist/chem_mat_data-"${NEW_VERSION}"*.tar.gz dist/chem_mat_data-"${NEW_VERSION}"*.whl
+uv publish dist/*"${NEW_VERSION}"*
 ok "Package published"
 
 # ── Done ─────────────────────────────────────────────────────────────

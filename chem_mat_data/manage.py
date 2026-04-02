@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import yaml
 import time
 import difflib
@@ -22,6 +23,8 @@ from chem_mat_data.web import NextcloudFileShare
 from chem_mat_data.utils import get_version
 from chem_mat_data.utils import PATH
 from chem_mat_data.utils import DOCS_PATH
+from chem_mat_data.utils import PAGES_PATH
+from chem_mat_data.utils import PROJECT_PATH
 from chem_mat_data.utils import METADATA_PATH
 from chem_mat_data.utils import TEMPLATE_ENV
 from chem_mat_data.utils import CsvListType
@@ -202,6 +205,8 @@ class CLI(click.RichGroup):
         # docs command group
         self.add_command(self.docs_group)
         self.docs_group.add_command(self.docs_collect_datasets_command)
+        self.docs_group.add_command(self.docs_compile_command)
+        self.docs_group.add_command(self.docs_deploy_command)
 
     def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
         """
@@ -797,6 +802,276 @@ class CLI(click.RichGroup):
         
         click.secho('✅ datasets overview written to file', fg='green')
         click.secho('')
+
+    @click.command('compile', short_help='Compile dataset metadata into JSON for the landing page.')
+    @click.option('--output-path',
+                  default=os.path.join(PAGES_PATH, 'datasets.json'),
+                  show_default=True,
+                  help='The path to the output JSON file.')
+    @click.pass_obj
+    def docs_compile_command(self,
+                             output_path: str,
+                             ) -> None:
+        """
+        Fetch dataset metadata from the remote file share server and compile it into a JSON file
+        that powers the interactive dataset explorer on the landing page. The generated
+        ``datasets.json`` is placed in the ``pages/`` directory and loaded by the landing page
+        at runtime.
+
+        Run this command before ``docs deploy`` whenever the dataset metadata on the server has
+        changed, so that the landing page reflects the latest state.
+        """
+        from datetime import datetime, timezone
+        from rich.console import Console
+        from rich.panel import Panel
+
+        console = Console()
+
+        console.print()
+        console.print(Panel(
+            "[bold]Compile Dataset Metadata[/bold]\n"
+            f"[dim]Output: {output_path}[/dim]",
+            style="bright_blue",
+            expand=False,
+        ))
+        console.print()
+
+        # Step 1: Fetch metadata from remote
+        with console.status("[bold cyan]Fetching metadata from remote server...", spinner="dots"):
+            try:
+                metadata: dict = self.file_share.fetch_metadata(force=True)
+            except Exception as e:
+                console.print("[red]  [bold]\\[1/3][/bold] Failed to fetch metadata[/red]")
+                console.print(Panel(str(e), title="Error", style="red"))
+                return
+
+        num_total = len(metadata.get('datasets', {}))
+        console.print(f"[green]  [bold]\\[1/3][/bold] Fetched metadata ({num_total} datasets found)[/green]")
+
+        # Step 2: Transform metadata into JSON structure
+        with console.status("[bold cyan]Transforming dataset metadata...", spinner="dots"):
+            datasets = []
+            for dataset_name, dataset_info in metadata.get('datasets', {}).items():
+                # Skip internal/test datasets prefixed with underscore
+                if dataset_name.startswith('_'):
+                    continue
+
+                # Build a clean, fallback-safe dataset object
+                verbose_fallback = dataset_name.replace('_', ' ').title()
+                datasets.append({
+                    'name': dataset_name,
+                    'verbose': dataset_info.get('verbose', verbose_fallback),
+                    'category': dataset_info.get('category', 'organic'),
+                    'compounds': dataset_info.get('compounds', 0),
+                    'targets': dataset_info.get('targets', 0),
+                    'target_type': dataset_info.get('target_type', []),
+                    'description': dataset_info.get('description', ''),
+                    'tags': dataset_info.get('tags', []),
+                    'sources': dataset_info.get('sources', []),
+                    'target_descriptions': dataset_info.get('target_descriptions', {}),
+                    'raw': dataset_info.get('raw', []),
+                    'min_version': dataset_info.get('min_version', None),
+                    'notes': dataset_info.get('notes', []),
+                })
+
+            # Collect unique categories for the summary
+            categories = sorted(set(d['category'] for d in datasets))
+
+        console.print(f"[green]  [bold]\\[2/3][/bold] Transformed {len(datasets)} public datasets[/green]")
+
+        # Step 3: Write JSON file
+        with console.status("[bold cyan]Writing datasets.json...", spinner="dots"):
+            # Construct the download base URL so the landing page can link directly to raw files
+            download_base = f'{self.file_share.base_url}/public.php/dav/files/{self.file_share.share_token}'
+
+            output = {
+                'generated_at': datetime.now(timezone.utc).isoformat(),
+                'version': get_version(),
+                'download_base': download_base,
+                'datasets': datasets,
+            }
+
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(output, f, indent=2, ensure_ascii=False)
+
+        console.print(f"[green]  [bold]\\[3/3][/bold] Written to {output_path}[/green]")
+
+        console.print()
+        console.print(Panel(
+            f"[bold green]Compilation complete![/bold green]\n\n"
+            f"  Datasets:    {len(datasets)}\n"
+            f"  Categories:  {', '.join(categories)}\n"
+            f"  Output:      {output_path}\n\n"
+            f"[dim]Run 'cmmanage docs deploy' to publish the updated site.[/dim]",
+            style="green",
+            expand=False,
+        ))
+
+    @click.command('deploy', short_help='Build and deploy the documentation site to GitHub Pages.')
+    @click.option('--preview', is_flag=True, help='Build the site locally and open it in the browser without deploying.')
+    @click.option('--port', default=8000, show_default=True, help='The port to use for the local preview server.')
+    @click.option('--build-dir', default=os.path.join(PROJECT_PATH, '_site'), show_default=True,
+                  help='The directory to build the site into.')
+    @click.pass_obj
+    def docs_deploy_command(self,
+                            preview: bool,
+                            port: int,
+                            build_dir: str,
+                            ) -> None:
+        """
+        Build and deploy the full documentation site to GitHub Pages. This command performs all
+        the steps required for a complete deployment: building the MkDocs documentation, copying
+        the landing page, and pushing the result to the ``gh-pages`` branch.
+
+        The site is composed of two parts: a custom landing page served at the root (``/``) and
+        the MkDocs documentation served under ``/docs/``.
+
+        Use ``--preview`` to build the site locally and open it in the browser for inspection
+        without pushing anything to the remote.
+        """
+        import shutil
+        import subprocess
+        import webbrowser
+        import http.server
+        import threading
+
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.status import Status
+
+        console = Console()
+        mkdocs_dir = os.path.join(build_dir, 'docs')
+        pages_dir = PAGES_PATH
+        project_dir = PROJECT_PATH
+        errors = []
+
+        console.print()
+        mode_label = "Preview" if preview else "Deploy"
+        console.print(Panel(
+            f"[bold]GitHub Pages {mode_label}[/bold]\n"
+            f"[dim]Building site into {build_dir}[/dim]",
+            style="bright_blue",
+            expand=False,
+        ))
+        console.print()
+
+        # Step 1: Clean previous build
+        with console.status("[bold cyan]Cleaning previous build...", spinner="dots"):
+            if os.path.exists(build_dir):
+                shutil.rmtree(build_dir)
+            os.makedirs(build_dir, exist_ok=True)
+        console.print("[green]  [bold]\\[1/4][/bold] Cleaned build directory[/green]")
+
+        # Step 2: Build MkDocs
+        with console.status("[bold cyan]Building MkDocs documentation...", spinner="dots"):
+            result = subprocess.run(
+                ['mkdocs', 'build', '-d', mkdocs_dir],
+                cwd=project_dir,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                errors.append(f"mkdocs build failed:\n{result.stderr}")
+
+        if errors:
+            console.print(f"[red]  [bold]\\[2/4][/bold] MkDocs build failed[/red]")
+            console.print(Panel(errors[-1], title="Error", style="red"))
+            return
+
+        console.print("[green]  [bold]\\[2/4][/bold] Built MkDocs documentation[/green]")
+
+        # Step 3: Copy landing page
+        with console.status("[bold cyan]Copying landing page...", spinner="dots"):
+            if not os.path.isdir(pages_dir):
+                errors.append(f"Landing page directory not found: {pages_dir}")
+            else:
+                for item in os.listdir(pages_dir):
+                    src = os.path.join(pages_dir, item)
+                    dst = os.path.join(build_dir, item)
+                    if os.path.isdir(src):
+                        shutil.copytree(src, dst, dirs_exist_ok=True)
+                    else:
+                        shutil.copy2(src, dst)
+
+                # Add .nojekyll to prevent GitHub Pages Jekyll processing
+                nojekyll_path = os.path.join(build_dir, '.nojekyll')
+                with open(nojekyll_path, 'w') as f:
+                    pass
+
+        if errors:
+            console.print(f"[red]  [bold]\\[3/4][/bold] Landing page copy failed[/red]")
+            console.print(Panel(errors[-1], title="Error", style="red"))
+            return
+
+        console.print("[green]  [bold]\\[3/4][/bold] Copied landing page[/green]")
+
+        # Step 4: Deploy or preview
+        if preview:
+            console.print(f"[green]  [bold]\\[4/4][/bold] Starting preview server on port {port}[/green]")
+            console.print()
+
+            url = f"http://localhost:{port}"
+            console.print(Panel(
+                f"[bold green]Preview server running[/bold green]\n\n"
+                f"  Landing page:   [link={url}]{url}[/link]\n"
+                f"  Documentation:  [link={url}/docs/]{url}/docs/[/link]\n\n"
+                f"[dim]Press Ctrl+C to stop the server[/dim]",
+                style="green",
+                expand=False,
+            ))
+
+            webbrowser.open(url)
+
+            handler = lambda *args, **kwargs: http.server.SimpleHTTPRequestHandler(
+                *args, directory=build_dir, **kwargs
+            )
+            server = http.server.HTTPServer(('localhost', port), handler)
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                server.shutdown()
+                console.print("\n[dim]Preview server stopped.[/dim]")
+        else:
+            with console.status("[bold cyan]Deploying to gh-pages...", spinner="dots"):
+                result = subprocess.run(
+                    ['ghp-import', '-n', '-p', '-f', build_dir],
+                    cwd=project_dir,
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode != 0:
+                    errors.append(f"ghp-import failed:\n{result.stderr}")
+
+            if errors:
+                console.print(f"[red]  [bold]\\[4/4][/bold] Deployment failed[/red]")
+                console.print(Panel(errors[-1], title="Error", style="red"))
+
+                # Check if ghp-import is installed
+                ghp_check = shutil.which('ghp-import')
+                if not ghp_check:
+                    console.print()
+                    console.print(Panel(
+                        "[bold yellow]ghp-import is not installed.[/bold yellow]\n\n"
+                        "Install it with: [bold]pip install ghp-import[/bold]",
+                        style="yellow",
+                        expand=False,
+                    ))
+                return
+
+            console.print("[green]  [bold]\\[4/4][/bold] Deployed to gh-pages[/green]")
+            console.print()
+            console.print(Panel(
+                "[bold green]Deployment complete![/bold green]\n\n"
+                "  The site should be live shortly at:\n"
+                "  [link=https://the16thpythonist.github.io/chem_mat_data/]https://the16thpythonist.github.io/chem_mat_data/[/link]",
+                style="green",
+                expand=False,
+            ))
+
+        # Clean up build directory after deploy (not for preview, user may want to inspect)
+        if not preview and os.path.exists(build_dir):
+            shutil.rmtree(build_dir)
 
 
 @click.group(cls=CLI)

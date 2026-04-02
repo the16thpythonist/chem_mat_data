@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - Unreleased
+
+### Added
+
+- **Interactive dataset explorer landing page.** The GitHub Pages site now features a full
+  interactive landing page at the root (`/`) with MkDocs documentation served under `/docs/`.
+  The landing page includes a searchable, sortable dataset table with expandable detail rows,
+  category/task/format filters, copy-to-clipboard code examples, direct download links to the
+  raw data on bwSyncAndShare, and source reference lists.
+- **`cmmanage docs compile` command.** Fetches dataset metadata from the remote file share server
+  and compiles it into a `datasets.json` file in the `pages/` directory. This JSON powers the
+  interactive landing page at runtime.
+- **`cmmanage docs deploy` command.** Builds the full GitHub Pages site locally (MkDocs docs +
+  landing page) and deploys it to the `gh-pages` branch via `ghp-import`. Supports `--preview`
+  flag for local inspection with a built-in HTTP server.
+- **Direct dataset download links.** Expanded dataset details on the landing page include download
+  buttons that link directly to raw dataset files (CSV, XYZ) on the bwSyncAndShare file share.
+- **Format column and filter.** The dataset table shows a Format column (csv, xyz_bundle) with a
+  corresponding filter in the filter bar alongside Category and Task filters.
+
+### Changed
+
+- **GitHub Pages deployment restructured.** The site is now composed of a custom landing page at
+  the root and MkDocs documentation at `/docs/`. The GitHub Actions workflow and MkDocs config
+  (`site_url`) were updated accordingly.
+
 ## [1.7.1] - Unreleased
 
 ### Changed

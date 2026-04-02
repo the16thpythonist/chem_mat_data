@@ -34,6 +34,8 @@ TEMPLATE_ENV = j2.Environment(loader=j2.FileSystemLoader(TEMPLATE_PATH))
 
 METADATA_PATH = os.path.join(PATH, 'metadata.yml')
 DOCS_PATH = os.path.join(os.path.dirname(PATH), 'docs')
+PAGES_PATH = os.path.join(os.path.dirname(PATH), 'pages')
+PROJECT_PATH = os.path.dirname(PATH)
 
 # MISC FUNCTIONS
 # ==============

@@ -659,6 +659,40 @@ datasets:
         target_type:
         - regression
         targets: 1
+    electrum_oxstate:
+        category: tmc
+        compounds: 39166
+        description: Graph dataset of ~39,000 mononuclear transition metal complexes
+            from the CSD, curated by Orsi & Frei (Digital Discovery 2025) for the
+            ELECTRUM paper. Multi-class classification of metal oxidation state (0
+            to +6, 7 classes). Processed using MetalOrganicProcessing with decomposed
+            metal + ligand SMILES and heuristic donor atom detection. Oxidation state
+            is also passed to the processing for accurate d-electron count encoding.
+        min_version: 1.7.0
+        raw:
+        - csv
+        sources:
+        - https://doi.org/10.1039/D5DD00145E
+        - https://github.com/TheFreiLab/electrum_val
+        tags:
+        - Molecules
+        - TransitionMetals
+        - TMC
+        - OxidationState
+        - Classification
+        - CSD
+        target_descriptions:
+            '0': OS=0 class indicator
+            '1': OS=+1 class indicator
+            '2': OS=+2 class indicator
+            '3': OS=+3 class indicator
+            '4': OS=+4 class indicator
+            '5': OS=+5 class indicator
+            '6': OS=+6 class indicator
+        target_type:
+        - classification
+        targets: 7
+        verbose: ELECTRUM CSD Oxidation State Classification
     esol:
         compounds: 1127
         description: Water solubility data(log solubility in mols per litre) for common

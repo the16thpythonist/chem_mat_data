@@ -35,6 +35,7 @@ MANIFEST
 # Custom
 chem_mat_data/scripts/results/*
 site/*
+_site/
 adrs/*
 
 *.gz
