@@ -1,11 +1,18 @@
 # AI Coding Agent for Dataset Discovery and Processing
 
+**Required Tools**
 Crawlfetch: github.com/unclecode/crawl4ai
 MCP File Downloader: github.com/abs222222/mcp-file-downloader
 Websearch: github.com/ghoulr/opencode-websearch-cited
 
-Add to opencode config file:
+**How to use**
+1. opencode serve --port 54321 --print-logs
+2. cmmanage agent process <link>
+3. cmmanage agent generate
+4. python chem_mat_data/agent/artifacts/scripts/<name>_generated.py 
 
+**OpenCode Configurations**
+```
 "mcp": {
     "file_downloader": {
         "type": "local",
@@ -50,7 +57,7 @@ Add to opencode config file:
                 "*": "deny"
             }
         }
-    }
+    },
     "script-generation": {
         "description": "Generate a processing script for the downloaded dataset.",
         "permission": {
@@ -76,10 +83,5 @@ Add to opencode config file:
         }
     }
 }
-
-How to use:
-0. opencode serve --port 54321 --print-logs
-1. cmmanage agent process <link>
-2. cmmanage agent generate
-3. python chem_mat_data/agent/artifacts/scripts/<name>_generated.py 
+```
 

@@ -58,7 +58,7 @@ BASE_TEMPLATE_PATH: Path = (
 )
 SCRIPT_GENERATION_PROMPT: str = """
 You are a Python developer who specializes in writing dataset processing scripts. 
-You have file tools enabled (bash, read, glob, grep, list, codesearch, edit). Use them to inspect the downloaded dataset file and existing scripts in the directories mentioned below before writing code.
+You have file tools enabled (bash, read, glob, grep, list, codesearch). Use them to inspect the downloaded dataset file and existing scripts in the directories mentioned below before writing code.
 Treat all locations as read-only except the scripts artifacts directory.
 
 Inputs for this task:
