@@ -2,6 +2,9 @@ venv/*
 venv/
 .vscode/
 tests/artifacts/
+.mcp-servers/
+benchmark_results/
+chem_mat_data/agent/artifacts/
 
 # Byte-compiled / optimized / DLL files
 */__pycache__/*

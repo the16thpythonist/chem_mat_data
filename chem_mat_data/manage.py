@@ -90,6 +90,357 @@ class RichDiffDisplay(RichMixin):
             yield Text(f"📊 {self.changed_lines} lines differ between local and remote files", style="yellow")
 
 
+CODE_STYLE = Style(color='grey66', bgcolor='grey19')
+
+
+def render_help(text: str) -> Text:
+    """
+    Convert a help string with backtick code spans and rich markup into a styled
+    Rich ``Text`` object.
+
+    Backtick-delimited spans (e.g. \`metadata.yml\`) are rendered as pills with a
+    subtle dark background. Rich markup like ``[bold]...[/bold]`` in the remaining
+    text is preserved.
+
+    :param text: The help text string, optionally containing \`code\` spans and
+        ``[bold]`` rich markup.
+
+    :returns: A Rich ``Text`` object ready for console rendering.
+    """
+    import re
+
+    result = Text()
+    parts = re.split(r'`([^`]+)`', text)
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            result.append_text(Text.from_markup(part))
+        else:
+            result.append(f" {part} ", style=CODE_STYLE)
+
+    return result
+
+
+class RichHelpCommand(click.RichCommand):
+    """
+    A custom command class that uses a Rich widget instead of the default help text
+    rendering. This avoids the issue where rich_click dims paragraphs after the first one.
+
+    Pass a ``rich_help`` widget (any Rich renderable) via the ``cls`` and ``rich_help``
+    keyword arguments of the ``@click.command`` decorator. The widget is rendered between
+    the usage line and the options panel, constrained to ``help_max_width`` characters.
+    """
+
+    def __init__(self, *args, rich_help=None, help_max_width: int = 120, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.rich_help_widget = rich_help
+        self.help_max_width = help_max_width
+
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        self.format_usage(ctx, formatter)
+
+        if self.rich_help_widget:
+            help_width = min(Console().width, self.help_max_width)
+            help_console = Console(width=help_width)
+            help_console.print(self.rich_help_widget)
+
+        self.format_options(ctx, formatter)
+        self.format_epilog(ctx, formatter)
+
+
+class RichHelpGroup(click.RichGroup):
+    """
+    A custom group class that uses a Rich widget for help text rendering,
+    analogous to :class:`RichHelpCommand` but for command groups.
+
+    The widget is rendered between the usage line and the options/commands
+    panels. Commands are listed in registration order (not alphabetical).
+    """
+
+    def __init__(self, *args, rich_help=None, help_max_width: int = 120, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.rich_help_widget = rich_help
+        self.help_max_width = help_max_width
+
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        self.format_usage(ctx, formatter)
+
+        if self.rich_help_widget:
+            help_width = min(Console().width, self.help_max_width)
+            help_console = Console(width=help_width)
+            help_console.print(self.rich_help_widget)
+
+        self.format_options(ctx, formatter)
+
+    def list_commands(self, ctx: click.Context) -> List[str]:
+        """Return commands in registration order, not alphabetical."""
+        return list(self.commands.keys())
+
+
+class RichDocsCompileHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``docs compile`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Fetch dataset metadata from the remote file share server and compile it into a '
+            'JSON file that powers the interactive dataset explorer on the landing page.\n'
+        )
+
+        yield render_help(
+            'The command connects to the Nextcloud file share, downloads the current '
+            '`metadata.yml`, and transforms each dataset entry into a structured JSON object '
+            'containing the dataset name, category, number of compounds, target types, tags, '
+            'and source references. Internal datasets (names starting with `_`) are excluded '
+            'automatically.\n'
+        )
+
+        yield render_help(
+            'The resulting `datasets.json` file is written into the `pages/` directory so that '
+            'the static landing page can load it at runtime. It also embeds a download base '
+            'URL so the explorer can link directly to the raw dataset files on the server.\n'
+        )
+
+        yield render_help(
+            'Run this command before `cmmanage docs deploy` whenever the dataset metadata on '
+            'the server has changed, so that the landing page reflects the latest state.\n'
+        )
+
+
+class RichManageHelp(RichMixin):
+    """
+    Rich display element that renders the extended help text for the cmmanage CLI.
+
+    The help text consists of an introductory paragraph about ChemMatData, a paragraph
+    explaining the cmmanage interface, and one paragraph for each command category
+    (Metadata, Dataset, Docs, Agent) with the category name bolded.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'ChemMatData is a Python package that provides unified access to chemistry and material science '
+            'datasets for machine learning applications. It is specifically designed for training graph neural '
+            'networks (GNNs) by offering both raw tabular data (CSV/pandas) and processed graph representations. '
+            'The package connects to a remote Nextcloud file share server to distribute datasets and uses a '
+            'local caching system to avoid redundant downloads.\n'
+        )
+
+        yield render_help(
+            'The `cmmanage` command line interface is the internal management tool for the ChemMatData package. '
+            'Unlike the `cmdata` command, which is intended for end users to browse and download datasets, `cmmanage` '
+            'is aimed at developers and maintainers of the package and the dataset collection. It exposes commands '
+            'for maintaining metadata, creating and uploading datasets, managing documentation, and running an '
+            'LLM-based dataset discovery agent. The commands are organized into the following categories:\n'
+        )
+
+        yield render_help(
+            '[bold]Metadata[/bold] commands manage the `metadata.yml` file that describes all datasets in the collection. '
+            'This file is the central registry that maps dataset names to their properties such as the number of '
+            'elements, target labels, and dataset category. The metadata commands allow you to collect metadata from '
+            'individual experiment results, upload the compiled file to the remote server, edit it locally, compare '
+            'local and remote versions with a diff view, and remove individual dataset entries.\n'
+        )
+
+        yield render_help(
+            '[bold]Dataset[/bold] commands handle the creation and distribution of dataset files. Datasets are '
+            'produced by running experiment modules (Python scripts) that fetch raw data, process molecular or '
+            'crystal structures into the graph format, and package the results. The dataset commands let you '
+            'trigger these experiment scripts to create new datasets locally and then upload the resulting files '
+            'to the remote file share server for distribution.\n'
+        )
+
+        yield render_help(
+            '[bold]Docs[/bold] commands assist with building and deploying the package documentation. This includes '
+            'compiling dataset metadata into structured formats for the documentation site and the landing page, '
+            'as well as deploying the full documentation to GitHub Pages. These commands ensure that the public '
+            'documentation stays in sync with the current state of the dataset collection and makes it easy to '
+            'preview changes locally before publishing.\n'
+        )
+
+        yield render_help(
+            '[bold]Agent[/bold] commands expose an LLM-based dataset discovery agent that can automatically find '
+            'and process datasets from scientific publications. Given a publication URL, the agent extracts dataset '
+            'download links and can generate processing scripts that convert the raw data into the ChemMatData '
+            'graph format. This is especially useful for rapidly onboarding new datasets from the literature without '
+            'having to manually search for and download the underlying data files.\n'
+        )
+
+
+class RichAgentIdentifyHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent identify`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Given a publication URL or paper title, run an LLM agent that reads the '
+            'paper and determines whether it publishes molecular or materials property '
+            'data that could be compiled into a machine-learning dataset.\n'
+        )
+
+        yield render_help(
+            'The agent looks for data availability sections, repository links (Zenodo, '
+            'GitHub, Figshare, etc.), supplementary tables with SMILES or molecular '
+            'formulas, and mentions of DFT calculations or experimental measurements '
+            'on collections of compounds. If given a paper title instead of a URL, the '
+            'agent will search the web to locate the paper first.\n'
+        )
+
+        yield render_help(
+            'The result is a simple yes/no decision accompanied by a short reasoning '
+            'paragraph. A JSON file with both fields is saved to '
+            '`agent/artifacts/identify/`.\n'
+        )
+
+
+class RichAgentPrepareHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent prepare`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Given a scientific publication URL, run an LLM agent that navigates the paper, '
+            'searches for associated dataset repositories (Zenodo, GitHub, Figshare, OSF, etc.), '
+            'and downloads the raw data files.\n'
+        )
+
+        yield render_help(
+            'The agent inspects sections such as "Data Availability", supplementary materials, '
+            'and linked external repositories. It prefers tabular formats (`.csv`, `.tsv`, `.xlsx`) '
+            'over archives and avoids downloading duplicate representations. If a `README` with '
+            'schema or column descriptions is available, it is downloaded alongside the data.\n'
+        )
+
+        yield render_help(
+            'Downloaded files are saved into `agent/artifacts/downloads/`. After this command '
+            'completes, run `cmmanage agent generate` to produce a processing script from the '
+            'downloaded data.\n'
+        )
+
+        yield render_help(
+            'The LLM backend is selected from the `[agent]` section of the config file '
+            '(default: `opencode`). Use `--backend` to override, e.g. '
+            '`cmmanage agent --backend claude prepare <url>`.\n'
+        )
+
+
+class RichAgentGenerateHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent generate`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Inspect previously downloaded dataset files in `agent/artifacts/downloads/` and '
+            'generate a ChemMatData-compatible processing script that converts the raw data '
+            'into the graph format.\n'
+        )
+
+        yield render_help(
+            'The LLM agent reads the downloaded files (and any accompanying README), studies '
+            'the example scripts in `agent/example_scripts/`, and produces a new Python script '
+            'that extends the base processing template (`scripts/create_graph_datasets.py`). '
+            'The generated script follows the same conventions as hand-written dataset scripts '
+            'and is ready to run locally.\n'
+        )
+
+        yield render_help(
+            'The output is saved to `agent/artifacts/scripts/<dataset>_generated.py`. '
+            'You can then execute it directly with '
+            '`python chem_mat_data/agent/artifacts/scripts/<name>_generated.py` to produce '
+            'the final graph dataset.\n'
+        )
+
+        yield render_help(
+            'This command requires that `cmmanage agent prepare` has been run first so that '
+            'dataset files are present in the downloads directory.\n'
+        )
+
+
+class RichAgentInstallPluginsHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent install-plugins`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Install the external MCP servers and tools that enhance the agent\'s '
+            'capabilities. Plugins are installed for the currently active backend only '
+            '(as set in the config file or via `--backend`).\n'
+        )
+
+        yield render_help(
+            '[bold]Claude backend[/bold] plugins: `crawl4ai-mcp-server` (pip) for advanced '
+            'web crawling with JavaScript rendering, and `mcp-file-downloader` (Node.js) for '
+            'robust file downloads with optional browser-mode support. These are configured as '
+            'MCP servers in the `[agent.claude.mcp_servers]` config section.\n'
+        )
+
+        yield render_help(
+            '[bold]OpenCode backend[/bold] plugins: `mcp-file-downloader` (Node.js) for file '
+            'downloads. After installation, the command prints an OpenCode configuration snippet '
+            'that must be added to your OpenCode config manually. The other OpenCode plugins '
+            '(`crawl4ai`, `websearch_cited`) are installed as OpenCode plugins separately.\n'
+        )
+
+        yield render_help(
+            'All MCP servers are installed into the `.mcp-servers/` directory inside the '
+            'project root. The config file is updated automatically with the correct paths '
+            '(Claude backend only). The agent works without these plugins using built-in '
+            'fallback tools, but performs better with them installed.\n'
+        )
+
+
+class RichAgentGroupHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent`` command group.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'The agent system automates the discovery and processing of chemistry and '
+            'materials science datasets from scientific publications. Given a publication '
+            'URL, it can locate the associated raw data files, download them, and generate '
+            'a ChemMatData-compatible processing script that converts the data into the '
+            'graph format used for training graph neural networks.\n'
+        )
+
+        yield render_help(
+            'The typical workflow consists of two steps. First, '
+            '`cmmanage agent prepare <url>` navigates the publication page, searches for '
+            'linked data repositories (Zenodo, Figshare, GitHub, OSF, supplementary '
+            'materials), and downloads the raw dataset files into '
+            '`agent/artifacts/downloads/`. Second, `cmmanage agent generate` reads those '
+            'files, generates a Python processing script based on the example scripts and '
+            'base template, and then runs and iterates on the script until it produces '
+            'valid output.\n'
+        )
+
+        yield render_help(
+            'Before running the main workflow, you can use `cmmanage agent identify <url>` '
+            'to quickly check whether a publication actually contains usable molecular or '
+            'materials property data. Use `cmmanage agent install-plugins` to set up '
+            'optional MCP server plugins that improve the agent\'s web crawling and file '
+            'download capabilities.\n'
+        )
+
+        yield render_help(
+            'The LLM backend is selected from the `[agent]` section of the config file '
+            '(default: `opencode`). Use `--backend` to override on any command, e.g. '
+            '`cmmanage agent --backend claude prepare <url>`. The `claude` backend uses '
+            'the Claude Agent SDK and requires either an API key or an OAuth token '
+            'configured in `[agent.claude]`.\n'
+        )
+
+
 class RichCommandGroups(RichMixin):
     """
     Rich display element that shows command groups in separate panels.
@@ -181,11 +532,7 @@ class CLI(click.RichGroup):
         )
         self.cache = self.config.cache
         
-        self.help = (
-            'This is the internal management command line interface for the ChemMatData package. '
-            'This CLI will provide certain commands that are useful for maintaining and developing of the '
-            'package and the database itself.'
-        )
+        self.help = ''
         
         ## -- Adding commands --
         
@@ -208,34 +555,43 @@ class CLI(click.RichGroup):
         self.docs_group.add_command(self.docs_compile_command)
         self.docs_group.add_command(self.docs_deploy_command)
 
+        # agent command group
+        self.add_command(self.agent_group)
+        self.agent_group.add_command(self.agent_install_plugins_command)
+        self.agent_group.add_command(self.agent_identify_command)
+        self.agent_group.add_command(self.agent_prepare_command)
+        self.agent_group.add_command(self.agent_generate_command)
+
+    # The maximum width (in characters) for the help text paragraphs. This ensures
+    # that the text wraps at a reasonable width even on very wide terminals.
+    HELP_MAX_WIDTH: int = 120
+
     def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
         """
-        Custom help formatting that displays each command group in its own panel.
+        Custom help formatting that displays the usage line, extended help text,
+        options, and command groups in that order.
         """
-        # First, let rich_click handle the standard parts (usage, description, options)
-        # We'll do this by temporarily removing the commands and then adding them back
-        commands_backup = self.commands.copy()
-        self.commands = {}
+        self.format_usage(ctx, formatter)
 
-        # Let the parent class format the basic help (usage, description, options)
-        super(CLI, self).format_help(ctx, formatter)
+        # Display the extended help text with a max width constraint
+        help_width = min(Console().width, self.HELP_MAX_WIDTH)
+        help_console = Console(width=help_width)
+        help_console.print(RichManageHelp())
 
-        # Restore the commands
-        self.commands = commands_backup
+        self.format_options(ctx, formatter)
 
-        # Now add our custom command groups display
-        console = Console()
-
-        # Collect command groups (skip regular commands if any)
+        # Collect and display command groups
         command_groups = {}
         for name, cmd in self.commands.items():
             if isinstance(cmd, click.Group):
                 command_groups[name] = cmd
 
-        # Display the command groups using our custom rich display
         if command_groups:
-            rich_display = RichCommandGroups(command_groups)
-            console.print(rich_display)
+            click.echo(RichCommandGroups(command_groups))
+
+    def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+        # Override parent behavior - command groups are rendered in format_help instead.
+        pass
 
     ## == METADATA COMMAND GROUP ==
     # This command group is used to manage the metadata.yml file both locally and on the remote server 
@@ -728,6 +1084,596 @@ class CLI(click.RichGroup):
         click.secho('✅ datasets uploaded', fg='green')
         click.secho()
 
+    ## == AGENT COMMAND GROUP ==
+    # Commands to interact with the LLM-powered agent workflow for automated
+    # dataset discovery and processing script generation.
+
+    @click.group('agent', cls=RichHelpGroup, rich_help=RichAgentGroupHelp(),
+                 short_help='LLM agent for automated dataset discovery and processing.')
+    @click.option('--backend', '-b',
+                  type=click.Choice(['opencode', 'claude']),
+                  default=None,
+                  help='LLM backend to use. Overrides the config file setting.')
+    @click.pass_obj
+    def agent_group(self,
+                    backend: str | None,
+                    ) -> None:
+        if backend:
+            self._agent_backend_name = backend
+        else:
+            self._agent_backend_name = self.config.get_agent_backend()
+
+    #: Friendly display names for common MCP and built-in tool names.
+    _TOOL_DISPLAY_NAMES: Dict[str, str] = {
+        'mcp__file_downloader__download_file': 'Download',
+        'mcp__crawl4ai__crawl_webpage': 'Crawl',
+        'mcp__crawl4ai__crawl_website': 'Crawl',
+        'WebFetch': 'Fetch',
+        'WebSearch': 'Search',
+        'ToolSearch': 'ToolSearch',
+    }
+
+    @staticmethod
+    def _parse_tool_input(raw_input: str) -> dict:
+        """
+        Try to parse a tool input string as a dict. Handles both JSON and
+        Python dict repr formats.
+        """
+        import ast
+        import json
+
+        if not raw_input or not isinstance(raw_input, str):
+            return {}
+
+        # Try JSON first
+        try:
+            parsed = json.loads(raw_input)
+            if isinstance(parsed, dict):
+                return parsed
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+        # Try Python literal
+        try:
+            parsed = ast.literal_eval(raw_input)
+            if isinstance(parsed, dict):
+                return parsed
+        except (ValueError, SyntaxError):
+            pass
+
+        return {}
+
+    @staticmethod
+    def _format_tool_summary(name: str, parsed: dict, raw_input: str) -> str:
+        """
+        Extract the most relevant field from a tool call for display.
+
+        Returns a short, human-readable summary string.
+        """
+        # For known tools, pick the most meaningful field
+        if name in ('WebFetch', 'mcp__crawl4ai__crawl_webpage', 'mcp__crawl4ai__crawl_website'):
+            return parsed.get('url', raw_input)
+
+        if name == 'WebSearch':
+            return parsed.get('query', raw_input)
+
+        if name == 'ToolSearch':
+            return parsed.get('query', raw_input)
+
+        if name == 'mcp__file_downloader__download_file':
+            url = parsed.get('url', '')
+            fname = parsed.get('filename', '')
+            if fname:
+                # Show just the basename
+                fname = fname.rsplit('/', 1)[-1] if '/' in fname else fname
+            if url and fname:
+                return f'{fname}  [dim]from[/dim]  {url}'
+            return url or fname or raw_input
+
+        if name == 'Bash':
+            cmd = parsed.get('command', raw_input)
+            if len(cmd) > 120:
+                cmd = cmd[:117] + '...'
+            return cmd
+
+        if name == 'Read':
+            path = parsed.get('file_path', raw_input)
+            return path
+
+        if name in ('Glob', 'Grep'):
+            pattern = parsed.get('pattern', '')
+            path = parsed.get('path', '')
+            if pattern and path:
+                return f'{pattern}  [dim]in[/dim]  {path}'
+            return pattern or raw_input
+
+        if name == 'Edit':
+            return parsed.get('file_path', raw_input)
+
+        if name == 'Write':
+            return parsed.get('file_path', raw_input)
+
+        # Fallback: show the first string value from the dict, or raw input
+        if parsed:
+            for v in parsed.values():
+                if isinstance(v, str) and v:
+                    val = v if len(v) <= 120 else v[:117] + '...'
+                    return val
+
+        val = raw_input if len(raw_input) <= 120 else raw_input[:117] + '...'
+        return val
+
+    @classmethod
+    def _make_agent_event_callback(cls, console):
+        """
+        Create an ``on_event`` callback that renders intermediate agent steps
+        to the Rich console.
+
+        Text events are printed as indented paragraphs with a leading bullet.
+        Tool-call events are printed as compact sub-bullets with the tool name
+        and the most relevant argument.
+
+        :param console: A :class:`rich.console.Console` instance.
+
+        :returns: A callback suitable for the ``on_event`` parameter.
+        """
+        def on_event(event: dict) -> None:
+            etype = event.get('type', '')
+            if etype == 'text':
+                content = event.get('content', '').strip()
+                if not content:
+                    return
+                # First line gets the bullet, continuation lines are indented
+                lines = [l.strip() for l in content.split('\n') if l.strip()]
+                if not lines:
+                    return
+                console.print(f'  [bright_cyan]●[/bright_cyan] {lines[0]}')
+                for line in lines[1:]:
+                    console.print(f'    {line}', style='dim')
+
+            elif etype == 'tool_call':
+                name = event.get('name', 'unknown')
+                raw_input = str(event.get('input', ''))
+                parsed = cls._parse_tool_input(raw_input)
+
+                display_name = cls._TOOL_DISPLAY_NAMES.get(name, name)
+                summary = cls._format_tool_summary(name, parsed, raw_input)
+
+                console.print(
+                    f'    [dim]◦[/dim] [bold bright_black]{display_name}[/bold bright_black]'
+                    f' [dim]→[/dim] {summary}'
+                )
+
+            elif etype == 'tool_result':
+                pass  # silently consumed; too verbose to display
+
+        return on_event
+
+    def _agent_header_panel(self, console, title: str, fields: dict) -> None:
+        """
+        Print a styled header panel for an agent command.
+
+        :param console: Rich Console.
+        :param title: Panel title (e.g. "Prepare Dataset").
+        :param fields: Dict of label -> value pairs to display.
+        """
+        from rich.panel import Panel
+        from rich.text import Text
+
+        lines = Text()
+        for i, (label, value) in enumerate(fields.items()):
+            if i > 0:
+                lines.append('\n')
+            lines.append(f'  {label}  ', style='dim')
+            lines.append(str(value), style='bold')
+
+        console.print()
+        console.print(Panel(
+            lines,
+            title=f'[bold]Agent: {title}[/bold]',
+            title_align='left',
+            style='bright_blue',
+            expand=True,
+            padding=(1, 1),
+        ))
+        console.print()
+
+    @click.command('identify', cls=RichHelpCommand,
+                   rich_help=RichAgentIdentifyHelp(),
+                   short_help='Check whether a paper publishes usable molecular/materials data.')
+    @click.argument('query', type=str)
+    @click.pass_obj
+    def agent_identify_command(self,
+                               query: str,
+                               ) -> None:
+        import os
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.text import Text
+
+        from chem_mat_data.agent.extraction_agent import identify_dataset
+
+        console = Console()
+        backend = self._agent_backend_name
+        backend_config = self.config.get_agent_backend_config(backend)
+        model = backend_config.get('model', '')
+        backend_label = f'{backend} ({model})' if model else backend
+
+        self._agent_header_panel(console, 'Identify Dataset', {
+            'Query': query,
+            'Backend': backend_label,
+        })
+
+        on_event = self._make_agent_event_callback(console)
+
+        try:
+            if backend == 'opencode':
+                with console.status(
+                    '[bold cyan]Agent is running...[/bold cyan] '
+                    '[dim](intermediate steps not available for this backend)[/dim]',
+                    spinner='dots',
+                ):
+                    result = identify_dataset(
+                        query,
+                        backend_name=backend,
+                        config=self.config,
+                    )
+            else:
+                result = identify_dataset(
+                    query,
+                    backend_name=backend,
+                    config=self.config,
+                    on_event=on_event,
+                )
+
+        except Exception as exc:
+            console.print()
+            console.print(Panel(
+                f'[bold red]Identify failed[/bold red]\n\n{exc}',
+                style='red',
+                expand=True,
+            ))
+            sys.exit(1)
+
+        decision = result.get('decision', 'unknown')
+        reasoning = result.get('reasoning', '')
+        output_path = result.get('output_path', '')
+
+        if decision == 'yes':
+            decision_style = 'bold green'
+            panel_style = 'green'
+            decision_display = 'YES'
+        elif decision == 'no':
+            decision_style = 'bold red'
+            panel_style = 'red'
+            decision_display = 'NO'
+        else:
+            decision_style = 'bold yellow'
+            panel_style = 'yellow'
+            decision_display = decision.upper()
+
+        body = Text()
+        body.append('Decision: ', style='dim')
+        body.append(decision_display, style=decision_style)
+        body.append('\n\n')
+        body.append('Reasoning:\n', style='dim')
+        body.append(reasoning)
+        if output_path:
+            body.append('\n\n')
+            body.append('Saved to: ', style='dim')
+            body.append(str(os.path.relpath(output_path)), style='bold')
+
+        console.print()
+        console.print(Panel(
+            body,
+            title='[bold]Identification Result[/bold]',
+            title_align='left',
+            style=panel_style,
+            expand=True,
+            padding=(1, 2),
+        ))
+
+    @click.command('prepare', cls=RichHelpCommand,
+                   rich_help=RichAgentPrepareHelp(),
+                   short_help='Discover and download dataset files from a publication URL.')
+    @click.argument('link', type=str)
+    @click.pass_obj
+    def agent_prepare_command(self,
+                              link: str,
+                              ) -> None:
+        import os
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.text import Text
+
+        from chem_mat_data.agent.extraction_agent import discover_and_download, DOWNLOADS_DIR
+
+        console = Console()
+        backend = self._agent_backend_name
+        backend_config = self.config.get_agent_backend_config(backend)
+        model = backend_config.get('model', '')
+        backend_label = f'{backend} ({model})' if model else backend
+
+        self._agent_header_panel(console, 'Prepare Dataset', {
+            'Publication': link,
+            'Backend': backend_label,
+        })
+
+        # Snapshot files before the agent runs
+        existing_files = set()
+        if DOWNLOADS_DIR.exists():
+            existing_files = {p.name for p in DOWNLOADS_DIR.iterdir() if p.is_file()}
+
+        on_event = self._make_agent_event_callback(console)
+
+        try:
+            if backend == 'opencode':
+                with console.status(
+                    '[bold cyan]Agent is running...[/bold cyan] '
+                    '[dim](intermediate steps not available for this backend)[/dim]',
+                    spinner='dots',
+                ):
+                    result = discover_and_download(
+                        link,
+                        backend_name=backend,
+                        config=self.config,
+                    )
+            else:
+                result = discover_and_download(
+                    link,
+                    backend_name=backend,
+                    config=self.config,
+                    on_event=on_event,
+                )
+
+        except Exception as exc:
+            console.print()
+            console.print(Panel(
+                f'[bold red]Prepare failed[/bold red]\n\n{exc}',
+                style='red',
+                expand=True,
+            ))
+            sys.exit(1)
+
+        # Discover new files
+        new_files = []
+        if DOWNLOADS_DIR.exists():
+            new_files = [
+                p.name for p in sorted(DOWNLOADS_DIR.iterdir())
+                if p.is_file() and p.name not in existing_files
+            ]
+
+        # Build result panel
+        body = Text()
+        if new_files:
+            body.append(f'Downloaded {len(new_files)} file(s) to ', style='')
+            body.append('agent/artifacts/downloads/', style='bold')
+            body.append('\n\n')
+            for fname in new_files:
+                body.append(f'  {fname}\n', style='dim')
+        else:
+            body.append('Agent response:\n', style='dim')
+            # Show truncated response
+            display = result.strip()
+            if len(display) > 500:
+                display = display[:500] + '...'
+            body.append(display + '\n')
+
+        body.append('\nRun ', style='dim')
+        body.append('cmmanage agent generate', style='bold')
+        body.append(' to create a processing script.', style='dim')
+
+        console.print()
+        console.print(Panel(
+            body,
+            title='[bold green]Prepare complete[/bold green]',
+            title_align='left',
+            style='green',
+            expand=True,
+            padding=(1, 2),
+        ))
+
+    @click.command('generate', cls=RichHelpCommand,
+                   rich_help=RichAgentGenerateHelp(),
+                   short_help='Generate a processing script for the downloaded dataset.')
+    @click.pass_obj
+    def agent_generate_command(self,
+                               ) -> None:
+        import os
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.text import Text
+
+        from chem_mat_data.agent.extraction_agent import (
+            generate_processing_script,
+            get_downloaded_files,
+            DOWNLOADS_DIR,
+        )
+        from chem_mat_data.agent.plugins import create_agent_venv, PluginInstallError
+
+        console = Console()
+        backend = self._agent_backend_name
+        backend_config = self.config.get_agent_backend_config(backend)
+        model = backend_config.get('model', '')
+        backend_label = f'{backend} ({model})' if model else backend
+
+        # List dataset files for the header
+        try:
+            downloaded = get_downloaded_files()
+            skip_names = {"readme", "download_recipe"}
+            dataset_files = [
+                p.name for p in downloaded
+                if not any(s in p.name.lower() for s in skip_names)
+            ]
+        except FileNotFoundError:
+            console.print()
+            console.print(Panel(
+                '[bold red]No dataset files found[/bold red]\n\n'
+                'Run [bold]cmmanage agent prepare <url>[/bold] first to download dataset files.',
+                style='red',
+                expand=True,
+            ))
+            sys.exit(1)
+
+        self._agent_header_panel(console, 'Generate Script', {
+            'Dataset files': ', '.join(dataset_files) if dataset_files else '(none)',
+            'Backend': backend_label,
+        })
+
+        # Set up a fresh venv for the agent to run generated scripts in
+        console.print('  [bright_cyan]●[/bright_cyan] Setting up virtual environment...')
+        try:
+            venv_python = create_agent_venv()
+            console.print(f'  [bright_cyan]●[/bright_cyan] Venv ready: [dim]{venv_python}[/dim]')
+        except PluginInstallError as exc:
+            console.print()
+            console.print(Panel(
+                f'[bold red]Venv setup failed[/bold red]\n\n{exc}',
+                style='red',
+                expand=True,
+            ))
+            sys.exit(1)
+
+        console.print()
+        on_event = self._make_agent_event_callback(console)
+
+        try:
+            if backend == 'opencode':
+                with console.status(
+                    '[bold cyan]Agent is running...[/bold cyan] '
+                    '[dim](intermediate steps not available for this backend)[/dim]',
+                    spinner='dots',
+                ):
+                    script_path = generate_processing_script(
+                        backend_name=backend,
+                        config=self.config,
+                        venv_python=venv_python,
+                    )
+            else:
+                script_path = generate_processing_script(
+                    backend_name=backend,
+                    config=self.config,
+                    on_event=on_event,
+                    venv_python=venv_python,
+                )
+
+        except FileNotFoundError as exc:
+            console.print()
+            console.print(Panel(
+                f'[bold red]Generate failed[/bold red]\n\n{exc}',
+                style='red',
+                expand=True,
+            ))
+            sys.exit(1)
+        except Exception as exc:
+            console.print()
+            console.print(Panel(
+                f'[bold red]Generate failed[/bold red]\n\n{exc}',
+                style='red',
+                expand=True,
+            ))
+            sys.exit(1)
+
+        # Build result panel
+        rel_path = os.path.relpath(script_path)
+        body = Text()
+        body.append(str(rel_path), style='bold')
+        body.append('\n\n')
+        body.append('Run it with:\n', style='dim')
+        body.append(f'  python {rel_path}', style='bold')
+
+        console.print()
+        console.print(Panel(
+            body,
+            title='[bold green]Script generated[/bold green]',
+            title_align='left',
+            style='green',
+            expand=True,
+            padding=(1, 2),
+        ))
+
+    @click.command('install-plugins', cls=RichHelpCommand,
+                   rich_help=RichAgentInstallPluginsHelp(),
+                   short_help='Install MCP server plugins for the active agent backend.')
+    @click.pass_obj
+    def agent_install_plugins_command(self,
+                                      ) -> None:
+        from rich.console import Console
+        from rich.panel import Panel
+
+        from chem_mat_data.agent.plugins import (
+            install_claude_plugins,
+            install_opencode_plugins,
+            get_opencode_config_snippet,
+            PluginInstallError,
+        )
+
+        console = Console()
+        backend = self._agent_backend_name
+
+        console.print()
+        console.print(Panel(
+            f"[bold]Install Agent Plugins[/bold]\n"
+            f"[dim]Backend: {backend}[/dim]",
+            style="bright_blue",
+            expand=False,
+        ))
+        console.print()
+
+        try:
+            if backend == "claude":
+                console.print("[cyan]  [bold]\\[1/2][/bold] Installing crawl4ai-mcp-server (pip)...[/cyan]")
+                from chem_mat_data.agent.plugins import install_crawl4ai
+                install_crawl4ai()
+                console.print(f"[green]  [bold]\\[1/2][/bold] crawl4ai-mcp-server installed[/green]")
+
+                console.print("[cyan]  [bold]\\[2/2][/bold] Installing mcp-file-downloader (npm)...[/cyan]")
+                from chem_mat_data.agent.plugins import install_file_downloader, _update_config_mcp_servers
+                server_js = install_file_downloader()
+                _update_config_mcp_servers(self.config, "claude", {
+                    "crawl4ai": {"command": "crawl4ai-mcp", "args": []},
+                    "file_downloader": {"command": "node", "args": [str(server_js)]},
+                })
+                console.print(f"[green]  [bold]\\[2/2][/bold] mcp-file-downloader installed[/green]")
+
+                console.print()
+                console.print(Panel(
+                    "[bold green]All plugins installed![/bold green]\n\n"
+                    "  MCP servers have been configured in your config file.\n"
+                    "  The agent will automatically use them on the next run.",
+                    style="green",
+                    expand=False,
+                ))
+
+            elif backend == "opencode":
+                console.print("[cyan]  [bold]\\[1/1][/bold] Installing mcp-file-downloader...[/cyan]")
+                server_js = install_opencode_plugins(self.config)
+                console.print(f"[green]  [bold]\\[1/1][/bold] mcp-file-downloader installed[/green]")
+
+                snippet = get_opencode_config_snippet(server_js)
+                console.print()
+                console.print(Panel(
+                    "[bold green]Plugins installed![/bold green]\n\n"
+                    "  The mcp-file-downloader has been installed.\n"
+                    "  You still need to configure OpenCode manually.\n\n"
+                    f"[dim]{snippet}[/dim]",
+                    style="green",
+                    expand=False,
+                ))
+
+            else:
+                click.secho(f'❌ Unknown backend: {backend}', fg='red')
+                sys.exit(1)
+
+        except PluginInstallError as exc:
+            console.print()
+            console.print(Panel(
+                f"[bold red]Plugin installation failed[/bold red]\n\n{exc}",
+                style="red",
+                expand=False,
+            ))
+            sys.exit(1)
+
     ## == DOCS COMMAND GROUP ==
     # This command group is used to manage the documentation of the package.
     
@@ -803,7 +1749,9 @@ class CLI(click.RichGroup):
         click.secho('✅ datasets overview written to file', fg='green')
         click.secho('')
 
-    @click.command('compile', short_help='Compile dataset metadata into JSON for the landing page.')
+    @click.command('compile', cls=RichHelpCommand,
+                   rich_help=RichDocsCompileHelp(),
+                   short_help='Compile dataset metadata into JSON for the landing page.')
     @click.option('--output-path',
                   default=os.path.join(PAGES_PATH, 'datasets.json'),
                   show_default=True,
@@ -812,15 +1760,6 @@ class CLI(click.RichGroup):
     def docs_compile_command(self,
                              output_path: str,
                              ) -> None:
-        """
-        Fetch dataset metadata from the remote file share server and compile it into a JSON file
-        that powers the interactive dataset explorer on the landing page. The generated
-        ``datasets.json`` is placed in the ``pages/`` directory and loaded by the landing page
-        at runtime.
-
-        Run this command before ``docs deploy`` whenever the dataset metadata on the server has
-        changed, so that the landing page reflects the latest state.
-        """
         from datetime import datetime, timezone
         from rich.console import Console
         from rich.panel import Panel

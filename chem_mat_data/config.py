@@ -148,7 +148,51 @@ class Config(metaclass=Singleton):
     def get_fileshare_parameters(self, fileshare_type: str) -> dict:
         """
         Returns a dict with the additional parameters specifically for the given "fileshare_type".
-        
+
         :returns: dict
         """
         return self.config_data['remote'].get(fileshare_type, {})
+
+    # ~ agent configuration
+    # The following methods provide access to the ``[agent]`` section of the config file
+    # which controls the LLM backend used for automated dataset discovery and processing.
+
+    def get_agent_backend(self) -> str:
+        """
+        Returns the name of the configured agent backend.
+
+        Falls back to ``"opencode"`` when the ``[agent]`` section is absent or
+        does not contain a ``backend`` key, which ensures backwards compatibility
+        with config files created before agent backend support was added.
+
+        :returns: Backend identifier string (e.g. ``"opencode"`` or ``"claude"``).
+        """
+        return self.config_data.get('agent', {}).get('backend', 'opencode')
+
+    def get_agent_backend_config(self, backend: str) -> dict:
+        """
+        Returns the backend-specific configuration dict for the given backend.
+
+        This corresponds to the ``[agent.<backend>]`` subsection of the config
+        file. For example, ``get_agent_backend_config("claude")`` returns the
+        contents of ``[agent.claude]``.
+
+        :param backend: The backend name (e.g. ``"opencode"`` or ``"claude"``).
+
+        :returns: Dict of backend-specific settings, or empty dict if absent.
+        """
+        return self.config_data.get('agent', {}).get(backend, {})
+
+    def get_agent_prompt_override(self, prompt_name: str) -> Optional[str]:
+        """
+        Returns a user-defined prompt override from the config file, or ``None``.
+
+        When set, the override replaces the built-in prompt template for the
+        given prompt name entirely. Valid prompt names are ``"link_prompt"``
+        and ``"script_generation_prompt"``.
+
+        :param prompt_name: The prompt key (e.g. ``"link_prompt"``).
+
+        :returns: The override string, or ``None`` if not configured.
+        """
+        return self.config_data.get('agent', {}).get(prompt_name)

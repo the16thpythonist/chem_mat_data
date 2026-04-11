@@ -5,7 +5,65 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.8.0] - Unreleased
+## [1.9.0] - Unreleased
+
+### Added
+
+- **LLM-powered dataset extraction agent.** New `cmmanage agent` command group that automates
+  dataset onboarding from scientific publications using an LLM agent. The workflow is split into
+  three stages:
+  - `cmmanage agent identify <url-or-title>`: Determines whether a publication publishes
+    molecular or materials property data suitable for dataset extraction. Accepts either a
+    URL or a paper title (the agent searches for it). Outputs a yes/no decision with a
+    reasoning paragraph and saves a JSON artifact to `agent/artifacts/identify/`.
+  - `cmmanage agent prepare <url>`: Navigates the publication, finds associated dataset
+    repositories (Zenodo, Figshare, GitHub, OSF, etc.), and downloads the raw data files
+    into `agent/artifacts/downloads/`. The agent writes a `download_recipe.md` documenting
+    the programmatic download steps for reproducibility.
+  - `cmmanage agent generate`: Inspects previously downloaded dataset files, reads example
+    processing scripts for reference, and generates a ChemMatData-compatible PyComex script
+    that extends the base processing template. Sets up a fresh virtual environment with `uv`,
+    runs the generated script, and iterates on errors up to 3 times.
+- **Pluggable agent backend system.** Abstract `AgentBackend` base class with two concrete
+  implementations: `OpenCodeBackend` (delegates to a locally running OpenCode server) and
+  `ClaudeBackend` (uses the Claude Agent SDK with API key or OAuth token authentication).
+  Backends are selected via the `--backend` flag or the `[agent]` config section.
+- **Claude Agent SDK integration.** The `claude` backend wraps the async `claude_agent_sdk.query()`
+  API with a synchronous interface, supports both API key (`ANTHROPIC_API_KEY`) and OAuth token
+  (`CLAUDE_CODE_OAUTH_TOKEN`) authentication for Claude Pro/Max subscriptions, and streams
+  intermediate agent steps (text narrations, tool calls) to the CLI via an `on_event` callback.
+  Runs with `permission_mode="bypassPermissions"` for non-interactive execution.
+- **Agent prompt template system.** Backend-specific prompt templates for the link-discovery
+  and script-generation stages (tool names differ between backends), and a shared template
+  for the identify stage. Prompts can be overridden per-user via the config file.
+- **MCP plugin installation.** `cmmanage agent install-plugins` command that installs
+  `crawl4ai-mcp-server` (pip) and `mcp-file-downloader` (Node.js) for enhanced web crawling
+  and file download capabilities. Automatically configures MCP server entries in the config
+  file for the Claude backend.
+- **Virtual environment management for script execution.** `create_agent_venv()` uses `uv` to
+  create a fresh venv and install the project in editable mode before each generate run, ensuring
+  generated scripts execute in a clean, reproducible environment.
+- **Example processing scripts.** Three self-contained reference scripts (COMPAS-1x, Open Melting
+  Point, TM-Bio) in `agent/example_scripts/` that demonstrate the full download-and-process
+  pattern the script-generation agent should follow. Each script includes built-in data download
+  with caching logic.
+- **Rich CLI output for agent commands.** Agent commands display styled header panels, live
+  streaming of intermediate agent steps (text as bullets, tool calls as one-line summaries with
+  friendly tool names), and result panels with download/generation status. Custom Rich help
+  widgets for all agent subcommands and the agent group itself.
+- **Config file extensions.** New `[agent]` section in `config.toml` with `backend` selection,
+  prompt override keys (`link_prompt`, `script_generation_prompt`, `identify_prompt`), and
+  per-backend configuration (`[agent.opencode]`, `[agent.claude]` with `model`, `api_key`,
+  `oauth_token`, `allowed_tools`, `mcp_servers`).
+
+### Changed
+
+- **Agent command ordering.** Commands in the `cmmanage agent` group now appear in workflow
+  order: `install-plugins`, `identify`, `prepare`, `generate`.
+- **Agent CLI renamed.** The `process` subcommand was renamed to `prepare` and `generate` was
+  split into its own command for clarity.
+
+## [1.8.0] - 2026-04-02
 
 ### Added
 
@@ -31,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the root and MkDocs documentation at `/docs/`. The GitHub Actions workflow and MkDocs config
   (`site_url`) were updated accordingly.
 
-## [1.7.1] - Unreleased
+## [1.7.1] - 2026-04-02
 
 ### Changed
 
@@ -58,7 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Data format selector widget** in `cmdata info` showing CSV, XYZ, TMC, and Graph availability
   as highlighted/dimmed badges.
 
-## [1.7.0] - Unreleased
+## [1.7.0] - 2026-04-02
 
 ### Added
 

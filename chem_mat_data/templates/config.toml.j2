@@ -10,3 +10,28 @@ a = 1
 #dav_url = "https://nextcloud.DOMAIN.com/remote.php/dav/files/USERNAME/ChemMatData"
 #dav_username = "USERNAME"
 #dav_password = "PASSWORD"
+
+[agent]
+backend = "opencode"
+# Uncomment to override the built-in prompts with custom text:
+# link_prompt = "..."
+# script_generation_prompt = "..."
+
+[agent.opencode]
+# OpenCode is configured via its own config file. No additional settings needed here.
+
+[agent.claude]
+model = "claude-sonnet-4-20250514"
+# Authentication (pick one):
+#   api_key: Anthropic API key for pay-per-token usage.
+#   oauth_token: Claude Pro/Max OAuth token for subscription usage.
+#     Obtain via: claude login && claude setup-token
+# Environment variables ANTHROPIC_API_KEY / CLAUDE_CODE_OAUTH_TOKEN
+# take precedence over these config values.
+# api_key = "sk-ant-..."
+# oauth_token = "sk-ant-oat01-..."
+# allowed_tools = ["Read", "Write", "Bash", "Glob", "Grep", "WebSearch", "WebFetch"]
+# [agent.claude.mcp_servers]
+# [agent.claude.mcp_servers.file_downloader]
+# command = "node"
+# args = ["/path/to/download-server.js"]
