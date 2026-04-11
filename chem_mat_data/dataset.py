@@ -38,7 +38,6 @@ import csv
 import os
 import tempfile
 import heapq
-import queue
 import threading
 import multiprocessing as mp
 from typing import Tuple, Iterator, Optional, List, Any, Dict, Callable
@@ -53,6 +52,7 @@ from chem_mat_data.data import load_xyz_as_mol
 
 # === MODULE-LEVEL HELPER FUNCTIONS ===
 
+
 def identity_mol_transform(mol: 'Chem.Mol') -> 'Chem.Mol':
     """
     Default mol_transform that returns the molecule unchanged.
@@ -65,6 +65,7 @@ def identity_mol_transform(mol: 'Chem.Mol') -> 'Chem.Mol':
     :returns: The same molecule object unchanged
     """
     return mol
+
 
 def _convert_value(value: Any) -> float:
     """
@@ -114,7 +115,8 @@ def _convert_raw_to_mol(raw_data: Any, dataset_type: str) -> 'Chem.Mol':
         mol = Chem.MolFromSmiles(raw_data)
         if mol is None:
             import logging
-            logging.warning(f"Skipping invalid SMILES string: {raw_data}")
+
+            logging.warning(f'Skipping invalid SMILES string: {raw_data}')
             return None
         return mol
 
@@ -146,7 +148,9 @@ def _convert_raw_to_mol(raw_data: Any, dataset_type: str) -> 'Chem.Mol':
         return mol
 
     else:
-        raise ValueError(f"Unknown dataset type: {dataset_type}. Expected 'smiles' or 'xyz'.")
+        raise ValueError(
+            f"Unknown dataset type: {dataset_type}. Expected 'smiles' or 'xyz'."
+        )
 
 
 def _graph_worker(
@@ -238,6 +242,7 @@ def _graph_worker(
 
 
 # === DATASET IMPLEMENTATION ===
+
 
 class StreamingDataset:
     """
@@ -440,10 +445,9 @@ class XyzDataset(StreamingDataset):
                 self.metadata_map[element_id] = data
 
         # Get list of xyz files, sorted for reproducibility
-        self.xyz_files = sorted([
-            f for f in os.listdir(self.bundle_path)
-            if f.endswith('.xyz')
-        ])
+        self.xyz_files = sorted(
+            [f for f in os.listdir(self.bundle_path) if f.endswith('.xyz')]
+        )
 
         # Cache for dataset length
         self._length: Optional[int] = None
@@ -488,7 +492,9 @@ class XyzDataset(StreamingDataset):
 
                 # Extract atom information
                 atoms = mol.GetAtoms()
-                atomic_numbers = np.array([atom.GetAtomicNum() for atom in atoms], dtype=int)
+                atomic_numbers = np.array(
+                    [atom.GetAtomicNum() for atom in atoms], dtype=int
+                )
                 symbols = np.array([atom.GetSymbol() for atom in atoms], dtype=str)
 
                 # Construct xyz_data dict
@@ -512,11 +518,15 @@ class XyzDataset(StreamingDataset):
                             properties.append(float('nan'))
 
                 # If no target columns specified or no metadata, return empty array
-                properties = np.array(properties, dtype=float) if properties else np.array([], dtype=float)
+                properties = (
+                    np.array(properties, dtype=float)
+                    if properties
+                    else np.array([], dtype=float)
+                )
 
                 yield xyz_data, properties
 
-            except Exception as e:
+            except Exception:
                 # Skip molecules that fail to load
                 # In production, you might want to log this
                 continue
@@ -540,6 +550,7 @@ class XyzDataset(StreamingDataset):
 # GraphDataset directly iterates raw datasets and converts data in worker processes
 # for better performance. These classes are kept for potential external use or future
 # features.
+
 
 class DatasetAdapter:
     """
@@ -571,7 +582,7 @@ class DatasetAdapter:
 
         :yields: Tuples of (RDKit Mol object, properties array)
         """
-        raise NotImplementedError("Subclasses must implement __iter__")
+        raise NotImplementedError('Subclasses must implement __iter__')
 
     def __len__(self) -> int:
         """
@@ -616,7 +627,7 @@ class SmilesDatasetAdapter(DatasetAdapter):
         for smiles, properties in self.dataset:
             mol = Chem.MolFromSmiles(smiles)
             if mol is None:
-                raise ValueError(f"Invalid SMILES string: {smiles}")
+                raise ValueError(f'Invalid SMILES string: {smiles}')
             yield mol, properties
 
 
@@ -655,7 +666,6 @@ class XyzDatasetAdapter(DatasetAdapter):
 
         :yields: Tuples of (RDKit Mol object with 3D conformer, properties array)
         """
-        import rdkit.Chem as Chem
 
         for xyz_data, properties in self.dataset:
             mol = self._mol_from_xyz_data(xyz_data)
@@ -865,7 +875,7 @@ class GraphDataset(StreamingDataset):
         # If we get here, dataset not found in any supported format
         raise FileNotFoundError(
             f"Dataset '{dataset}' not found in any supported format. "
-            f"Tried: CSV (SmilesDataset), xyz_bundle (XyzDataset). "
+            f'Tried: CSV (SmilesDataset), xyz_bundle (XyzDataset). '
             f"Please check the dataset name and ensure it's available in the remote file share."
         )
 
@@ -977,7 +987,7 @@ class GraphDataset(StreamingDataset):
             # result_queue:   UNBOUNDED
             #   - Critical: Must never block workers (prevents deadlock)
             #   - Safe: Collector thread drains continuously
-            #   - Memory: Bounded by processing rate (workers can't produce 
+            #   - Memory: Bounded by processing rate (workers can't produce
             #     faster than they process)
             #
             # results_buffer: UNBOUNDED (thread queue, not multiprocessing)
@@ -993,6 +1003,7 @@ class GraphDataset(StreamingDataset):
 
             # Thread-safe results buffer (regular queue, not mp.Queue)
             import queue as thread_queue
+
             results_buffer = thread_queue.Queue()
 
             # ----------------------------------------------------------------
@@ -1041,7 +1052,7 @@ class GraphDataset(StreamingDataset):
                 # heap[0] is always the smallest row_idx not yet yielded
                 heap = []
                 next_to_yield = 0  # Track which row should be yielded next
-                workers_done = 0   # Count worker shutdown sentinels
+                workers_done = 0  # Count worker shutdown sentinels
 
                 while workers_done < self.num_workers:
                     # BLOCKING get: Efficient - thread sleeps until result arrives
@@ -1099,7 +1110,7 @@ class GraphDataset(StreamingDataset):
                         input_queue,
                         result_queue,
                         self.dataset_type,  # Pass dataset type for raw data conversion
-                    )
+                    ),
                 )
                 p.start()
                 workers.append(p)
@@ -1259,7 +1270,7 @@ class ShuffleDataset(StreamingDataset):
         self,
         dataset: StreamingDataset,
         buffer_size: int = 10000,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
     ) -> None:
         super().__init__()
         self.dataset = dataset

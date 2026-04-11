@@ -14,6 +14,7 @@ References:
 - Original blog post: https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html
 - Data source: https://github.com/greglandrum/rdkit_blog/tree/master/data
 """
+
 import csv
 import io
 import numpy as np
@@ -61,7 +62,7 @@ METADATA: dict = {
     'sources': [
         'https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html',
         'https://github.com/greglandrum/rdkit_blog/tree/master/data',
-        'https://doi.org/10.1021/ci000197k'  # Original Briem & Lessel paper
+        'https://doi.org/10.1021/ci000197k',  # Original Briem & Lessel paper
     ],
     'target_descriptions': {
         '0': 'CHEMBL1862 - Tyrosine-protein kinase ABL (Homo sapiens) - pKi value',
@@ -98,14 +99,16 @@ METADATA: dict = {
         '31': 'CHEMBL1907596 - Neuronal acetylcholine receptor; alpha4/beta2 (Rattus norvegicus) - pKi value',
         '32': 'CHEMBL3371 - Serotonin 6 (5-HT6) receptor (Homo sapiens) - pKi value',
         '33': 'CHEMBL313 - Serotonin transporter (Rattus norvegicus) - pKi value',
-        '34': 'CHEMBL4860 - Apoptosis regulator Bcl-2 (Homo sapiens) - pKi value'
-    }
+        '34': 'CHEMBL4860 - Apoptosis regulator Bcl-2 (Homo sapiens) - pKi value',
+    },
 }
 
 # == GITHUB DATA SOURCES ==
 # URLs to the raw data files from Greg Landrum's RDKit blog repository
 
-GITHUB_BASE_URL = 'https://raw.githubusercontent.com/greglandrum/rdkit_blog/master/data/'
+GITHUB_BASE_URL = (
+    'https://raw.githubusercontent.com/greglandrum/rdkit_blog/master/data/'
+)
 
 URLS = {
     'actives': GITHUB_BASE_URL + 'BLSets_actives.txt',
@@ -179,7 +182,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         target_metadata[chembl_id] = {
             'tid': row['tid'],
             'name': row['pref_name'],
-            'organism': row['organism']
+            'organism': row['organism'],
         }
         target_list.append(chembl_id)
 
@@ -189,7 +192,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
 
     e.log(f'Loaded metadata for {num_targets} targets')
     e.log(f'Target order: {target_list[:5]}... (total {num_targets})')
-    e.log(f'Target index mapping created for multi-target vector')
+    e.log('Target index mapping created for multi-target vector')
 
     # == PARSE MAIN ACTIVES FILE ==
     e.log('')
@@ -216,7 +219,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                     molecule_target_data[smiles] = {
                         'target_pki_map': {},
                         'activity_labels': {},
-                        'source': 'actives'
+                        'source': 'actives',
                     }
 
                 # Store pKi value for this target
@@ -230,12 +233,18 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                 # Skip invalid pKi values
                 pass
 
-    e.log(f'Loaded {len(molecule_target_data)} unique molecules from BLSets_actives.txt')
+    e.log(
+        f'Loaded {len(molecule_target_data)} unique molecules from BLSets_actives.txt'
+    )
 
     # Count total measurements
-    total_measurements = sum(len(data['target_pki_map']) for data in molecule_target_data.values())
+    total_measurements = sum(
+        len(data['target_pki_map']) for data in molecule_target_data.values()
+    )
     e.log(f'  Total (SMILES, target) pairs with pKi: {total_measurements}')
-    e.log(f'  Average targets per molecule: {total_measurements / len(molecule_target_data):.2f}')
+    e.log(
+        f'  Average targets per molecule: {total_measurements / len(molecule_target_data):.2f}'
+    )
 
     # == PARSE SELECTED ACTIVES FILE ==
     e.log('')
@@ -339,21 +348,35 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     e.log('FILTERING AND PROCESSING STATISTICS')
     e.log('=' * 80)
     e.log(f'Total unique molecules: {stats["total"]}')
-    e.log(f'  - Filtered (salts/dots): {stats["filtered_salt"]} ({100*stats["filtered_salt"]/stats["total"]:.1f}%)')
-    e.log(f'  - Filtered (invalid SMILES): {stats["filtered_invalid_smiles"]} ({100*stats["filtered_invalid_smiles"]/stats["total"]:.1f}%)')
-    e.log(f'  - Filtered (single atoms): {stats["filtered_single_atom"]} ({100*stats["filtered_single_atom"]/stats["total"]:.1f}%)')
-    e.log(f'  ✓ Successfully processed: {stats["success"]} ({100*stats["success"]/stats["total"]:.1f}%)')
+    e.log(
+        f'  - Filtered (salts/dots): {stats["filtered_salt"]} ({100 * stats["filtered_salt"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  - Filtered (invalid SMILES): {stats["filtered_invalid_smiles"]} ({100 * stats["filtered_invalid_smiles"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  - Filtered (single atoms): {stats["filtered_single_atom"]} ({100 * stats["filtered_single_atom"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  ✓ Successfully processed: {stats["success"]} ({100 * stats["success"] / stats["total"]:.1f}%)'
+    )
     e.log('')
     e.log('MULTI-TARGET STATISTICS:')
-    e.log(f'  - Total pKi measurements across all molecules: {stats["total_measurements"]}')
-    avg_measurements = stats["total_measurements"] / stats["success"] if stats["success"] > 0 else 0
+    e.log(
+        f'  - Total pKi measurements across all molecules: {stats["total_measurements"]}'
+    )
+    avg_measurements = (
+        stats['total_measurements'] / stats['success'] if stats['success'] > 0 else 0
+    )
     e.log(f'  - Average measurements per molecule: {avg_measurements:.2f}')
 
     if stats['measurements_per_molecule']:
         measurements_array = np.array(stats['measurements_per_molecule'])
         e.log(f'  - Min measurements per molecule: {measurements_array.min()}')
         e.log(f'  - Max measurements per molecule: {measurements_array.max()}')
-        e.log(f'  - Median measurements per molecule: {np.median(measurements_array):.1f}')
+        e.log(
+            f'  - Median measurements per molecule: {np.median(measurements_array):.1f}'
+        )
 
     e.log(f'  - Target vector dimension: {num_targets}')
     e.log('')
@@ -365,7 +388,9 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         entry = dataset[i].copy()
         # Show non-NaN values from target vector for readability
         target_vec = entry['targets']
-        non_nan_indices = [idx for idx, val in enumerate(target_vec) if not pd.isna(val)]
+        non_nan_indices = [
+            idx for idx, val in enumerate(target_vec) if not pd.isna(val)
+        ]
         entry['targets_preview'] = {
             f'target_{idx}': target_vec[idx]
             for idx in non_nan_indices[:5]  # Show first 5 measured targets

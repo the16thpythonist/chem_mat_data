@@ -14,6 +14,7 @@ Each backend has its own set of plugins:
   other tools (crawl4ai, websearch) are configured as OpenCode plugins
   separately.
 """
+
 from __future__ import annotations
 
 import os
@@ -26,24 +27,25 @@ from chem_mat_data.utils import PROJECT_PATH
 
 
 #: Directory where MCP servers are installed.
-MCP_SERVERS_DIR: Path = Path(PROJECT_PATH) / ".mcp-servers"
+MCP_SERVERS_DIR: Path = Path(PROJECT_PATH) / '.mcp-servers'
 
 #: URL of the mcp-file-downloader Git repository.
-FILE_DOWNLOADER_REPO: str = "https://github.com/abs222222/mcp-file-downloader.git"
+FILE_DOWNLOADER_REPO: str = 'https://github.com/abs222222/mcp-file-downloader.git'
 
 #: Subdirectory name for the file downloader inside .mcp-servers/.
-FILE_DOWNLOADER_DIR_NAME: str = "file-downloader"
+FILE_DOWNLOADER_DIR_NAME: str = 'file-downloader'
 
 
 class PluginInstallError(Exception):
     """Raised when a plugin installation step fails."""
+
     pass
 
 
 def _run(
     cmd: List[str],
     cwd: str | Path | None = None,
-    description: str = "",
+    description: str = '',
 ) -> subprocess.CompletedProcess:
     """
     Run a subprocess command and raise :class:`PluginInstallError` on failure.
@@ -64,7 +66,7 @@ def _run(
     if result.returncode != 0:
         detail = result.stderr.strip() or result.stdout.strip()
         raise PluginInstallError(
-            f"{description or ' '.join(cmd)} failed (exit {result.returncode}):\n{detail}"
+            f'{description or " ".join(cmd)} failed (exit {result.returncode}):\n{detail}'
         )
     return result
 
@@ -78,6 +80,7 @@ def _check_command(name: str) -> bool:
 # File downloader (shared between backends)
 # =========================================================================
 
+
 def install_file_downloader() -> Path:
     """
     Install the mcp-file-downloader MCP server into ``.mcp-servers/``.
@@ -89,10 +92,12 @@ def install_file_downloader() -> Path:
     :returns: Absolute path to the ``download-server.js`` entry point.
     :raises PluginInstallError: If git, npm, or npx commands fail.
     """
-    if not _check_command("git"):
-        raise PluginInstallError("git is not installed. Please install git first.")
-    if not _check_command("npm"):
-        raise PluginInstallError("npm is not installed. Please install Node.js (>= 18) first.")
+    if not _check_command('git'):
+        raise PluginInstallError('git is not installed. Please install git first.')
+    if not _check_command('npm'):
+        raise PluginInstallError(
+            'npm is not installed. Please install Node.js (>= 18) first.'
+        )
 
     MCP_SERVERS_DIR.mkdir(parents=True, exist_ok=True)
     dest = MCP_SERVERS_DIR / FILE_DOWNLOADER_DIR_NAME
@@ -102,31 +107,30 @@ def install_file_downloader() -> Path:
         shutil.rmtree(dest)
 
     _run(
-        ["git", "clone", FILE_DOWNLOADER_REPO, str(dest)],
-        description="git clone mcp-file-downloader",
+        ['git', 'clone', FILE_DOWNLOADER_REPO, str(dest)],
+        description='git clone mcp-file-downloader',
     )
     _run(
-        ["npm", "install"],
+        ['npm', 'install'],
         cwd=dest,
-        description="npm install (file-downloader)",
+        description='npm install (file-downloader)',
     )
     _run(
-        ["npx", "playwright", "install", "chromium"],
+        ['npx', 'playwright', 'install', 'chromium'],
         cwd=dest,
-        description="npx playwright install chromium",
+        description='npx playwright install chromium',
     )
 
-    server_js = dest / "download-server.js"
+    server_js = dest / 'download-server.js'
     if not server_js.exists():
-        raise PluginInstallError(
-            f"Expected server file not found: {server_js}"
-        )
+        raise PluginInstallError(f'Expected server file not found: {server_js}')
     return server_js
 
 
 # =========================================================================
 # crawl4ai MCP server (Claude backend)
 # =========================================================================
+
 
 def install_crawl4ai() -> str:
     """
@@ -139,29 +143,30 @@ def install_crawl4ai() -> str:
     :returns: The command name to start the server (``"crawl4ai-mcp"``).
     :raises PluginInstallError: If pip install or setup fails.
     """
-    if not _check_command("pip"):
-        raise PluginInstallError("pip is not installed.")
+    if not _check_command('pip'):
+        raise PluginInstallError('pip is not installed.')
 
     _run(
-        ["pip", "install", "crawl4ai-mcp-server"],
-        description="pip install crawl4ai-mcp-server",
+        ['pip', 'install', 'crawl4ai-mcp-server'],
+        description='pip install crawl4ai-mcp-server',
     )
     _run(
-        ["crawl4ai-setup"],
-        description="crawl4ai-setup (browser configuration)",
+        ['crawl4ai-setup'],
+        description='crawl4ai-setup (browser configuration)',
     )
 
-    if not _check_command("crawl4ai-mcp"):
+    if not _check_command('crawl4ai-mcp'):
         raise PluginInstallError(
-            "crawl4ai-mcp command not found after installation. "
-            "Check that the pip install target is on your PATH."
+            'crawl4ai-mcp command not found after installation. '
+            'Check that the pip install target is on your PATH.'
         )
-    return "crawl4ai-mcp"
+    return 'crawl4ai-mcp'
 
 
 # =========================================================================
 # Backend-specific installation orchestration
 # =========================================================================
+
 
 def install_claude_plugins(config) -> Dict[str, Any]:
     """
@@ -180,20 +185,20 @@ def install_claude_plugins(config) -> Dict[str, Any]:
 
     # 1. crawl4ai
     crawl4ai_cmd = install_crawl4ai()
-    mcp_servers["crawl4ai"] = {
-        "command": crawl4ai_cmd,
-        "args": [],
+    mcp_servers['crawl4ai'] = {
+        'command': crawl4ai_cmd,
+        'args': [],
     }
 
     # 2. file downloader
     server_js = install_file_downloader()
-    mcp_servers["file_downloader"] = {
-        "command": "node",
-        "args": [str(server_js)],
+    mcp_servers['file_downloader'] = {
+        'command': 'node',
+        'args': [str(server_js)],
     }
 
     # 3. Update config
-    _update_config_mcp_servers(config, "claude", mcp_servers)
+    _update_config_mcp_servers(config, 'claude', mcp_servers)
 
     return mcp_servers
 
@@ -233,21 +238,21 @@ def _update_config_mcp_servers(
     """
     import tomlkit
 
-    if "agent" not in config.config_data:
-        config.config_data["agent"] = tomlkit.table()
+    if 'agent' not in config.config_data:
+        config.config_data['agent'] = tomlkit.table()
 
-    agent_section = config.config_data["agent"]
+    agent_section = config.config_data['agent']
 
     if backend_name not in agent_section:
         agent_section[backend_name] = tomlkit.table()
 
     backend_section = agent_section[backend_name]
 
-    if "mcp_servers" not in backend_section:
-        backend_section["mcp_servers"] = tomlkit.table()
+    if 'mcp_servers' not in backend_section:
+        backend_section['mcp_servers'] = tomlkit.table()
 
     for server_name, server_config in mcp_servers.items():
-        backend_section["mcp_servers"][server_name] = server_config
+        backend_section['mcp_servers'][server_name] = server_config
 
     config.save()
 
@@ -318,7 +323,7 @@ Add the following to your OpenCode configuration:
 # =========================================================================
 
 #: Default venv location inside the artifacts directory.
-VENV_DIR: Path = Path(__file__).resolve().parent / "artifacts" / ".venv"
+VENV_DIR: Path = Path(__file__).resolve().parent / 'artifacts' / '.venv'
 
 
 def create_agent_venv(venv_path: Path | None = None) -> Path:
@@ -348,29 +353,29 @@ def create_agent_venv(venv_path: Path | None = None) -> Path:
 
     # Create venv
     _run(
-        [uv_bin, "venv", str(venv_path)],
-        description="uv venv (create virtual environment)",
+        [uv_bin, 'venv', str(venv_path)],
+        description='uv venv (create virtual environment)',
     )
 
     # Determine the python interpreter path inside the venv
-    if sys.platform == "win32":
-        python_path = venv_path / "Scripts" / "python.exe"
+    if sys.platform == 'win32':
+        python_path = venv_path / 'Scripts' / 'python.exe'
     else:
-        python_path = venv_path / "bin" / "python"
+        python_path = venv_path / 'bin' / 'python'
 
     if not python_path.exists():
         raise PluginInstallError(
-            f"Python interpreter not found at {python_path} after venv creation"
+            f'Python interpreter not found at {python_path} after venv creation'
         )
 
     # Install the project in editable mode with dev deps
     env = os.environ.copy()
-    env["VIRTUAL_ENV"] = str(venv_path)
+    env['VIRTUAL_ENV'] = str(venv_path)
 
     _run(
-        [uv_bin, "pip", "install", "-e", f"{PROJECT_PATH}[dev]"],
+        [uv_bin, 'pip', 'install', '-e', f'{PROJECT_PATH}[dev]'],
         cwd=PROJECT_PATH,
-        description="uv pip install -e .[dev]",
+        description='uv pip install -e .[dev]',
     )
 
     return python_path
@@ -389,16 +394,17 @@ def _find_uv() -> str:
     # Try the uv Python package
     try:
         from uv import find_uv_bin
+
         return str(find_uv_bin())
     except (ImportError, FileNotFoundError):
         pass
 
     # Fall back to PATH
-    uv_path = shutil.which("uv")
+    uv_path = shutil.which('uv')
     if uv_path:
         return uv_path
 
     raise PluginInstallError(
-        "uv is not installed. Install it with: pip install uv  "
-        "or see https://docs.astral.sh/uv/getting-started/installation/"
+        'uv is not installed. Install it with: pip install uv  '
+        'or see https://docs.astral.sh/uv/getting-started/installation/'
     )

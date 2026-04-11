@@ -9,6 +9,7 @@ This test module specifically tests the XyzDataset streaming functionality inclu
 - Length calculation
 - Error handling
 """
+
 import os
 import tempfile
 import pytest
@@ -57,9 +58,7 @@ class TestBasicIteration:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
             assert isinstance(dataset, XyzDataset)
 
@@ -72,7 +71,7 @@ class TestBasicIteration:
                 dataset='_test2',
                 folder_path=temp_path,
                 use_cache=True,
-                target_columns=None  # No properties for this test
+                target_columns=None,  # No properties for this test
             )
 
             count = 0
@@ -84,7 +83,7 @@ class TestBasicIteration:
                 assert isinstance(properties, np.ndarray)
                 count += 1
 
-            assert count > 0, "Dataset should yield at least one item"
+            assert count > 0, 'Dataset should yield at least one item'
 
     def test_xyz_data_structure(self):
         """
@@ -92,9 +91,7 @@ class TestBasicIteration:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             for xyz_data, properties in dataset:
@@ -115,13 +112,19 @@ class TestBasicIteration:
                 atomic_numbers = xyz_data['atomic_numbers']
                 assert isinstance(atomic_numbers, np.ndarray)
                 assert atomic_numbers.ndim == 1
-                assert atomic_numbers.dtype == np.int64 or atomic_numbers.dtype == np.int32
+                assert (
+                    atomic_numbers.dtype == np.int64 or atomic_numbers.dtype == np.int32
+                )
 
                 # Check symbols
                 symbols = xyz_data['symbols']
                 assert isinstance(symbols, np.ndarray)
                 assert symbols.ndim == 1
-                assert symbols.dtype.kind in ('U', 'S', 'O')  # Unicode, bytes, or object (string)
+                assert symbols.dtype.kind in (
+                    'U',
+                    'S',
+                    'O',
+                )  # Unicode, bytes, or object (string)
 
                 # Check num_atoms
                 assert isinstance(xyz_data['num_atoms'], (int, np.integer))
@@ -138,19 +141,19 @@ class TestBasicIteration:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             for xyz_data, properties in dataset:
                 positions = xyz_data['positions']
 
                 # Coordinates should not all be zero
-                assert np.any(positions != 0), "Positions should contain non-zero values"
+                assert np.any(positions != 0), (
+                    'Positions should contain non-zero values'
+                )
 
                 # Coordinates should be finite
-                assert np.all(np.isfinite(positions)), "Positions should be finite"
+                assert np.all(np.isfinite(positions)), 'Positions should be finite'
 
                 # Only check first item
                 break
@@ -161,19 +164,19 @@ class TestBasicIteration:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             for xyz_data, properties in dataset:
                 atomic_numbers = xyz_data['atomic_numbers']
 
                 # All atomic numbers should be positive
-                assert np.all(atomic_numbers > 0), "Atomic numbers should be positive"
+                assert np.all(atomic_numbers > 0), 'Atomic numbers should be positive'
 
                 # All atomic numbers should be <= 118 (valid elements)
-                assert np.all(atomic_numbers <= 118), "Atomic numbers should be valid elements"
+                assert np.all(atomic_numbers <= 118), (
+                    'Atomic numbers should be valid elements'
+                )
 
                 # Only check first item
                 break
@@ -184,9 +187,7 @@ class TestBasicIteration:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             for xyz_data, properties in dataset:
@@ -194,8 +195,10 @@ class TestBasicIteration:
 
                 # All symbols should be non-empty strings
                 for symbol in symbols:
-                    assert len(str(symbol)) > 0, "Symbols should be non-empty"
-                    assert len(str(symbol)) <= 2, "Element symbols should be 1-2 characters"
+                    assert len(str(symbol)) > 0, 'Symbols should be non-empty'
+                    assert len(str(symbol)) <= 2, (
+                        'Element symbols should be 1-2 characters'
+                    )
 
                 # Only check first item
                 break
@@ -213,7 +216,7 @@ class TestParserSupport:
                 dataset='_test2',
                 parser_cls='default',
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             count = 0
@@ -233,9 +236,7 @@ class TestLengthCalculation:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             length = len(dataset)
@@ -253,9 +254,7 @@ class TestLengthCalculation:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             # First call calculates
@@ -279,7 +278,7 @@ class TestMetadataIntegration:
                 dataset='_test2',
                 folder_path=temp_path,
                 use_cache=True,
-                target_columns=['target']
+                target_columns=['target'],
             )
 
             for xyz_data, properties in dataset:
@@ -299,7 +298,7 @@ class TestMetadataIntegration:
                 dataset='_test2',
                 folder_path=temp_path,
                 use_cache=True,
-                target_columns=None
+                target_columns=None,
             )
 
             for xyz_data, properties in dataset:
@@ -321,9 +320,7 @@ class TestCaching:
         with tempfile.TemporaryDirectory() as temp_path:
             # First load without cache
             dataset1 = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             # Count items
@@ -331,9 +328,7 @@ class TestCaching:
 
             # Second load with cache
             dataset2 = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             count2 = sum(1 for _ in dataset2)
@@ -351,9 +346,7 @@ class TestMultipleIterations:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             # First iteration
@@ -376,9 +369,7 @@ class TestDataConsistency:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             # Get first molecule from first iteration
@@ -392,7 +383,9 @@ class TestDataConsistency:
             # Should be identical
             assert xyz_data1['num_atoms'] == xyz_data2['num_atoms']
             assert np.array_equal(xyz_data1['positions'], xyz_data2['positions'])
-            assert np.array_equal(xyz_data1['atomic_numbers'], xyz_data2['atomic_numbers'])
+            assert np.array_equal(
+                xyz_data1['atomic_numbers'], xyz_data2['atomic_numbers']
+            )
 
 
 class TestErrorHandling:
@@ -408,7 +401,7 @@ class TestErrorHandling:
                 dataset = XyzDataset(
                     dataset='nonexistent_dataset_12345',
                     folder_path=temp_path,
-                    use_cache=True
+                    use_cache=True,
                 )
                 # Try to iterate to trigger error
                 next(iter(dataset))
@@ -423,9 +416,7 @@ class TestStreamingBehavior:
         """
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', folder_path=temp_path, use_cache=True
             )
 
             # Take only first 2 items

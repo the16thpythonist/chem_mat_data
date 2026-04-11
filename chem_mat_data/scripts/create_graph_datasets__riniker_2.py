@@ -32,6 +32,7 @@ References:
   DOI: 10.1021/ci400466r
 - Repository: https://github.com/rdkit/benchmarking_platform
 """
+
 import os
 import gzip
 import zipfile
@@ -137,12 +138,50 @@ METADATA: dict = {
 
 # == GITHUB REPOSITORY SOURCE ==
 
-REPO_URL = 'https://github.com/rdkit/benchmarking_platform/archive/refs/heads/master.zip'
+REPO_URL = (
+    'https://github.com/rdkit/benchmarking_platform/archive/refs/heads/master.zip'
+)
 
 # Subset II target configuration (from configuration_file_II.py)
-CHEMBL_IDS = [10434, 12209, 25, 43, 130, 126, 12252, 11575, 11534, 11631, 165, 10193, 15,
-              11489, 121, 72, 259, 10188, 108, 12952, 93, 10980, 19905, 107, 87, 17045,
-              11140, 114, 90, 13001, 65, 61, 10280, 51, 100, 10260, 11365]
+CHEMBL_IDS = [
+    10434,
+    12209,
+    25,
+    43,
+    130,
+    126,
+    12252,
+    11575,
+    11534,
+    11631,
+    165,
+    10193,
+    15,
+    11489,
+    121,
+    72,
+    259,
+    10188,
+    108,
+    12952,
+    93,
+    10980,
+    19905,
+    107,
+    87,
+    17045,
+    11140,
+    114,
+    90,
+    13001,
+    65,
+    61,
+    10280,
+    51,
+    100,
+    10260,
+    11365,
+]
 
 # == EXPERIMENT PARAMETERS ==
 
@@ -220,7 +259,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         e.log(f'Downloading repository from {REPO_URL}...')
         with FileDownloadSource(REPO_URL, verbose=True) as source:
             zip_path = source.fetch()
-            e.log(f'  ✓ Downloaded repository ZIP')
+            e.log('  ✓ Downloaded repository ZIP')
 
             # Extract to temporary directory while still in context manager
             e.log('Extracting repository to temporary directory...')
@@ -256,9 +295,9 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     num_targets = len(target_list)
 
     e.log(f'Total targets in Subset II: {num_targets}')
-    e.log(f'  - All ChEMBL targets (indices 0-{num_targets-1})')
+    e.log(f'  - All ChEMBL targets (indices 0-{num_targets - 1})')
     e.log(f'Target vector dimension: {num_targets}')
-    e.log(f'Target vector encoding: 0 = not mentioned, 1 = active, 2 = decoy')
+    e.log('Target vector encoding: 0 = not mentioned, 1 = active, 2 = decoy')
 
     # == PARSE ACTIVE COMPOUNDS ==
     e.log('')
@@ -297,18 +336,27 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                         'external_ids': [],
                     }
                 molecule_target_data[smiles]['active_targets'].append(target_key)
-                if external_id and external_id not in molecule_target_data[smiles]['external_ids']:
+                if (
+                    external_id
+                    and external_id not in molecule_target_data[smiles]['external_ids']
+                ):
                     molecule_target_data[smiles]['external_ids'].append(external_id)
                 count += 1
 
         e.log(f'  ✓ {target_key}: {count} actives')
 
     total_molecules_with_actives = len(molecule_target_data)
-    total_active_pairs = sum(len(data['active_targets']) for data in molecule_target_data.values())
-    e.log(f'\nTotal unique molecules with active annotations: {total_molecules_with_actives}')
+    total_active_pairs = sum(
+        len(data['active_targets']) for data in molecule_target_data.values()
+    )
+    e.log(
+        f'\nTotal unique molecules with active annotations: {total_molecules_with_actives}'
+    )
     e.log(f'Total (molecule, active target) pairs: {total_active_pairs}')
     if total_molecules_with_actives > 0:
-        e.log(f'Average active targets per molecule: {total_active_pairs / total_molecules_with_actives:.2f}')
+        e.log(
+            f'Average active targets per molecule: {total_active_pairs / total_molecules_with_actives:.2f}'
+        )
 
     # == PARSE DECOY COMPOUNDS ==
     e.log('')
@@ -344,7 +392,11 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                         }
                         new_molecules_from_decoys += 1
 
-                    if external_id and external_id not in molecule_target_data[smiles]['external_ids']:
+                    if (
+                        external_id
+                        and external_id
+                        not in molecule_target_data[smiles]['external_ids']
+                    ):
                         molecule_target_data[smiles]['external_ids'].append(external_id)
 
             # Add all ChEMBL targets as decoy targets for these molecules
@@ -356,7 +408,9 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                     count += 1
 
             total_decoy_pairs += count
-            e.log(f'  ✓ ChEMBL zinc_decoys: {len(zinc_decoy_smiles)} molecules × {len(CHEMBL_IDS)} targets = {count} decoy pairs')
+            e.log(
+                f'  ✓ ChEMBL zinc_decoys: {len(zinc_decoy_smiles)} molecules × {len(CHEMBL_IDS)} targets = {count} decoy pairs'
+            )
     else:
         e.log(f'  ! Warning: Decoy file not found: {file_path}')
 
@@ -466,26 +520,42 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     e.log('FILTERING AND PROCESSING STATISTICS')
     e.log('=' * 80)
     e.log(f'Total unique molecules: {stats["total"]}')
-    e.log(f'  - Filtered (salts/dots): {stats["filtered_salt"]} ({100*stats["filtered_salt"]/stats["total"]:.1f}%)')
-    e.log(f'  - Filtered (invalid SMILES): {stats["filtered_invalid_smiles"]} ({100*stats["filtered_invalid_smiles"]/stats["total"]:.1f}%)')
-    e.log(f'  - Filtered (single atoms): {stats["filtered_single_atom"]} ({100*stats["filtered_single_atom"]/stats["total"]:.1f}%)')
-    e.log(f'  ✓ Successfully processed: {stats["success"]} ({100*stats["success"]/stats["total"]:.1f}%)')
+    e.log(
+        f'  - Filtered (salts/dots): {stats["filtered_salt"]} ({100 * stats["filtered_salt"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  - Filtered (invalid SMILES): {stats["filtered_invalid_smiles"]} ({100 * stats["filtered_invalid_smiles"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  - Filtered (single atoms): {stats["filtered_single_atom"]} ({100 * stats["filtered_single_atom"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  ✓ Successfully processed: {stats["success"]} ({100 * stats["success"] / stats["total"]:.1f}%)'
+    )
     e.log('')
     e.log('MULTI-TARGET STATISTICS:')
-    e.log(f'  - Molecules with active targets: {stats["molecules_actives"]} ({100*stats["molecules_actives"]/stats["success"]:.1f}%)')
-    e.log(f'  - Molecules with decoy targets: {stats["molecules_decoys"]} ({100*stats["molecules_decoys"]/stats["success"]:.1f}%)')
-    e.log(f'  - Molecules with both active & decoy targets: {stats["molecules_both"]} ({100*stats["molecules_both"]/stats["success"]:.1f}%)')
+    e.log(
+        f'  - Molecules with active targets: {stats["molecules_actives"]} ({100 * stats["molecules_actives"] / stats["success"]:.1f}%)'
+    )
+    e.log(
+        f'  - Molecules with decoy targets: {stats["molecules_decoys"]} ({100 * stats["molecules_decoys"] / stats["success"]:.1f}%)'
+    )
+    e.log(
+        f'  - Molecules with both active & decoy targets: {stats["molecules_both"]} ({100 * stats["molecules_both"] / stats["success"]:.1f}%)'
+    )
     e.log(f'  - Total active target assignments: {stats["total_active_targets"]}')
     e.log(f'  - Total decoy target assignments: {stats["total_decoy_targets"]}')
-    if stats["molecules_actives"] > 0:
-        avg_active = stats["total_active_targets"] / stats["molecules_actives"]
+    if stats['molecules_actives'] > 0:
+        avg_active = stats['total_active_targets'] / stats['molecules_actives']
         e.log(f'  - Average active targets per active molecule: {avg_active:.2f}')
-        e.log(f'  - Multi-target actives (active against >1 target): {stats["multi_target_actives"]} ({100*stats["multi_target_actives"]/stats["molecules_actives"]:.1f}%)')
-    if stats["molecules_decoys"] > 0:
-        avg_decoy = stats["total_decoy_targets"] / stats["molecules_decoys"]
+        e.log(
+            f'  - Multi-target actives (active against >1 target): {stats["multi_target_actives"]} ({100 * stats["multi_target_actives"] / stats["molecules_actives"]:.1f}%)'
+        )
+    if stats['molecules_decoys'] > 0:
+        avg_decoy = stats['total_decoy_targets'] / stats['molecules_decoys']
         e.log(f'  - Average decoy targets per decoy molecule: {avg_decoy:.2f}')
     e.log(f'  - Target vector dimension: {num_targets}')
-    e.log(f'  - Target vector encoding: 0=not mentioned, 1=active, 2=decoy')
+    e.log('  - Target vector encoding: 0=not mentioned, 1=active, 2=decoy')
     e.log('')
 
     # Print example entries
@@ -494,7 +564,9 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         e.log(f'\nEntry {i}:')
         entry = dataset[i].copy()
         # Show first 20 positions of target vector for readability
-        entry['targets_preview'] = entry['targets'][:20] + ['...'] + [entry['targets'][-1]]
+        entry['targets_preview'] = (
+            entry['targets'][:20] + ['...'] + [entry['targets'][-1]]
+        )
         pprint(entry, max_depth=2)
 
     return dataset

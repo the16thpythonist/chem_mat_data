@@ -41,53 +41,66 @@ class RichDiffDisplay(RichMixin):
     """
     Rich display element that shows the diff between two metadata.yml files.
     """
-    def __init__(self, local_file: str, remote_file: str, diff_lines: List[str], changed_lines: int):
+
+    def __init__(
+        self,
+        local_file: str,
+        remote_file: str,
+        diff_lines: List[str],
+        changed_lines: int,
+    ):
         self.local_file = local_file
         self.remote_file = remote_file
         self.diff_lines = diff_lines
         self.changed_lines = changed_lines
-        
+
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
-        
+
         yield ''
-        
+
         # Show file paths being compared
         from rich.table import Table
+
         comparison_table = Table(box=None)
-        comparison_table.add_column("File", style="magenta", no_wrap=True)
-        comparison_table.add_column("Path", style="cyan", no_wrap=False)
-        comparison_table.add_row("Local", self.local_file)
-        comparison_table.add_row("Remote", "metadata.yml (from server)")
-        
+        comparison_table.add_column('File', style='magenta', no_wrap=True)
+        comparison_table.add_column('Path', style='cyan', no_wrap=False)
+        comparison_table.add_row('Local', self.local_file)
+        comparison_table.add_row('Remote', 'metadata.yml (from server)')
+
         yield comparison_table
-        
+
         # Show the actual diff if there are changes
         if self.changed_lines > 0 and self.diff_lines:
-            yield ""
-            
+            yield ''
+
             # Limit diff output to first 50 lines to avoid overwhelming display
             display_lines = self.diff_lines[:50]
             if len(self.diff_lines) > 50:
-                display_lines.append(f"... ({len(self.diff_lines) - 50} more lines truncated)")
-            
+                display_lines.append(
+                    f'... ({len(self.diff_lines) - 50} more lines truncated)'
+                )
+
             # Create a syntax-highlighted diff
             diff_text = '\n'.join(display_lines)
-            syntax = Syntax(diff_text, "diff", theme="monokai", line_numbers=False)
-            
+            syntax = Syntax(diff_text, 'diff', theme='monokai', line_numbers=False)
+
             panel = Panel(
                 syntax,
                 title=f'File Differences (showing first {min(50, len(self.diff_lines))} lines)',
-                expand=True
+                expand=True,
             )
-            
+
             yield panel
-            
+
         # Show diff summary
-        yield ""
+        yield ''
         if self.changed_lines == 0:
-            yield Text(f"✅ Files are identical", style="green")
+            yield Text('✅ Files are identical', style='green')
         else:
-            yield Text(f"📊 {self.changed_lines} lines differ between local and remote files", style="yellow")
+            yield Text(
+                f'📊 {self.changed_lines} lines differ between local and remote files',
+                style='yellow',
+            )
 
 
 CODE_STYLE = Style(color='grey66', bgcolor='grey19')
@@ -115,7 +128,7 @@ def render_help(text: str) -> Text:
         if i % 2 == 0:
             result.append_text(Text.from_markup(part))
         else:
-            result.append(f" {part} ", style=CODE_STYLE)
+            result.append(f' {part} ', style=CODE_STYLE)
 
     return result
 
@@ -371,7 +384,7 @@ class RichAgentInstallPluginsHelp(RichMixin):
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
 
         yield render_help(
-            'Install the external MCP servers and tools that enhance the agent\'s '
+            "Install the external MCP servers and tools that enhance the agent's "
             'capabilities. Plugins are installed for the currently active backend only '
             '(as set in the config file or via `--backend`).\n'
         )
@@ -428,7 +441,7 @@ class RichAgentGroupHelp(RichMixin):
             'Before running the main workflow, you can use `cmmanage agent identify <url>` '
             'to quickly check whether a publication actually contains usable molecular or '
             'materials property data. Use `cmmanage agent install-plugins` to set up '
-            'optional MCP server plugins that improve the agent\'s web crawling and file '
+            "optional MCP server plugins that improve the agent's web crawling and file "
             'download capabilities.\n'
         )
 
@@ -446,6 +459,7 @@ class RichCommandGroups(RichMixin):
     Rich display element that shows command groups in separate panels.
     Each panel contains all commands of that command group.
     """
+
     def __init__(self, command_groups: Dict[str, click.Group]):
         self.command_groups = command_groups
 
@@ -462,8 +476,10 @@ class RichCommandGroups(RichMixin):
                 expand=True,
             )
             # Force fixed width by setting both min and max to the same value
-            table.add_column("Command", style="bold cyan", min_width=25, max_width=25, no_wrap=True)
-            table.add_column("Description", style="white", ratio=1)
+            table.add_column(
+                'Command', style='bold cyan', min_width=25, max_width=25, no_wrap=True
+            )
+            table.add_column('Description', style='white', ratio=1)
 
             # Add all subcommands of this group to the table
             for cmd_name, cmd in group.commands.items():
@@ -471,13 +487,15 @@ class RichCommandGroups(RichMixin):
                 short_help = cmd.short_help
                 if not short_help and cmd.help:
                     # Extract first meaningful line from the full help text
-                    help_lines = [line.strip() for line in cmd.help.split('\n') if line.strip()]
+                    help_lines = [
+                        line.strip() for line in cmd.help.split('\n') if line.strip()
+                    ]
                     short_help = help_lines[0] if help_lines else ''
                 if not short_help:
                     short_help = ''
 
                 # Show composite command (e.g., "metadata collect" instead of just "collect")
-                composite_cmd = f"{group_name} {cmd_name}"
+                composite_cmd = f'{group_name} {cmd_name}'
                 table.add_row(composite_cmd, short_help)
 
             # Wrap the table in a panel with the group name as title
@@ -502,40 +520,40 @@ def is_experiment_archive(folder_path: str) -> bool:
     meta_path = os.path.join(folder_path, 'experiment_meta.json')
     code_path = os.path.join(folder_path, 'experiment_code.py')
     metadata_path = os.path.join(folder_path, 'metadata.yml')
-    if not os.path.exists(data_path) or not os.path.exists(meta_path) or not os.path.exists(code_path) or not os.path.exists(metadata_path):
+    if (
+        not os.path.exists(data_path)
+        or not os.path.exists(meta_path)
+        or not os.path.exists(code_path)
+        or not os.path.exists(metadata_path)
+    ):
         return False
-    
+
     return True
 
 
 class CLI(click.RichGroup):
-
-    # This list contains the string identifiers for the possible strategies that can be used for 
-    # the metadata collect method, which will collect the individual metadata files from the 
+    # This list contains the string identifiers for the possible strategies that can be used for
+    # the metadata collect method, which will collect the individual metadata files from the
     # experiment results.
     EXPERIMENT_COLLECT_STRATEGIES: List[str] = ['recent']
 
-    def __init__(self,
-                 **kwargs):
-        super(CLI, self).__init__(
-            invoke_without_command=True,
-            **kwargs
-        )
+    def __init__(self, **kwargs):
+        super(CLI, self).__init__(invoke_without_command=True, **kwargs)
 
-        # This config file is a global singleton instance which allows access to the most 
-        # important config parameter of the project such as the URL address of the fileshare 
+        # This config file is a global singleton instance which allows access to the most
+        # important config parameter of the project such as the URL address of the fileshare
         # server from which the datasets will be downloaded.
         self.config = Config()
         self.file_share = NextcloudFileShare(
-            self.config.get_fileshare_url(), 
-            **self.config.get_fileshare_parameters('nextcloud')
+            self.config.get_fileshare_url(),
+            **self.config.get_fileshare_parameters('nextcloud'),
         )
         self.cache = self.config.cache
-        
+
         self.help = ''
-        
+
         ## -- Adding commands --
-        
+
         # metadata command group
         self.add_command(self.metadata_group)
         self.metadata_group.add_command(self.metadata_collect_command)
@@ -543,7 +561,7 @@ class CLI(click.RichGroup):
         self.metadata_group.add_command(self.metadata_edit_command)
         self.metadata_group.add_command(self.metadata_diff_command)
         self.metadata_group.add_command(self.metadata_remove_command)
-        
+
         # dataset command group
         self.add_command(self.dataset_group)
         self.dataset_group.add_command(self.dataset_create_command)
@@ -589,224 +607,293 @@ class CLI(click.RichGroup):
         if command_groups:
             click.echo(RichCommandGroups(command_groups))
 
-    def format_commands(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
+    def format_commands(
+        self, ctx: click.Context, formatter: click.HelpFormatter
+    ) -> None:
         # Override parent behavior - command groups are rendered in format_help instead.
         pass
 
     ## == METADATA COMMAND GROUP ==
-    # This command group is used to manage the metadata.yml file both locally and on the remote server 
+    # This command group is used to manage the metadata.yml file both locally and on the remote server
 
-    @click.group('metadata', help='Commands for managing the metadata YML of the remote server.')
+    @click.group(
+        'metadata', help='Commands for managing the metadata YML of the remote server.'
+    )
     @click.pass_obj
-    def metadata_group(self,):
+    def metadata_group(
+        self,
+    ):
         """
-        This command group contains commands that can be used to manage the metadata.yml file on the 
-        remote file server. This metadata file contains all the necessary information about the 
+        This command group contains commands that can be used to manage the metadata.yml file on the
+        remote file server. This metadata file contains all the necessary information about the
         datasets and for example determines what information will be shown when using the
         ``list`` command.
         """
         pass
-    
-    def collect_dataset_archives_map(self, results_path: str) -> Dict[str, List[Experiment]]:
+
+    def collect_dataset_archives_map(
+        self, results_path: str
+    ) -> Dict[str, List[Experiment]]:
         """
-        A helper function which creates a ``dataset_archives_map`` data structure if given the absolute 
+        A helper function which creates a ``dataset_archives_map`` data structure if given the absolute
         string ``results_path`` of where to search the experiment archives. Returns a dict data structure
         whose string keys are the dataset names and the values are the corresponding Experiment instances
         imported from the experiment archives.
-        
+
         :param results_path: The absolute path to the folder where the experiment archives are stored.
-        
+
         :return: A dict data structure mapping dataset names to Experiment instances.
         """
         click.secho('collecting experiment archives...', fg='bright_black')
-        
+
         # ~ collecting experiment archives
         # We first want to generally collect all the experiment archives here for each dataset.
         experiments: List[Experiment] = []
         for root, folders, files in os.walk(results_path):
-            
             for folder in folders:
-                
                 folder_path = os.path.join(root, folder)
                 if is_experiment_archive(folder_path):
                     try:
                         experiment = Experiment.load(folder_path)
                     except Exception:
                         continue
-                    
-                    # for now we just add the loaded experiment to the list and will then later 
+
+                    # for now we just add the loaded experiment to the list and will then later
                     # sort out the metadata from it.
                     experiments.append(experiment)
-                    
+
                     experiment_name = experiment.metadata['name']
                     experiment_id = os.path.basename(folder_path)
-                    click.secho(f' * collecting experiment {experiment_name}/{experiment_id}', fg='bright_black')
-        
+                    click.secho(
+                        f' * collecting experiment {experiment_name}/{experiment_id}',
+                        fg='bright_black',
+                    )
+
         click.secho(f'collected {len(experiments)} experiments')
-        
+
         # Now that we have all the experiments we can sort the experiments into lists of which dataset they belong to.
-        # best case there is inly one dataest per experiment, but there are good chances that this will not be the 
-        # case. And if there are multiple datasets per experiment, we will have to decide which one to use to get 
+        # best case there is inly one dataest per experiment, but there are good chances that this will not be the
+        # case. And if there are multiple datasets per experiment, we will have to decide which one to use to get
         # the metadata from based on the strategy.
         dataset_archives_map: Dict[str, List[Experiment]] = defaultdict(list)
         for experiment in experiments:
             dataset = experiment.parameters['DATASET_NAME']
             dataset_archives_map[dataset].append(experiment)
-            
+
         return dataset_archives_map
 
     @click.command('collect')
-    @click.option('--blank', is_flag=True, help=('If this flag is set, the initial metadata.yml file will be created from scratch.'
-                                                 'Otherwise, the remote metadata.yml file will be downloaded and used as a base.'))
-    @click.option('-p', '--path', help='The path at which to save the new metadata file', 
-                  default=METADATA_PATH, show_default=True)
-    @click.option('-s', '--source', help='The source path at which to search for dataset metadata.', default=RESULTS_PATH)
-    @click.option('--strategy', help='The strategy to use for collecting the metadata.', 
-                  type=click.Choice(EXPERIMENT_COLLECT_STRATEGIES), default='recent')
-    @click.option('--verbose', is_flag=True, help='If this flag is set, the command will print additional information.')
-    @click.option('--datasets', type=CsvListType(), help=(
-        'A list of dataset names to collect metadata for. If not provided, all datasets will be collected.'
-    ))
+    @click.option(
+        '--blank',
+        is_flag=True,
+        help=(
+            'If this flag is set, the initial metadata.yml file will be created from scratch.'
+            'Otherwise, the remote metadata.yml file will be downloaded and used as a base.'
+        ),
+    )
+    @click.option(
+        '-p',
+        '--path',
+        help='The path at which to save the new metadata file',
+        default=METADATA_PATH,
+        show_default=True,
+    )
+    @click.option(
+        '-s',
+        '--source',
+        help='The source path at which to search for dataset metadata.',
+        default=RESULTS_PATH,
+    )
+    @click.option(
+        '--strategy',
+        help='The strategy to use for collecting the metadata.',
+        type=click.Choice(EXPERIMENT_COLLECT_STRATEGIES),
+        default='recent',
+    )
+    @click.option(
+        '--verbose',
+        is_flag=True,
+        help='If this flag is set, the command will print additional information.',
+    )
+    @click.option(
+        '--datasets',
+        type=CsvListType(),
+        help=(
+            'A list of dataset names to collect metadata for. If not provided, all datasets will be collected.'
+        ),
+    )
     @click.pass_obj
-    def metadata_collect_command(self,
-                                 blank: bool,
-                                 path: str,
-                                 source: str,
-                                 strategy: str,
-                                 verbose: bool,
-                                 datasets: List[str],
-                                 ) -> None:
+    def metadata_collect_command(
+        self,
+        blank: bool,
+        path: str,
+        source: str,
+        strategy: str,
+        verbose: bool,
+        datasets: List[str],
+    ) -> None:
         """
         This command collects the metadata of all datasets that are currently stored on the LOCAL system
-        and bundles that information into a single metadata.yml file. Will use the current version of the 
+        and bundles that information into a single metadata.yml file. Will use the current version of the
         remote file share metadata as a base unless the `--blank` flag is set.
         """
         time_start: float = time.time()
-        
+
         ## --- Creating the Base ---
-        # If the blank flag is NOT explicitly set, we are going to try and download the metadata.yml file from the remote file 
+        # If the blank flag is NOT explicitly set, we are going to try and download the metadata.yml file from the remote file
         # share server and use that as a base version which is then updated with the local metadata.
         metadata_all: dict = {'datasets': []}
         if not blank:
-            click.echo('downloading the metadata.yml file from the remote file share server...')
+            click.echo(
+                'downloading the metadata.yml file from the remote file share server...'
+            )
             metadata_all.update(self.file_share.fetch_metadata())
-        
+
         ## --- Collecting the Metadata ---
-        
+
         # This method will return a dict data structure that maps the dataset names to lists of Experiment instances
         # that have been loaded from the results folder of completed experiment. For each dataset name key the corresponding
         # value list consists of all experiment archives related to that dataset.
-        dataset_archives_map: Dict[str, List[Experiment]] = self.collect_dataset_archives_map(source)
-        
+        dataset_archives_map: Dict[str, List[Experiment]] = (
+            self.collect_dataset_archives_map(source)
+        )
+
         if datasets:
             dataset_archives_map = {
                 name: experiments
                 for name, experiments in dataset_archives_map.items()
                 if name in datasets
             }
-        
-        click.echo(f'updating information on {len(dataset_archives_map)} datasets: {" ".join(dataset_archives_map.keys())}')
-        
+
+        click.echo(
+            f'updating information on {len(dataset_archives_map)} datasets: {" ".join(dataset_archives_map.keys())}'
+        )
+
         # This data structure will hold the metadata for each dataset that we have collected from the experiments.
         dataset_metadata_map: Dict[str, dict] = {}
         for dataset, experiments in dataset_archives_map.items():
-            
             if strategy == 'recent':
-                experiment = sorted(experiments, key=lambda e: e.metadata['end_time'])[-1]
-        
-            # The actual experiment metadata that we are interested in will be stored as an additional artifact 
+                experiment = sorted(experiments, key=lambda e: e.metadata['end_time'])[
+                    -1
+                ]
+
+            # The actual experiment metadata that we are interested in will be stored as an additional artifact
             # called "metadata.yml" in the experiment folder. We will load this file and then add the metadata
             # to the dataset_metadata_map.
             metadata_path: str = os.path.join(experiment.path, 'metadata.yml')
             with open(metadata_path, mode='r') as file:
                 metadata: dict = yaml.load(file, Loader=yaml.FullLoader)
-            
+
             dataset_metadata_map[dataset] = metadata
 
         # --- merging the metadata ---
-        # The structure of the overall metadata is such that there is an additional key for each dataset and the 
+        # The structure of the overall metadata is such that there is an additional key for each dataset and the
         # corresponding value is again a dict-like object that contains the metadata for that dataset.
         click.echo('merging the metadata...')
         for dataset, metadata in dataset_metadata_map.items():
             metadata_all['datasets'][dataset] = metadata
-        
+
         # --- saving the file ---
         # In the end we can save the collected metadata into a file and place it at the specified path.
         path = os.path.expanduser(path)
         click.echo(f'saving the metadata file @ {path}...')
         with open(path, 'w') as file:
             yaml.dump(metadata_all, file, sort_keys=True, indent=4)
-            
+
         time_end: float = time.time()
-        
-        click.secho(f'✅ collected metadata.yml file in {time_end - time_start:.2f} seconds', fg='green')
-            
+
+        click.secho(
+            f'✅ collected metadata.yml file in {time_end - time_start:.2f} seconds',
+            fg='green',
+        )
+
         if verbose:
             pprint(metadata_all, max_string=100)
-            
+
         click.secho()
-            
+
     @click.command('upload')
-    @click.option('-p', '--path', help='The path to the metadata file that should be uploaded.', 
-                  default=METADATA_PATH, show_default=True)
+    @click.option(
+        '-p',
+        '--path',
+        help='The path to the metadata file that should be uploaded.',
+        default=METADATA_PATH,
+        show_default=True,
+    )
     @click.pass_obj
-    def metadata_upload_command(self,
-                                path: str
-                                ) -> None:
+    def metadata_upload_command(self, path: str) -> None:
         """
-        Uploads a local metadata.yml file to the remore file share server. Note that this will overwrite the 
+        Uploads a local metadata.yml file to the remore file share server. Note that this will overwrite the
         version of the metadata file that is currently stored on the server.
         """
         if not os.path.exists(path):
-            click.secho(f'Error: The specified metadata file "{path}" does not exist.', fg='red')
+            click.secho(
+                f'Error: The specified metadata file "{path}" does not exist.', fg='red'
+            )
             sys.exit(1)
 
-        click.secho('uploading the metadata file to the remote file share server...')        
+        click.secho('uploading the metadata file to the remote file share server...')
         self.file_share.upload('metadata.yml', path)
         click.secho('✅ uploaded metadata.yml', fg='green')
         click.secho()
-        
+
     @click.command('edit')
-    @click.option('-p', '--path', help='The path to the metadata file that should be uploaded.', default='./metadata.yml')
+    @click.option(
+        '-p',
+        '--path',
+        help='The path to the metadata file that should be uploaded.',
+        default='./metadata.yml',
+    )
     @click.pass_obj
-    def metadata_edit_command(self,
-                              path: str,
-                              ) -> None:
+    def metadata_edit_command(
+        self,
+        path: str,
+    ) -> None:
         """
         Opens the metadata.yml file in the default editor of the system.
         """
         if not os.path.exists(path):
-            click.secho(f'Error: The specified metadata file "{path}" does not exist.', fg='red')
+            click.secho(
+                f'Error: The specified metadata file "{path}" does not exist.', fg='red'
+            )
             sys.exit(1)
-        
+
         open_file_in_editor(path)
 
     @click.command('diff', short_help='Compare local metadata.yml with remote version')
-    @click.option('--local-file', '-f', type=click.Path(exists=True, dir_okay=False, readable=True), 
-                  default=METADATA_PATH, show_default=True,
-                  help='Path to the local metadata.yml file to compare')
+    @click.option(
+        '--local-file',
+        '-f',
+        type=click.Path(exists=True, dir_okay=False, readable=True),
+        default=METADATA_PATH,
+        show_default=True,
+        help='Path to the local metadata.yml file to compare',
+    )
     @click.pass_obj
     def metadata_diff_command(self, local_file: str) -> None:
         """
         Compares a local metadata.yml file with the remote metadata.yml file from the server.
         Shows the number of different lines and displays a visual diff of the changes.
-        
+
         By default, uses the package metadata.yml file for comparison.
         """
-        
+
         ## --- Fetch Remote Metadata ---
         try:
             # Try to fetch the remote metadata
             self.file_share.fetch_metadata(force=True)
-            
-            if not hasattr(self.file_share, 'metadata') or self.file_share.metadata is None:
+
+            if (
+                not hasattr(self.file_share, 'metadata')
+                or self.file_share.metadata is None
+            ):
                 click.secho('❌ Could not fetch remote metadata.yml file', fg='red')
                 sys.exit(1)
-                
+
         except Exception as e:
             click.secho(f'❌ Error fetching remote metadata: {str(e)}', fg='red')
             sys.exit(1)
-        
+
         ## --- Read Local File ---
         try:
             with open(local_file, 'r', encoding='utf-8') as f:
@@ -814,54 +901,80 @@ class CLI(click.RichGroup):
         except Exception as e:
             click.secho(f'❌ Error reading local file: {str(e)}', fg='red')
             sys.exit(1)
-        
+
         ## --- Normalize Both Files for Comparison ---
         try:
             # Parse local file to normalize it
             local_data = yaml.safe_load(local_content)
             # Convert both to the same YAML format for fair comparison
-            local_normalized = yaml.dump(local_data, default_flow_style=False, sort_keys=True, indent=2)
-            remote_normalized = yaml.dump(self.file_share.metadata, default_flow_style=False, sort_keys=True, indent=2)
+            local_normalized = yaml.dump(
+                local_data, default_flow_style=False, sort_keys=True, indent=2
+            )
+            remote_normalized = yaml.dump(
+                self.file_share.metadata,
+                default_flow_style=False,
+                sort_keys=True,
+                indent=2,
+            )
         except Exception as e:
             click.secho(f'❌ Error normalizing YAML data: {str(e)}', fg='red')
             sys.exit(1)
-        
+
         ## --- Calculate Diff ---
         local_lines = local_normalized.splitlines(keepends=False)
         remote_lines = remote_normalized.splitlines(keepends=False)
-        
+
         # Generate unified diff
-        diff_lines = list(difflib.unified_diff(
-            local_lines,
-            remote_lines,
-            fromfile=f'local/{os.path.basename(local_file)}',
-            tofile='remote/metadata.yml',
-            lineterm=''
-        ))
-        
+        diff_lines = list(
+            difflib.unified_diff(
+                local_lines,
+                remote_lines,
+                fromfile=f'local/{os.path.basename(local_file)}',
+                tofile='remote/metadata.yml',
+                lineterm='',
+            )
+        )
+
         # Count changed lines (lines starting with + or - but not +++ or ---)
-        changed_lines = sum(1 for line in diff_lines 
-                           if (line.startswith('+') and not line.startswith('+++')) or
-                              (line.startswith('-') and not line.startswith('---')))
-        
+        changed_lines = sum(
+            1
+            for line in diff_lines
+            if (line.startswith('+') and not line.startswith('+++'))
+            or (line.startswith('-') and not line.startswith('---'))
+        )
+
         ## --- Display Results ---
         rich_diff = RichDiffDisplay(
             local_file=local_file,
-            remote_file="remote/metadata.yml",
+            remote_file='remote/metadata.yml',
             diff_lines=diff_lines,
-            changed_lines=changed_lines
+            changed_lines=changed_lines,
         )
         click.echo(rich_diff)
 
-    @click.command('remove', short_help='Remove a dataset entry from the local metadata.yml file')
+    @click.command(
+        'remove', short_help='Remove a dataset entry from the local metadata.yml file'
+    )
     @click.argument('dataset_name', type=str)
-    @click.option('--metadata-path', '-f', type=click.Path(exists=True, dir_okay=False, readable=True, writable=True),
-                  default=METADATA_PATH, show_default=True,
-                  help='Path to the local metadata.yml file to modify')
-    @click.option('--backup', is_flag=True, default=True, show_default=True,
-                  help='Create a backup copy before modifying the file')
+    @click.option(
+        '--metadata-path',
+        '-f',
+        type=click.Path(exists=True, dir_okay=False, readable=True, writable=True),
+        default=METADATA_PATH,
+        show_default=True,
+        help='Path to the local metadata.yml file to modify',
+    )
+    @click.option(
+        '--backup',
+        is_flag=True,
+        default=True,
+        show_default=True,
+        help='Create a backup copy before modifying the file',
+    )
     @click.pass_obj
-    def metadata_remove_command(self, dataset_name: str, metadata_path: str, backup: bool) -> None:
+    def metadata_remove_command(
+        self, dataset_name: str, metadata_path: str, backup: bool
+    ) -> None:
         """
         Removes a dataset entry from the local metadata.yml file.
 
@@ -883,21 +996,29 @@ class CLI(click.RichGroup):
             sys.exit(1)
 
         if dataset_name not in metadata['datasets']:
-            click.secho(f'❌ Dataset "{dataset_name}" not found in metadata file', fg='red')
+            click.secho(
+                f'❌ Dataset "{dataset_name}" not found in metadata file', fg='red'
+            )
             available_datasets = list(metadata['datasets'].keys())
             if available_datasets:
-                click.secho(f'Available datasets: {", ".join(sorted(available_datasets))}', fg='yellow')
+                click.secho(
+                    f'Available datasets: {", ".join(sorted(available_datasets))}',
+                    fg='yellow',
+                )
             sys.exit(1)
 
         ## --- Create Backup if Requested ---
         if backup:
-            backup_path = f"{metadata_path}.backup"
+            backup_path = f'{metadata_path}.backup'
             try:
                 import shutil
+
                 shutil.copy2(metadata_path, backup_path)
                 click.secho(f'📋 Created backup at: {backup_path}', fg='bright_black')
             except Exception as e:
-                click.secho(f'⚠️ Warning: Could not create backup: {str(e)}', fg='yellow')
+                click.secho(
+                    f'⚠️ Warning: Could not create backup: {str(e)}', fg='yellow'
+                )
 
         ## --- Remove Dataset ---
         removed_dataset = metadata['datasets'].pop(dataset_name)
@@ -905,13 +1026,21 @@ class CLI(click.RichGroup):
         ## --- Write Updated Metadata ---
         try:
             with open(metadata_path, 'w', encoding='utf-8') as f:
-                yaml.dump(metadata, f, default_flow_style=False, sort_keys=True, indent=4)
-            click.secho(f'✅ Successfully removed dataset "{dataset_name}" from {metadata_path}', fg='green')
+                yaml.dump(
+                    metadata, f, default_flow_style=False, sort_keys=True, indent=4
+                )
+            click.secho(
+                f'✅ Successfully removed dataset "{dataset_name}" from {metadata_path}',
+                fg='green',
+            )
 
             # Show some info about what was removed
             compounds = removed_dataset.get('compounds', 'Unknown')
             targets = removed_dataset.get('targets', 'Unknown')
-            click.secho(f'   Removed dataset had {compounds} compounds and {targets} targets', fg='bright_black')
+            click.secho(
+                f'   Removed dataset had {compounds} compounds and {targets} targets',
+                fg='bright_black',
+            )
 
         except Exception as e:
             click.secho(f'❌ Error writing updated metadata file: {str(e)}', fg='red')
@@ -920,69 +1049,84 @@ class CLI(click.RichGroup):
     ## == DATASET COMMAND GROUP ==
     # all the commands related to the interaction with the local datasets - such as the (re)creation of
     # datasets or the uploading to the remote file share server.
-        
-    @click.group('dataset', help=('Commands for managing the datasets on the local system.'))
+
+    @click.group(
+        'dataset', help=('Commands for managing the datasets on the local system.')
+    )
     @click.pass_obj
-    def dataset_group(self,
-                      ) -> None:
+    def dataset_group(
+        self,
+    ) -> None:
         pass
-    
+
     def collect_dataset_experiment_map(experiments_path: str) -> Dict[str, Experiment]:
         """
-        A helper function which creates a ``dataset_experiment_map`` data structure if given 
-        the absolute string ``experiments_path`` of where to search the experiment modules. 
-        Returns a dict data structure whose string keys are the dataset names and the values 
+        A helper function which creates a ``dataset_experiment_map`` data structure if given
+        the absolute string ``experiments_path`` of where to search the experiment modules.
+        Returns a dict data structure whose string keys are the dataset names and the values
         are the corresponding Experiment instances imported from the experiment modules.
-        
+
         :param experiments_path: The absolute path to the folder where the experiment modules are stored.
-        
+
         :return: A dict data structure mapping dataset names to Experiment instances.
         """
         # In this data structure we are going to map the string dataset names to the imported
-        # Experiment instances that can potentially be executed to create the corresponding 
+        # Experiment instances that can potentially be executed to create the corresponding
         # datasets.
         dataset_experiment_map: Dict[str, Experiment] = {}
-        
+
         file_names: List[str] = os.listdir(experiments_path)
         for file_name in file_names:
             file_path = os.path.join(experiments_path, file_name)
             if os.path.isfile(file_path) and file_name.endswith('.py'):
-                
                 # Each python module we find, we'll import and check if it has the "DATASET_NAME"
                 # attribute. If it does, we'll add it to the list of available experiment modules.
                 module = dynamic_import(file_path)
-                if hasattr(module, 'DATASET_NAME') and hasattr(module, '__experiment__'):
+                if hasattr(module, 'DATASET_NAME') and hasattr(
+                    module, '__experiment__'
+                ):
                     experiment = getattr(module, '__experiment__')
                     dataset_name = experiment.parameters['DATASET_NAME']
                     dataset_experiment_map[dataset_name] = experiment
-                    
+
         return dataset_experiment_map
-    
-    @click.command('create', short_help='Creates a new dataset using the experiment modules.')
-    @click.option('--scripts-path', help='The path to the scripts folder.', default=SCRIPTS_PATH)
-    @click.option('--all', help='If this flag is set, all available datasets will be created.', is_flag=True)
+
+    @click.command(
+        'create', short_help='Creates a new dataset using the experiment modules.'
+    )
+    @click.option(
+        '--scripts-path', help='The path to the scripts folder.', default=SCRIPTS_PATH
+    )
+    @click.option(
+        '--all',
+        help='If this flag is set, all available datasets will be created.',
+        is_flag=True,
+    )
     @click.argument('name', type=str)
     @click.pass_obj
-    def dataset_create_command(self,
-                               scripts_path: str,
-                               name: str,
-                               all: bool,
-                               ) -> None:
+    def dataset_create_command(
+        self,
+        scripts_path: str,
+        name: str,
+        all: bool,
+    ) -> None:
         """
-        This command can be used to trigger the execution of one or multiple experiment modules which 
+        This command can be used to trigger the execution of one or multiple experiment modules which
         will re-create a dataset.
-        
-        The NAME argument may either be the string name of a single dataset to be created or a 
+
+        The NAME argument may either be the string name of a single dataset to be created or a
         comma separated list of dataset names.
         """
         # ~ collecting experiment modules
-        # First of all we construct a data structure that tells us which experiment modules are actually 
+        # First of all we construct a data structure that tells us which experiment modules are actually
         # available to create which datasets.
         click.secho('collecting available experiment modules...', color='bright_black')
-        
+
         # This method creates a dict data structure that maps the dataset names to the Experiment instances
         # that are imported from the experiment modules.
-        dataset_experiment_map: Dict[str, Experiment] = self.collect_dataset_experiment_map(scripts_path)
+        dataset_experiment_map: Dict[str, Experiment] = (
+            self.collect_dataset_experiment_map(scripts_path)
+        )
         click.secho(f'found {len(dataset_experiment_map)} experiment modules')
 
         # ~ parsing the name argument
@@ -993,31 +1137,48 @@ class CLI(click.RichGroup):
             dataset_names: List[str] = [n.replace(' ', '') for n in name.split(',')]
 
         # ~ executing the experiments
-        # We can fetch the experiment instances from the map that we previously constructed and 
+        # We can fetch the experiment instances from the map that we previously constructed and
         # we can forcefully execute these experiements by using the "run" method.
-        click.secho('running the experiment modules. Beware that this will take some time...')
+        click.secho(
+            'running the experiment modules. Beware that this will take some time...'
+        )
         for dataset_name in dataset_names:
             click.secho(f'⭐ running "{dataset_name}"', fg='yellow')
             experiment = dataset_experiment_map[dataset_name]
             experiment.run()
-        
+
         click.secho('✅ all experiments have been executed', fg='green')
-        
-    @click.command('upload', short_help='Uploads local datasets to the remote file share server.')
+
+    @click.command(
+        'upload', short_help='Uploads local datasets to the remote file share server.'
+    )
     @click.argument('name', type=str, required=False)
-    @click.option('--results-path', help='The path to the results folder.', default=RESULTS_PATH)
-    @click.option('-p', '--path', help='The path to the dataset file that should be uploaded.')
-    @click.option('--strategy', help='The strategy to use for selecting the experiment to use for the upload.',
-                    type=click.Choice(EXPERIMENT_COLLECT_STRATEGIES), default='recent')
-    @click.option('--all', help='If this flag is set, all available datasets will be uploaded.', is_flag=True)
+    @click.option(
+        '--results-path', help='The path to the results folder.', default=RESULTS_PATH
+    )
+    @click.option(
+        '-p', '--path', help='The path to the dataset file that should be uploaded.'
+    )
+    @click.option(
+        '--strategy',
+        help='The strategy to use for selecting the experiment to use for the upload.',
+        type=click.Choice(EXPERIMENT_COLLECT_STRATEGIES),
+        default='recent',
+    )
+    @click.option(
+        '--all',
+        help='If this flag is set, all available datasets will be uploaded.',
+        is_flag=True,
+    )
     @click.pass_obj
-    def dataset_upload_command(self,
-                               name: str,
-                               results_path: str,
-                               path: str,
-                               strategy: str,
-                               all: bool,
-                               ) -> None:
+    def dataset_upload_command(
+        self,
+        name: str,
+        results_path: str,
+        path: str,
+        strategy: str,
+        all: bool,
+    ) -> None:
         """
         This command will upload the graph dataset MPACK file and the raw CSV file for a given dataset
         NAME to the remote file share server. If the `--all` flag is set, all available datasets will be
@@ -1026,14 +1187,14 @@ class CLI(click.RichGroup):
         The NAME argument may either be the string name of a single dataset to be uploaded or a
         comma-separated list of dataset names.
         """
-        
+
         # This method will return a dict data structure that maps the dataset names to lists of Experiment instances
         # that have been loaded from the results folder of completed experiment. For each dataset name key the corresponding
         # value list consists of all experiment archives related to that dataset.
         dataset_archives_map: Dict[str, List[Experiment]] = defaultdict(list)
         dataset_archives_map.update(self.collect_dataset_archives_map(results_path))
         click.secho(f'found {len(dataset_archives_map)} datasets')
-            
+
         # ~ parsing the name argument
         # The name argument may be a single dataset name or a comma separated list of dataset names.
         if all:
@@ -1041,32 +1202,41 @@ class CLI(click.RichGroup):
         elif name:
             dataset_names: List[str] = [n.replace(' ', '') for n in name.split(',')]
         else:
-            click.secho('❌ Error: Must specify either dataset NAME(s) or use --all flag', fg='red')
+            click.secho(
+                '❌ Error: Must specify either dataset NAME(s) or use --all flag',
+                fg='red',
+            )
             sys.exit(1)
-            
+
         # ~ uploading the datasets
         # Now we can go through the dataset archives map and upload the dataset files to the file share server.
         click.secho('uploading the datasets...')
         for dataset_name in dataset_names:
-            
             experiments = dataset_archives_map[dataset_name]
             if len(experiments) == 0:
-                click.secho(f'❗ no experiment archives found for dataset "{dataset_name}"', fg='red')
+                click.secho(
+                    f'❗ no experiment archives found for dataset "{dataset_name}"',
+                    fg='red',
+                )
                 continue
-            
+
             click.secho(f'⭐ dataset "{dataset_name}"', fg='yellow')
-            
-            # First we need to select a single experiment to use as the basis of the upload for each dataset 
+
+            # First we need to select a single experiment to use as the basis of the upload for each dataset
             # based on the selected strategy.
             if strategy == 'recent':
-                experiment = sorted(experiments, key=lambda e: e.metadata['end_time'])[-1]
-        
+                experiment = sorted(experiments, key=lambda e: e.metadata['end_time'])[
+                    -1
+                ]
+
             # The actual dataset file that we are interested in will be stored as an additional artifact
             # called "{dataset_name}.xxx" in the experiment folder. We will load this file and then
             # upload it to the file share server.
-            
+
             mpack_file_name = f'{dataset_name}.mpack.gz'
-            mpack_file_path: str = os.path.join(experiment.path, f'{dataset_name}.mpack.gz')
+            mpack_file_path: str = os.path.join(
+                experiment.path, f'{dataset_name}.mpack.gz'
+            )
             if os.path.exists(mpack_file_path):
                 file_size = os.path.getsize(mpack_file_path)
                 file_size_mb = file_size / (1024 * 1024)
@@ -1088,16 +1258,24 @@ class CLI(click.RichGroup):
     # Commands to interact with the LLM-powered agent workflow for automated
     # dataset discovery and processing script generation.
 
-    @click.group('agent', cls=RichHelpGroup, rich_help=RichAgentGroupHelp(),
-                 short_help='LLM agent for automated dataset discovery and processing.')
-    @click.option('--backend', '-b',
-                  type=click.Choice(['opencode', 'claude']),
-                  default=None,
-                  help='LLM backend to use. Overrides the config file setting.')
+    @click.group(
+        'agent',
+        cls=RichHelpGroup,
+        rich_help=RichAgentGroupHelp(),
+        short_help='LLM agent for automated dataset discovery and processing.',
+    )
+    @click.option(
+        '--backend',
+        '-b',
+        type=click.Choice(['opencode', 'claude']),
+        default=None,
+        help='LLM backend to use. Overrides the config file setting.',
+    )
     @click.pass_obj
-    def agent_group(self,
-                    backend: str | None,
-                    ) -> None:
+    def agent_group(
+        self,
+        backend: str | None,
+    ) -> None:
         if backend:
             self._agent_backend_name = backend
         else:
@@ -1151,7 +1329,11 @@ class CLI(click.RichGroup):
         Returns a short, human-readable summary string.
         """
         # For known tools, pick the most meaningful field
-        if name in ('WebFetch', 'mcp__crawl4ai__crawl_webpage', 'mcp__crawl4ai__crawl_website'):
+        if name in (
+            'WebFetch',
+            'mcp__crawl4ai__crawl_webpage',
+            'mcp__crawl4ai__crawl_website',
+        ):
             return parsed.get('url', raw_input)
 
         if name == 'WebSearch':
@@ -1217,6 +1399,7 @@ class CLI(click.RichGroup):
 
         :returns: A callback suitable for the ``on_event`` parameter.
         """
+
         def on_event(event: dict) -> None:
             etype = event.get('type', '')
             if etype == 'text':
@@ -1268,24 +1451,30 @@ class CLI(click.RichGroup):
             lines.append(str(value), style='bold')
 
         console.print()
-        console.print(Panel(
-            lines,
-            title=f'[bold]Agent: {title}[/bold]',
-            title_align='left',
-            style='bright_blue',
-            expand=True,
-            padding=(1, 1),
-        ))
+        console.print(
+            Panel(
+                lines,
+                title=f'[bold]Agent: {title}[/bold]',
+                title_align='left',
+                style='bright_blue',
+                expand=True,
+                padding=(1, 1),
+            )
+        )
         console.print()
 
-    @click.command('identify', cls=RichHelpCommand,
-                   rich_help=RichAgentIdentifyHelp(),
-                   short_help='Check whether a paper publishes usable molecular/materials data.')
+    @click.command(
+        'identify',
+        cls=RichHelpCommand,
+        rich_help=RichAgentIdentifyHelp(),
+        short_help='Check whether a paper publishes usable molecular/materials data.',
+    )
     @click.argument('query', type=str)
     @click.pass_obj
-    def agent_identify_command(self,
-                               query: str,
-                               ) -> None:
+    def agent_identify_command(
+        self,
+        query: str,
+    ) -> None:
         import os
         from rich.console import Console
         from rich.panel import Panel
@@ -1299,10 +1488,14 @@ class CLI(click.RichGroup):
         model = backend_config.get('model', '')
         backend_label = f'{backend} ({model})' if model else backend
 
-        self._agent_header_panel(console, 'Identify Dataset', {
-            'Query': query,
-            'Backend': backend_label,
-        })
+        self._agent_header_panel(
+            console,
+            'Identify Dataset',
+            {
+                'Query': query,
+                'Backend': backend_label,
+            },
+        )
 
         on_event = self._make_agent_event_callback(console)
 
@@ -1328,11 +1521,13 @@ class CLI(click.RichGroup):
 
         except Exception as exc:
             console.print()
-            console.print(Panel(
-                f'[bold red]Identify failed[/bold red]\n\n{exc}',
-                style='red',
-                expand=True,
-            ))
+            console.print(
+                Panel(
+                    f'[bold red]Identify failed[/bold red]\n\n{exc}',
+                    style='red',
+                    expand=True,
+                )
+            )
             sys.exit(1)
 
         decision = result.get('decision', 'unknown')
@@ -1364,29 +1559,37 @@ class CLI(click.RichGroup):
             body.append(str(os.path.relpath(output_path)), style='bold')
 
         console.print()
-        console.print(Panel(
-            body,
-            title='[bold]Identification Result[/bold]',
-            title_align='left',
-            style=panel_style,
-            expand=True,
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                body,
+                title='[bold]Identification Result[/bold]',
+                title_align='left',
+                style=panel_style,
+                expand=True,
+                padding=(1, 2),
+            )
+        )
 
-    @click.command('prepare', cls=RichHelpCommand,
-                   rich_help=RichAgentPrepareHelp(),
-                   short_help='Discover and download dataset files from a publication URL.')
+    @click.command(
+        'prepare',
+        cls=RichHelpCommand,
+        rich_help=RichAgentPrepareHelp(),
+        short_help='Discover and download dataset files from a publication URL.',
+    )
     @click.argument('link', type=str)
     @click.pass_obj
-    def agent_prepare_command(self,
-                              link: str,
-                              ) -> None:
-        import os
+    def agent_prepare_command(
+        self,
+        link: str,
+    ) -> None:
         from rich.console import Console
         from rich.panel import Panel
         from rich.text import Text
 
-        from chem_mat_data.agent.extraction_agent import discover_and_download, DOWNLOADS_DIR
+        from chem_mat_data.agent.extraction_agent import (
+            discover_and_download,
+            DOWNLOADS_DIR,
+        )
 
         console = Console()
         backend = self._agent_backend_name
@@ -1394,10 +1597,14 @@ class CLI(click.RichGroup):
         model = backend_config.get('model', '')
         backend_label = f'{backend} ({model})' if model else backend
 
-        self._agent_header_panel(console, 'Prepare Dataset', {
-            'Publication': link,
-            'Backend': backend_label,
-        })
+        self._agent_header_panel(
+            console,
+            'Prepare Dataset',
+            {
+                'Publication': link,
+                'Backend': backend_label,
+            },
+        )
 
         # Snapshot files before the agent runs
         existing_files = set()
@@ -1428,18 +1635,21 @@ class CLI(click.RichGroup):
 
         except Exception as exc:
             console.print()
-            console.print(Panel(
-                f'[bold red]Prepare failed[/bold red]\n\n{exc}',
-                style='red',
-                expand=True,
-            ))
+            console.print(
+                Panel(
+                    f'[bold red]Prepare failed[/bold red]\n\n{exc}',
+                    style='red',
+                    expand=True,
+                )
+            )
             sys.exit(1)
 
         # Discover new files
         new_files = []
         if DOWNLOADS_DIR.exists():
             new_files = [
-                p.name for p in sorted(DOWNLOADS_DIR.iterdir())
+                p.name
+                for p in sorted(DOWNLOADS_DIR.iterdir())
                 if p.is_file() and p.name not in existing_files
             ]
 
@@ -1464,21 +1674,27 @@ class CLI(click.RichGroup):
         body.append(' to create a processing script.', style='dim')
 
         console.print()
-        console.print(Panel(
-            body,
-            title='[bold green]Prepare complete[/bold green]',
-            title_align='left',
-            style='green',
-            expand=True,
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                body,
+                title='[bold green]Prepare complete[/bold green]',
+                title_align='left',
+                style='green',
+                expand=True,
+                padding=(1, 2),
+            )
+        )
 
-    @click.command('generate', cls=RichHelpCommand,
-                   rich_help=RichAgentGenerateHelp(),
-                   short_help='Generate a processing script for the downloaded dataset.')
+    @click.command(
+        'generate',
+        cls=RichHelpCommand,
+        rich_help=RichAgentGenerateHelp(),
+        short_help='Generate a processing script for the downloaded dataset.',
+    )
     @click.pass_obj
-    def agent_generate_command(self,
-                               ) -> None:
+    def agent_generate_command(
+        self,
+    ) -> None:
         import os
         from rich.console import Console
         from rich.panel import Panel
@@ -1487,7 +1703,6 @@ class CLI(click.RichGroup):
         from chem_mat_data.agent.extraction_agent import (
             generate_processing_script,
             get_downloaded_files,
-            DOWNLOADS_DIR,
         )
         from chem_mat_data.agent.plugins import create_agent_venv, PluginInstallError
 
@@ -1500,38 +1715,53 @@ class CLI(click.RichGroup):
         # List dataset files for the header
         try:
             downloaded = get_downloaded_files()
-            skip_names = {"readme", "download_recipe"}
+            skip_names = {'readme', 'download_recipe'}
             dataset_files = [
-                p.name for p in downloaded
+                p.name
+                for p in downloaded
                 if not any(s in p.name.lower() for s in skip_names)
             ]
         except FileNotFoundError:
             console.print()
-            console.print(Panel(
-                '[bold red]No dataset files found[/bold red]\n\n'
-                'Run [bold]cmmanage agent prepare <url>[/bold] first to download dataset files.',
-                style='red',
-                expand=True,
-            ))
+            console.print(
+                Panel(
+                    '[bold red]No dataset files found[/bold red]\n\n'
+                    'Run [bold]cmmanage agent prepare <url>[/bold] first to download dataset files.',
+                    style='red',
+                    expand=True,
+                )
+            )
             sys.exit(1)
 
-        self._agent_header_panel(console, 'Generate Script', {
-            'Dataset files': ', '.join(dataset_files) if dataset_files else '(none)',
-            'Backend': backend_label,
-        })
+        self._agent_header_panel(
+            console,
+            'Generate Script',
+            {
+                'Dataset files': ', '.join(dataset_files)
+                if dataset_files
+                else '(none)',
+                'Backend': backend_label,
+            },
+        )
 
         # Set up a fresh venv for the agent to run generated scripts in
-        console.print('  [bright_cyan]●[/bright_cyan] Setting up virtual environment...')
+        console.print(
+            '  [bright_cyan]●[/bright_cyan] Setting up virtual environment...'
+        )
         try:
             venv_python = create_agent_venv()
-            console.print(f'  [bright_cyan]●[/bright_cyan] Venv ready: [dim]{venv_python}[/dim]')
+            console.print(
+                f'  [bright_cyan]●[/bright_cyan] Venv ready: [dim]{venv_python}[/dim]'
+            )
         except PluginInstallError as exc:
             console.print()
-            console.print(Panel(
-                f'[bold red]Venv setup failed[/bold red]\n\n{exc}',
-                style='red',
-                expand=True,
-            ))
+            console.print(
+                Panel(
+                    f'[bold red]Venv setup failed[/bold red]\n\n{exc}',
+                    style='red',
+                    expand=True,
+                )
+            )
             sys.exit(1)
 
         console.print()
@@ -1559,19 +1789,23 @@ class CLI(click.RichGroup):
 
         except FileNotFoundError as exc:
             console.print()
-            console.print(Panel(
-                f'[bold red]Generate failed[/bold red]\n\n{exc}',
-                style='red',
-                expand=True,
-            ))
+            console.print(
+                Panel(
+                    f'[bold red]Generate failed[/bold red]\n\n{exc}',
+                    style='red',
+                    expand=True,
+                )
+            )
             sys.exit(1)
         except Exception as exc:
             console.print()
-            console.print(Panel(
-                f'[bold red]Generate failed[/bold red]\n\n{exc}',
-                style='red',
-                expand=True,
-            ))
+            console.print(
+                Panel(
+                    f'[bold red]Generate failed[/bold red]\n\n{exc}',
+                    style='red',
+                    expand=True,
+                )
+            )
             sys.exit(1)
 
         # Build result panel
@@ -1583,26 +1817,31 @@ class CLI(click.RichGroup):
         body.append(f'  python {rel_path}', style='bold')
 
         console.print()
-        console.print(Panel(
-            body,
-            title='[bold green]Script generated[/bold green]',
-            title_align='left',
-            style='green',
-            expand=True,
-            padding=(1, 2),
-        ))
+        console.print(
+            Panel(
+                body,
+                title='[bold green]Script generated[/bold green]',
+                title_align='left',
+                style='green',
+                expand=True,
+                padding=(1, 2),
+            )
+        )
 
-    @click.command('install-plugins', cls=RichHelpCommand,
-                   rich_help=RichAgentInstallPluginsHelp(),
-                   short_help='Install MCP server plugins for the active agent backend.')
+    @click.command(
+        'install-plugins',
+        cls=RichHelpCommand,
+        rich_help=RichAgentInstallPluginsHelp(),
+        short_help='Install MCP server plugins for the active agent backend.',
+    )
     @click.pass_obj
-    def agent_install_plugins_command(self,
-                                      ) -> None:
+    def agent_install_plugins_command(
+        self,
+    ) -> None:
         from rich.console import Console
         from rich.panel import Panel
 
         from chem_mat_data.agent.plugins import (
-            install_claude_plugins,
             install_opencode_plugins,
             get_opencode_config_snippet,
             PluginInstallError,
@@ -1612,54 +1851,83 @@ class CLI(click.RichGroup):
         backend = self._agent_backend_name
 
         console.print()
-        console.print(Panel(
-            f"[bold]Install Agent Plugins[/bold]\n"
-            f"[dim]Backend: {backend}[/dim]",
-            style="bright_blue",
-            expand=False,
-        ))
+        console.print(
+            Panel(
+                f'[bold]Install Agent Plugins[/bold]\n[dim]Backend: {backend}[/dim]',
+                style='bright_blue',
+                expand=False,
+            )
+        )
         console.print()
 
         try:
-            if backend == "claude":
-                console.print("[cyan]  [bold]\\[1/2][/bold] Installing crawl4ai-mcp-server (pip)...[/cyan]")
+            if backend == 'claude':
+                console.print(
+                    '[cyan]  [bold]\\[1/2][/bold] Installing crawl4ai-mcp-server (pip)...[/cyan]'
+                )
                 from chem_mat_data.agent.plugins import install_crawl4ai
-                install_crawl4ai()
-                console.print(f"[green]  [bold]\\[1/2][/bold] crawl4ai-mcp-server installed[/green]")
 
-                console.print("[cyan]  [bold]\\[2/2][/bold] Installing mcp-file-downloader (npm)...[/cyan]")
-                from chem_mat_data.agent.plugins import install_file_downloader, _update_config_mcp_servers
+                install_crawl4ai()
+                console.print(
+                    '[green]  [bold]\\[1/2][/bold] crawl4ai-mcp-server installed[/green]'
+                )
+
+                console.print(
+                    '[cyan]  [bold]\\[2/2][/bold] Installing mcp-file-downloader (npm)...[/cyan]'
+                )
+                from chem_mat_data.agent.plugins import (
+                    install_file_downloader,
+                    _update_config_mcp_servers,
+                )
+
                 server_js = install_file_downloader()
-                _update_config_mcp_servers(self.config, "claude", {
-                    "crawl4ai": {"command": "crawl4ai-mcp", "args": []},
-                    "file_downloader": {"command": "node", "args": [str(server_js)]},
-                })
-                console.print(f"[green]  [bold]\\[2/2][/bold] mcp-file-downloader installed[/green]")
+                _update_config_mcp_servers(
+                    self.config,
+                    'claude',
+                    {
+                        'crawl4ai': {'command': 'crawl4ai-mcp', 'args': []},
+                        'file_downloader': {
+                            'command': 'node',
+                            'args': [str(server_js)],
+                        },
+                    },
+                )
+                console.print(
+                    '[green]  [bold]\\[2/2][/bold] mcp-file-downloader installed[/green]'
+                )
 
                 console.print()
-                console.print(Panel(
-                    "[bold green]All plugins installed![/bold green]\n\n"
-                    "  MCP servers have been configured in your config file.\n"
-                    "  The agent will automatically use them on the next run.",
-                    style="green",
-                    expand=False,
-                ))
+                console.print(
+                    Panel(
+                        '[bold green]All plugins installed![/bold green]\n\n'
+                        '  MCP servers have been configured in your config file.\n'
+                        '  The agent will automatically use them on the next run.',
+                        style='green',
+                        expand=False,
+                    )
+                )
 
-            elif backend == "opencode":
-                console.print("[cyan]  [bold]\\[1/1][/bold] Installing mcp-file-downloader...[/cyan]")
+            elif backend == 'opencode':
+                console.print(
+                    '[cyan]  [bold]\\[1/1][/bold] Installing mcp-file-downloader...[/cyan]'
+                )
                 server_js = install_opencode_plugins(self.config)
-                console.print(f"[green]  [bold]\\[1/1][/bold] mcp-file-downloader installed[/green]")
+                console.print(
+                    '[green]  [bold]\\[1/1][/bold] mcp-file-downloader installed[/green]'
+                )
 
                 snippet = get_opencode_config_snippet(server_js)
                 console.print()
-                console.print(Panel(
-                    "[bold green]Plugins installed![/bold green]\n\n"
-                    "  The mcp-file-downloader has been installed.\n"
-                    "  You still need to configure OpenCode manually.\n\n"
-                    f"[dim]{snippet}[/dim]",
-                    style="green",
-                    expand=False,
-                ))
+                console.print(
+                    Panel(
+                        '[bold green]Plugins installed![/bold green]\n\n'
+                        '  The mcp-file-downloader has been installed.\n'
+                        '  You still need to configure OpenCode manually.\n\n'
+                        f'[dim]{snippet}[/dim]',
+                        style='green',
+                        expand=False,
+                    )
+                )
 
             else:
                 click.secho(f'❌ Unknown backend: {backend}', fg='red')
@@ -1667,75 +1935,92 @@ class CLI(click.RichGroup):
 
         except PluginInstallError as exc:
             console.print()
-            console.print(Panel(
-                f"[bold red]Plugin installation failed[/bold red]\n\n{exc}",
-                style="red",
-                expand=False,
-            ))
+            console.print(
+                Panel(
+                    f'[bold red]Plugin installation failed[/bold red]\n\n{exc}',
+                    style='red',
+                    expand=False,
+                )
+            )
             sys.exit(1)
 
     ## == DOCS COMMAND GROUP ==
     # This command group is used to manage the documentation of the package.
-    
+
     @click.group('docs', help='Commands for managing the documentation of the package.')
     @click.pass_obj
-    def docs_group(self,
-                     ) -> None:
-          """
-          This command group contains commands that can be used to manage the documentation of the package.
-          This includes commands to build the documentation, open it in a browser, or edit it.
-          """
-          pass
-      
-    @click.command('collect-datasets', help='Compiles the datasets for the documentation from the metadata file.')
-    @click.option('--metadata-path', help='The path to the metadata file to use for compiling the datasets.',
-                  default=METADATA_PATH, show_default=True)
-    @click.option('--output-path', help='The path to the output file where the compiled datasets will be written.',
-                  default=os.path.join(DOCS_PATH, 'datasets.md'), show_default=True)
-    @click.pass_obj
-    def docs_collect_datasets_command(self,
-                                      metadata_path: str,
-                                      output_path: str,
-                                      ) -> None:
+    def docs_group(
+        self,
+    ) -> None:
         """
-        This command will dynamically create the overview of the datasets that are available in the 
-        remote file share server using the metadata.yml file. By default, this will collect the dataset information 
+        This command group contains commands that can be used to manage the documentation of the package.
+        This includes commands to build the documentation, open it in a browser, or edit it.
+        """
+        pass
+
+    @click.command(
+        'collect-datasets',
+        help='Compiles the datasets for the documentation from the metadata file.',
+    )
+    @click.option(
+        '--metadata-path',
+        help='The path to the metadata file to use for compiling the datasets.',
+        default=METADATA_PATH,
+        show_default=True,
+    )
+    @click.option(
+        '--output-path',
+        help='The path to the output file where the compiled datasets will be written.',
+        default=os.path.join(DOCS_PATH, 'datasets.md'),
+        show_default=True,
+    )
+    @click.pass_obj
+    def docs_collect_datasets_command(
+        self,
+        metadata_path: str,
+        output_path: str,
+    ) -> None:
+        """
+        This command will dynamically create the overview of the datasets that are available in the
+        remote file share server using the metadata.yml file. By default, this will collect the dataset information
         from the results of the experiments that have been executed the most recently.
         """
-        
+
         ## -- Getting Metadata --
         # This dictionary contains all the metadata information stored on the remote file share server.
         click.secho('fetching metadata from remote fileshare server...')
         metadata: dict = self.file_share.fetch_metadata(force=True)
-        
+
         ## -- Creating Table --
         # Using prettytable to create the table in the markdown format
         click.secho('compiling datasets overview...')
         table = PrettyTable()
         table.align = 'l'
         table.field_names = [
-            "Name",
-            "Category",
-            "Description",
-            "No. Elements",
-            "Target Type",
+            'Name',
+            'Category',
+            'Description',
+            'No. Elements',
+            'Target Type',
         ]
         for dataset_name, dataset_info in metadata['datasets'].items():
-            table.add_row([
-                f'**{dataset_name}**',
-                dataset_info.get('category', 'organic'),
-                dataset_info.get('verbose', '-'),
-                str(dataset_info.get('compounds', 0)),
-                ', '.join(dataset_info.get('target_type', [])),
-            ])
-            
-        # This is important to set the style to markdown so that the string that is created from this is 
+            table.add_row(
+                [
+                    f'**{dataset_name}**',
+                    dataset_info.get('category', 'organic'),
+                    dataset_info.get('verbose', '-'),
+                    str(dataset_info.get('compounds', 0)),
+                    ', '.join(dataset_info.get('target_type', [])),
+                ]
+            )
+
+        # This is important to set the style to markdown so that the string that is created from this is
         # actually a valid markdown syntax.
         table.set_style(TableStyle.MARKDOWN)
         datasets_table: str = table.get_string()
-        
+
         ## -- Writing the Docs File --
-        # Here we use the jinja2 template to actually render the content of the documentation file 
+        # Here we use the jinja2 template to actually render the content of the documentation file
         # mainly centered around the just created table of the datasets.
         click.secho('writing datasets overview to file...')
         template = TEMPLATE_ENV.get_template('docs_dataset.md.j2')
@@ -1745,21 +2030,27 @@ class CLI(click.RichGroup):
         )
         with open(output_path, 'w') as file:
             file.write(content)
-        
+
         click.secho('✅ datasets overview written to file', fg='green')
         click.secho('')
 
-    @click.command('compile', cls=RichHelpCommand,
-                   rich_help=RichDocsCompileHelp(),
-                   short_help='Compile dataset metadata into JSON for the landing page.')
-    @click.option('--output-path',
-                  default=os.path.join(PAGES_PATH, 'datasets.json'),
-                  show_default=True,
-                  help='The path to the output JSON file.')
+    @click.command(
+        'compile',
+        cls=RichHelpCommand,
+        rich_help=RichDocsCompileHelp(),
+        short_help='Compile dataset metadata into JSON for the landing page.',
+    )
+    @click.option(
+        '--output-path',
+        default=os.path.join(PAGES_PATH, 'datasets.json'),
+        show_default=True,
+        help='The path to the output JSON file.',
+    )
     @click.pass_obj
-    def docs_compile_command(self,
-                             output_path: str,
-                             ) -> None:
+    def docs_compile_command(
+        self,
+        output_path: str,
+    ) -> None:
         from datetime import datetime, timezone
         from rich.console import Console
         from rich.panel import Panel
@@ -1767,28 +2058,38 @@ class CLI(click.RichGroup):
         console = Console()
 
         console.print()
-        console.print(Panel(
-            "[bold]Compile Dataset Metadata[/bold]\n"
-            f"[dim]Output: {output_path}[/dim]",
-            style="bright_blue",
-            expand=False,
-        ))
+        console.print(
+            Panel(
+                '[bold]Compile Dataset Metadata[/bold]\n'
+                f'[dim]Output: {output_path}[/dim]',
+                style='bright_blue',
+                expand=False,
+            )
+        )
         console.print()
 
         # Step 1: Fetch metadata from remote
-        with console.status("[bold cyan]Fetching metadata from remote server...", spinner="dots"):
+        with console.status(
+            '[bold cyan]Fetching metadata from remote server...', spinner='dots'
+        ):
             try:
                 metadata: dict = self.file_share.fetch_metadata(force=True)
             except Exception as e:
-                console.print("[red]  [bold]\\[1/3][/bold] Failed to fetch metadata[/red]")
-                console.print(Panel(str(e), title="Error", style="red"))
+                console.print(
+                    '[red]  [bold]\\[1/3][/bold] Failed to fetch metadata[/red]'
+                )
+                console.print(Panel(str(e), title='Error', style='red'))
                 return
 
         num_total = len(metadata.get('datasets', {}))
-        console.print(f"[green]  [bold]\\[1/3][/bold] Fetched metadata ({num_total} datasets found)[/green]")
+        console.print(
+            f'[green]  [bold]\\[1/3][/bold] Fetched metadata ({num_total} datasets found)[/green]'
+        )
 
         # Step 2: Transform metadata into JSON structure
-        with console.status("[bold cyan]Transforming dataset metadata...", spinner="dots"):
+        with console.status(
+            '[bold cyan]Transforming dataset metadata...', spinner='dots'
+        ):
             datasets = []
             for dataset_name, dataset_info in metadata.get('datasets', {}).items():
                 # Skip internal/test datasets prefixed with underscore
@@ -1797,29 +2098,35 @@ class CLI(click.RichGroup):
 
                 # Build a clean, fallback-safe dataset object
                 verbose_fallback = dataset_name.replace('_', ' ').title()
-                datasets.append({
-                    'name': dataset_name,
-                    'verbose': dataset_info.get('verbose', verbose_fallback),
-                    'category': dataset_info.get('category', 'organic'),
-                    'compounds': dataset_info.get('compounds', 0),
-                    'targets': dataset_info.get('targets', 0),
-                    'target_type': dataset_info.get('target_type', []),
-                    'description': dataset_info.get('description', ''),
-                    'tags': dataset_info.get('tags', []),
-                    'sources': dataset_info.get('sources', []),
-                    'target_descriptions': dataset_info.get('target_descriptions', {}),
-                    'raw': dataset_info.get('raw', []),
-                    'min_version': dataset_info.get('min_version', None),
-                    'notes': dataset_info.get('notes', []),
-                })
+                datasets.append(
+                    {
+                        'name': dataset_name,
+                        'verbose': dataset_info.get('verbose', verbose_fallback),
+                        'category': dataset_info.get('category', 'organic'),
+                        'compounds': dataset_info.get('compounds', 0),
+                        'targets': dataset_info.get('targets', 0),
+                        'target_type': dataset_info.get('target_type', []),
+                        'description': dataset_info.get('description', ''),
+                        'tags': dataset_info.get('tags', []),
+                        'sources': dataset_info.get('sources', []),
+                        'target_descriptions': dataset_info.get(
+                            'target_descriptions', {}
+                        ),
+                        'raw': dataset_info.get('raw', []),
+                        'min_version': dataset_info.get('min_version', None),
+                        'notes': dataset_info.get('notes', []),
+                    }
+                )
 
             # Collect unique categories for the summary
             categories = sorted(set(d['category'] for d in datasets))
 
-        console.print(f"[green]  [bold]\\[2/3][/bold] Transformed {len(datasets)} public datasets[/green]")
+        console.print(
+            f'[green]  [bold]\\[2/3][/bold] Transformed {len(datasets)} public datasets[/green]'
+        )
 
         # Step 3: Write JSON file
-        with console.status("[bold cyan]Writing datasets.json...", spinner="dots"):
+        with console.status('[bold cyan]Writing datasets.json...', spinner='dots'):
             # Construct the download base URL so the landing page can link directly to raw files
             download_base = f'{self.file_share.base_url}/public.php/dav/files/{self.file_share.share_token}'
 
@@ -1834,30 +2141,48 @@ class CLI(click.RichGroup):
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(output, f, indent=2, ensure_ascii=False)
 
-        console.print(f"[green]  [bold]\\[3/3][/bold] Written to {output_path}[/green]")
+        console.print(f'[green]  [bold]\\[3/3][/bold] Written to {output_path}[/green]')
 
         console.print()
-        console.print(Panel(
-            f"[bold green]Compilation complete![/bold green]\n\n"
-            f"  Datasets:    {len(datasets)}\n"
-            f"  Categories:  {', '.join(categories)}\n"
-            f"  Output:      {output_path}\n\n"
-            f"[dim]Run 'cmmanage docs deploy' to publish the updated site.[/dim]",
-            style="green",
-            expand=False,
-        ))
+        console.print(
+            Panel(
+                f'[bold green]Compilation complete![/bold green]\n\n'
+                f'  Datasets:    {len(datasets)}\n'
+                f'  Categories:  {", ".join(categories)}\n'
+                f'  Output:      {output_path}\n\n'
+                f"[dim]Run 'cmmanage docs deploy' to publish the updated site.[/dim]",
+                style='green',
+                expand=False,
+            )
+        )
 
-    @click.command('deploy', short_help='Build and deploy the documentation site to GitHub Pages.')
-    @click.option('--preview', is_flag=True, help='Build the site locally and open it in the browser without deploying.')
-    @click.option('--port', default=8000, show_default=True, help='The port to use for the local preview server.')
-    @click.option('--build-dir', default=os.path.join(PROJECT_PATH, '_site'), show_default=True,
-                  help='The directory to build the site into.')
+    @click.command(
+        'deploy', short_help='Build and deploy the documentation site to GitHub Pages.'
+    )
+    @click.option(
+        '--preview',
+        is_flag=True,
+        help='Build the site locally and open it in the browser without deploying.',
+    )
+    @click.option(
+        '--port',
+        default=8000,
+        show_default=True,
+        help='The port to use for the local preview server.',
+    )
+    @click.option(
+        '--build-dir',
+        default=os.path.join(PROJECT_PATH, '_site'),
+        show_default=True,
+        help='The directory to build the site into.',
+    )
     @click.pass_obj
-    def docs_deploy_command(self,
-                            preview: bool,
-                            port: int,
-                            build_dir: str,
-                            ) -> None:
+    def docs_deploy_command(
+        self,
+        preview: bool,
+        port: int,
+        build_dir: str,
+    ) -> None:
         """
         Build and deploy the full documentation site to GitHub Pages. This command performs all
         the steps required for a complete deployment: building the MkDocs documentation, copying
@@ -1873,11 +2198,9 @@ class CLI(click.RichGroup):
         import subprocess
         import webbrowser
         import http.server
-        import threading
 
         from rich.console import Console
         from rich.panel import Panel
-        from rich.status import Status
 
         console = Console()
         mkdocs_dir = os.path.join(build_dir, 'docs')
@@ -1886,24 +2209,28 @@ class CLI(click.RichGroup):
         errors = []
 
         console.print()
-        mode_label = "Preview" if preview else "Deploy"
-        console.print(Panel(
-            f"[bold]GitHub Pages {mode_label}[/bold]\n"
-            f"[dim]Building site into {build_dir}[/dim]",
-            style="bright_blue",
-            expand=False,
-        ))
+        mode_label = 'Preview' if preview else 'Deploy'
+        console.print(
+            Panel(
+                f'[bold]GitHub Pages {mode_label}[/bold]\n'
+                f'[dim]Building site into {build_dir}[/dim]',
+                style='bright_blue',
+                expand=False,
+            )
+        )
         console.print()
 
         # Step 1: Clean previous build
-        with console.status("[bold cyan]Cleaning previous build...", spinner="dots"):
+        with console.status('[bold cyan]Cleaning previous build...', spinner='dots'):
             if os.path.exists(build_dir):
                 shutil.rmtree(build_dir)
             os.makedirs(build_dir, exist_ok=True)
-        console.print("[green]  [bold]\\[1/4][/bold] Cleaned build directory[/green]")
+        console.print('[green]  [bold]\\[1/4][/bold] Cleaned build directory[/green]')
 
         # Step 2: Build MkDocs
-        with console.status("[bold cyan]Building MkDocs documentation...", spinner="dots"):
+        with console.status(
+            '[bold cyan]Building MkDocs documentation...', spinner='dots'
+        ):
             result = subprocess.run(
                 ['mkdocs', 'build', '-d', mkdocs_dir],
                 cwd=project_dir,
@@ -1911,19 +2238,21 @@ class CLI(click.RichGroup):
                 text=True,
             )
             if result.returncode != 0:
-                errors.append(f"mkdocs build failed:\n{result.stderr}")
+                errors.append(f'mkdocs build failed:\n{result.stderr}')
 
         if errors:
-            console.print(f"[red]  [bold]\\[2/4][/bold] MkDocs build failed[/red]")
-            console.print(Panel(errors[-1], title="Error", style="red"))
+            console.print('[red]  [bold]\\[2/4][/bold] MkDocs build failed[/red]')
+            console.print(Panel(errors[-1], title='Error', style='red'))
             return
 
-        console.print("[green]  [bold]\\[2/4][/bold] Built MkDocs documentation[/green]")
+        console.print(
+            '[green]  [bold]\\[2/4][/bold] Built MkDocs documentation[/green]'
+        )
 
         # Step 3: Copy landing page
-        with console.status("[bold cyan]Copying landing page...", spinner="dots"):
+        with console.status('[bold cyan]Copying landing page...', spinner='dots'):
             if not os.path.isdir(pages_dir):
-                errors.append(f"Landing page directory not found: {pages_dir}")
+                errors.append(f'Landing page directory not found: {pages_dir}')
             else:
                 for item in os.listdir(pages_dir):
                     src = os.path.join(pages_dir, item)
@@ -1939,26 +2268,30 @@ class CLI(click.RichGroup):
                     pass
 
         if errors:
-            console.print(f"[red]  [bold]\\[3/4][/bold] Landing page copy failed[/red]")
-            console.print(Panel(errors[-1], title="Error", style="red"))
+            console.print('[red]  [bold]\\[3/4][/bold] Landing page copy failed[/red]')
+            console.print(Panel(errors[-1], title='Error', style='red'))
             return
 
-        console.print("[green]  [bold]\\[3/4][/bold] Copied landing page[/green]")
+        console.print('[green]  [bold]\\[3/4][/bold] Copied landing page[/green]')
 
         # Step 4: Deploy or preview
         if preview:
-            console.print(f"[green]  [bold]\\[4/4][/bold] Starting preview server on port {port}[/green]")
+            console.print(
+                f'[green]  [bold]\\[4/4][/bold] Starting preview server on port {port}[/green]'
+            )
             console.print()
 
-            url = f"http://localhost:{port}"
-            console.print(Panel(
-                f"[bold green]Preview server running[/bold green]\n\n"
-                f"  Landing page:   [link={url}]{url}[/link]\n"
-                f"  Documentation:  [link={url}/docs/]{url}/docs/[/link]\n\n"
-                f"[dim]Press Ctrl+C to stop the server[/dim]",
-                style="green",
-                expand=False,
-            ))
+            url = f'http://localhost:{port}'
+            console.print(
+                Panel(
+                    f'[bold green]Preview server running[/bold green]\n\n'
+                    f'  Landing page:   [link={url}]{url}[/link]\n'
+                    f'  Documentation:  [link={url}/docs/]{url}/docs/[/link]\n\n'
+                    f'[dim]Press Ctrl+C to stop the server[/dim]',
+                    style='green',
+                    expand=False,
+                )
+            )
 
             webbrowser.open(url)
 
@@ -1970,9 +2303,9 @@ class CLI(click.RichGroup):
                 server.serve_forever()
             except KeyboardInterrupt:
                 server.shutdown()
-                console.print("\n[dim]Preview server stopped.[/dim]")
+                console.print('\n[dim]Preview server stopped.[/dim]')
         else:
-            with console.status("[bold cyan]Deploying to gh-pages...", spinner="dots"):
+            with console.status('[bold cyan]Deploying to gh-pages...', spinner='dots'):
                 result = subprocess.run(
                     ['ghp-import', '-n', '-p', '-f', build_dir],
                     cwd=project_dir,
@@ -1980,33 +2313,37 @@ class CLI(click.RichGroup):
                     text=True,
                 )
                 if result.returncode != 0:
-                    errors.append(f"ghp-import failed:\n{result.stderr}")
+                    errors.append(f'ghp-import failed:\n{result.stderr}')
 
             if errors:
-                console.print(f"[red]  [bold]\\[4/4][/bold] Deployment failed[/red]")
-                console.print(Panel(errors[-1], title="Error", style="red"))
+                console.print('[red]  [bold]\\[4/4][/bold] Deployment failed[/red]')
+                console.print(Panel(errors[-1], title='Error', style='red'))
 
                 # Check if ghp-import is installed
                 ghp_check = shutil.which('ghp-import')
                 if not ghp_check:
                     console.print()
-                    console.print(Panel(
-                        "[bold yellow]ghp-import is not installed.[/bold yellow]\n\n"
-                        "Install it with: [bold]pip install ghp-import[/bold]",
-                        style="yellow",
-                        expand=False,
-                    ))
+                    console.print(
+                        Panel(
+                            '[bold yellow]ghp-import is not installed.[/bold yellow]\n\n'
+                            'Install it with: [bold]pip install ghp-import[/bold]',
+                            style='yellow',
+                            expand=False,
+                        )
+                    )
                 return
 
-            console.print("[green]  [bold]\\[4/4][/bold] Deployed to gh-pages[/green]")
+            console.print('[green]  [bold]\\[4/4][/bold] Deployed to gh-pages[/green]')
             console.print()
-            console.print(Panel(
-                "[bold green]Deployment complete![/bold green]\n\n"
-                "  The site should be live shortly at:\n"
-                "  [link=https://the16thpythonist.github.io/chem_mat_data/]https://the16thpythonist.github.io/chem_mat_data/[/link]",
-                style="green",
-                expand=False,
-            ))
+            console.print(
+                Panel(
+                    '[bold green]Deployment complete![/bold green]\n\n'
+                    '  The site should be live shortly at:\n'
+                    '  [link=https://the16thpythonist.github.io/chem_mat_data/]https://the16thpythonist.github.io/chem_mat_data/[/link]',
+                    style='green',
+                    expand=False,
+                )
+            )
 
         # Clean up build directory after deploy (not for preview, user may want to inspect)
         if not preview and os.path.exists(build_dir):
@@ -2014,19 +2351,24 @@ class CLI(click.RichGroup):
 
 
 @click.group(cls=CLI)
-@click.option("-v", "--version", is_flag=True, help='Print the version of the package')
-@click.option('--no-verify', is_flag=True, help='turn off ssl verification for the fileshare connection')
+@click.option('-v', '--version', is_flag=True, help='Print the version of the package')
+@click.option(
+    '--no-verify',
+    is_flag=True,
+    help='turn off ssl verification for the fileshare connection',
+)
 @click.pass_context
-def cli(ctx: Any,
-        version: bool,
-        no_verify: bool,
-        ) -> None:
+def cli(
+    ctx: Any,
+    version: bool,
+    no_verify: bool,
+) -> None:
 
     # 07.06.24
     # This is actually required to make the CLI class work as it is currently implemented.
-    # The problem is that all the commands which are also methods need to be decorated with the 
-    # @pass_obj in the position of the "self" argument and here we set the object to be passed 
-    # as the CLI instance to make that happen. 
+    # The problem is that all the commands which are also methods need to be decorated with the
+    # @pass_obj in the position of the "self" argument and here we set the object to be passed
+    # as the CLI instance to make that happen.
     ctx.obj = ctx.command
     ctx.obj.file_share.verfiy = not no_verify
 
@@ -2034,18 +2376,17 @@ def cli(ctx: Any,
         version = get_version()
         click.echo(Text(version, style=Style(bold=True)))
         sys.exit(0)
-        
+
     # 07.06.24
-    # There was previously a bug here which caused the help text to be rendered for every 
-    # command. After adding the additional condition "not ctx.invoked_subcommand" this was 
+    # There was previously a bug here which caused the help text to be rendered for every
+    # command. After adding the additional condition "not ctx.invoked_subcommand" this was
     # fixed.
-    
-    # This section will implement the small convenience feature that if no arguments are passed 
+
+    # This section will implement the small convenience feature that if no arguments are passed
     # to the CLI at all, it will simply show the help information.
     elif not ctx.args and not ctx.invoked_subcommand:
         ctx.command.format_help(ctx, ctx.formatter_class())
 
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     cli()  # pragma: no cover

@@ -1,5 +1,5 @@
 import rdkit.Chem as Chem
-from typing import List, Dict
+from typing import Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -16,6 +16,7 @@ experiment = Experiment.extend(
     glob=globals(),
 )
 
+
 @experiment.hook('add_graph_metadata', default=False, replace=True)
 def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
@@ -30,23 +31,22 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
 
     dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
-
         data['smiles'] = data['Canonical_Smiles']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGETS ==
         # Either active or inactive
         data['targets'] = [data['Activity'] == index for index in range(2)]
@@ -54,6 +54,5 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
 
     return dataset
 
+
 experiment.run_if_main()
-
-

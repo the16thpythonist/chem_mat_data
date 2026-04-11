@@ -24,38 +24,38 @@ SMILES_LIST = [
 
 def test_save_and_load_graphs_basically_works():
     """
-    The "save_graphs" method should be able to take a list of graph dict objects and save them 
+    The "save_graphs" method should be able to take a list of graph dict objects and save them
     as a persistent message pack file to the disk.
-    
-    Conversely, the "load_graphs" method should be able to load the same file back into memory 
+
+    Conversely, the "load_graphs" method should be able to load the same file back into memory
     as a list of graph dict objects.
     """
     path = os.path.join(ARTIFACTS_PATH, 'test_save_graphs_basically_works.mpack')
-    
+
     # First we need to generate some graph objects with which to run the test
     processing = MoleculeProcessing()
     graphs = [processing.process(value) for value in SMILES_LIST]
-    
+
     # Then we need to save these graphs into a file
     save_graphs(graphs, path)
-    
+
     assert os.path.exists(path)
     assert os.path.isfile(path)
-    
+
     # And finally we can attempt to load that file now from memory again
     graphs_loaded = load_graphs(path)
     assert isinstance(graphs_loaded, list)
     assert len(graphs_loaded) == len(graphs)
     for graph in graphs_loaded:
         assert_graph_dict(graph)
-        
-        
+
+
 def test_process_test_dataset():
     """
     This is less of a unittest and more of a utility function.
-    
-    This function will load the _test.csv file from the assets folder and process all the 
-    SMILES strings contained in it into graph representations. It will then save these graphs 
+
+    This function will load the _test.csv file from the assets folder and process all the
+    SMILES strings contained in it into graph representations. It will then save these graphs
     as a message pack file into the same folder.
     """
     name = 'clintox'
@@ -63,7 +63,7 @@ def test_process_test_dataset():
     with open(source_path, mode='r') as file:
         dict_reader = csv.DictReader(file)
         rows = list(dict_reader)
-        
+
     processing = MoleculeProcessing()
     graphs = []
     for row in rows:
@@ -72,15 +72,15 @@ def test_process_test_dataset():
             graphs.append(graph)
         except Exception as exc:
             print(exc)
-        
+
     dst_path = os.path.join(ASSETS_PATH, f'{name}.mpack')
     save_graphs(graphs, dst_path)
     assert os.path.exists(dst_path)
-    
+
     graphs_loaded = load_graphs(dst_path)
     assert len(graphs) == len(graphs_loaded)
-    
-    
+
+
 def test_load_xyz_as_mol_basically_works():
     """
     The "load_xyz_as_mol" function should be able to load a xyz file from the disk and return
@@ -88,15 +88,14 @@ def test_load_xyz_as_mol_basically_works():
     """
     xyz_path = os.path.join(ASSETS_PATH, '_test.xyz')
     mol, info = load_xyz_as_mol(xyz_path)
-    
+
     assert isinstance(mol, Chem.Mol)
     assert isinstance(info, dict)
     # For this particular molecule we know that it should have 16 atoms!
     assert mol.GetNumAtoms() == 17
-    
-    
+
+
 class TestDefaultXyzParser:
-    
     def test_parsing_example_file_works(self):
         """
         Parsing a standard xyz file should work for the default parser and return a RDKit molecule
@@ -108,67 +107,65 @@ class TestDefaultXyzParser:
         assert isinstance(mol, Chem.Mol)
         assert len(mol.GetAtoms()) > 0
         assert len(mol.GetAtoms()) == 17
-        
+
     def test_parsing_qm9_file_doesnt_work(self):
         """
-        The special format of the QM9 dataset is not supported by the default parser and should 
+        The special format of the QM9 dataset is not supported by the default parser and should
         therefore not work.
         """
         xyz_path = os.path.join(ASSETS_PATH, 'qm9.xyz')
         parser = DefaultXyzParser(xyz_path)
-        
+
         with pytest.raises(Exception):
             mol: Chem.Mol = parser.parse()  # noqa: F841
-        
-        
-class TestQM9XYZParser():
-    
+
+
+class TestQM9XYZParser:
     def test_parsing_qm9_file_basically_works(self):
         """
-        Loading a xyz file with the special qm9 flavor should work and retrieve all the important 
+        Loading a xyz file with the special qm9 flavor should work and retrieve all the important
         information.
         """
         xyz_path = os.path.join(ASSETS_PATH, 'qm9.xyz')
         parser = QM9XyzParser(xyz_path)
-        
+
         mol, info = parser.parse()
         assert isinstance(mol, Chem.Mol)
         assert isinstance(info, dict)
         assert len(info) != 0
-        
+
         assert 'targets' in info
         assert 'functional' in info
         assert 'smiles1' in info
         assert 'smiles2' in info
-        
-        
-class TestTUDatasetParser():
-    
+
+
+class TestTUDatasetParser:
     def test_loading_dataset_basically_works(self):
-        
+
         path: str = os.path.join(ASSETS_PATH, 'TU_MUTAG')
         parser = TUDatasetParser(path=path, name='MUTAG')
-    
+
         # This step is required to properly initialize the parser
         parser.initialize()
-        
+
         try:
-            # This method will actually load the information from all the files and then turn this 
-            # into a list of the graph dictionaries containing the informations about the 
+            # This method will actually load the information from all the files and then turn this
+            # into a list of the graph dictionaries containing the informations about the
             # individual graphs.
             parser.load()
             assert isinstance(parser.index_graph_map, dict)
             assert len(parser.index_graph_map) == 188
-            
+
         finally:
             parser.finalize()
-        
+
     def test_iterating_over_mols_works(self):
         """
-        This test will check it it is possible to use the parser object as an iterator to iterate 
+        This test will check it it is possible to use the parser object as an iterator to iterate
         over rdkit mol objects of the individual graphs.
         """
-        
+
         path: str = os.path.join(ASSETS_PATH, 'TU_MUTAG')
         parser = TUDatasetParser(
             path=path,
@@ -193,29 +190,28 @@ class TestTUDatasetParser():
                 -1: 0,
             },
         )
-    
+
         # This step is required to properly initialize the parser
         parser.initialize()
-        
+
         try:
-            # This method will actually load the information from all the files and then turn this 
-            # into a list of the graph dictionaries containing the informations about the 
+            # This method will actually load the information from all the files and then turn this
+            # into a list of the graph dictionaries containing the informations about the
             # individual graphs.
             parser.load()
-           
+
             counter = 0
             for mol, label in parser:
-                
                 assert isinstance(mol, Chem.Mol)
                 assert mol.GetNumAtoms() > 0
                 assert mol.GetNumBonds() > 0
-                
+
                 smiles = Chem.MolToSmiles(mol)
                 print(smiles)
                 assert smiles is not None
-                
+
                 counter += 1
-                
+
             assert counter == 188
 
         finally:
@@ -246,7 +242,9 @@ class TestHOPV15Parser:
         assert isinstance(info, dict)
         assert len(info) > 0
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_parsing_extracts_basic_info(self):
         """
         Test that the parser correctly extracts basic molecular information from the file.
@@ -257,10 +255,16 @@ class TestHOPV15Parser:
         mol, info = parser.parse()
 
         # Test that all expected keys are present
-        expected_keys = ['smiles', 'inchi', 'pruned_smiles', 'num_conformers',
-                        'experimental_properties', 'conformers']
+        expected_keys = [
+            'smiles',
+            'inchi',
+            'pruned_smiles',
+            'num_conformers',
+            'experimental_properties',
+            'conformers',
+        ]
         for key in expected_keys:
-            assert key in info, f"Missing key: {key}"
+            assert key in info, f'Missing key: {key}'
 
         # Test specific values
         assert isinstance(info['smiles'], str)
@@ -274,7 +278,9 @@ class TestHOPV15Parser:
         assert isinstance(info['num_conformers'], int)
         assert info['num_conformers'] == 18
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_experimental_properties_parsing(self):
         """
         Test that experimental properties are correctly parsed from the CSV line.
@@ -290,7 +296,7 @@ class TestHOPV15Parser:
         # Test that all expected experimental properties are present
         expected_props = ['PCE', 'VOC', 'JSC', 'HOMO', 'LUMO', 'gap']
         for prop in expected_props:
-            assert prop in exp_props, f"Missing experimental property: {prop}"
+            assert prop in exp_props, f'Missing experimental property: {prop}'
             assert isinstance(exp_props[prop], (int, float))
 
         # Test specific values from the example file
@@ -301,7 +307,9 @@ class TestHOPV15Parser:
         assert exp_props['LUMO'] == 17.07
         assert exp_props['gap'] == 66.3
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_conformer_parsing(self):
         """
         Test that conformers and their associated data are correctly parsed.
@@ -341,10 +349,13 @@ class TestHOPV15Parser:
 
             # Test coordinate array
             import numpy as np
+
             assert isinstance(conformer['coordinates'], np.ndarray)
             assert conformer['coordinates'].shape == (conformer['num_atoms'], 3)
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_calculated_data_parsing(self):
         """
         Test that calculated quantum chemistry data is correctly parsed from QChem lines.
@@ -370,7 +381,7 @@ class TestHOPV15Parser:
             # Test required fields
             required_fields = ['method', 'HOMO', 'LUMO', 'gap', 'additional_values']
             for field in required_fields:
-                assert field in calc_entry, f"Missing field: {field}"
+                assert field in calc_entry, f'Missing field: {field}'
 
             # Test data types
             assert isinstance(calc_entry['method'], str)
@@ -431,7 +442,9 @@ class TestHOPV15Parser:
                 positions.append([pos.x, pos.y, pos.z])
 
             # At least some coordinates should be non-zero
-            non_zero_coords = [pos for pos in positions if any(abs(coord) > 0.001 for coord in pos)]
+            non_zero_coords = [
+                pos for pos in positions if any(abs(coord) > 0.001 for coord in pos)
+            ]
             assert len(non_zero_coords) > 0
 
     def test_hopv15_get_fields_method(self):
@@ -441,14 +454,20 @@ class TestHOPV15Parser:
         fields = HOPV15Parser.get_fields()
 
         expected_fields = [
-            'smiles', 'inchi', 'pruned_smiles', 'num_conformers',
-            'experimental_properties', 'conformers'
+            'smiles',
+            'inchi',
+            'pruned_smiles',
+            'num_conformers',
+            'experimental_properties',
+            'conformers',
         ]
 
         assert isinstance(fields, list)
         assert set(fields) == set(expected_fields)
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_with_load_xyz_as_mol_function(self):
         """
         Test that the HOPV15 parser works correctly when used through the load_xyz_as_mol function.
@@ -493,7 +512,9 @@ class TestHOPV15Parser:
             assert 'smiles' in info
             assert 'conformers' in info
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_parse_all_first_molecule_complete(self):
         """
         Test that the first molecule from parse_all has complete information.
@@ -505,10 +526,16 @@ class TestHOPV15Parser:
         first_mol, first_info = molecules[0]
 
         # Test that first molecule has full information
-        expected_keys = ['smiles', 'inchi', 'pruned_smiles', 'num_conformers',
-                        'experimental_properties', 'conformers']
+        expected_keys = [
+            'smiles',
+            'inchi',
+            'pruned_smiles',
+            'num_conformers',
+            'experimental_properties',
+            'conformers',
+        ]
         for key in expected_keys:
-            assert key in first_info, f"Missing key in first molecule: {key}"
+            assert key in first_info, f'Missing key in first molecule: {key}'
 
         # Test specific values for first molecule
         assert first_info['smiles'].startswith('Cc1ccc')
@@ -516,7 +543,9 @@ class TestHOPV15Parser:
         assert 'experimental_properties' in first_info
         assert first_info['experimental_properties']['PCE'] == 1.47
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_parse_all_second_molecule_short_format(self):
         """
         Test that the second molecule is parsed correctly despite having a shorter format.
@@ -543,7 +572,9 @@ class TestHOPV15Parser:
         assert len(second_info['conformers']) > 0
         assert second_mol.GetNumAtoms() > 0
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_parse_all_conformer_data(self):
         """
         Test that conformers are correctly parsed for all molecules.
@@ -569,7 +600,9 @@ class TestHOPV15Parser:
                 # Test that calculated data is present
                 assert len(conformer['calculated_data']) > 0
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_parse_all_vs_single_parse_consistency(self):
         """
         Test that parse_all returns the same first molecule as the single parse method.
@@ -593,10 +626,18 @@ class TestHOPV15Parser:
         assert len(first_info['conformers']) > 0
 
         # Test experimental properties match
-        if 'experimental_properties' in single_info and 'experimental_properties' in first_info:
-            assert single_info['experimental_properties'] == first_info['experimental_properties']
+        if (
+            'experimental_properties' in single_info
+            and 'experimental_properties' in first_info
+        ):
+            assert (
+                single_info['experimental_properties']
+                == first_info['experimental_properties']
+            )
 
-    @pytest.mark.skip(reason="Requires real HOPV15 dataset with specific data structure")
+    @pytest.mark.skip(
+        reason='Requires real HOPV15 dataset with specific data structure'
+    )
     def test_hopv15_parse_all_molecule_atom_counts(self):
         """
         Test that molecules have expected atom counts.

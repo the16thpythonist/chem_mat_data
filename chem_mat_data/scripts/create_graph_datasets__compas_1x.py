@@ -1,5 +1,5 @@
 import io
-from typing import List, Dict
+from typing import Dict
 import os
 import requests
 import pandas as pd
@@ -12,13 +12,13 @@ from pycomex.utils import folder_path, file_namespace
 
 
 # :param DATASET_NAME:
-#       This string determines the name of the message pack dataset file that is then 
-#       stored into the "results" folder of the experiment as the result of the 
-#       processing process. The corresponding file extensions will be added 
+#       This string determines the name of the message pack dataset file that is then
+#       stored into the "results" folder of the experiment as the result of the
+#       processing process. The corresponding file extensions will be added
 #       automatically.
 DATASET_NAME: str = 'compas_1x'
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'verbose': 'Cata-Condensed Polybenzenoid Hydrocarbons (COMPAS-1x)',
@@ -33,7 +33,15 @@ METADATA: dict = {
         'in organic electronics and materials design.'
     ),
     'target_type': ['regression'],
-    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties', 'Polycyclic Aromatic Hydrocarbons', 'PAH', 'GFN2-xTB'],
+    'tags': [
+        'SMILES',
+        'Molecules',
+        'Quantum Chemistry',
+        'Molecular Properties',
+        'Polycyclic Aromatic Hydrocarbons',
+        'PAH',
+        'GFN2-xTB',
+    ],
     'sources': [
         'https://pubs.acs.org/doi/full/10.1021/acs.jcim.2c00503',
         'https://pubmed.ncbi.nlm.nih.gov/35881922/',
@@ -51,7 +59,7 @@ METADATA: dict = {
         6: 'aIP_eV - Adiabatic ionization potential in electron volts (eV)',
         7: 'NFOD - Fractional occupation density (indicator of polyradical character)',
         8: 'n_rings - Number of aromatic rings in the molecule',
-    }
+    },
 }
 
 __TESTING__ = False
@@ -69,20 +77,20 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
     We add the compound id for identification and the molecular weight
     """
-    pass #graph['graph_id'] = data['ID']
+    pass  # graph['graph_id'] = data['ID']
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
-    
+
     e.log('downloading raw csv file...')
     raw_url = 'https://gitlab.com/porannegroup/compas/-/raw/main/COMPAS-1/compas-1x.csv?ref_type=heads&inline=false'
     response = requests.get(raw_url, verify=False)
     csv_file = io.StringIO(response.text)
     df = pd.read_csv(csv_file)
-    
+
     print(df.head())
-    
+
     compressed_path = os.path.join(e.path, f'{e.DATASET_NAME}.csv.gz')
     with gzip.open(compressed_path, mode='wb') as compressed_file:
         shutil.copyfileobj(csv_file, compressed_file)
@@ -103,28 +111,29 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     index: int = 0
     for data in df.to_dict('records'):
         data['smiles'] = data['smiles']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGETS ==
         # In this dataset we only have one target
         data['targets'] = [data[key] for key in columns]
         dataset[index] = data
-        
+
         index += 1
 
     return dataset
+
 
 experiment.run_if_main()

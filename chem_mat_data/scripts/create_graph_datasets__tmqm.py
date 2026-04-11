@@ -23,6 +23,7 @@ updated 2024 release with SMILES (108k complexes).
 
 Results are written to ``results/create_graph_datasets__tmqm/debug/``.
 """
+
 import os
 import json
 import gzip
@@ -36,19 +37,18 @@ import yaml
 import msgpack
 import requests
 import numpy as np
-import rdkit.Chem as Chem
 import pandas as pd
 from rich.pretty import pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from rdkit import RDLogger
+
 RDLogger.DisableLog('rdApp.*')
 
 import chem_mat_data._typing as typc
 from chem_mat_data.tmc_processing import (
     MetalOrganicProcessing,
-    TRANSITION_METAL_ATOMIC_NUMBERS,
     decompose_complex_smiles,
 )
 from chem_mat_data.data import default, ext_hook, save_graphs
@@ -64,7 +64,9 @@ from chem_mat_data.data import default, ext_hook, save_graphs
 #       to the 2024 release of the tmQM dataset on GitHub. The file is approximately
 #       20 MB and contains ~108,000 rows. Note that ~7,700 rows have missing SMILES
 #       and will be skipped.
-DOWNLOAD_URL: str = 'https://raw.githubusercontent.com/uiocompcat/tmQM/master/tmQM/tmQM_y.csv'
+DOWNLOAD_URL: str = (
+    'https://raw.githubusercontent.com/uiocompcat/tmQM/master/tmQM/tmQM_y.csv'
+)
 
 # :param TARGET_COLUMNS:
 #       A list of the 8 column names in the raw CSV that contain the DFT-computed
@@ -114,9 +116,7 @@ METADATA: dict = {
         'https://github.com/uiocompcat/tmQM',
     ],
     'verbose': 'tmQM Transition Metal Complex QM Properties',
-    'target_descriptions': {
-        str(i): col for i, col in enumerate(TARGET_COLUMNS)
-    },
+    'target_descriptions': {str(i): col for i, col in enumerate(TARGET_COLUMNS)},
 }
 
 # == PROCESSING PARAMETERS ==
@@ -155,16 +155,18 @@ experiment = Experiment(
 # PROCESSING WORKER
 # ======================================================================================
 
+
 class TMCProcessingWorker(multiprocessing.Process):
     """
     Multiprocessing worker that converts decomposed TMC data into graph representations
     using ``MetalOrganicProcessing``.
     """
 
-    def __init__(self,
-                 input_queue: multiprocessing.Queue,
-                 output_queue: multiprocessing.Queue,
-                 ):
+    def __init__(
+        self,
+        input_queue: multiprocessing.Queue,
+        output_queue: multiprocessing.Queue,
+    ):
         super().__init__()
         self.input_queue = input_queue
         self.output_queue = output_queue
@@ -193,7 +195,9 @@ class TMCProcessingWorker(multiprocessing.Process):
             except Exception as exc:
                 metal = data.get('metal', '?')
                 cid = data.get('complex_id', '?')
-                print(f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}')
+                print(
+                    f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}'
+                )
                 graph = None
 
             graph_encoded = msgpack.packb(graph, default=default)
@@ -203,6 +207,7 @@ class TMCProcessingWorker(multiprocessing.Process):
 # ======================================================================================
 # HOOKS
 # ======================================================================================
+
 
 @experiment.hook('add_graph_metadata', default=True, replace=False)
 def add_graph_metadata(e: Experiment, data: dict, graph: typc.GraphDict) -> None:
@@ -281,15 +286,17 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
             'ligand_smiles': ligand_smiles,
             'connecting_atom_indices': connecting_atom_indices,
             'total_charge': total_charge,
-            'oxidation_state': 0,      # Not available in tmQM
-            'spin_multiplicity': 1,    # Not available in tmQM
+            'oxidation_state': 0,  # Not available in tmQM
+            'spin_multiplicity': 1,  # Not available in tmQM
             'whole_complex_smiles': smiles,
             'targets': targets,
         }
 
-    e.log(f'parsed {len(dataset)} complexes '
-          f'({skipped_no_smiles} missing SMILES, '
-          f'{skipped_decompose} decomposition failures)')
+    e.log(
+        f'parsed {len(dataset)} complexes '
+        f'({skipped_no_smiles} missing SMILES, '
+        f'{skipped_decompose} decomposition failures)'
+    )
     return dataset
 
 
@@ -334,6 +341,7 @@ def save_csv(e: Experiment, dataset: Dict[int, dict]) -> None:
 # ======================================================================================
 # MAIN EXPERIMENT
 # ======================================================================================
+
 
 @experiment
 def experiment(e: Experiment):
@@ -384,7 +392,6 @@ def experiment(e: Experiment):
         prev_count = 0
 
         while count < num_indices:
-
             while not input_queue.full() and len(indices) != 0:
                 index = indices.pop()
                 data = dataset[index]
@@ -403,10 +410,14 @@ def experiment(e: Experiment):
                 num_remaining = num_elements - (count + 1)
                 time_per_element = time_passed / (count + 1)
                 time_remaining = time_per_element * num_remaining
-                eta = datetime.datetime.now() + datetime.timedelta(seconds=time_remaining)
-                e.log(f' * {count:05d}/{num_elements} done'
-                      f' - time passed: {time_passed / 60:.2f}m'
-                      f' - eta: {eta:%a %d.%m %H:%M}')
+                eta = datetime.datetime.now() + datetime.timedelta(
+                    seconds=time_remaining
+                )
+                e.log(
+                    f' * {count:05d}/{num_elements} done'
+                    f' - time passed: {time_passed / 60:.2f}m'
+                    f' - eta: {eta:%a %d.%m %H:%M}'
+                )
 
         end_time = time.time()
         duration = end_time - start_time
@@ -433,7 +444,10 @@ def experiment(e: Experiment):
     if e.COMPRESS:
         e.log('compressing...')
         compressed_path = os.path.join(e.path, e.DATASET_NAME + '.mpack.gz')
-        with open(dataset_path, 'rb') as f_in, gzip.open(compressed_path, 'wb') as f_out:
+        with (
+            open(dataset_path, 'rb') as f_in,
+            gzip.open(compressed_path, 'wb') as f_out,
+        ):
             shutil.copyfileobj(f_in, f_out)
 
         compressed_size = os.path.getsize(compressed_path)

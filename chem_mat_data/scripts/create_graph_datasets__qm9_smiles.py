@@ -1,5 +1,5 @@
 from rdkit import Chem
-from typing import List, Dict
+from typing import Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -15,12 +15,12 @@ DESCRIPTION: str = (
 )
 
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'tags': [
-        'Molecules', 
-        'SMILES', 
+        'Molecules',
+        'SMILES',
         'Quantum Chemistry',
         'DFT',
         'Electronic Properties',
@@ -29,7 +29,7 @@ METADATA: dict = {
     'sources': [
         'https://www.nature.com/articles/sdata201422',
         'https://moleculenet.org/datasets',
-        'https://pytorch-geometric.readthedocs.io/en/2.5.0/generated/torch_geometric.datasets.QM9.html'
+        'https://pytorch-geometric.readthedocs.io/en/2.5.0/generated/torch_geometric.datasets.QM9.html',
     ],
     # TADF: Thermally Activated Delayed Fluorescence
     'target_descriptions': {
@@ -49,7 +49,7 @@ METADATA: dict = {
         '13': 'G - Free energy at 298.15K',
         '14': 'Cv - Heat capacity at 298.15K',
         '15': 'U_0 atom - Atomization energy at 0K',
-    }
+    },
 }
 
 __TESTING__ = False
@@ -67,7 +67,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
     We add the compound id for identification and the molecular weight
     """
-    pass #graph['graph_id'] = data['ID']
+    pass  # graph['graph_id'] = data['ID']
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
@@ -100,28 +100,29 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     index: int = 0
     for data in df.to_dict('records'):
         data['smiles'] = data['smiles']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGETS ==
         # In this dataset we only have one target
         data['targets'] = [data[key] for key in columns]
         dataset[index] = data
-        
+
         index += 1
 
     return dataset
+
 
 experiment.run_if_main()

@@ -21,12 +21,12 @@ molecular graphs.
 
 Results are written to ``results/create_graph_datasets__tmqmg/debug/``.
 """
+
 import os
 import gzip
 import time
 import shutil
 import datetime
-import tempfile
 import multiprocessing
 from typing import Dict, List, Optional
 
@@ -41,10 +41,13 @@ from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from rdkit import RDLogger
+
 RDLogger.DisableLog('rdApp.*')
 
 import chem_mat_data._typing as typc
-from chem_mat_data.tmc_processing import MetalOrganicProcessing, TRANSITION_METAL_ATOMIC_NUMBERS
+from chem_mat_data.tmc_processing import (
+    MetalOrganicProcessing,
+)
 from chem_mat_data.data import default, ext_hook, save_graphs
 
 
@@ -58,7 +61,9 @@ from chem_mat_data.data import default, ext_hook, save_graphs
 #       The URL from which the raw tmQMg CSV file will be downloaded. This points
 #       to the ELECTRUM validation repository's ``datasets/tmQMg.csv`` on GitHub.
 #       The file is approximately 20 MB and contains ~63,000 rows.
-DOWNLOAD_URL: str = 'https://raw.githubusercontent.com/TheFreiLab/electrum_val/main/datasets/tmQMg.csv'
+DOWNLOAD_URL: str = (
+    'https://raw.githubusercontent.com/TheFreiLab/electrum_val/main/datasets/tmQMg.csv'
+)
 
 # :param TARGET_COLUMNS:
 #       A list of the 20 column names in the raw CSV that contain the DFT-computed
@@ -117,9 +122,7 @@ METADATA: dict = {
         'https://github.com/TheFreiLab/electrum_val',
     ],
     'verbose': 'tmQMg Transition Metal Complex QM Properties',
-    'target_descriptions': {
-        str(i): col for i, col in enumerate(TARGET_COLUMNS)
-    },
+    'target_descriptions': {str(i): col for i, col in enumerate(TARGET_COLUMNS)},
 }
 
 # == PROCESSING PARAMETERS ==
@@ -181,12 +184,12 @@ experiment = Experiment(
 
 # Atomic numbers of common donor atoms in coordination chemistry.
 DONOR_ELEMENTS: set = {
-    7,   # N
-    8,   # O
+    7,  # N
+    8,  # O
     15,  # P
     16,  # S
     34,  # Se
-    9,   # F
+    9,  # F
     17,  # Cl
     35,  # Br
     53,  # I
@@ -220,7 +223,11 @@ def infer_connecting_atoms(ligand_smiles: str) -> List[int]:
         mol = Chem.MolFromSmiles(ligand_smiles, sanitize=False)
         if mol is not None:
             try:
-                Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES)
+                Chem.SanitizeMol(
+                    mol,
+                    Chem.SanitizeFlags.SANITIZE_ALL
+                    ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES,
+                )
             except Exception:
                 pass
     if mol is None:
@@ -264,6 +271,7 @@ def infer_connecting_atoms(ligand_smiles: str) -> List[int]:
 # is the input format: instead of a single SMILES string, each work item contains the
 # decomposed representation (metal, ligand_smiles list, connecting_atom_indices).
 
+
 class TMCProcessingWorker(multiprocessing.Process):
     """
     Multiprocessing worker that converts decomposed TMC data into graph representations
@@ -274,10 +282,11 @@ class TMCProcessingWorker(multiprocessing.Process):
     graph dicts (or None on failure) back to the main process.
     """
 
-    def __init__(self,
-                 input_queue: multiprocessing.Queue,
-                 output_queue: multiprocessing.Queue,
-                 ):
+    def __init__(
+        self,
+        input_queue: multiprocessing.Queue,
+        output_queue: multiprocessing.Queue,
+    ):
         super().__init__()
         self.input_queue = input_queue
         self.output_queue = output_queue
@@ -312,7 +321,9 @@ class TMCProcessingWorker(multiprocessing.Process):
             except Exception as exc:
                 metal = data.get('metal', '?')
                 cid = data.get('complex_id', '?')
-                print(f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}')
+                print(
+                    f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}'
+                )
                 graph = None
 
             graph_encoded = msgpack.packb(graph, default=default)
@@ -322,6 +333,7 @@ class TMCProcessingWorker(multiprocessing.Process):
 # ======================================================================================
 # HOOKS
 # ======================================================================================
+
 
 @experiment.hook('add_graph_metadata', default=True, replace=False)
 def add_graph_metadata(e: Experiment, data: dict, graph: typc.GraphDict) -> None:
@@ -409,8 +421,8 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
             'ligand_smiles': ligand_smiles,
             'connecting_atom_indices': connecting_atom_indices,
             'total_charge': charge,
-            'oxidation_state': 0,      # Not available in tmQMg
-            'spin_multiplicity': 1,    # Not available in tmQMg
+            'oxidation_state': 0,  # Not available in tmQMg
+            'spin_multiplicity': 1,  # Not available in tmQMg
             'targets': targets,
             # Keep the original dot-separated string for CSV output
             'ligand_smiles_raw': ligand_smiles_raw,
@@ -459,6 +471,7 @@ def save_csv(e: Experiment, dataset: Dict[int, dict]) -> None:
 # ======================================================================================
 # MAIN EXPERIMENT
 # ======================================================================================
+
 
 @experiment
 def experiment(e: Experiment):
@@ -517,7 +530,6 @@ def experiment(e: Experiment):
         prev_count = 0
 
         while count < num_indices:
-
             # Keep the input queue full so workers always have work available
             while not input_queue.full() and len(indices) != 0:
                 index = indices.pop()
@@ -539,10 +551,14 @@ def experiment(e: Experiment):
                 num_remaining = num_elements - (count + 1)
                 time_per_element = time_passed / (count + 1)
                 time_remaining = time_per_element * num_remaining
-                eta = datetime.datetime.now() + datetime.timedelta(seconds=time_remaining)
-                e.log(f' * {count:05d}/{num_elements} done'
-                      f' - time passed: {time_passed / 60:.2f}m'
-                      f' - eta: {eta:%a %d.%m %H:%M}')
+                eta = datetime.datetime.now() + datetime.timedelta(
+                    seconds=time_remaining
+                )
+                e.log(
+                    f' * {count:05d}/{num_elements} done'
+                    f' - time passed: {time_passed / 60:.2f}m'
+                    f' - eta: {eta:%a %d.%m %H:%M}'
+                )
 
         end_time = time.time()
         duration = end_time - start_time
@@ -572,7 +588,10 @@ def experiment(e: Experiment):
     if e.COMPRESS:
         e.log('compressing...')
         compressed_path = os.path.join(e.path, e.DATASET_NAME + '.mpack.gz')
-        with open(dataset_path, 'rb') as f_in, gzip.open(compressed_path, 'wb') as f_out:
+        with (
+            open(dataset_path, 'rb') as f_in,
+            gzip.open(compressed_path, 'wb') as f_out,
+        ):
             shutil.copyfileobj(f_in, f_out)
 
         compressed_size = os.path.getsize(compressed_path)

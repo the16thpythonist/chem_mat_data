@@ -17,6 +17,7 @@ References:
 - MoleculeNet: Wu, Z. et al., Chem. Sci., 9 (2018) 513-530
   DOI: 10.1039/C7SC02664A
 """
+
 import os
 import csv
 from typing import Dict
@@ -121,10 +122,11 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         e.log(f'Downloading dataset from {DATASET_URL}...')
         with FileDownloadSource(DATASET_URL, verbose=True) as source:
             downloaded_path = source.fetch()
-            e.log(f'  Downloaded to temporary location')
+            e.log('  Downloaded to temporary location')
 
             # Copy to experiment archive folder
             import shutil
+
             shutil.copy(downloaded_path, csv_path)
             e.log(f'  Saved to {csv_path}')
 
@@ -187,8 +189,12 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     e.log('DATASET STATISTICS')
     e.log('=' * 80)
     e.log(f'Total compounds: {len(dataset)}')
-    e.log(f'  - Penetrating (1): {penetrating} ({100*penetrating/len(dataset):.1f}%)')
-    e.log(f'  - Non-penetrating (0): {non_penetrating} ({100*non_penetrating/len(dataset):.1f}%)')
+    e.log(
+        f'  - Penetrating (1): {penetrating} ({100 * penetrating / len(dataset):.1f}%)'
+    )
+    e.log(
+        f'  - Non-penetrating (0): {non_penetrating} ({100 * non_penetrating / len(dataset):.1f}%)'
+    )
     e.log('')
 
     return dataset

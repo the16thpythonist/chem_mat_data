@@ -1,5 +1,5 @@
 import rdkit.Chem as Chem
-from typing import List, Dict
+from typing import Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -7,9 +7,7 @@ from chem_mat_data import load_smiles_dataset
 
 DATASET_NAME: str = 'esol'
 
-DESCRIPTION: str = (
-    'Water solubility data(log solubility in mols per litre) for common organic small molecules.'
-)
+DESCRIPTION: str = 'Water solubility data(log solubility in mols per litre) for common organic small molecules.'
 
 __TESTING__ = False
 
@@ -19,6 +17,7 @@ experiment = Experiment.extend(
     namespace=file_namespace(__file__),
     glob=globals(),
 )
+
 
 @experiment.hook('add_graph_metadata', default=False, replace=True)
 def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
@@ -36,21 +35,21 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
         data['smiles'] = data['smiles']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGET VALUES ==
         # In this dataset we only have one target
         data['targets'] = [data['measured log solubility in mols per litre']]
@@ -58,5 +57,5 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
 
     return dataset
 
-experiment.run_if_main()
 
+experiment.run_if_main()

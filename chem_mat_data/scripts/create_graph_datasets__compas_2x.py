@@ -1,5 +1,5 @@
 import io
-from typing import List, Dict
+from typing import Dict
 import os
 import gzip
 import shutil
@@ -12,13 +12,13 @@ from pycomex.utils import folder_path, file_namespace
 
 
 # :param DATASET_NAME:
-#       This string determines the name of the message pack dataset file that is then 
-#       stored into the "results" folder of the experiment as the result of the 
-#       processing process. The corresponding file extensions will be added 
+#       This string determines the name of the message pack dataset file that is then
+#       stored into the "results" folder of the experiment as the result of the
+#       processing process. The corresponding file extensions will be added
 #       automatically.
 DATASET_NAME: str = 'compas_2x'
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'verbose': 'Cata-Condensed Hetero-Polycyclic Aromatic Systems (COMPAS-2x)',
@@ -37,7 +37,16 @@ METADATA: dict = {
         'generative models, and machine learning applications in organic electronics and optoelectronics.'
     ),
     'target_type': ['regression'],
-    'tags': ['SMILES', 'Molecules', 'Quantum Chemistry', 'Molecular Properties', 'Polycyclic Aromatic Systems', 'Heteroaromatic', 'GFN1-xTB', 'Cata-Condensed'],
+    'tags': [
+        'SMILES',
+        'Molecules',
+        'Quantum Chemistry',
+        'Molecular Properties',
+        'Polycyclic Aromatic Systems',
+        'Heteroaromatic',
+        'GFN1-xTB',
+        'Cata-Condensed',
+    ],
     'sources': [
         'https://www.nature.com/articles/s41597-024-02927-8',
         'https://pubmed.ncbi.nlm.nih.gov/38242917/',
@@ -56,7 +65,7 @@ METADATA: dict = {
         6: 'dispersion - Dispersion energy in Hartree (Eh)',
         7: 'aip - Adiabatic ionization potential in Hartree (Eh)',
         8: 'aea - Adiabatic electron affinity in Hartree (Eh)',
-    }
+    },
 }
 
 __TESTING__ = False
@@ -74,12 +83,12 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
     We add the compound id for identification and the molecular weight
     """
-    pass #graph['graph_id'] = data['ID']
+    pass  # graph['graph_id'] = data['ID']
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
-    
+
     # For the COMPAS 2 dataset the raw file is provided in the form of a CSV file that is hosted on Gitlab
     # here we download that file and then open the content as a pandas dataframe.
     e.log('downloading raw csv file...')
@@ -88,14 +97,14 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     response.raise_for_status()  # Ensure the request was successful
     csv_file = io.StringIO(response.text)
     df = pd.read_csv(csv_file, quotechar='"')
-    
+
     print(df.head())
-    
+
     compressed_path = os.path.join(e.path, f'{e.DATASET_NAME}.csv.gz')
     with gzip.open(compressed_path, mode='wb') as compressed_file:
         shutil.copyfileobj(csv_file, compressed_file)
-    
-    #df = load_smiles_dataset('qm9_smiles')
+
+    # df = load_smiles_dataset('qm9_smiles')
 
     columns = [
         'homo',
@@ -113,31 +122,32 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     index: int = 0
     for c, data in enumerate(df.to_dict('records')):
         data['smiles'] = data['smiles']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGETS ==
         # In this dataset we only have one target
         data['targets'] = [data[key] for key in columns]
         dataset[index] = data
-        
+
         index += 1
-        
+
         if c % 1000 == 0:
             print(f' * processed {c} records')
 
     return dataset
+
 
 experiment.run_if_main()

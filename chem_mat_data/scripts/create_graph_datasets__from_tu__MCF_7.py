@@ -1,9 +1,10 @@
 """
 from typing import List, Dict
-This experiment downloads the MCF-7 dataset from the TU dataset collection which is a classification 
-dataset related to breast cancer. 
+This experiment downloads the MCF-7 dataset from the TU dataset collection which is a classification
+dataset related to breast cancer.
 The dataset consists of molecular graphs and binary class labels.
 """
+
 from typing import Optional, Dict
 
 import rdkit.Chem as Chem
@@ -12,17 +13,17 @@ from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 # :param SOURCE_URL:
-#       As a fallback option, if no local dataset path is given, this parameter can define the URL at 
-#       which the dataset can be downloaded from. This should be a valid URL that points to the TU dataset 
+#       As a fallback option, if no local dataset path is given, this parameter can define the URL at
+#       which the dataset can be downloaded from. This should be a valid URL that points to the TU dataset
 #       format. If given, the experiment will attempt to download and extract before loading the dataset.
 SOURCE_URL: Optional[str] = 'https://www.chrsmrrs.com/graphkerneldatasets/MCF-7.zip'
 # :param DATASET_NAME:
-#       The name of the dataset which will be used as the final file name aka the unique string 
+#       The name of the dataset which will be used as the final file name aka the unique string
 #       identifier on the remote file share server.
 DATASET_NAME: str = 'MCF-7'
 # :param NODE_LABEL_MAP:
-#       This is a dictionary that maps the node label classes to the integer values corresponding to 
-#       the actual atomic numbers. This mapping will have to be extracted from the README file of 
+#       This is a dictionary that maps the node label classes to the integer values corresponding to
+#       the actual atomic numbers. This mapping will have to be extracted from the README file of
 #       the TU dataset.
 NODE_LABEL_MAP: Dict[int, str] = {
     0: 'O',

@@ -20,6 +20,7 @@ number dataset, this one also provides the actual oxidation state, which is pass
 
 Results are written to ``results/create_graph_datasets__electrum_oxstate/debug/``.
 """
+
 import os
 import json
 import gzip
@@ -40,10 +41,13 @@ from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from rdkit import RDLogger
+
 RDLogger.DisableLog('rdApp.*')
 
 import chem_mat_data._typing as typc
-from chem_mat_data.tmc_processing import MetalOrganicProcessing, TRANSITION_METAL_ATOMIC_NUMBERS
+from chem_mat_data.tmc_processing import (
+    MetalOrganicProcessing,
+)
 from chem_mat_data.data import default, ext_hook, save_graphs
 
 
@@ -76,7 +80,14 @@ DESCRIPTION: str = (
 METADATA: dict = {
     'category': 'tmc',
     'min_version': '1.7.0',
-    'tags': ['Molecules', 'TransitionMetals', 'TMC', 'OxidationState', 'Classification', 'CSD'],
+    'tags': [
+        'Molecules',
+        'TransitionMetals',
+        'TMC',
+        'OxidationState',
+        'Classification',
+        'CSD',
+    ],
     'sources': [
         'https://doi.org/10.1039/D5DD00145E',
         'https://github.com/TheFreiLab/electrum_val',
@@ -111,12 +122,12 @@ experiment = Experiment(
 # ======================================================================================
 
 DONOR_ELEMENTS: set = {
-    7,   # N
-    8,   # O
+    7,  # N
+    8,  # O
     15,  # P
     16,  # S
     34,  # Se
-    9,   # F
+    9,  # F
     17,  # Cl
     35,  # Br
     53,  # I
@@ -135,7 +146,11 @@ def infer_connecting_atoms(ligand_smiles: str) -> List[int]:
         mol = Chem.MolFromSmiles(ligand_smiles, sanitize=False)
         if mol is not None:
             try:
-                Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES)
+                Chem.SanitizeMol(
+                    mol,
+                    Chem.SanitizeFlags.SANITIZE_ALL
+                    ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES,
+                )
             except Exception:
                 pass
     if mol is None:
@@ -169,12 +184,13 @@ def infer_connecting_atoms(ligand_smiles: str) -> List[int]:
 # PROCESSING WORKER
 # ======================================================================================
 
-class TMCProcessingWorker(multiprocessing.Process):
 
-    def __init__(self,
-                 input_queue: multiprocessing.Queue,
-                 output_queue: multiprocessing.Queue,
-                 ):
+class TMCProcessingWorker(multiprocessing.Process):
+    def __init__(
+        self,
+        input_queue: multiprocessing.Queue,
+        output_queue: multiprocessing.Queue,
+    ):
         super().__init__()
         self.input_queue = input_queue
         self.output_queue = output_queue
@@ -206,7 +222,9 @@ class TMCProcessingWorker(multiprocessing.Process):
             except Exception as exc:
                 metal = data.get('metal', '?')
                 cid = data.get('complex_id', '?')
-                print(f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}')
+                print(
+                    f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}'
+                )
                 graph = None
 
             graph_encoded = msgpack.packb(graph, default=default)
@@ -216,6 +234,7 @@ class TMCProcessingWorker(multiprocessing.Process):
 # ======================================================================================
 # HOOKS
 # ======================================================================================
+
 
 @experiment.hook('add_graph_metadata', default=True, replace=False)
 def add_graph_metadata(e: Experiment, data: dict, graph: typc.GraphDict) -> None:
@@ -308,8 +327,10 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
             'connecting_atom_indices': connecting_atom_indices,
             'total_charge': 0,
             'oxidation_state': oxidation_state,
-            'spin_multiplicity': 1,     # Not available
-            'coordination_number': int(float(row['bondorder'])) if not pd.isna(row.get('bondorder', None)) else 0,
+            'spin_multiplicity': 1,  # Not available
+            'coordination_number': int(float(row['bondorder']))
+            if not pd.isna(row.get('bondorder', None))
+            else 0,
             'whole_complex_smiles': str(whole_smiles),
             'targets': targets,
             'ligand_smiles_raw': ligand_smiles_raw,
@@ -357,6 +378,7 @@ def save_csv(e: Experiment, dataset: Dict[int, dict]) -> None:
 # MAIN EXPERIMENT
 # ======================================================================================
 
+
 @experiment
 def experiment(e: Experiment):
 
@@ -401,7 +423,6 @@ def experiment(e: Experiment):
         prev_count = 0
 
         while count < num_indices:
-
             while not input_queue.full() and len(indices) != 0:
                 index = indices.pop()
                 data = dataset[index]
@@ -420,10 +441,14 @@ def experiment(e: Experiment):
                 num_remaining = num_elements - (count + 1)
                 time_per_element = time_passed / (count + 1)
                 time_remaining = time_per_element * num_remaining
-                eta = datetime.datetime.now() + datetime.timedelta(seconds=time_remaining)
-                e.log(f' * {count:05d}/{num_elements} done'
-                      f' - time passed: {time_passed / 60:.2f}m'
-                      f' - eta: {eta:%a %d.%m %H:%M}')
+                eta = datetime.datetime.now() + datetime.timedelta(
+                    seconds=time_remaining
+                )
+                e.log(
+                    f' * {count:05d}/{num_elements} done'
+                    f' - time passed: {time_passed / 60:.2f}m'
+                    f' - eta: {eta:%a %d.%m %H:%M}'
+                )
 
         end_time = time.time()
         duration = end_time - start_time
@@ -449,7 +474,10 @@ def experiment(e: Experiment):
     if e.COMPRESS:
         e.log('compressing...')
         compressed_path = os.path.join(e.path, e.DATASET_NAME + '.mpack.gz')
-        with open(dataset_path, 'rb') as f_in, gzip.open(compressed_path, 'wb') as f_out:
+        with (
+            open(dataset_path, 'rb') as f_in,
+            gzip.open(compressed_path, 'wb') as f_out,
+        ):
             shutil.copyfileobj(f_in, f_out)
 
         compressed_size = os.path.getsize(compressed_path)

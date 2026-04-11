@@ -21,7 +21,7 @@ SMILES_COLUMN: str = 'SMILES'
 #       This is a list of string names of the CSV columns which contain the target values
 #       of the dataset. This can be a single column for regression tasks or multiple columns
 #       for multi-target regression or classification tasks. For the final graph dataset
-#       the target values will be merged into a single numeric vector that contains the 
+#       the target values will be merged into a single numeric vector that contains the
 #       corresponding values in the same order as the column names are defined here.
 TARGET_COLUMNS: List[str] = ['BP']
 # :param DATASET_TYPE:
@@ -33,22 +33,17 @@ DATASET_TYPE: str = 'regression'
 #       metadata.
 DESCRIPTION: str = 'A dataset consisting of roughly 5000 molecules associated with their boiling points.'
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
-    'tags': [
-        'Molecules', 
-        'SMILES', 
-        'Molecular Properties', 
-        'Boiling Point'
-    ],
+    'tags': ['Molecules', 'SMILES', 'Molecular Properties', 'Boiling Point'],
     'sources': [
         'https://zenodo.org/records/14392754',
-        'https://link.springer.com/article/10.1007/s11030-025-11196-5',    
+        'https://link.springer.com/article/10.1007/s11030-025-11196-5',
     ],
     'target_descriptions': {
         '0': 'Boiling Point (BP) in Kelvin',
-    }
+    },
 }
 
 __TESTING__ = False
@@ -59,6 +54,7 @@ experiment = Experiment.extend(
     namespace=file_namespace(__file__),
     glob=globals(),
 )
+
 
 @experiment.hook('add_graph_metadata', default=False, replace=True)
 def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
@@ -71,7 +67,7 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
 
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
-    
+
     ## -- Load Dataset --
     e.log('Loading the CSV file from the remote file share server...')
     config = Config()
@@ -84,30 +80,30 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     dataset: Dict[int, dict] = {}
     index: int = 0
     for data in df.to_dict('records'):
-        
         data['smiles'] = data[e.SMILES_COLUMN]
-        
+
         ## -- Molecule Filters --
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         ## -- Target Values --
         # In this dataset we only have one target
         data['targets'] = [data[col] for col in e.TARGET_COLUMNS]
         dataset[index] = data
-        
+
         index += 1
 
     return dataset
+
 
 experiment.run_if_main()

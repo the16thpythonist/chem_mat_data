@@ -16,13 +16,14 @@ from chem_mat_data.graph import assert_graph_dict
 rdDepictor.SetPreferCoordGen(True)
 
 
-def create_frameless_figure(width: int = 100,
-                            height: int = 100,
-                            ratio: int = 2,
-                            dim: int = 2,
-                            show_spines: bool = False,
-                            show_axis: bool = False,
-                            ) -> t.Tuple[plt.Figure, plt.Axes]:
+def create_frameless_figure(
+    width: int = 100,
+    height: int = 100,
+    ratio: int = 2,
+    dim: int = 2,
+    show_spines: bool = False,
+    show_axis: bool = False,
+) -> t.Tuple[plt.Figure, plt.Axes]:
     """
     Returns a tuple of a matplotlib Figure and Axes object, where the axes object is a complete blank slate
     that can act as the foundation of a matplotlib-based visualization of a graph.
@@ -39,10 +40,10 @@ def create_frameless_figure(width: int = 100,
         size of the image.
     :return:
     """
-    
+
     fig = plt.figure(figsize=(width / (100 * ratio), height / (100 * ratio)))
     fig.set_dpi(100 * ratio)
-    
+
     if dim == 2:
         ax = fig.add_subplot(111)
     elif dim == 3:
@@ -53,8 +54,8 @@ def create_frameless_figure(width: int = 100,
     ax.get_yaxis().set_ticks([])
     if dim == 3:
         ax.get_zaxis().set_ticks([])
-        
-        # Also: In the 3D case we always want to show the axis, because 3D structures are not really 
+
+        # Also: In the 3D case we always want to show the axis, because 3D structures are not really
         # interpretable without them.
         show_axis = True
 
@@ -66,12 +67,10 @@ def create_frameless_figure(width: int = 100,
         ax.axis('off')
 
     # Selecting the axis-X making the bottom and top axes False.
-    plt.tick_params(axis='x', which='both', bottom=False,
-                    top=False, labelbottom=False)
+    plt.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
 
     # Selecting the axis-Y making the right and left axes False
-    plt.tick_params(axis='y', which='both', right=False,
-                    left=False, labelleft=False)
+    plt.tick_params(axis='y', which='both', right=False, left=False, labelleft=False)
 
     # https://stackoverflow.com/questions/4581504
     fig.patch.set_facecolor((0, 0, 0, 0))
@@ -89,18 +88,19 @@ def create_frameless_figure(width: int = 100,
 
     setattr(fig, '_savefig', fig.savefig)
     setattr(fig, 'savefig', types.MethodType(savefig, fig))
-    
+
     fig.tight_layout(pad=0, h_pad=0, w_pad=0)
 
     return fig, ax
 
 
-def visualize_molecular_graph_from_mol(ax: plt.Axes,
-                                       mol: Chem.Mol,
-                                       image_width: 1000,
-                                       image_height: 1000,
-                                       line_width: int = 5,
-                                       ) -> t.Tuple[np.ndarray, str]:
+def visualize_molecular_graph_from_mol(
+    ax: plt.Axes,
+    mol: Chem.Mol,
+    image_width: 1000,
+    image_height: 1000,
+    line_width: int = 5,
+) -> t.Tuple[np.ndarray, str]:
     """
     Creates a molecular graph visualization if given the RDKit Mol object ``mol`` and the matplotlib Axes
     ``ax`` to draw on. The image width and height have to be the same values as the final pixel values of
@@ -141,9 +141,7 @@ def visualize_molecular_graph_from_mol(ax: plt.Axes,
     # with which to control this directly for the drawer class. So we have to manually edit the svg string
     # to get rid of it...
     svg_string = re.sub(
-        r'opacity:\d*\.\d*;fill:#FFFFFF',
-        'opacity:0.0;fill:#FFFFFF',
-        svg_string
+        r'opacity:\d*\.\d*;fill:#FFFFFF', 'opacity:0.0;fill:#FFFFFF', svg_string
     )
 
     # Now, we can't directly display SVG to a matplotlib canvas, which is why we first need to convert this
@@ -165,14 +163,11 @@ def visualize_molecular_graph_from_mol(ax: plt.Axes,
     # files within the drawer.
     node_coordinates = []
     for point in [mol_drawer.GetDrawCoords(i) for i, _ in enumerate(mol.GetAtoms())]:
-        node_coordinates.append([
-            point.x,
-            point.y
-        ])
+        node_coordinates.append([point.x, point.y])
 
     node_coordinates = np.array(node_coordinates)
-    
-    # 23.10.23 - Here we just want to make sure that we are properly doing the memory management of 
+
+    # 23.10.23 - Here we just want to make sure that we are properly doing the memory management of
     # for this function.
     file_obj.close()
     del image, mol_drawer, png_data
@@ -180,54 +175,59 @@ def visualize_molecular_graph_from_mol(ax: plt.Axes,
     return node_coordinates, svg_string
 
 
-# This is simply a wrapper function of the function above to make it more convenient to use since here we 
+# This is simply a wrapper function of the function above to make it more convenient to use since here we
 # want to support different types of input for the molecule - including directly passing graph dicts
-def plot_molecule(ax: plt.Axes,
-                  molecule: Union[Chem.Mol, str, dict],
-                  image_width: int = 1000,
-                  image_height: int = 1000,
-                  **kwargs,
-                  ) -> np.ndarray:
+def plot_molecule(
+    ax: plt.Axes,
+    molecule: Union[Chem.Mol, str, dict],
+    image_width: int = 1000,
+    image_height: int = 1000,
+    **kwargs,
+) -> np.ndarray:
     """
     Plot a visual representation of the given ``molecule`` on the given matplotlib Axes object ``ax``.
-    
+
     :param ax: The matplotlib Axes object onto which the visualization should be drawn
     :param molecule: The molecule that should be visualized. This can be either a RDKit Mol object, a SMILES
         string or a graph dict that contains a SMILES string under the key "graph_repr".
     :param image_width: The pixel width of the resulting image
     :param image_height: The pixel height of the resulting image
-    
+
     :return: A numpy array of shape (V, 2) containing the node positions of the molecule in the visualization.
         This can be used to plot additional information on top of the molecule visualization.
     """
-    
+
     # ~ data validation
-    # Since we allow multiple different data types as the input for the molecule here we will perform some 
+    # Since we allow multiple different data types as the input for the molecule here we will perform some
     # validation to make sure that the input actually specifies a valid molecule that can be plotted at all.
-    
+
     if isinstance(molecule, str):
         mol = Chem.MolFromSmiles(molecule)
-        assert mol, f'Could not convert SMILES string "{molecule}" into a valid RDKit molecule object!'
-        
+        assert mol, (
+            f'Could not convert SMILES string "{molecule}" into a valid RDKit molecule object!'
+        )
+
     elif isinstance(molecule, dict):
         assert_graph_dict(molecule)
-        assert 'graph_repr' in molecule, 'The given graph dict does not contain a "graph_repr" (smiles) key!'
+        assert 'graph_repr' in molecule, (
+            'The given graph dict does not contain a "graph_repr" (smiles) key!'
+        )
         mol = Chem.MolFromSmiles(molecule['graph_repr'])
         assert mol, (
             f'Could not convert the SMILES string "{molecule["graph_repr"]}" from the given graph dict '
             f'into a valid RDKit molecule object!'
         )
-    
+
     elif isinstance(molecule, Chem.Mol):
         mol = molecule
-        
+
     else:
         raise TypeError(f'Unsupported molecule type "{type(molecule)}" for plotting!')
-    
+
     # ~ visualization
-    # for the visualization itself we can just use this function which handles the actual plotting based on the 
+    # for the visualization itself we can just use this function which handles the actual plotting based on the
     # rdkit Mol object.
-    
+
     node_coordinates, _ = visualize_molecular_graph_from_mol(
         ax=ax,
         mol=mol,
@@ -235,5 +235,5 @@ def plot_molecule(ax: plt.Axes,
         image_height=image_height,
         **kwargs,
     )
-    
+
     return node_coordinates

@@ -1,9 +1,7 @@
-
 import os
 import tempfile
 import zipfile
 import shutil
-from pathlib import Path
 
 import requests
 from tqdm import tqdm
@@ -13,22 +11,22 @@ class AbsractOnlineSource:
     """
     Abstract base class for online data sources.
     """
-    
+
     def prepare(self):
         """
-        Optional steps that may be required to setup the online source such as 
+        Optional steps that may be required to setup the online source such as
         authentication etc.
         """
-        raise NotImplementedError("Subclasses must implement this method")
-    
+        raise NotImplementedError('Subclasses must implement this method')
+
     def fetch(self) -> str:
         """
         Optional steps to fetch data from the online source. Should return the path
         to the downloaded data.
         """
-        raise NotImplementedError("Subclasses must implement this method")
-    
-    
+        raise NotImplementedError('Subclasses must implement this method')
+
+
 class ZenodoSource(AbsractOnlineSource):
     """
     Data source from a Zenodo repository.
@@ -77,7 +75,7 @@ class ZenodoSource(AbsractOnlineSource):
 
         No authentication is required for public Zenodo repositories.
         """
-        self.temp_dir = tempfile.mkdtemp(prefix="zenodo_")
+        self.temp_dir = tempfile.mkdtemp(prefix='zenodo_')
 
     def fetch(self) -> str:
         """
@@ -91,7 +89,7 @@ class ZenodoSource(AbsractOnlineSource):
             self.prepare()
 
         # Download the ZIP file
-        zip_path = os.path.join(self.temp_dir, "download.zip")
+        zip_path = os.path.join(self.temp_dir, 'download.zip')
 
         response = requests.get(self.url, stream=True)
         response.raise_for_status()
@@ -101,7 +99,7 @@ class ZenodoSource(AbsractOnlineSource):
                 f.write(chunk)
 
         # Extract the ZIP file
-        extract_dir = os.path.join(self.temp_dir, "extracted")
+        extract_dir = os.path.join(self.temp_dir, 'extracted')
         os.makedirs(extract_dir, exist_ok=True)
 
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -121,11 +119,15 @@ class ZenodoSource(AbsractOnlineSource):
 
                 # Also check if the relative_path basename exists
                 if os.path.basename(self.relative_path) in files:
-                    target_path = os.path.join(root, os.path.basename(self.relative_path))
+                    target_path = os.path.join(
+                        root, os.path.basename(self.relative_path)
+                    )
                     break
 
         if not os.path.exists(target_path):
-            raise ValueError(f"File '{self.relative_path}' not found in the downloaded archive")
+            raise ValueError(
+                f"File '{self.relative_path}' not found in the downloaded archive"
+            )
 
         return target_path
 
@@ -218,7 +220,7 @@ class FileDownloadSource(AbsractOnlineSource):
 
         No authentication is required for public file downloads.
         """
-        self.temp_dir = tempfile.mkdtemp(prefix="file_download_")
+        self.temp_dir = tempfile.mkdtemp(prefix='file_download_')
 
     def fetch(self) -> str:
         """
@@ -231,7 +233,7 @@ class FileDownloadSource(AbsractOnlineSource):
             self.prepare()
 
         # Extract filename from URL, or use a default name
-        filename = os.path.basename(self.url.split('?')[0]) or "downloaded_file"
+        filename = os.path.basename(self.url.split('?')[0]) or 'downloaded_file'
         self.downloaded_file_path = os.path.join(self.temp_dir, filename)
 
         # Set up headers to mimic a browser request
@@ -247,11 +249,11 @@ class FileDownloadSource(AbsractOnlineSource):
                 headers=headers,
                 timeout=(10, 30),  # (connection timeout, read timeout)
                 allow_redirects=True,
-                verify=self.ssl_verify
+                verify=self.ssl_verify,
             )
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to download file from {self.url}: {e}")
+            raise Exception(f'Failed to download file from {self.url}: {e}')
 
         # Get file size from headers for progress bar
         total_size = int(response.headers.get('content-length', 0))
@@ -260,7 +262,9 @@ class FileDownloadSource(AbsractOnlineSource):
             if self.verbose and total_size > 0:
                 # Use tqdm progress bar for verbose downloads
                 with open(self.downloaded_file_path, 'wb') as f:
-                    with tqdm(total=total_size, unit='B', unit_scale=True, desc=filename) as pbar:
+                    with tqdm(
+                        total=total_size, unit='B', unit_scale=True, desc=filename
+                    ) as pbar:
                         for chunk in response.iter_content(chunk_size=8192):
                             if chunk:
                                 f.write(chunk)
@@ -275,7 +279,7 @@ class FileDownloadSource(AbsractOnlineSource):
             # Clean up partial file on error
             if os.path.exists(self.downloaded_file_path):
                 os.remove(self.downloaded_file_path)
-            raise Exception(f"Failed to write downloaded file: {e}")
+            raise Exception(f'Failed to write downloaded file: {e}')
         finally:
             response.close()
 

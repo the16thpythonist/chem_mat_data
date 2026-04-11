@@ -10,6 +10,3 @@ The GraphDict format is generally designed to be flexible - being able to dynami
 additional properties - and to be JSON serializable.
 """
 GraphDict = t.Dict[str, t.Union[list, np.ndarray]]
-
-
-

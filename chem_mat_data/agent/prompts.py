@@ -9,6 +9,7 @@ task with the same constraints.
 Prompts can be overridden on a per-user basis via the ``[agent]`` section of the
 ChemMatData configuration file. See :func:`get_prompt` for details.
 """
+
 from __future__ import annotations
 
 from typing import Dict, Optional
@@ -677,15 +678,15 @@ Do NOT wrap the JSON in ```json``` code fences. Output the raw JSON object only.
 # =============================================================================
 
 _PROMPTS: Dict[str, Dict[str, str]] = {
-    "opencode": {
-        "link": OPENCODE_LINK_PROMPT,
-        "script_generation": OPENCODE_SCRIPT_GENERATION_PROMPT,
-        "identify": IDENTIFY_PROMPT,
+    'opencode': {
+        'link': OPENCODE_LINK_PROMPT,
+        'script_generation': OPENCODE_SCRIPT_GENERATION_PROMPT,
+        'identify': IDENTIFY_PROMPT,
     },
-    "claude": {
-        "link": CLAUDE_LINK_PROMPT,
-        "script_generation": CLAUDE_SCRIPT_GENERATION_PROMPT,
-        "identify": IDENTIFY_PROMPT,
+    'claude': {
+        'link': CLAUDE_LINK_PROMPT,
+        'script_generation': CLAUDE_SCRIPT_GENERATION_PROMPT,
+        'identify': IDENTIFY_PROMPT,
     },
 }
 

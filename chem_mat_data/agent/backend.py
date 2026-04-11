@@ -8,6 +8,7 @@ API so that the rest of the agent system can switch backends transparently.
 
 Use the :func:`get_backend` factory function to instantiate a backend by name.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -36,7 +37,7 @@ class AgentBackend:
 
     #: Identifies which prompt variant this backend uses.
     #: Must be set by subclasses (e.g. ``"opencode"``, ``"claude"``).
-    PROMPT_VARIANT: str = ""
+    PROMPT_VARIANT: str = ''
 
     def send_message(
         self,
@@ -68,7 +69,7 @@ class OpenCodeBackend(AgentBackend):
     the OpenCode HTTP API does not stream intermediate steps.
     """
 
-    PROMPT_VARIANT = "opencode"
+    PROMPT_VARIANT = 'opencode'
 
     def __init__(self, agent: str | None = None):
         """
@@ -97,7 +98,7 @@ class OpenCodeBackend(AgentBackend):
 
         result = send_message(prompt, timeout=timeout, agent=self.agent)
         if not result:
-            raise RuntimeError("OpenCode returned an empty response")
+            raise RuntimeError('OpenCode returned an empty response')
         return result
 
 
@@ -122,11 +123,11 @@ class ClaudeBackend(AgentBackend):
     ``claude setup-token`` in your terminal.
     """
 
-    PROMPT_VARIANT = "claude"
+    PROMPT_VARIANT = 'claude'
 
     def __init__(
         self,
-        model: str = "claude-sonnet-4-20250514",
+        model: str = 'claude-sonnet-4-20250514',
         allowed_tools: List[str] | None = None,
         mcp_servers: Dict[str, Any] | None = None,
         api_key: str | None = None,
@@ -178,10 +179,10 @@ class ClaudeBackend(AgentBackend):
         Only sets variables that are not already present in the environment,
         so explicit env vars always take precedence over config file values.
         """
-        if self.api_key and "ANTHROPIC_API_KEY" not in os.environ:
-            os.environ["ANTHROPIC_API_KEY"] = self.api_key
-        if self.oauth_token and "CLAUDE_CODE_OAUTH_TOKEN" not in os.environ:
-            os.environ["CLAUDE_CODE_OAUTH_TOKEN"] = self.oauth_token
+        if self.api_key and 'ANTHROPIC_API_KEY' not in os.environ:
+            os.environ['ANTHROPIC_API_KEY'] = self.api_key
+        if self.oauth_token and 'CLAUDE_CODE_OAUTH_TOKEN' not in os.environ:
+            os.environ['CLAUDE_CODE_OAUTH_TOKEN'] = self.oauth_token
 
     async def _query(
         self,
@@ -202,33 +203,37 @@ class ClaudeBackend(AgentBackend):
         )
 
         options_kwargs: Dict[str, Any] = {
-            "model": self.model,
-            "permission_mode": "bypassPermissions",
+            'model': self.model,
+            'permission_mode': 'bypassPermissions',
         }
         if self.allowed_tools:
-            options_kwargs["allowed_tools"] = self.allowed_tools
+            options_kwargs['allowed_tools'] = self.allowed_tools
         if self.mcp_servers:
-            options_kwargs["mcp_servers"] = self.mcp_servers
+            options_kwargs['mcp_servers'] = self.mcp_servers
 
         options = ClaudeAgentOptions(**options_kwargs)
 
-        final_text = ""
+        final_text = ''
         async for message in query(prompt=prompt, options=options):
             if isinstance(message, AssistantMessage) and on_event:
                 for block in message.content:
                     if isinstance(block, TextBlock):
-                        on_event({"type": "text", "content": block.text})
+                        on_event({'type': 'text', 'content': block.text})
                     elif isinstance(block, ToolUseBlock):
-                        on_event({
-                            "type": "tool_call",
-                            "name": block.name,
-                            "input": str(block.input) if hasattr(block, "input") else "",
-                        })
+                        on_event(
+                            {
+                                'type': 'tool_call',
+                                'name': block.name,
+                                'input': str(block.input)
+                                if hasattr(block, 'input')
+                                else '',
+                            }
+                        )
             elif isinstance(message, ResultMessage):
                 final_text = message.result
 
         if not final_text:
-            raise RuntimeError("Claude Agent SDK returned no result")
+            raise RuntimeError('Claude Agent SDK returned no result')
         return final_text
 
 
@@ -237,8 +242,8 @@ class ClaudeBackend(AgentBackend):
 # =============================================================================
 
 _BACKEND_REGISTRY: Dict[str, type] = {
-    "opencode": OpenCodeBackend,
-    "claude": ClaudeBackend,
+    'opencode': OpenCodeBackend,
+    'claude': ClaudeBackend,
 }
 
 
@@ -264,20 +269,20 @@ def get_backend(
     :raises ValueError: If ``name`` is not a recognised backend.
     """
     if name not in _BACKEND_REGISTRY:
-        valid = ", ".join(sorted(_BACKEND_REGISTRY))
-        raise ValueError(f"Unknown backend {name!r}. Valid backends: {valid}")
+        valid = ', '.join(sorted(_BACKEND_REGISTRY))
+        raise ValueError(f'Unknown backend {name!r}. Valid backends: {valid}')
 
     config = config or {}
 
-    if name == "opencode":
+    if name == 'opencode':
         return OpenCodeBackend(agent=agent)
-    elif name == "claude":
+    elif name == 'claude':
         return ClaudeBackend(
-            model=config.get("model", "claude-sonnet-4-20250514"),
-            allowed_tools=config.get("allowed_tools"),
-            mcp_servers=config.get("mcp_servers"),
-            api_key=config.get("api_key"),
-            oauth_token=config.get("oauth_token"),
+            model=config.get('model', 'claude-sonnet-4-20250514'),
+            allowed_tools=config.get('allowed_tools'),
+            mcp_servers=config.get('mcp_servers'),
+            api_key=config.get('api_key'),
+            oauth_token=config.get('oauth_token'),
         )
 
     # Fallback for future backends registered in _BACKEND_REGISTRY

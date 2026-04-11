@@ -22,6 +22,7 @@ using molSimplify's ligand library.
 
 Results are written to ``results/create_graph_datasets__kulik_spin/debug/``.
 """
+
 import os
 import json
 import gzip
@@ -43,6 +44,7 @@ from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from rdkit import RDLogger
+
 RDLogger.DisableLog('rdApp.*')
 
 import chem_mat_data._typing as typc
@@ -55,7 +57,9 @@ from chem_mat_data.data import default, ext_hook, save_graphs
 # :param DOWNLOAD_URL:
 #       Zenodo archive containing training, validation, and test splits.
 #       Approximately 229 MB. The CSV files are in ``many_body_ml copy/data/``.
-DOWNLOAD_URL: str = 'https://zenodo.org/api/records/13331586/files/many_body_ml.zip/content'
+DOWNLOAD_URL: str = (
+    'https://zenodo.org/api/records/13331586/files/many_body_ml.zip/content'
+)
 
 # :param DATA_CSV_PATHS:
 #       Paths within the zip for the 4 data splits. All are combined into a single
@@ -92,16 +96,21 @@ DESCRIPTION: str = (
 METADATA: dict = {
     'category': 'tmc',
     'min_version': '1.7.0',
-    'tags': ['Molecules', 'TransitionMetals', 'TMC', 'SpinSplitting', 'DFT',
-             'Octahedral', 'OpenShell'],
+    'tags': [
+        'Molecules',
+        'TransitionMetals',
+        'TMC',
+        'SpinSplitting',
+        'DFT',
+        'Octahedral',
+        'OpenShell',
+    ],
     'sources': [
         'https://doi.org/10.1021/acs.iecr.8b04015',
         'https://doi.org/10.5281/zenodo.13331586',
     ],
     'verbose': 'Kulik Octahedral TMC Spin-Splitting Properties',
-    'target_descriptions': {
-        str(i): col for i, col in enumerate(TARGET_COLUMNS)
-    },
+    'target_descriptions': {str(i): col for i, col in enumerate(TARGET_COLUMNS)},
 }
 
 # == PROCESSING PARAMETERS ==
@@ -134,36 +143,36 @@ experiment = Experiment(
 # have explicit index 0 since the heuristic would incorrectly pick a heteroatom.
 
 LIGAND_NAME_MAP: Dict[str, Tuple[str, List[int]]] = {
-    'acac':               ('CC(=O)/C=C(/C)[O-]', None),   # bidentate, infer
-    'acetonitrile':       ('CC#N', [2]),                    # N-donor
-    'aminomethylene':     ('[CH]=[NH]', [1]),               # N-donor
-    'ammonia':            ('N', [0]),                        # N-donor
-    'benzisc':            ('[C-]#[N+]Cc1ccccc1', [0]),      # isocyanide C-donor
-    'bipy':               ('c1ccc(-c2ccccn2)nc1', None),    # bidentate, infer
-    'carbonyl':           ('C#O', [0]),                      # CO, C-donor
-    'chloride':           ('[Cl-]', [0]),
-    'cyanide':            ('[C-]#N', [0]),                   # C-donor
-    'diazole':            ('c1c[nH]cn1', None),              # infer
-    'en':                 ('NCCN', None),                    # bidentate, infer
-    'fluoride':           ('[F-]', [0]),
-    'furan':              ('c1ccoc1', None),                  # O-donor, infer
-    'hydrogencyanide':    ('C#N', [1]),                      # HCN, N-donor
-    'hydrogenisocyanide': ('[C-]#[N+]', [0]),                # HNC, C-donor
-    'hydrogensulfide':    ('S', [0]),                         # H2S
-    'imidazolidinone':    ('O=C1NCCN1', None),               # infer
-    'iodide':             ('[I-]', [0]),
-    'methanol':           ('CO', [1]),                        # O-donor
-    'methylamine':        ('CN', [1]),                        # N-donor
-    'misc':               ('[C-]#[N+]C', [0]),               # methyl isocyanide
-    'ox':                 ('O=C([O-])C(=O)[O-]', None),      # oxalate bidentate, infer
-    'phen':               ('c1cnc2c(c1)ccc1cccnc12', None),  # bidentate, infer
-    'phosphine':          ('P', [0]),
-    'phosphorine':        ('C1=CCPC=C1', None),              # P-donor, infer
-    'pisc':               ('[C-]#[N+]c1ccc(C(C)(C)C)cc1', [0]),  # isocyanide C-donor
-    'porphyrin':          None,                               # tetradentate — skip
-    'pyr':                ('c1ccncc1', None),                 # pyridine, infer
-    'sulfide':            ('[SH-]', [0]),
-    'water':              ('O', [0]),
+    'acac': ('CC(=O)/C=C(/C)[O-]', None),  # bidentate, infer
+    'acetonitrile': ('CC#N', [2]),  # N-donor
+    'aminomethylene': ('[CH]=[NH]', [1]),  # N-donor
+    'ammonia': ('N', [0]),  # N-donor
+    'benzisc': ('[C-]#[N+]Cc1ccccc1', [0]),  # isocyanide C-donor
+    'bipy': ('c1ccc(-c2ccccn2)nc1', None),  # bidentate, infer
+    'carbonyl': ('C#O', [0]),  # CO, C-donor
+    'chloride': ('[Cl-]', [0]),
+    'cyanide': ('[C-]#N', [0]),  # C-donor
+    'diazole': ('c1c[nH]cn1', None),  # infer
+    'en': ('NCCN', None),  # bidentate, infer
+    'fluoride': ('[F-]', [0]),
+    'furan': ('c1ccoc1', None),  # O-donor, infer
+    'hydrogencyanide': ('C#N', [1]),  # HCN, N-donor
+    'hydrogenisocyanide': ('[C-]#[N+]', [0]),  # HNC, C-donor
+    'hydrogensulfide': ('S', [0]),  # H2S
+    'imidazolidinone': ('O=C1NCCN1', None),  # infer
+    'iodide': ('[I-]', [0]),
+    'methanol': ('CO', [1]),  # O-donor
+    'methylamine': ('CN', [1]),  # N-donor
+    'misc': ('[C-]#[N+]C', [0]),  # methyl isocyanide
+    'ox': ('O=C([O-])C(=O)[O-]', None),  # oxalate bidentate, infer
+    'phen': ('c1cnc2c(c1)ccc1cccnc12', None),  # bidentate, infer
+    'phosphine': ('P', [0]),
+    'phosphorine': ('C1=CCPC=C1', None),  # P-donor, infer
+    'pisc': ('[C-]#[N+]c1ccc(C(C)(C)C)cc1', [0]),  # isocyanide C-donor
+    'porphyrin': None,  # tetradentate — skip
+    'pyr': ('c1ccncc1', None),  # pyridine, infer
+    'sulfide': ('[SH-]', [0]),
+    'water': ('O', [0]),
 }
 
 
@@ -183,7 +192,11 @@ def infer_connecting_atoms(ligand_smiles: str) -> List[int]:
         mol = Chem.MolFromSmiles(ligand_smiles, sanitize=False)
         if mol is not None:
             try:
-                Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES)
+                Chem.SanitizeMol(
+                    mol,
+                    Chem.SanitizeFlags.SANITIZE_ALL
+                    ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES,
+                )
             except Exception:
                 pass
     if mol is None:
@@ -234,7 +247,11 @@ def resolve_ligand(name: str) -> Optional[Tuple[str, List[int]]]:
         mol = Chem.MolFromSmiles(name, sanitize=False)
         if mol is not None:
             try:
-                Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES)
+                Chem.SanitizeMol(
+                    mol,
+                    Chem.SanitizeFlags.SANITIZE_ALL
+                    ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES,
+                )
             except Exception:
                 pass
     if mol is None:
@@ -316,12 +333,13 @@ def parse_complex_name(
 # PROCESSING WORKER
 # ======================================================================================
 
-class TMCProcessingWorker(multiprocessing.Process):
 
-    def __init__(self,
-                 input_queue: multiprocessing.Queue,
-                 output_queue: multiprocessing.Queue,
-                 ):
+class TMCProcessingWorker(multiprocessing.Process):
+    def __init__(
+        self,
+        input_queue: multiprocessing.Queue,
+        output_queue: multiprocessing.Queue,
+    ):
         super().__init__()
         self.input_queue = input_queue
         self.output_queue = output_queue
@@ -349,7 +367,9 @@ class TMCProcessingWorker(multiprocessing.Process):
             except Exception as exc:
                 metal = data.get('metal', '?')
                 cid = data.get('complex_id', '?')
-                print(f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}')
+                print(
+                    f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}'
+                )
                 graph = None
 
             graph_encoded = msgpack.packb(graph, default=default)
@@ -359,6 +379,7 @@ class TMCProcessingWorker(multiprocessing.Process):
 # ======================================================================================
 # HOOKS
 # ======================================================================================
+
 
 @experiment.hook('add_graph_metadata', default=True, replace=False)
 def add_graph_metadata(e: Experiment, data: dict, graph: typc.GraphDict) -> None:
@@ -376,7 +397,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     # -- Download and cache --
     zip_path = os.path.join(e.path, 'many_body_ml.zip')
     if not os.path.exists(zip_path):
-        e.log(f'downloading Zenodo archive (~229 MB) ...')
+        e.log('downloading Zenodo archive (~229 MB) ...')
         response = requests.get(e.DOWNLOAD_URL, timeout=600, stream=True)
         response.raise_for_status()
         with open(zip_path, 'wb') as f:
@@ -384,7 +405,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                 f.write(chunk)
         e.log(f'downloaded {os.path.getsize(zip_path) / 1024 / 1024:.1f} MB')
     else:
-        e.log(f'using cached archive')
+        e.log('using cached archive')
 
     # -- Load and combine all splits --
     e.log('loading data splits...')
@@ -452,9 +473,11 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
             'targets': targets,
         }
 
-    e.log(f'parsed {len(dataset)} complexes '
-          f'({skipped_parse} parse failures, '
-          f'{skipped_porphyrin} tetradentate skipped)')
+    e.log(
+        f'parsed {len(dataset)} complexes '
+        f'({skipped_parse} parse failures, '
+        f'{skipped_porphyrin} tetradentate skipped)'
+    )
     return dataset
 
 
@@ -491,6 +514,7 @@ def save_csv(e: Experiment, dataset: Dict[int, dict]) -> None:
 # ======================================================================================
 # MAIN EXPERIMENT
 # ======================================================================================
+
 
 @experiment
 def experiment(e: Experiment):
@@ -536,7 +560,6 @@ def experiment(e: Experiment):
         prev_count = 0
 
         while count < num_indices:
-
             while not input_queue.full() and len(indices) != 0:
                 index = indices.pop()
                 data = dataset[index]
@@ -555,10 +578,14 @@ def experiment(e: Experiment):
                 num_remaining = num_elements - (count + 1)
                 time_per_element = time_passed / (count + 1)
                 time_remaining = time_per_element * num_remaining
-                eta = datetime.datetime.now() + datetime.timedelta(seconds=time_remaining)
-                e.log(f' * {count:05d}/{num_elements} done'
-                      f' - time passed: {time_passed / 60:.2f}m'
-                      f' - eta: {eta:%a %d.%m %H:%M}')
+                eta = datetime.datetime.now() + datetime.timedelta(
+                    seconds=time_remaining
+                )
+                e.log(
+                    f' * {count:05d}/{num_elements} done'
+                    f' - time passed: {time_passed / 60:.2f}m'
+                    f' - eta: {eta:%a %d.%m %H:%M}'
+                )
 
         end_time = time.time()
         duration = end_time - start_time
@@ -584,7 +611,10 @@ def experiment(e: Experiment):
     if e.COMPRESS:
         e.log('compressing...')
         compressed_path = os.path.join(e.path, e.DATASET_NAME + '.mpack.gz')
-        with open(dataset_path, 'rb') as f_in, gzip.open(compressed_path, 'wb') as f_out:
+        with (
+            open(dataset_path, 'rb') as f_in,
+            gzip.open(compressed_path, 'wb') as f_out,
+        ):
             shutil.copyfileobj(f_in, f_out)
 
         compressed_size = os.path.getsize(compressed_path)

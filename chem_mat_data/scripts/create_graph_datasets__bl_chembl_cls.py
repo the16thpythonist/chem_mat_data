@@ -14,6 +14,7 @@ References:
 - Original blog post: https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html
 - Data source: https://github.com/greglandrum/rdkit_blog/tree/master/data
 """
+
 import csv
 import io
 import rdkit.Chem as Chem
@@ -61,7 +62,7 @@ METADATA: dict = {
     'sources': [
         'https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html',
         'https://github.com/greglandrum/rdkit_blog/tree/master/data',
-        'https://doi.org/10.1021/ci000197k'  # Original Briem & Lessel paper
+        'https://doi.org/10.1021/ci000197k',  # Original Briem & Lessel paper
     ],
     'notes': [
         'This is a virtual screening benchmark dataset derived from ChEMBL25 for evaluating molecular similarity methods.',
@@ -106,13 +107,15 @@ METADATA: dict = {
         '32': 'CHEMBL3371 - Serotonin 6 (5-HT6) receptor (Homo sapiens)',
         '33': 'CHEMBL313 - Serotonin transporter (Rattus norvegicus)',
         '34': 'CHEMBL4860 - Apoptosis regulator Bcl-2 (Homo sapiens)',
-    }
+    },
 }
 
 # == GITHUB DATA SOURCES ==
 # URLs to the raw data files from Greg Landrum's RDKit blog repository
 
-GITHUB_BASE_URL = 'https://raw.githubusercontent.com/greglandrum/rdkit_blog/master/data/'
+GITHUB_BASE_URL = (
+    'https://raw.githubusercontent.com/greglandrum/rdkit_blog/master/data/'
+)
 
 URLS = {
     'actives': GITHUB_BASE_URL + 'BLSets_actives.txt',
@@ -188,7 +191,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         target_metadata[chembl_id] = {
             'tid': row['tid'],
             'name': row['pref_name'],
-            'organism': row['organism']
+            'organism': row['organism'],
         }
         target_list.append(chembl_id)
 
@@ -198,7 +201,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
 
     e.log(f'Loaded metadata for {num_targets} targets')
     e.log(f'Target order: {target_list[:5]}... (total {num_targets})')
-    e.log(f'Target index mapping created for multi-target vector')
+    e.log('Target index mapping created for multi-target vector')
 
     # == PARSE SELECTED ACTIVES FILE FIRST ==
     e.log('')
@@ -221,9 +224,13 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         selected_actives_map[smiles].append(target_id)
 
     e.log(f'Loaded {len(selected_actives_map)} unique molecules from selected_actives')
-    total_selected_pairs = sum(len(targets) for targets in selected_actives_map.values())
+    total_selected_pairs = sum(
+        len(targets) for targets in selected_actives_map.values()
+    )
     e.log(f'  Total (SMILES, target) pairs: {total_selected_pairs}')
-    e.log(f'  Average targets per molecule: {total_selected_pairs / len(selected_actives_map):.2f}')
+    e.log(
+        f'  Average targets per molecule: {total_selected_pairs / len(selected_actives_map):.2f}'
+    )
 
     # Build molecule_target_data from selected actives only
     molecule_target_data = {}
@@ -231,7 +238,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         molecule_target_data[smiles] = {
             'targets': target_list,  # List of target ChEMBL IDs
             'is_decoy': False,
-            'source': 'selected_actives'
+            'source': 'selected_actives',
         }
 
     # == PARSE DECOYS FILE ==
@@ -252,7 +259,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                 'targets': [],  # Empty - no target information
                 'is_decoy': True,
                 'source': 'decoys',
-                'chembl_id': row['chembl_id']
+                'chembl_id': row['chembl_id'],
             }
             num_decoys += 1
 
@@ -349,20 +356,34 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     e.log('FILTERING AND PROCESSING STATISTICS')
     e.log('=' * 80)
     e.log(f'Total unique molecules: {stats["total"]}')
-    e.log(f'  - Filtered (salts/dots): {stats["filtered_salt"]} ({100*stats["filtered_salt"]/stats["total"]:.1f}%)')
-    e.log(f'  - Filtered (invalid SMILES): {stats["filtered_invalid_smiles"]} ({100*stats["filtered_invalid_smiles"]/stats["total"]:.1f}%)')
-    e.log(f'  - Filtered (single atoms): {stats["filtered_single_atom"]} ({100*stats["filtered_single_atom"]/stats["total"]:.1f}%)')
-    e.log(f'  ✓ Successfully processed: {stats["success"]} ({100*stats["success"]/stats["total"]:.1f}%)')
+    e.log(
+        f'  - Filtered (salts/dots): {stats["filtered_salt"]} ({100 * stats["filtered_salt"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  - Filtered (invalid SMILES): {stats["filtered_invalid_smiles"]} ({100 * stats["filtered_invalid_smiles"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  - Filtered (single atoms): {stats["filtered_single_atom"]} ({100 * stats["filtered_single_atom"] / stats["total"]:.1f}%)'
+    )
+    e.log(
+        f'  ✓ Successfully processed: {stats["success"]} ({100 * stats["success"] / stats["total"]:.1f}%)'
+    )
     e.log('')
     e.log('MULTI-TARGET STATISTICS:')
-    e.log(f'  - Selected active molecules (from selected_actives file): {stats["molecules_selected_actives"]} ({100*stats["molecules_selected_actives"]/stats["success"]:.1f}%)')
-    e.log(f'  - Decoy molecules (all positions=2, assumed inactive): {stats["molecules_decoys"]} ({100*stats["molecules_decoys"]/stats["success"]:.1f}%)')
+    e.log(
+        f'  - Selected active molecules (from selected_actives file): {stats["molecules_selected_actives"]} ({100 * stats["molecules_selected_actives"] / stats["success"]:.1f}%)'
+    )
+    e.log(
+        f'  - Decoy molecules (all positions=2, assumed inactive): {stats["molecules_decoys"]} ({100 * stats["molecules_decoys"] / stats["success"]:.1f}%)'
+    )
     e.log(f'  - Total active target assignments: {stats["total_active_targets"]}')
-    if stats["molecules_selected_actives"] > 0:
-        avg_active = stats["total_active_targets"] / stats["molecules_selected_actives"]
+    if stats['molecules_selected_actives'] > 0:
+        avg_active = stats['total_active_targets'] / stats['molecules_selected_actives']
         e.log(f'  - Average active targets per selected molecule: {avg_active:.2f}')
     e.log(f'  - Target vector dimension: {num_targets}')
-    e.log(f'  - Target vector encoding: 0=not mentioned, 1=active, 2=decoy (all positions)')
+    e.log(
+        '  - Target vector encoding: 0=not mentioned, 1=active, 2=decoy (all positions)'
+    )
     e.log('')
 
     # Print example entries

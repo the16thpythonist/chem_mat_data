@@ -1,11 +1,12 @@
 """
 Unit tests for the "connectors.py" module that contains online data source connectors.
 """
+
 import os
 import tempfile
 import zipfile
 import pytest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 from io import BytesIO
 
 from chem_mat_data.connectors import ZenodoSource
@@ -21,8 +22,8 @@ class TestZenodoSource:
         """
         Test that ZenodoSource initializes correctly with url and relative_path.
         """
-        url = "https://zenodo.org/record/123456/files/dataset.zip"
-        relative_path = "data/molecules.csv"
+        url = 'https://zenodo.org/record/123456/files/dataset.zip'
+        relative_path = 'data/molecules.csv'
 
         source = ZenodoSource(url, relative_path)
 
@@ -34,7 +35,7 @@ class TestZenodoSource:
         """
         Test that prepare() creates a temporary directory.
         """
-        source = ZenodoSource("https://test.com/file.zip", "test.csv")
+        source = ZenodoSource('https://test.com/file.zip', 'test.csv')
 
         source.prepare()
 
@@ -53,7 +54,9 @@ class TestZenodoSource:
         # Create a mock ZIP file content
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-            zip_file.writestr('data/molecules.csv', 'smiles,property\nCCO,1.2\nCCC,2.1\n')
+            zip_file.writestr(
+                'data/molecules.csv', 'smiles,property\nCCO,1.2\nCCC,2.1\n'
+            )
         zip_content = zip_buffer.getvalue()
 
         # Mock the response
@@ -63,8 +66,7 @@ class TestZenodoSource:
         mock_get.return_value = mock_response
 
         source = ZenodoSource(
-            "https://zenodo.org/record/123456/files/dataset.zip",
-            "data/molecules.csv"
+            'https://zenodo.org/record/123456/files/dataset.zip', 'data/molecules.csv'
         )
 
         file_path = source.fetch()
@@ -99,11 +101,13 @@ class TestZenodoSource:
         mock_get.return_value = mock_response
 
         source = ZenodoSource(
-            "https://zenodo.org/record/123456/files/dataset.zip",
-            "data/molecules.csv"
+            'https://zenodo.org/record/123456/files/dataset.zip', 'data/molecules.csv'
         )
 
-        with pytest.raises(ValueError, match="File 'data/molecules.csv' not found in the downloaded archive"):
+        with pytest.raises(
+            ValueError,
+            match="File 'data/molecules.csv' not found in the downloaded archive",
+        ):
             source.fetch()
 
         source.cleanup()
@@ -116,7 +120,9 @@ class TestZenodoSource:
         # Create a mock ZIP file with file in different location
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-            zip_file.writestr('different/path/molecules.csv', 'smiles,property\nCCO,1.2\n')
+            zip_file.writestr(
+                'different/path/molecules.csv', 'smiles,property\nCCO,1.2\n'
+            )
         zip_content = zip_buffer.getvalue()
 
         mock_response = Mock()
@@ -125,8 +131,8 @@ class TestZenodoSource:
         mock_get.return_value = mock_response
 
         source = ZenodoSource(
-            "https://zenodo.org/record/123456/files/dataset.zip",
-            "data/molecules.csv"  # This exact path doesn't exist, but basename does
+            'https://zenodo.org/record/123456/files/dataset.zip',
+            'data/molecules.csv',  # This exact path doesn't exist, but basename does
         )
 
         file_path = source.fetch()
@@ -144,15 +150,15 @@ class TestZenodoSource:
         Test that HTTP errors are properly raised during download.
         """
         mock_response = Mock()
-        mock_response.raise_for_status.side_effect = Exception("HTTP 404 Not Found")
+        mock_response.raise_for_status.side_effect = Exception('HTTP 404 Not Found')
         mock_get.return_value = mock_response
 
         source = ZenodoSource(
-            "https://zenodo.org/record/nonexistent/files/dataset.zip",
-            "data/molecules.csv"
+            'https://zenodo.org/record/nonexistent/files/dataset.zip',
+            'data/molecules.csv',
         )
 
-        with pytest.raises(Exception, match="HTTP 404 Not Found"):
+        with pytest.raises(Exception, match='HTTP 404 Not Found'):
             source.fetch()
 
         source.cleanup()
@@ -161,8 +167,8 @@ class TestZenodoSource:
         """
         Test that ZenodoSource works correctly as a context manager.
         """
-        url = "https://zenodo.org/record/123456/files/dataset.zip"
-        relative_path = "data/molecules.csv"
+        url = 'https://zenodo.org/record/123456/files/dataset.zip'
+        relative_path = 'data/molecules.csv'
 
         with ZenodoSource(url, relative_path) as source:
             assert source.url == url
@@ -188,8 +194,7 @@ class TestZenodoSource:
         temp_dir_path = None
 
         with ZenodoSource(
-            "https://zenodo.org/record/123456/files/dataset.zip",
-            "test.txt"
+            'https://zenodo.org/record/123456/files/dataset.zip', 'test.txt'
         ) as source:
             file_path = source.fetch()
             temp_dir_path = source.temp_dir
@@ -204,7 +209,7 @@ class TestZenodoSource:
         """
         Test that cleanup() properly removes the temporary directory.
         """
-        source = ZenodoSource("https://test.com/file.zip", "test.csv")
+        source = ZenodoSource('https://test.com/file.zip', 'test.csv')
         source.prepare()
 
         temp_dir = source.temp_dir
@@ -219,8 +224,8 @@ class TestZenodoSource:
         """
         Test that cleanup() handles case where temp_dir doesn't exist.
         """
-        source = ZenodoSource("https://test.com/file.zip", "test.csv")
-        source.temp_dir = "/nonexistent/path"
+        source = ZenodoSource('https://test.com/file.zip', 'test.csv')
+        source.temp_dir = '/nonexistent/path'
 
         # Should not raise an exception
         source.cleanup()
@@ -230,7 +235,7 @@ class TestZenodoSource:
         """
         Test that multiple cleanup() calls don't cause issues.
         """
-        source = ZenodoSource("https://test.com/file.zip", "test.csv")
+        source = ZenodoSource('https://test.com/file.zip', 'test.csv')
         source.prepare()
 
         source.cleanup()
@@ -247,8 +252,8 @@ class TestZenodoSourceIntegration:
 
     @pytest.mark.slow
     @pytest.mark.skipif(
-        os.environ.get("SKIP_INTEGRATION_TESTS", "true").lower() == "true",
-        reason="Integration tests skipped (set SKIP_INTEGRATION_TESTS=false to enable)"
+        os.environ.get('SKIP_INTEGRATION_TESTS', 'true').lower() == 'true',
+        reason='Integration tests skipped (set SKIP_INTEGRATION_TESTS=false to enable)',
     )
     def test_real_zenodo_download(self):
         """
@@ -257,15 +262,15 @@ class TestZenodoSourceIntegration:
         Uses: https://zenodo.org/records/11580890/files/TheJacksonLab/ClosedLoopTransfer-ClosedLoopTransfer.zip
         This test is marked as slow and skipped by default.
         """
-        url = "https://zenodo.org/records/11580890/files/TheJacksonLab/ClosedLoopTransfer-ClosedLoopTransfer.zip?download=1"
+        url = 'https://zenodo.org/records/11580890/files/TheJacksonLab/ClosedLoopTransfer-ClosedLoopTransfer.zip?download=1'
 
-        with ZenodoSource(url, "README.md") as source:
+        with ZenodoSource(url, 'README.md') as source:
             try:
                 file_path = source.fetch()
 
                 # Verify the file was downloaded and extracted
                 assert os.path.exists(file_path)
-                assert file_path.endswith("README.md")
+                assert file_path.endswith('README.md')
 
                 # Check that file has some content
                 with open(file_path, 'r') as f:
@@ -273,21 +278,21 @@ class TestZenodoSourceIntegration:
                 assert len(content) > 0
 
             except Exception as e:
-                pytest.skip(f"Real Zenodo download failed (network issue?): {e}")
+                pytest.skip(f'Real Zenodo download failed (network issue?): {e}')
 
     @pytest.mark.slow
     @pytest.mark.skipif(
-        os.environ.get("SKIP_INTEGRATION_TESTS", "true").lower() == "true",
-        reason="Integration tests skipped (set SKIP_INTEGRATION_TESTS=false to enable)"
+        os.environ.get('SKIP_INTEGRATION_TESTS', 'true').lower() == 'true',
+        reason='Integration tests skipped (set SKIP_INTEGRATION_TESTS=false to enable)',
     )
     def test_real_zenodo_file_search(self):
         """
         Test the file search functionality with a real Zenodo archive.
         This tests the fallback mechanisms for finding files when exact paths don't match.
         """
-        url = "https://zenodo.org/records/11580890/files/TheJacksonLab/ClosedLoopTransfer-ClosedLoopTransfer.zip?download=1"
+        url = 'https://zenodo.org/records/11580890/files/TheJacksonLab/ClosedLoopTransfer-ClosedLoopTransfer.zip?download=1'
 
-        with ZenodoSource(url, "LICENSE") as source:
+        with ZenodoSource(url, 'LICENSE') as source:
             try:
                 file_path = source.fetch()
 
@@ -298,7 +303,10 @@ class TestZenodoSourceIntegration:
                     content = f.read()
                 assert len(content) > 0
                 # LICENSE files typically contain copyright information
-                assert any(word in content.lower() for word in ['license', 'copyright', 'mit', 'apache', 'gpl'])
+                assert any(
+                    word in content.lower()
+                    for word in ['license', 'copyright', 'mit', 'apache', 'gpl']
+                )
 
             except Exception as e:
-                pytest.skip(f"Real Zenodo download failed (network issue?): {e}")
+                pytest.skip(f'Real Zenodo download failed (network issue?): {e}')

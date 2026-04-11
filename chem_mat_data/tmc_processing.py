@@ -28,7 +28,8 @@ Example usage:
         graph_labels=[some_property_value],
     )
 """
-from typing import Any, Dict, List, Tuple, Optional, Union
+
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 import rdkit.Chem as Chem
@@ -53,26 +54,52 @@ from chem_mat_data.utils import mol_from_smiles
 # The 30 transition metals (groups 3-12, periods 4-6) by atomic number.
 TRANSITION_METAL_ATOMIC_NUMBERS: set = {
     # 3d series (period 4)
-    21, 22, 23, 24, 25, 26, 27, 28, 29, 30,   # Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,  # Sc, Ti, V, Cr, Mn, Fe, Co, Ni, Cu, Zn
     # 4d series (period 5)
-    39, 40, 41, 42, 43, 44, 45, 46, 47, 48,   # Y, Zr, Nb, Mo, Tc, Ru, Rh, Pd, Ag, Cd
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,  # Y, Zr, Nb, Mo, Tc, Ru, Rh, Pd, Ag, Cd
     # 5d series (period 6)
-    72, 73, 74, 75, 76, 77, 78, 79, 80,        # Hf, Ta, W, Re, Os, Ir, Pt, Au, Hg
-    57,                                          # La (included for completeness)
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,  # Hf, Ta, W, Re, Os, Ir, Pt, Au, Hg
+    57,  # La (included for completeness)
 }
 
 # Pauling electronegativity values. Source: standard reference tables.
 # Values normalized by dividing by 3.98 (fluorine) during encoding.
 PAULING_ELECTRONEGATIVITY: Dict[int, float] = {
-    1: 2.20,   # H
-    2: 0.00,   # He (noble gas)
-    3: 0.98,   # Li
-    4: 1.57,   # Be
-    5: 2.04,   # B
-    6: 2.55,   # C
-    7: 3.04,   # N
-    8: 3.44,   # O
-    9: 3.98,   # F
+    1: 2.20,  # H
+    2: 0.00,  # He (noble gas)
+    3: 0.98,  # Li
+    4: 1.57,  # Be
+    5: 2.04,  # B
+    6: 2.55,  # C
+    7: 3.04,  # N
+    8: 3.44,  # O
+    9: 3.98,  # F
     11: 0.93,  # Na
     12: 1.31,  # Mg
     13: 1.61,  # Al
@@ -120,56 +147,56 @@ PAULING_ELECTRONEGATIVITY: Dict[int, float] = {
 
 # Group number (1-18) by atomic number. Only elements likely to appear in TMC datasets.
 ELEMENT_GROUP: Dict[int, int] = {
-    1: 1,      # H
-    3: 1,      # Li
-    5: 13,     # B
-    6: 14,     # C
-    7: 15,     # N
-    8: 16,     # O
-    9: 17,     # F
-    11: 1,     # Na
-    12: 2,     # Mg
-    13: 13,    # Al
-    14: 14,    # Si
-    15: 15,    # P
-    16: 16,    # S
-    17: 17,    # Cl
-    19: 1,     # K
-    20: 2,     # Ca
-    21: 3,     # Sc
-    22: 4,     # Ti
-    23: 5,     # V
-    24: 6,     # Cr
-    25: 7,     # Mn
-    26: 8,     # Fe
-    27: 9,     # Co
-    28: 10,    # Ni
-    29: 11,    # Cu
-    30: 12,    # Zn
-    33: 15,    # As
-    34: 16,    # Se
-    35: 17,    # Br
-    39: 3,     # Y
-    40: 4,     # Zr
-    41: 5,     # Nb
-    42: 6,     # Mo
-    43: 7,     # Tc
-    44: 8,     # Ru
-    45: 9,     # Rh
-    46: 10,    # Pd
-    47: 11,    # Ag
-    48: 12,    # Cd
-    53: 17,    # I
-    57: 3,     # La
-    72: 4,     # Hf
-    73: 5,     # Ta
-    74: 6,     # W
-    75: 7,     # Re
-    76: 8,     # Os
-    77: 9,     # Ir
-    78: 10,    # Pt
-    79: 11,    # Au
-    80: 12,    # Hg
+    1: 1,  # H
+    3: 1,  # Li
+    5: 13,  # B
+    6: 14,  # C
+    7: 15,  # N
+    8: 16,  # O
+    9: 17,  # F
+    11: 1,  # Na
+    12: 2,  # Mg
+    13: 13,  # Al
+    14: 14,  # Si
+    15: 15,  # P
+    16: 16,  # S
+    17: 17,  # Cl
+    19: 1,  # K
+    20: 2,  # Ca
+    21: 3,  # Sc
+    22: 4,  # Ti
+    23: 5,  # V
+    24: 6,  # Cr
+    25: 7,  # Mn
+    26: 8,  # Fe
+    27: 9,  # Co
+    28: 10,  # Ni
+    29: 11,  # Cu
+    30: 12,  # Zn
+    33: 15,  # As
+    34: 16,  # Se
+    35: 17,  # Br
+    39: 3,  # Y
+    40: 4,  # Zr
+    41: 5,  # Nb
+    42: 6,  # Mo
+    43: 7,  # Tc
+    44: 8,  # Ru
+    45: 9,  # Rh
+    46: 10,  # Pd
+    47: 11,  # Ag
+    48: 12,  # Cd
+    53: 17,  # I
+    57: 3,  # La
+    72: 4,  # Hf
+    73: 5,  # Ta
+    74: 6,  # W
+    75: 7,  # Re
+    76: 8,  # Os
+    77: 9,  # Ir
+    78: 10,  # Pt
+    79: 11,  # Au
+    80: 12,  # Hg
 }
 
 # The element list for the one-hot encoding. 50 elements covering all common ligand atoms
@@ -177,26 +204,70 @@ ELEMENT_GROUP: Dict[int, int] = {
 # by period.
 TMC_ELEMENTS: List[str] = [
     # Common organic / ligand atoms (20)
-    'C', 'N', 'O', 'S', 'P', 'Se', 'B', 'H',
-    'F', 'Cl', 'Br', 'I',
-    'Si', 'Li', 'Na', 'Mg', 'Al', 'K', 'Ca', 'As',
+    'C',
+    'N',
+    'O',
+    'S',
+    'P',
+    'Se',
+    'B',
+    'H',
+    'F',
+    'Cl',
+    'Br',
+    'I',
+    'Si',
+    'Li',
+    'Na',
+    'Mg',
+    'Al',
+    'K',
+    'Ca',
+    'As',
     # 3d transition metals (10)
-    'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+    'Sc',
+    'Ti',
+    'V',
+    'Cr',
+    'Mn',
+    'Fe',
+    'Co',
+    'Ni',
+    'Cu',
+    'Zn',
     # 4d transition metals (10)
-    'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
+    'Y',
+    'Zr',
+    'Nb',
+    'Mo',
+    'Tc',
+    'Ru',
+    'Rh',
+    'Pd',
+    'Ag',
+    'Cd',
     # 5d transition metals (10)
-    'La', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',
+    'La',
+    'Hf',
+    'Ta',
+    'W',
+    'Re',
+    'Os',
+    'Ir',
+    'Pt',
+    'Au',
+    'Hg',
 ]
 
 # Maximum normalization constants
 _MAX_ELECTRONEGATIVITY = 3.98  # Fluorine
-_MAX_COVALENT_RADIUS = 2.6     # Approximate max (Cs)
-_MAX_VDW_RADIUS = 3.0          # Approximate max
+_MAX_COVALENT_RADIUS = 2.6  # Approximate max (Cs)
+_MAX_VDW_RADIUS = 3.0  # Approximate max
 _MAX_PERIOD = 7
 _MAX_GROUP = 18
 _MAX_D_ELECTRONS = 10
 _MAX_OUTER_ELECTRONS = 18
-_MAX_MASS = 210.0              # Approximate (Hg ~200)
+_MAX_MASS = 210.0  # Approximate (Hg ~200)
 
 # RDKit periodic table instance for property lookups
 _PT = Chem.GetPeriodicTable()
@@ -205,6 +276,7 @@ _PT = Chem.GetPeriodicTable()
 # ======================================================================================
 # CUSTOM ENCODERS
 # ======================================================================================
+
 
 class LookupEncoder(EncoderBase, EncodingDescriptionMixin):
     """
@@ -218,11 +290,12 @@ class LookupEncoder(EncoderBase, EncodingDescriptionMixin):
 
     requires_molecule: bool = False
 
-    def __init__(self,
-                 lookup_table: Dict[int, float],
-                 max_value: float,
-                 description: str = '',
-                 ):
+    def __init__(
+        self,
+        lookup_table: Dict[int, float],
+        max_value: float,
+        description: str = '',
+    ):
         self.lookup_table = lookup_table
         self.max_value = max_value
         self._description = description
@@ -348,6 +421,7 @@ class DElectronCountEncoder(EncoderBase, EncodingDescriptionMixin):
 # METAL-ORGANIC PROCESSING CLASS
 # ======================================================================================
 
+
 class MetalOrganicProcessing(AbstractProcessing):
     """
     Processing class for transition metal complexes (TMCs) using a decomposed representation.
@@ -397,44 +471,63 @@ class MetalOrganicProcessing(AbstractProcessing):
 
     node_attribute_map = {
         'symbol': {
-            'callback': chem_prop('GetSymbol', OneHotEncoder(
-                TMC_ELEMENTS,
-                add_unknown=True,
-                dtype=str,
-                value_descriptions=[f'{s}' for s in TMC_ELEMENTS],
-            )),
+            'callback': chem_prop(
+                'GetSymbol',
+                OneHotEncoder(
+                    TMC_ELEMENTS,
+                    add_unknown=True,
+                    dtype=str,
+                    value_descriptions=[f'{s}' for s in TMC_ELEMENTS],
+                ),
+            ),
             'description': 'One-hot encoding of the atom type (50 elements + unknown)',
             'is_type': True,
             'encodes_symbol': True,
         },
         'hybridization': {
-            'callback': chem_prop('GetHybridization', OneHotEncoder(
-                [0, 1, 2, 3, 4, 5, 6, 7, 8],
-                add_unknown=True,
-                dtype=int,
-                value_descriptions=[
-                    'Unspecified', 'S', 'SP', 'SP2', 'SP3',
-                    'SP2D', 'SP3D', 'SP3D2', 'Other',
-                ],
-            )),
+            'callback': chem_prop(
+                'GetHybridization',
+                OneHotEncoder(
+                    [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                    add_unknown=True,
+                    dtype=int,
+                    value_descriptions=[
+                        'Unspecified',
+                        'S',
+                        'SP',
+                        'SP2',
+                        'SP3',
+                        'SP2D',
+                        'SP3D',
+                        'SP3D2',
+                        'Other',
+                    ],
+                ),
+            ),
             'description': 'One-hot encoding of atom hybridization (incl. SP3D2 for metals)',
         },
         'total_degree': {
-            'callback': chem_prop('GetTotalDegree', OneHotEncoder(
-                list(range(13)),
-                add_unknown=False,
-                dtype=int,
-                value_descriptions=[f'{i} neighbors' for i in range(13)],
-            )),
+            'callback': chem_prop(
+                'GetTotalDegree',
+                OneHotEncoder(
+                    list(range(13)),
+                    add_unknown=False,
+                    dtype=int,
+                    value_descriptions=[f'{i} neighbors' for i in range(13)],
+                ),
+            ),
             'description': 'One-hot encoding of total degree / coordination number (0-12)',
         },
         'num_hydrogen_atoms': {
-            'callback': chem_prop('GetTotalNumHs', OneHotEncoder(
-                [0, 1, 2, 3, 4],
-                add_unknown=False,
-                dtype=int,
-                value_descriptions=[f'{i} hydrogens' for i in range(5)],
-            )),
+            'callback': chem_prop(
+                'GetTotalNumHs',
+                OneHotEncoder(
+                    [0, 1, 2, 3, 4],
+                    add_unknown=False,
+                    dtype=int,
+                    value_descriptions=[f'{i} hydrogens' for i in range(5)],
+                ),
+            ),
             'description': 'One-hot encoding of the total number of attached hydrogen atoms',
         },
         'mass': {
@@ -460,35 +553,40 @@ class MetalOrganicProcessing(AbstractProcessing):
         },
         'electronegativity': {
             'callback': LookupEncoder(
-                PAULING_ELECTRONEGATIVITY, _MAX_ELECTRONEGATIVITY,
+                PAULING_ELECTRONEGATIVITY,
+                _MAX_ELECTRONEGATIVITY,
                 description='Pauling electronegativity (normalized)',
             ),
             'description': 'Pauling electronegativity (normalized by F=3.98)',
         },
         'covalent_radius': {
             'callback': PeriodicTableEncoder(
-                'GetRcovalent', _MAX_COVALENT_RADIUS,
+                'GetRcovalent',
+                _MAX_COVALENT_RADIUS,
                 description='Covalent radius (normalized)',
             ),
             'description': 'Covalent radius from RDKit periodic table (normalized)',
         },
         'vdw_radius': {
             'callback': PeriodicTableEncoder(
-                'GetRvdw', _MAX_VDW_RADIUS,
+                'GetRvdw',
+                _MAX_VDW_RADIUS,
                 description='van der Waals radius (normalized)',
             ),
             'description': 'van der Waals radius from RDKit periodic table (normalized)',
         },
         'period': {
             'callback': PeriodicTableEncoder(
-                'GetRow', _MAX_PERIOD,
+                'GetRow',
+                _MAX_PERIOD,
                 description='Period / row in periodic table (normalized)',
             ),
             'description': 'Period in the periodic table (normalized by 7)',
         },
         'group_number': {
             'callback': LookupEncoder(
-                ELEMENT_GROUP, _MAX_GROUP,
+                ELEMENT_GROUP,
+                _MAX_GROUP,
                 description='Group number in periodic table (normalized)',
             ),
             'description': 'Group number in the periodic table (normalized by 18)',
@@ -499,7 +597,8 @@ class MetalOrganicProcessing(AbstractProcessing):
         },
         'outer_electrons': {
             'callback': PeriodicTableEncoder(
-                'GetNOuterElecs', _MAX_OUTER_ELECTRONS,
+                'GetNOuterElecs',
+                _MAX_OUTER_ELECTRONS,
                 description='Number of outer shell electrons (normalized)',
             ),
             'description': 'Number of outer shell electrons (normalized by 18)',
@@ -508,29 +607,42 @@ class MetalOrganicProcessing(AbstractProcessing):
 
     edge_attribute_map = {
         'bond_type': {
-            'callback': chem_prop('GetBondType', OneHotEncoder(
-                [1, 2, 3, 12, 17, 21],
-                add_unknown=True,
-                dtype=int,
-                value_descriptions=[
-                    'Single Bond', 'Double Bond', 'Triple Bond',
-                    'Aromatic Bond', 'Dative Bond', 'Zero-Order Bond',
-                ],
-                string_values=['S', 'D', 'T', 'A', 'DAT', 'Z'],
-            )),
+            'callback': chem_prop(
+                'GetBondType',
+                OneHotEncoder(
+                    [1, 2, 3, 12, 17, 21],
+                    add_unknown=True,
+                    dtype=int,
+                    value_descriptions=[
+                        'Single Bond',
+                        'Double Bond',
+                        'Triple Bond',
+                        'Aromatic Bond',
+                        'Dative Bond',
+                        'Zero-Order Bond',
+                    ],
+                    string_values=['S', 'D', 'T', 'A', 'DAT', 'Z'],
+                ),
+            ),
             'description': 'One-hot encoding of bond type (incl. dative)',
             'is_type': True,
             'encodes_bond': True,
         },
         'stereo': {
-            'callback': chem_prop('GetStereo', OneHotEncoder(
-                [0, 1, 2, 3],
-                add_unknown=False,
-                dtype=int,
-                value_descriptions=[
-                    'Stereo None', 'Stereo Any', 'Stereo Z', 'Stereo E',
-                ],
-            )),
+            'callback': chem_prop(
+                'GetStereo',
+                OneHotEncoder(
+                    [0, 1, 2, 3],
+                    add_unknown=False,
+                    dtype=int,
+                    value_descriptions=[
+                        'Stereo None',
+                        'Stereo Any',
+                        'Stereo Z',
+                        'Stereo E',
+                    ],
+                ),
+            ),
             'description': 'One-hot encoding of stereo configuration',
         },
         'is_aromatic': {
@@ -576,17 +688,23 @@ class MetalOrganicProcessing(AbstractProcessing):
 
         # Compute index arrays for type-relevant attributes, symbol encoding, bond encoding
         # following the same pattern as MoleculeProcessing.
-        self.node_type_indices = np.array(self._get_attribute_indices(
-            self.node_attribute_map,
-            self.MOCK_ATOM,
-            lambda data: data.get('is_type', False),
-        ), dtype=int)
+        self.node_type_indices = np.array(
+            self._get_attribute_indices(
+                self.node_attribute_map,
+                self.MOCK_ATOM,
+                lambda data: data.get('is_type', False),
+            ),
+            dtype=int,
+        )
 
-        self.edge_type_indices = np.array(self._get_attribute_indices(
-            self.edge_attribute_map,
-            self.MOCK_BOND,
-            lambda data: data.get('is_type', False),
-        ), dtype=int)
+        self.edge_type_indices = np.array(
+            self._get_attribute_indices(
+                self.edge_attribute_map,
+                self.MOCK_BOND,
+                lambda data: data.get('is_type', False),
+            ),
+            dtype=int,
+        )
 
         # Extract the symbol encoder for human-readable atom labels
         symbol_data = self._get_attribute_data(
@@ -605,7 +723,9 @@ class MetalOrganicProcessing(AbstractProcessing):
         # Compute the base edge feature dimension from the attribute map (before extra features)
         mock_edge_attrs = []
         for name, data in self.edge_attribute_map.items():
-            mock_edge_attrs += self._apply_callback(data['callback'], self.MOCK_MOLECULE, self.MOCK_BOND)
+            mock_edge_attrs += self._apply_callback(
+                data['callback'], self.MOCK_MOLECULE, self.MOCK_BOND
+            )
         self._base_edge_dim = len(mock_edge_attrs)
 
     # ==================================================================================
@@ -617,7 +737,9 @@ class MetalOrganicProcessing(AbstractProcessing):
         Apply a feature extraction callback to an atom or bond element.
         Handles the ``requires_molecule`` protocol for encoders that need the full Mol context.
         """
-        if hasattr(callback, 'requires_molecule') and getattr(callback, 'requires_molecule'):
+        if hasattr(callback, 'requires_molecule') and getattr(
+            callback, 'requires_molecule'
+        ):
             return callback(mol, element)
         else:
             return callback(element)
@@ -651,21 +773,29 @@ class MetalOrganicProcessing(AbstractProcessing):
             attributes += value
         return attributes
 
-    def _encode_metal_atom(self, metal_symbol: str, oxidation_state: int) -> List[float]:
+    def _encode_metal_atom(
+        self, metal_symbol: str, oxidation_state: int
+    ) -> List[float]:
         """
         Encode the metal center node. Creates a temporary RDKit atom with the correct symbol
         and formal charge (as a proxy for oxidation state) so that all standard callbacks work.
         """
         # Create a single-atom molecule for the metal so that RDKit atom property methods work.
         # We skip valence sanitization to avoid errors with unusual metal valences.
-        metal_smiles = f'[{metal_symbol}+{oxidation_state}]' if oxidation_state > 0 else \
-                       f'[{metal_symbol}{oxidation_state}]' if oxidation_state < 0 else \
-                       f'[{metal_symbol}]'
+        metal_smiles = (
+            f'[{metal_symbol}+{oxidation_state}]'
+            if oxidation_state > 0
+            else f'[{metal_symbol}{oxidation_state}]'
+            if oxidation_state < 0
+            else f'[{metal_symbol}]'
+        )
 
         metal_mol = Chem.MolFromSmiles(metal_smiles, sanitize=False)
         if metal_mol is None:
-            raise ValueError(f'Could not create RDKit atom for metal "{metal_symbol}" '
-                             f'with oxidation state {oxidation_state}')
+            raise ValueError(
+                f'Could not create RDKit atom for metal "{metal_symbol}" '
+                f'with oxidation state {oxidation_state}'
+            )
 
         metal_atom = metal_mol.GetAtoms()[0]
         return self._encode_atom(metal_mol, metal_atom)
@@ -704,23 +834,33 @@ class MetalOrganicProcessing(AbstractProcessing):
         dative_direction = [direction]
         is_metal_metal = [0.0]
 
-        return (bond_type_onehot + stereo_onehot + is_aromatic + is_in_ring +
-                is_conjugated + bond_order + is_dative + dative_direction + is_metal_metal)
+        return (
+            bond_type_onehot
+            + stereo_onehot
+            + is_aromatic
+            + is_in_ring
+            + is_conjugated
+            + bond_order
+            + is_dative
+            + dative_direction
+            + is_metal_metal
+        )
 
     # ==================================================================================
     # MAIN PROCESSING METHOD
     # ==================================================================================
 
-    def process(self,
-                metal: str,
-                ligand_smiles: List[str],
-                connecting_atom_indices: List[List[int]],
-                oxidation_state: int = 0,
-                total_charge: int = 0,
-                spin_multiplicity: int = 1,
-                graph_labels: list = [],
-                whole_complex_smiles: Optional[str] = None,
-                ) -> GraphDict:
+    def process(
+        self,
+        metal: str,
+        ligand_smiles: List[str],
+        connecting_atom_indices: List[List[int]],
+        oxidation_state: int = 0,
+        total_charge: int = 0,
+        spin_multiplicity: int = 1,
+        graph_labels: list = [],
+        whole_complex_smiles: Optional[str] = None,
+    ) -> GraphDict:
         """
         Convert a decomposed TMC representation into a graph dictionary.
 
@@ -749,7 +889,9 @@ class MetalOrganicProcessing(AbstractProcessing):
         """
         # --- Metal center (node index 0) ---
         node_indices: List[int] = [0]
-        node_attributes: List[List[float]] = [self._encode_metal_atom(metal, oxidation_state)]
+        node_attributes: List[List[float]] = [
+            self._encode_metal_atom(metal, oxidation_state)
+        ]
         node_atoms: List[str] = [metal]
 
         edge_indices: List[List[int]] = []
@@ -762,8 +904,9 @@ class MetalOrganicProcessing(AbstractProcessing):
         coordination_number = 0
 
         # --- Process each ligand ---
-        for lig_idx, (lig_smi, conn_indices) in enumerate(zip(ligand_smiles, connecting_atom_indices)):
-
+        for lig_idx, (lig_smi, conn_indices) in enumerate(
+            zip(ligand_smiles, connecting_atom_indices)
+        ):
             # Some ligand SMILES from TMC datasets contain unusual valences (e.g., B with
             # 4 bonds in tris(pyrazolyl)borate) because they are fragments that were bonded
             # to a metal. We try standard sanitization first, then fall back to partial
@@ -773,8 +916,10 @@ class MetalOrganicProcessing(AbstractProcessing):
             if mol is None:
                 mol = _mol_from_smiles_lenient(lig_smi)
             if mol is None:
-                raise ValueError(f'Could not parse ligand SMILES "{lig_smi}" '
-                                 f'(ligand index {lig_idx})')
+                raise ValueError(
+                    f'Could not parse ligand SMILES "{lig_smi}" '
+                    f'(ligand index {lig_idx})'
+                )
 
             # Add ligand atoms as nodes
             for atom in mol.GetAtoms():
@@ -783,7 +928,9 @@ class MetalOrganicProcessing(AbstractProcessing):
                 node_attributes.append(self._encode_atom(mol, atom))
 
                 if self.symbol_encoder:
-                    node_atoms.append(self.symbol_encoder.encode_string(atom.GetSymbol()))
+                    node_atoms.append(
+                        self.symbol_encoder.encode_string(atom.GetSymbol())
+                    )
 
             # Add intra-ligand bonds as edges
             for bond in mol.GetBonds():
@@ -793,7 +940,9 @@ class MetalOrganicProcessing(AbstractProcessing):
                 edge_attributes.append(self._encode_bond(mol, bond))
 
                 if self.bond_encoder:
-                    edge_bonds.append(self.bond_encoder.encode_string(bond.GetBondType()))
+                    edge_bonds.append(
+                        self.bond_encoder.encode_string(bond.GetBondType())
+                    )
 
             # Add dative bond edges from connecting atoms to metal (node 0)
             for conn_idx in conn_indices:
@@ -810,10 +959,15 @@ class MetalOrganicProcessing(AbstractProcessing):
 
         # --- Graph-level features (5 dims) ---
         # 1. Molecular weight approximation (sum of all atom masses)
-        total_mass = sum(
-            _PT.GetAtomicWeight(Chem.Atom(s).GetAtomicNum())
-            for s in [metal] + [a for lig in ligand_smiles for a in _get_ligand_atoms(lig)]
-        ) if False else 0.0  # placeholder, computed below
+        total_mass = (
+            sum(
+                _PT.GetAtomicWeight(Chem.Atom(s).GetAtomicNum())
+                for s in [metal]
+                + [a for lig in ligand_smiles for a in _get_ligand_atoms(lig)]
+            )
+            if False
+            else 0.0
+        )  # placeholder, computed below
 
         # Compute molecular weight by summing individual ligand weights + metal mass
         metal_mass = _PT.GetAtomicWeight(Chem.Atom(metal).GetAtomicNum())
@@ -831,11 +985,11 @@ class MetalOrganicProcessing(AbstractProcessing):
         metal_z = Chem.Atom(metal).GetAtomicNum()
 
         graph_attributes = [
-            total_mass,             # molecular weight
-            float(total_charge),    # total charge
-            1.0,                    # num metal centers (mononuclear)
+            total_mass,  # molecular weight
+            float(total_charge),  # total charge
+            1.0,  # num metal centers (mononuclear)
             float(coordination_number),  # coordination number
-            float(metal_z),         # metal atomic number
+            float(metal_z),  # metal atomic number
         ]
 
         # --- Build graph_repr ---
@@ -843,19 +997,27 @@ class MetalOrganicProcessing(AbstractProcessing):
             graph_repr = whole_complex_smiles
         else:
             # Synthetic representation: "Fe(II)|[NH3].[NH3].[NH3].[NH3].[NH3].[NH3]"
-            graph_repr = f'{metal}({_roman_numeral(oxidation_state)})|{".".join(ligand_smiles)}'
+            graph_repr = (
+                f'{metal}({_roman_numeral(oxidation_state)})|{".".join(ligand_smiles)}'
+            )
 
         # --- Assemble GraphDict ---
         graph: GraphDict = {
-            'node_indices':     np.array(node_indices, dtype=int),
-            'node_attributes':  np.array(node_attributes, dtype=float),
-            'edge_indices':     np.array(edge_indices, dtype=int) if edge_indices else np.empty((0, 2), dtype=int),
-            'edge_attributes':  np.array(edge_attributes, dtype=float) if edge_attributes else np.empty((0, self._base_edge_dim + self._EXTRA_EDGE_FEATURES), dtype=float),
+            'node_indices': np.array(node_indices, dtype=int),
+            'node_attributes': np.array(node_attributes, dtype=float),
+            'edge_indices': np.array(edge_indices, dtype=int)
+            if edge_indices
+            else np.empty((0, 2), dtype=int),
+            'edge_attributes': np.array(edge_attributes, dtype=float)
+            if edge_attributes
+            else np.empty(
+                (0, self._base_edge_dim + self._EXTRA_EDGE_FEATURES), dtype=float
+            ),
             'graph_attributes': np.array(graph_attributes, dtype=float),
-            'graph_labels':     graph_labels,
-            'graph_repr':       graph_repr,
-            'node_atoms':       np.array(node_atoms, dtype=str),
-            'edge_bonds':       np.array(edge_bonds, dtype=str),
+            'graph_labels': graph_labels,
+            'graph_repr': graph_repr,
+            'node_atoms': np.array(node_atoms, dtype=str),
+            'edge_bonds': np.array(edge_bonds, dtype=str),
         }
 
         return graph
@@ -864,6 +1026,7 @@ class MetalOrganicProcessing(AbstractProcessing):
 # ======================================================================================
 # UTILITY FUNCTIONS
 # ======================================================================================
+
 
 def decompose_complex_smiles(
     smiles: str,
@@ -966,8 +1129,9 @@ def decompose_complex_smiles(
         parent_to_local = {parent: local for local, parent in enumerate(fi)}
 
         # Which atoms in this fragment were bonded to the metal?
-        local_conn = [parent_to_local[adj] for adj in adjusted_neighbors
-                      if adj in parent_to_local]
+        local_conn = [
+            parent_to_local[adj] for adj in adjusted_neighbors if adj in parent_to_local
+        ]
 
         if not local_conn:
             continue  # Fragment was not bonded to the metal (counter-ion / solvent)
@@ -1030,7 +1194,10 @@ def _mol_from_smiles_lenient(smiles: str) -> Optional[Chem.Mol]:
         return None
 
     try:
-        Chem.SanitizeMol(mol, Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES)
+        Chem.SanitizeMol(
+            mol,
+            Chem.SanitizeFlags.SANITIZE_ALL ^ Chem.SanitizeFlags.SANITIZE_PROPERTIES,
+        )
     except Exception:
         # If even partial sanitization fails, return the unsanitized mol as a last resort.
         # Some property queries may return incorrect values, but at least we won't crash.

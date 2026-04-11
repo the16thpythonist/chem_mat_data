@@ -21,6 +21,7 @@ tmQM: Balcells & Skjelstad, *JCIM* 2020.
 
 Results are written to ``results/create_graph_datasets__tm_sco/debug/``.
 """
+
 import os
 import json
 import gzip
@@ -35,13 +36,13 @@ import yaml
 import msgpack
 import requests
 import numpy as np
-import rdkit.Chem as Chem
 import pandas as pd
 from rich.pretty import pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
 from rdkit import RDLogger
+
 RDLogger.DisableLog('rdApp.*')
 
 import chem_mat_data._typing as typc
@@ -54,8 +55,12 @@ from chem_mat_data.data import default, ext_hook, save_graphs
 
 # == SOURCE PARAMETERS ==
 
-DOWNLOAD_URL_ZENODO: str = 'https://zenodo.org/api/records/11404217/files/Data.zip/content'
-DOWNLOAD_URL_TMQM: str = 'https://raw.githubusercontent.com/uiocompcat/tmQM/master/tmQM/tmQM_y.csv'
+DOWNLOAD_URL_ZENODO: str = (
+    'https://zenodo.org/api/records/11404217/files/Data.zip/content'
+)
+DOWNLOAD_URL_TMQM: str = (
+    'https://raw.githubusercontent.com/uiocompcat/tmQM/master/tmQM/tmQM_y.csv'
+)
 
 # :param APPLICATION_CSV_PATH:
 #       Path within the Zenodo zip for the tmSCO application CSV.
@@ -91,9 +96,7 @@ METADATA: dict = {
         'https://github.com/uiocompcat/tmQM',
     ],
     'verbose': 'tmSCO — SpinCrossover TMC Subset with QM Properties',
-    'target_descriptions': {
-        str(i): col for i, col in enumerate(TARGET_COLUMNS)
-    },
+    'target_descriptions': {str(i): col for i, col in enumerate(TARGET_COLUMNS)},
 }
 
 # == PROCESSING PARAMETERS ==
@@ -118,12 +121,13 @@ experiment = Experiment(
 # PROCESSING WORKER
 # ======================================================================================
 
-class TMCProcessingWorker(multiprocessing.Process):
 
-    def __init__(self,
-                 input_queue: multiprocessing.Queue,
-                 output_queue: multiprocessing.Queue,
-                 ):
+class TMCProcessingWorker(multiprocessing.Process):
+    def __init__(
+        self,
+        input_queue: multiprocessing.Queue,
+        output_queue: multiprocessing.Queue,
+    ):
         super().__init__()
         self.input_queue = input_queue
         self.output_queue = output_queue
@@ -152,7 +156,9 @@ class TMCProcessingWorker(multiprocessing.Process):
             except Exception as exc:
                 metal = data.get('metal', '?')
                 cid = data.get('complex_id', '?')
-                print(f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}')
+                print(
+                    f' ! error processing {cid} ({metal}) - {exc.__class__.__name__}: {exc}'
+                )
                 graph = None
 
             graph_encoded = msgpack.packb(graph, default=default)
@@ -162,6 +168,7 @@ class TMCProcessingWorker(multiprocessing.Process):
 # ======================================================================================
 # HOOKS
 # ======================================================================================
+
 
 @experiment.hook('add_graph_metadata', default=True, replace=False)
 def add_graph_metadata(e: Experiment, data: dict, graph: typc.GraphDict) -> None:
@@ -179,7 +186,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     # -- Download and cache Zenodo zip --
     zip_path = os.path.join(e.path, 'tmqm_applications_data.zip')
     if not os.path.exists(zip_path):
-        e.log(f'downloading Zenodo archive (~588 MB) ...')
+        e.log('downloading Zenodo archive (~588 MB) ...')
         e.log('this may take several minutes on the first run...')
         response = requests.get(e.DOWNLOAD_URL_ZENODO, timeout=1800, stream=True)
         response.raise_for_status()
@@ -188,27 +195,29 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
                 f.write(chunk)
         e.log(f'downloaded {os.path.getsize(zip_path) / 1024 / 1024:.1f} MB')
     else:
-        e.log(f'using cached Zenodo archive')
+        e.log('using cached Zenodo archive')
 
     # -- Extract refcodes for this application --
     e.log(f'extracting refcodes from {e.APPLICATION_CSV_PATH} ...')
     with zipfile.ZipFile(zip_path, 'r') as zf:
         with zf.open(e.APPLICATION_CSV_PATH) as csv_file:
             df_app = pd.read_csv(csv_file, usecols=['refcode'])
-            app_refcodes: Set[str] = set(df_app['refcode'].dropna().astype(str).str.strip())
+            app_refcodes: Set[str] = set(
+                df_app['refcode'].dropna().astype(str).str.strip()
+            )
     e.log(f'found {len(app_refcodes)} refcodes')
 
     # -- Download and cache tmQM CSV --
     tmqm_csv_path = os.path.join(e.path, 'tmqm_y.csv')
     if not os.path.exists(tmqm_csv_path):
-        e.log(f'downloading tmQM CSV ...')
+        e.log('downloading tmQM CSV ...')
         response = requests.get(e.DOWNLOAD_URL_TMQM, timeout=300)
         response.raise_for_status()
         with open(tmqm_csv_path, 'w') as f:
             f.write(response.text)
         e.log(f'downloaded {len(response.content) / 1024 / 1024:.1f} MB')
     else:
-        e.log(f'using cached tmQM CSV')
+        e.log('using cached tmQM CSV')
 
     # -- Parse tmQM, filter to application subset, decompose SMILES --
     e.log('parsing tmQM and filtering to application subset...')
@@ -254,9 +263,11 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         if e.MAX_ELEMENTS is not None and len(dataset) >= e.MAX_ELEMENTS:
             break
 
-    e.log(f'parsed {len(dataset)} complexes '
-          f'({skipped_no_smiles} missing SMILES, '
-          f'{skipped_decompose} decomposition failures)')
+    e.log(
+        f'parsed {len(dataset)} complexes '
+        f'({skipped_no_smiles} missing SMILES, '
+        f'{skipped_decompose} decomposition failures)'
+    )
     return dataset
 
 
@@ -294,6 +305,7 @@ def save_csv(e: Experiment, dataset: Dict[int, dict]) -> None:
 # ======================================================================================
 # MAIN EXPERIMENT
 # ======================================================================================
+
 
 @experiment
 def experiment(e: Experiment):
@@ -339,7 +351,6 @@ def experiment(e: Experiment):
         prev_count = 0
 
         while count < num_indices:
-
             while not input_queue.full() and len(indices) != 0:
                 index = indices.pop()
                 data = dataset[index]
@@ -358,10 +369,14 @@ def experiment(e: Experiment):
                 num_remaining = num_elements - (count + 1)
                 time_per_element = time_passed / (count + 1)
                 time_remaining = time_per_element * num_remaining
-                eta = datetime.datetime.now() + datetime.timedelta(seconds=time_remaining)
-                e.log(f' * {count:05d}/{num_elements} done'
-                      f' - time passed: {time_passed / 60:.2f}m'
-                      f' - eta: {eta:%a %d.%m %H:%M}')
+                eta = datetime.datetime.now() + datetime.timedelta(
+                    seconds=time_remaining
+                )
+                e.log(
+                    f' * {count:05d}/{num_elements} done'
+                    f' - time passed: {time_passed / 60:.2f}m'
+                    f' - eta: {eta:%a %d.%m %H:%M}'
+                )
 
         end_time = time.time()
         duration = end_time - start_time
@@ -387,7 +402,10 @@ def experiment(e: Experiment):
     if e.COMPRESS:
         e.log('compressing...')
         compressed_path = os.path.join(e.path, e.DATASET_NAME + '.mpack.gz')
-        with open(dataset_path, 'rb') as f_in, gzip.open(compressed_path, 'wb') as f_out:
+        with (
+            open(dataset_path, 'rb') as f_in,
+            gzip.open(compressed_path, 'wb') as f_out,
+        ):
             shutil.copyfileobj(f_in, f_out)
 
         compressed_size = os.path.getsize(compressed_path)

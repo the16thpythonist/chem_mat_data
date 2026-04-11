@@ -1,11 +1,10 @@
 import pandas as pd
 import rdkit.Chem as Chem
-from typing import List, Dict
+from typing import Dict
 from rich.pretty import pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
-from chem_mat_data import load_smiles_dataset
 from chem_mat_data.connectors import FileDownloadSource
 from chem_mat_data.data import HOPV15Parser
 
@@ -24,12 +23,12 @@ DESCRIPTION: str = (
 )
 
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'tags': [
-        'Molecules', 
-        'SMILES', 
+        'Molecules',
+        'SMILES',
         'Organic Electronics',
         'Solar Cells',
     ],
@@ -44,8 +43,8 @@ METADATA: dict = {
         '2': 'gap - Gap between HOMO and LUMO energy levels in eV',
         '3': 'JSC - Closed circuit current in mA/cm2',
         '4': 'VOC - Open circuit voltage in V',
-        '5': 'PCE - Power conversion efficience in percent'
-    }
+        '5': 'PCE - Power conversion efficience in percent',
+    },
 }
 
 experiment = Experiment.extend(
@@ -55,10 +54,11 @@ experiment = Experiment.extend(
     glob=globals(),
 )
 
+
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
-    
-    # This file contains the dataset in question. It is available as a download link from a 
+
+    # This file contains the dataset in question. It is available as a download link from a
     # Chemarxiv paper.
     e.log('Downloading dataset...')
     with FileDownloadSource(
@@ -67,24 +67,25 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         ssl_verify=False,
     ) as source:
         path = source.fetch()
-        
+
         parser = HOPV15Parser(path=path)
         mol_tuples = parser.parse_all()
         e.log(f'Downloaded dataset with {len(mol_tuples)} entries')
-        
+
         pprint(mol_tuples[:3], max_depth=3)
         pprint(mol_tuples[0][1]['experimental_properties'], max_depth=3)
-        
+
         # Convert the mol_tuples into a dataframe format
         df_data = []
         for mol, data in mol_tuples:
-            
             smiles = data.get('smiles')
             # Create a row with SMILES and experimental properties
             if data.get('experimental_properties'):
                 row = {
                     'smiles': smiles,
-                    **data['experimental_properties']  # Flatten experimental properties into the row
+                    **data[
+                        'experimental_properties'
+                    ],  # Flatten experimental properties into the row
                 }
                 df_data.append(row)
             else:
@@ -93,33 +94,31 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         df = pd.DataFrame(df_data)
         print(df.head())
         e.log(f'Created dataframe with {len(df)} rows and columns: {list(df.columns)}')
-        
-    
-    # Now that we have the raw data as a dataframe, we can convert it into the expected 
-    # dictionary format where each entry in the dictionary corresponds to a single data point 
+
+    # Now that we have the raw data as a dataframe, we can convert it into the expected
+    # dictionary format where each entry in the dictionary corresponds to a single data point
     # in the dataset.
     e.log('Processing dataset...')
     dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
-
         data['smiles'] = data['smiles']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGET VALUES ==
-        # Only one target. We combine the experimental and computational data into a single list 
+        # Only one target. We combine the experimental and computational data into a single list
         data['targets'] = [
             data['HOMO'],
             data['LUMO'],
@@ -132,5 +131,6 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
         dataset[index] = data
 
     return dataset
+
 
 experiment.run_if_main()

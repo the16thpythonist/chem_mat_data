@@ -1,5 +1,5 @@
 import rdkit.Chem as Chem
-from typing import List, Dict
+from typing import Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -14,16 +14,16 @@ DESCRIPTION: str = (
 )
 
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'tags': [
-        'Molecules', 
-        'SMILES', 
+        'Molecules',
+        'SMILES',
         'Experimental',
         'Hydration Free Energy',
         'Molecular Dynamics',
-        'Hydration'
+        'Hydration',
     ],
     'verbose': 'Hydration Free Energy',
     'sources': [
@@ -35,7 +35,7 @@ METADATA: dict = {
     'target_descriptions': {
         '0': 'HDF expt - Experimentally determined hydration free energy',
         '1': 'HDF calc - hydration free energy calculated using molecular dynamics simulations',
-    }
+    },
 }
 
 experiment = Experiment.extend(
@@ -45,6 +45,7 @@ experiment = Experiment.extend(
     glob=globals(),
 )
 
+
 @experiment.hook('add_graph_metadata', default=False, replace=True)
 def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
@@ -52,35 +53,36 @@ def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
     graph['graph_id'] = data['iupac']
 
+
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
-    
+
     df = load_smiles_dataset('freesolv')
     dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
-
         data['smiles'] = data['smiles']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGET VALUES ==
-        # Only one target. We combine the experimental and computational data into a single list 
+        # Only one target. We combine the experimental and computational data into a single list
         data['targets'] = [data['expt'], data['calc']]
 
         dataset[index] = data
 
     return dataset
+
 
 experiment.run_if_main()

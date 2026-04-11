@@ -1,5 +1,4 @@
 import os
-import tempfile
 import unittest
 from unittest import TestCase
 
@@ -47,10 +46,12 @@ class TestHOPV15FigshareDownload(TestCase):
             # Check basic file properties
             with open(downloaded_path, 'r') as f:
                 content = f.read()
-                self.assertGreater(len(content), 1000000, "File should be substantial size")
+                self.assertGreater(
+                    len(content), 1000000, 'File should be substantial size'
+                )
 
                 lines = content.split('\n')
-                self.assertGreater(len(lines), 100000, "File should have many lines")
+                self.assertGreater(len(lines), 100000, 'File should have many lines')
 
             # Parse the first molecule directly using the updated parser
             parser = HOPV15Parser(path=downloaded_path)
@@ -94,11 +95,15 @@ class TestHOPV15FigshareDownload(TestCase):
                         self.assertIsInstance(exp_props[prop], (int, float))
 
             # Log success information
-            print(f"Successfully parsed first molecule from Figshare HOPV15 dataset using 2-step parser")
-            print(f"Molecule SMILES: {info['smiles']}")
-            print(f"Has conformers: {'conformers' in info and len(info.get('conformers', [])) > 0}")
-            print(f"Has experimental properties: {'experimental_properties' in info}")
-            print(f"Original file size: {len(content)} characters, {len(lines)} lines")
+            print(
+                'Successfully parsed first molecule from Figshare HOPV15 dataset using 2-step parser'
+            )
+            print(f'Molecule SMILES: {info["smiles"]}')
+            print(
+                f'Has conformers: {"conformers" in info and len(info.get("conformers", [])) > 0}'
+            )
+            print(f'Has experimental properties: {"experimental_properties" in info}')
+            print(f'Original file size: {len(content)} characters, {len(lines)} lines')
 
     def test_download_and_parse_multiple_molecules_from_figshare(self):
         """
@@ -126,7 +131,7 @@ class TestHOPV15FigshareDownload(TestCase):
 
             # Basic validation
             self.assertIsInstance(mol_tuples, list)
-            self.assertGreater(len(mol_tuples), 0, "Should parse at least one molecule")
+            self.assertGreater(len(mol_tuples), 0, 'Should parse at least one molecule')
 
             # Test first few molecules (limit to avoid long test time)
             molecules_to_test = min(5, len(mol_tuples))
@@ -150,10 +155,12 @@ class TestHOPV15FigshareDownload(TestCase):
                 parsed_smiles = Chem.MolToSmiles(mol)
                 self.assertIsInstance(parsed_smiles, str)
 
-            print(f"Multiple molecule parsing successful. Parsed {len(mol_tuples)} molecules")
-            print(f"First molecule SMILES: {mol_tuples[0][1]['smiles']}")
+            print(
+                f'Multiple molecule parsing successful. Parsed {len(mol_tuples)} molecules'
+            )
+            print(f'First molecule SMILES: {mol_tuples[0][1]["smiles"]}')
             if len(mol_tuples) > 1:
-                print(f"Second molecule SMILES: {mol_tuples[1][1]['smiles']}")
+                print(f'Second molecule SMILES: {mol_tuples[1][1]["smiles"]}')
 
     def test_figshare_file_format_consistency(self):
         """
@@ -179,19 +186,31 @@ class TestHOPV15FigshareDownload(TestCase):
                 lines = f.readlines()
 
             # Basic file validation
-            self.assertGreater(len(content), 15000000, "File should be substantial size")
-            self.assertGreater(len(lines), 300000, "File should have many lines")
+            self.assertGreater(
+                len(content), 15000000, 'File should be substantial size'
+            )
+            self.assertGreater(len(lines), 300000, 'File should have many lines')
 
             # Check for expected patterns in the file
             # Count occurrences of key patterns
-            smiles_pattern_count = content.count('InChI=')  # InChI lines should indicate molecule entries
+            smiles_pattern_count = content.count(
+                'InChI='
+            )  # InChI lines should indicate molecule entries
             qchem_count = content.count('QChem ')
             conformer_count = content.count('Conformer ')
 
             # Verify we have substantial data
-            self.assertGreater(smiles_pattern_count, 100, "Should have many InChI entries indicating molecules")
-            self.assertGreater(qchem_count, 1000, "Should have many QChem calculation entries")
-            self.assertGreater(conformer_count, 1000, "Should have many conformer entries")
+            self.assertGreater(
+                smiles_pattern_count,
+                100,
+                'Should have many InChI entries indicating molecules',
+            )
+            self.assertGreater(
+                qchem_count, 1000, 'Should have many QChem calculation entries'
+            )
+            self.assertGreater(
+                conformer_count, 1000, 'Should have many conformer entries'
+            )
 
             # Check that we have experimental data (CSV-like lines with numerical data)
             csv_pattern_count = 0
@@ -202,7 +221,9 @@ class TestHOPV15FigshareDownload(TestCase):
                     if len(parts) > 5:  # Should have multiple comma-separated values
                         csv_pattern_count += 1
 
-            self.assertGreater(csv_pattern_count, 10, "Should find CSV-like experimental data lines")
+            self.assertGreater(
+                csv_pattern_count, 10, 'Should find CSV-like experimental data lines'
+            )
 
             # Test that we can parse the file using the new 2-step parser
             parser = HOPV15Parser(path=downloaded_path)
@@ -216,13 +237,15 @@ class TestHOPV15FigshareDownload(TestCase):
             # Check if experimental properties are present
             has_experimental_data = 'experimental_properties' in info
 
-            print(f"Dataset file format validation successful using 2-step parser")
-            print(f"File size: {len(content)} characters, {len(lines)} lines")
-            print(f"InChI entries found: {smiles_pattern_count}")
-            print(f"QChem calculations found: {qchem_count}")
-            print(f"Conformer entries found: {conformer_count}")
-            print(f"CSV-like experimental data lines found: {csv_pattern_count}")
-            print(f"First molecule parsed successfully with experimental data: {has_experimental_data}")
+            print('Dataset file format validation successful using 2-step parser')
+            print(f'File size: {len(content)} characters, {len(lines)} lines')
+            print(f'InChI entries found: {smiles_pattern_count}')
+            print(f'QChem calculations found: {qchem_count}')
+            print(f'Conformer entries found: {conformer_count}')
+            print(f'CSV-like experimental data lines found: {csv_pattern_count}')
+            print(
+                f'First molecule parsed successfully with experimental data: {has_experimental_data}'
+            )
 
 
 if __name__ == '__main__':

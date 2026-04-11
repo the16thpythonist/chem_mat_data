@@ -19,6 +19,7 @@ Example usage:
     #  'spin_multiplicity', 'coordination_number', 'ligand_smiles',
     #  'connecting_atom_indices', 'geometry', ...]
 """
+
 import json
 import logging
 import tempfile
@@ -40,11 +41,12 @@ JSON_COLUMNS: List[str] = [
 ]
 
 
-def load_tmc_dataset(dataset_name: str,
-                     folder_path: str = tempfile.gettempdir(),
-                     config: Optional[Config] = None,
-                     use_cache: bool = True,
-                     ) -> pd.DataFrame:
+def load_tmc_dataset(
+    dataset_name: str,
+    folder_path: str = tempfile.gettempdir(),
+    config: Optional[Config] = None,
+    use_cache: bool = True,
+) -> pd.DataFrame:
     """
     Load a transition metal complex dataset in decomposed tabular format.
 
@@ -81,6 +83,7 @@ def load_tmc_dataset(dataset_name: str,
         min_ver = metadata.get('min_version')
         if min_ver:
             from chem_mat_data.utils import check_version_compatible, get_version
+
             if not check_version_compatible(min_ver):
                 logger.warning(
                     f'Dataset "{dataset_name}" requires chem_mat_data >= {min_ver}, '

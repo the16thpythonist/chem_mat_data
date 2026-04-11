@@ -1,10 +1,9 @@
 import pandas as pd
 import rdkit.Chem as Chem
-from typing import List, Dict
+from typing import Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
-from chem_mat_data import load_smiles_dataset
 from chem_mat_data.connectors import FileDownloadSource
 
 DATASET_NAME: str = 'half_life'
@@ -22,12 +21,12 @@ DESCRIPTION: str = (
 )
 
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'tags': [
-        'Molecules', 
-        'SMILES', 
+        'Molecules',
+        'SMILES',
         'Environment',
         'Half-Life',
     ],
@@ -38,7 +37,7 @@ METADATA: dict = {
     # TADF: Thermally Activated Delayed Fluorescence
     'target_descriptions': {
         '0': 'DT50 - Mean Experimental half-life (DT50) in days under aerobic soil conditions'
-    }
+    },
 }
 
 experiment = Experiment.extend(
@@ -48,10 +47,11 @@ experiment = Experiment.extend(
     glob=globals(),
 )
 
+
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
-    
-    # This file contains the dataset in question. It is available as a download link from a 
+
+    # This file contains the dataset in question. It is available as a download link from a
     # Chemarxiv paper.
     e.log('Downloading dataset...')
     with FileDownloadSource(
@@ -61,39 +61,39 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     ) as source:
         path = source.fetch()
         df = pd.read_excel(path, sheet_name=1)
-        
+
         e.log(f'Downloaded dataset with {len(df)} entries')
         print(df.head())
-    
-    # Now that we have the raw data as a dataframe, we can convert it into the expected 
-    # dictionary format where each entry in the dictionary corresponds to a single data point 
+
+    # Now that we have the raw data as a dataframe, we can convert it into the expected
+    # dictionary format where each entry in the dictionary corresponds to a single data point
     # in the dataset.
     e.log('Processing dataset...')
     dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
-
         data['smiles'] = data['SMILES']
-        
+
         # == MOLECULE FILTERS ==
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGET VALUES ==
-        # Only one target. We combine the experimental and computational data into a single list 
+        # Only one target. We combine the experimental and computational data into a single list
         data['targets'] = [data['DT50_gmean']]
 
         dataset[index] = data
 
     return dataset
+
 
 experiment.run_if_main()

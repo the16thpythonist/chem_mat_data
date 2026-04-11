@@ -1,5 +1,5 @@
 import rdkit.Chem as Chem
-from typing import List, Dict
+from typing import Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
@@ -11,7 +11,8 @@ __TESTING__ = False
 
 DESCRIPTION: str = (
     'The MoleculeNet lipophilicity dataset contains experimental octanol/water '
-    'distribution coefficient values ''(logD at pH 7.4) for 4200 compounds curated '
+    'distribution coefficient values '
+    '(logD at pH 7.4) for 4200 compounds curated '
     'from the ChEMBL database. This regression dataset was contributed to MoleculeNet '
     'by Patrick Hop and serves as a benchmark for evaluating machine learning models  '
     'ability to predict molecular lipophilicity from chemical structure. '
@@ -21,12 +22,12 @@ DESCRIPTION: str = (
 )
 
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'tags': [
-        'Molecules', 
-        'SMILES', 
+        'Molecules',
+        'SMILES',
         'Experimental',
         'Partition Coefficient',
     ],
@@ -38,7 +39,7 @@ METADATA: dict = {
     # TADF: Thermally Activated Delayed Fluorescence
     'target_descriptions': {
         '0': 'logD - Experimental logD (pH 7.4) octanol-water distribution coefficient',
-    }
+    },
 }
 
 experiment = Experiment.extend(
@@ -47,6 +48,7 @@ experiment = Experiment.extend(
     namespace=file_namespace(__file__),
     glob=globals(),
 )
+
 
 @experiment.hook('add_graph_metadata', default=False, replace=True)
 def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
@@ -63,27 +65,28 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     dataset: Dict[int, dict] = {}
     for index, data in enumerate(df.to_dict('records')):
         data['smiles'] = data['smiles']
-        
+
         # === MOLECULE FILTERS ===
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         # == TARGETS ==
         # We have only one target
         data['targets'] = [data['exp']]
 
         dataset[index] = data
-    
+
     return dataset
+
 
 experiment.run_if_main()

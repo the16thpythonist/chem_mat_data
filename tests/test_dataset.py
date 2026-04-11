@@ -1,6 +1,7 @@
 """
 Unit tests for streaming dataset functionality.
 """
+
 import os
 import tempfile
 import pytest
@@ -8,7 +9,13 @@ import numpy as np
 import rdkit.Chem as Chem
 import rdkit.Chem.AllChem as AllChem
 
-from chem_mat_data.dataset import SmilesDataset, XyzDataset, GraphDataset, ShuffleDataset, identity_mol_transform
+from chem_mat_data.dataset import (
+    SmilesDataset,
+    XyzDataset,
+    GraphDataset,
+    ShuffleDataset,
+    identity_mol_transform,
+)
 from chem_mat_data.processing import MoleculeProcessing
 
 
@@ -23,7 +30,7 @@ class TestSmilesDataset:
                 smiles_column='smiles',
                 target_columns=['target'],
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             assert dataset.dataset == '_test'
@@ -35,9 +42,7 @@ class TestSmilesDataset:
         """Test that iteration yields correct tuples."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             count = 0
@@ -54,9 +59,7 @@ class TestSmilesDataset:
         """Test that __len__ returns correct count."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             length = len(dataset)
@@ -71,9 +74,7 @@ class TestSmilesDataset:
         """Test that __len__ matches actual iteration count."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             expected_length = len(dataset)
@@ -85,9 +86,7 @@ class TestSmilesDataset:
         """Test that dataset can be iterated multiple times."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # First iteration
@@ -107,7 +106,7 @@ class TestSmilesDataset:
                 smiles_column='smiles',
                 target_columns=['target', 'target_1'],
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             for smiles, properties in dataset:
@@ -124,7 +123,7 @@ class TestSmilesDataset:
                 smiles_column='smiles',
                 target_columns=['target'],
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             for smiles, properties in dataset:
@@ -140,10 +139,7 @@ class TestGraphDataset:
         """Test GraphDataset initialization in sequential mode."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             assert dataset.dataset == '_test'
@@ -158,10 +154,7 @@ class TestGraphDataset:
         """Test GraphDataset initialization in parallel mode."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=2,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=2, folder_path=temp_path, use_cache=True
             )
 
             assert dataset.num_workers == 2
@@ -171,10 +164,7 @@ class TestGraphDataset:
         """Test that sequential mode yields valid graph dicts."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             count = 0
@@ -201,10 +191,7 @@ class TestGraphDataset:
         """Test that parallel mode yields valid graph dicts."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=2,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=2, folder_path=temp_path, use_cache=True
             )
 
             count = 0
@@ -226,19 +213,13 @@ class TestGraphDataset:
         with tempfile.TemporaryDirectory() as temp_path:
             # Sequential results
             dataset_seq = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
             results_seq = list(dataset_seq)
 
             # Parallel results
             dataset_par = GraphDataset(
-                dataset='_test',
-                num_workers=2,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=2, folder_path=temp_path, use_cache=True
             )
             results_par = list(dataset_par)
 
@@ -247,17 +228,15 @@ class TestGraphDataset:
 
             # Check order is preserved by comparing graph_labels
             for i, (g_seq, g_par) in enumerate(zip(results_seq, results_par)):
-                assert g_seq['graph_labels'] == g_par['graph_labels'], \
-                    f"Order mismatch at index {i}"
+                assert g_seq['graph_labels'] == g_par['graph_labels'], (
+                    f'Order mismatch at index {i}'
+                )
 
     def test_length(self):
         """Test that __len__ works correctly."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             length = len(dataset)
@@ -268,10 +247,7 @@ class TestGraphDataset:
         """Test that GraphDataset can be iterated multiple times."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             # First iteration
@@ -287,10 +263,7 @@ class TestGraphDataset:
         """Test that manual cleanup works."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=2,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=2, folder_path=temp_path, use_cache=True
             )
 
             # Process one item
@@ -306,18 +279,13 @@ class TestGraphDataset:
         with tempfile.TemporaryDirectory() as temp_path:
             # Get SMILES data
             smiles_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
             smiles_data = list(smiles_dataset)
 
             # Get graph data
             graph_dataset = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
             graph_data = list(graph_dataset)
 
@@ -337,7 +305,7 @@ class TestGraphDataset:
                 num_workers=0,
                 processing_class=MoleculeProcessing,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             # Should work fine
@@ -352,7 +320,7 @@ class TestGraphDataset:
                 num_workers=2,
                 buffer_size=50,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             assert dataset.buffer_size == 50
@@ -369,7 +337,7 @@ class TestGraphDataset:
                     dataset='_test',
                     num_workers=num_workers,
                     folder_path=temp_path,
-                    use_cache=True
+                    use_cache=True,
                 )
 
                 graphs = list(dataset)
@@ -389,10 +357,7 @@ class TestGraphDatasetMolTransform:
         """Test that default identity transform works correctly."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             # Should use identity_mol_transform by default
@@ -407,6 +372,7 @@ class TestGraphDatasetMolTransform:
 
     def test_custom_transform_sequential(self):
         """Test that custom transform works in sequential mode."""
+
         def add_hydrogens(mol):
             return Chem.AddHs(mol)
 
@@ -416,7 +382,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=0,
                 mol_transform=add_hydrogens,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             # Should produce valid graphs with more nodes (due to H atoms)
@@ -430,6 +396,7 @@ class TestGraphDatasetMolTransform:
 
     def test_custom_transform_parallel(self):
         """Test that custom transform works in parallel mode."""
+
         def add_hydrogens(mol):
             return Chem.AddHs(mol)
 
@@ -439,7 +406,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=2,
                 mol_transform=add_hydrogens,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             # Should produce valid graphs - test first 10
@@ -458,10 +425,7 @@ class TestGraphDatasetMolTransform:
         with tempfile.TemporaryDirectory() as temp_path:
             # Without hydrogens (default)
             dataset_no_h = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
             graph_no_h = next(iter(dataset_no_h))
             num_atoms_no_h = len(graph_no_h['node_indices'])
@@ -472,7 +436,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=0,
                 mol_transform=lambda mol: Chem.AddHs(mol),
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
             graph_with_h = next(iter(dataset_with_h))
             num_atoms_with_h = len(graph_with_h['node_indices'])
@@ -489,7 +453,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=0,
                 mol_transform=lambda mol: Chem.AddHs(mol),
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
             graph_with_h = next(iter(dataset_with_h))
             num_atoms_with_h = len(graph_with_h['node_indices'])
@@ -500,7 +464,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=0,
                 mol_transform=lambda mol: Chem.RemoveHs(mol),
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
             graph_no_h = next(iter(dataset_no_h))
             num_atoms_no_h = len(graph_no_h['node_indices'])
@@ -510,6 +474,7 @@ class TestGraphDatasetMolTransform:
 
     def test_3d_conformer_generation(self):
         """Test generating 3D conformers for molecules."""
+
         def add_3d_coords(mol):
             """Add 3D coordinates via conformer generation."""
             mol = Chem.AddHs(mol)
@@ -526,7 +491,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=0,
                 mol_transform=add_3d_coords,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             # Should produce valid graphs - test first 2 (3D is computationally expensive)
@@ -545,10 +510,7 @@ class TestGraphDatasetMolTransform:
         with tempfile.TemporaryDirectory() as temp_path:
             # Get first 10 results without transform
             dataset_no_transform = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
             labels_no_transform = []
             for i, g in enumerate(dataset_no_transform):
@@ -562,7 +524,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=0,
                 mol_transform=lambda mol: Chem.AddHs(mol),
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
             labels_with_transform = []
             for i, g in enumerate(dataset_with_transform):
@@ -575,6 +537,7 @@ class TestGraphDatasetMolTransform:
 
     def test_sequential_parallel_consistency(self):
         """Test that sequential and parallel modes produce same results with transform."""
+
         def add_hydrogens(mol):
             return Chem.AddHs(mol)
 
@@ -585,7 +548,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=0,
                 mol_transform=add_hydrogens,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
             results_seq = []
             for i, g in enumerate(dataset_seq):
@@ -599,7 +562,7 @@ class TestGraphDatasetMolTransform:
                 num_workers=2,
                 mol_transform=add_hydrogens,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
             results_par = []
             for i, g in enumerate(dataset_par):
@@ -623,15 +586,11 @@ class TestShuffleDataset:
         """Test ShuffleDataset initialization."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=100,
-                seed=42
+                dataset=base_dataset, buffer_size=100, seed=42
             )
 
             assert shuffled_dataset.dataset is base_dataset
@@ -642,15 +601,10 @@ class TestShuffleDataset:
         """Test that __len__ returns same length as base dataset."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
-            shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10
-            )
+            shuffled_dataset = ShuffleDataset(dataset=base_dataset, buffer_size=10)
 
             assert len(shuffled_dataset) == len(base_dataset)
 
@@ -658,9 +612,7 @@ class TestShuffleDataset:
         """Test that all items are yielded exactly once."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # Get original items
@@ -668,9 +620,7 @@ class TestShuffleDataset:
 
             # Get shuffled items
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
+                dataset=base_dataset, buffer_size=10, seed=42
             )
             shuffled_smiles = [smiles for smiles, _ in shuffled_dataset]
 
@@ -687,9 +637,7 @@ class TestShuffleDataset:
         """Test that items are actually shuffled (order changes)."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # Get original order
@@ -697,9 +645,7 @@ class TestShuffleDataset:
 
             # Get shuffled order (with seed for reproducibility)
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=100,
-                seed=42
+                dataset=base_dataset, buffer_size=100, seed=42
             )
             shuffled_smiles = [smiles for smiles, _ in shuffled_dataset]
 
@@ -708,33 +654,26 @@ class TestShuffleDataset:
             if len(original_smiles) > 2:
                 # Check that at least some positions changed
                 # Note: there's a small probability they could be the same, but very unlikely
-                differences = sum(1 for i in range(len(original_smiles))
-                                if original_smiles[i] != shuffled_smiles[i])
-                assert differences > 0, "Shuffling should change the order"
+                differences = sum(
+                    1
+                    for i in range(len(original_smiles))
+                    if original_smiles[i] != shuffled_smiles[i]
+                )
+                assert differences > 0, 'Shuffling should change the order'
 
     def test_seed_reproducibility(self):
         """Test that same seed produces same shuffle order."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # First shuffle with seed=42
-            shuffled1 = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
-            )
+            shuffled1 = ShuffleDataset(dataset=base_dataset, buffer_size=10, seed=42)
             order1 = [smiles for smiles, _ in shuffled1]
 
             # Second shuffle with same seed
-            shuffled2 = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
-            )
+            shuffled2 = ShuffleDataset(dataset=base_dataset, buffer_size=10, seed=42)
             order2 = [smiles for smiles, _ in shuffled2]
 
             # Should be identical
@@ -744,25 +683,15 @@ class TestShuffleDataset:
         """Test that different seeds produce different orders."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # Shuffle with seed=42
-            shuffled1 = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
-            )
+            shuffled1 = ShuffleDataset(dataset=base_dataset, buffer_size=10, seed=42)
             order1 = [smiles for smiles, _ in shuffled1]
 
             # Shuffle with seed=123
-            shuffled2 = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=123
-            )
+            shuffled2 = ShuffleDataset(dataset=base_dataset, buffer_size=10, seed=123)
             order2 = [smiles for smiles, _ in shuffled2]
 
             # Should be different (with very high probability for different seeds)
@@ -773,10 +702,7 @@ class TestShuffleDataset:
         """Test that ShuffleDataset works with GraphDataset."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = GraphDataset(
-                dataset='_test',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             # Get original labels
@@ -784,30 +710,25 @@ class TestShuffleDataset:
 
             # Shuffle
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
+                dataset=base_dataset, buffer_size=10, seed=42
             )
             shuffled_labels = [graph['graph_labels'] for graph in shuffled_dataset]
 
             # Check all items present
             assert len(shuffled_labels) == len(original_labels)
-            assert set(tuple(l) for l in shuffled_labels) == set(tuple(l) for l in original_labels)
+            assert set(tuple(l) for l in shuffled_labels) == set(
+                tuple(l) for l in original_labels
+            )
 
     def test_works_with_parallel_graph_dataset(self):
         """Test that ShuffleDataset works with parallel GraphDataset."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = GraphDataset(
-                dataset='_test',
-                num_workers=2,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', num_workers=2, folder_path=temp_path, use_cache=True
             )
 
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
+                dataset=base_dataset, buffer_size=10, seed=42
             )
 
             # Should iterate successfully
@@ -818,15 +739,11 @@ class TestShuffleDataset:
         """Test that ShuffleDataset can be iterated multiple times."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
+                dataset=base_dataset, buffer_size=10, seed=42
             )
 
             # First iteration
@@ -843,9 +760,7 @@ class TestShuffleDataset:
         """Test that different buffer sizes work correctly."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             original_smiles = set(smiles for smiles, _ in base_dataset)
@@ -853,9 +768,7 @@ class TestShuffleDataset:
             # Test various buffer sizes
             for buffer_size in [1, 5, 100, 1000]:
                 shuffled_dataset = ShuffleDataset(
-                    dataset=base_dataset,
-                    buffer_size=buffer_size,
-                    seed=42
+                    dataset=base_dataset, buffer_size=buffer_size, seed=42
                 )
 
                 shuffled_smiles = set(smiles for smiles, _ in shuffled_dataset)
@@ -867,16 +780,12 @@ class TestShuffleDataset:
         """Test that buffer_size larger than dataset works correctly."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # Buffer size much larger than dataset
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10000,
-                seed=42
+                dataset=base_dataset, buffer_size=10000, seed=42
             )
 
             original_smiles = [smiles for smiles, _ in base_dataset]
@@ -890,9 +799,7 @@ class TestShuffleDataset:
         """Test that properties are preserved during shuffling."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # Get original smiles -> properties mapping
@@ -900,9 +807,7 @@ class TestShuffleDataset:
 
             # Shuffle
             shuffled_dataset = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10,
-                seed=42
+                dataset=base_dataset, buffer_size=10, seed=42
             )
 
             # Check that each SMILES has its correct properties
@@ -913,30 +818,24 @@ class TestShuffleDataset:
         """Test that without seed, multiple iterations give different orders."""
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
 
             # First shuffle without seed
-            shuffled1 = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10
-            )
+            shuffled1 = ShuffleDataset(dataset=base_dataset, buffer_size=10)
             order1 = [smiles for smiles, _ in shuffled1]
 
             # Second shuffle without seed
-            shuffled2 = ShuffleDataset(
-                dataset=base_dataset,
-                buffer_size=10
-            )
+            shuffled2 = ShuffleDataset(dataset=base_dataset, buffer_size=10)
             order2 = [smiles for smiles, _ in shuffled2]
 
             # With different random states, likely to be different
             # (though not guaranteed for very small datasets)
             if len(order1) > 3:
                 # At least some differences expected
-                differences = sum(1 for i in range(len(order1)) if order1[i] != order2[i])
+                differences = sum(
+                    1 for i in range(len(order1)) if order1[i] != order2[i]
+                )
                 # Very unlikely to be identical for 4+ items without seed
                 assert differences > 0 or len(order1) <= 3
 
@@ -951,7 +850,7 @@ class TestEdgeCases:
                 dataset='_test',
                 smiles_column='nonexistent_column',
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             # Should raise KeyError when iterating
@@ -966,7 +865,7 @@ class TestEdgeCases:
                 dataset='_test',
                 target_columns=[],
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             for smiles, properties in dataset:
@@ -984,7 +883,7 @@ class TestGraphDatasetAutoDetection:
                 dataset='_test',  # This is a CSV-based SMILES dataset
                 num_workers=0,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             # Should detect and use SmilesDataset
@@ -1009,7 +908,7 @@ class TestGraphDatasetAutoDetection:
                 dataset='_test2',  # This is an xyz_bundle dataset
                 num_workers=0,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             # Should detect and use XyzDataset
@@ -1033,10 +932,7 @@ class TestGraphDatasetAutoDetection:
         """Test XYZ dataset with sequential processing (num_workers=0)."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test2',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             graphs = list(dataset)
@@ -1053,10 +949,7 @@ class TestGraphDatasetAutoDetection:
         """Test XYZ dataset with parallel processing (num_workers>0)."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test2',
-                num_workers=2,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', num_workers=2, folder_path=temp_path, use_cache=True
             )
 
             graphs = list(dataset)
@@ -1075,7 +968,7 @@ class TestGraphDatasetAutoDetection:
                 num_workers=0,
                 parser_cls='default',  # Specify parser explicitly
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
 
             assert dataset.dataset_type == 'xyz'
@@ -1084,16 +977,14 @@ class TestGraphDatasetAutoDetection:
 
     def test_xyz_with_mol_transform(self):
         """Test that mol_transform works with XYZ datasets."""
+
         def add_hydrogens(mol):
             return Chem.AddHs(mol)
 
         with tempfile.TemporaryDirectory() as temp_path:
             # Without hydrogens
             dataset_no_h = GraphDataset(
-                dataset='_test2',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', num_workers=0, folder_path=temp_path, use_cache=True
             )
             graph_no_h = next(iter(dataset_no_h))
             num_atoms_no_h = len(graph_no_h['node_indices'])
@@ -1104,7 +995,7 @@ class TestGraphDatasetAutoDetection:
                 num_workers=0,
                 mol_transform=add_hydrogens,
                 folder_path=temp_path,
-                use_cache=True
+                use_cache=True,
             )
             graph_with_h = next(iter(dataset_with_h))
             num_atoms_with_h = len(graph_with_h['node_indices'])
@@ -1117,19 +1008,13 @@ class TestGraphDatasetAutoDetection:
         with tempfile.TemporaryDirectory() as temp_path:
             # Sequential results
             dataset_seq = GraphDataset(
-                dataset='_test2',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', num_workers=0, folder_path=temp_path, use_cache=True
             )
             results_seq = list(dataset_seq)
 
             # Parallel results
             dataset_par = GraphDataset(
-                dataset='_test2',
-                num_workers=2,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', num_workers=2, folder_path=temp_path, use_cache=True
             )
             results_par = list(dataset_par)
 
@@ -1149,7 +1034,7 @@ class TestGraphDatasetAutoDetection:
                     dataset='nonexistent_dataset_xyz_12345',
                     num_workers=0,
                     folder_path=temp_path,
-                    use_cache=True
+                    use_cache=True,
                 )
 
             # Error message should mention both formats tried
@@ -1161,10 +1046,7 @@ class TestGraphDatasetAutoDetection:
         """Test that __len__ works correctly for XYZ datasets."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test2',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             length = len(dataset)
@@ -1179,10 +1061,7 @@ class TestGraphDatasetAutoDetection:
         """Test that XYZ GraphDataset can be iterated multiple times."""
         with tempfile.TemporaryDirectory() as temp_path:
             dataset = GraphDataset(
-                dataset='_test2',
-                num_workers=0,
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test2', num_workers=0, folder_path=temp_path, use_cache=True
             )
 
             # First iteration
@@ -1199,15 +1078,13 @@ class TestGraphDatasetAutoDetection:
         from chem_mat_data.dataset import (
             DatasetAdapter,
             SmilesDatasetAdapter,
-            XyzDatasetAdapter
+            XyzDatasetAdapter,
         )
 
         with tempfile.TemporaryDirectory() as temp_path:
             # Test SmilesDatasetAdapter
             smiles_ds = SmilesDataset(
-                dataset='_test',
-                folder_path=temp_path,
-                use_cache=True
+                dataset='_test', folder_path=temp_path, use_cache=True
             )
             smiles_adapter = SmilesDatasetAdapter(smiles_ds)
 
@@ -1221,11 +1098,7 @@ class TestGraphDatasetAutoDetection:
                 break
 
             # Test XyzDatasetAdapter
-            xyz_ds = XyzDataset(
-                dataset='_test2',
-                folder_path=temp_path,
-                use_cache=True
-            )
+            xyz_ds = XyzDataset(dataset='_test2', folder_path=temp_path, use_cache=True)
             xyz_adapter = XyzDatasetAdapter(xyz_ds)
 
             assert isinstance(xyz_adapter, DatasetAdapter)

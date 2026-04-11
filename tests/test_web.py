@@ -1,7 +1,8 @@
 """
-Unittests for the "web.py" module that contains the functionality to communicate with the remote 
+Unittests for the "web.py" module that contains the functionality to communicate with the remote
 file share server that hosts the datasets.
 """
+
 import os
 import tempfile
 import pytest
@@ -16,21 +17,21 @@ from .utils import ASSETS_PATH
 @pytest.mark.network
 class TestNextcloudFileShare:
     """
-    The ``NextcloudFileShare`` class is a wrapper around the Nextcloud API which is one option to 
+    The ``NextcloudFileShare`` class is a wrapper around the Nextcloud API which is one option to
     use as a file share server to host the datasets.
     """
-    
+
     def test_download_basically_works(self):
         """
         The ``download`` method should be able to download a file from the remote file share server.
         """
         config = Config()
         file_share = NextcloudFileShare(config.get_fileshare_url())
-        
+
         content = file_share.download('metadata.yml')
         assert isinstance(content, bytes)
         assert len(content) != 0
-        
+
     def test_download_progress_works(self):
         """
         The ``download`` method should be able to show a progress bar while downloading a file from
@@ -38,13 +39,13 @@ class TestNextcloudFileShare:
         """
         config = Config()
         file_share = NextcloudFileShare(config.get_fileshare_url())
-        
+
         with Progress() as progress:
             content = file_share.download('metadata.yml', progress=progress)
-            
+
             assert isinstance(content, bytes)
             assert len(content) != 0
-        
+
     def test_download_file_basically_works(self):
         """
         The ``download_file`` method should download a file from the remote file share server and
@@ -52,14 +53,14 @@ class TestNextcloudFileShare:
         """
         config = Config()
         file_share = NextcloudFileShare(config.get_fileshare_url())
-        
+
         with tempfile.TemporaryDirectory() as folder_path:
             path = file_share.download_file('metadata.yml', folder_path)
             assert os.path.exists(path)
-            
+
     def test_fetch_metadata_basically_works(self):
         """
-        The ``fetch_metadata`` method should fetch the metadata.yml file from the remote file share 
+        The ``fetch_metadata`` method should fetch the metadata.yml file from the remote file share
         server and store the metadata then in the file share object as a dictionary.
         """
         config = Config()
@@ -67,11 +68,11 @@ class TestNextcloudFileShare:
         metadata = file_share.fetch_metadata()
         assert isinstance(metadata, dict)
         assert 'datasets' in file_share
-        
-    @pytest.mark.skip(reason="Requires DAV credentials to run")
+
+    @pytest.mark.skip(reason='Requires DAV credentials to run')
     def test_upload(self):
         """
-        Given the DAV credentials, it should be possible to upload files to the nextcloud file share as well using 
+        Given the DAV credentials, it should be possible to upload files to the nextcloud file share as well using
         the ``upload`` method.
         """
         config = Config()
@@ -82,11 +83,11 @@ class TestNextcloudFileShare:
         )
         file_path = os.path.join(ASSETS_PATH, 'test.txt')
         file_share.upload('test.txt', file_path)
-        
+
         with tempfile.TemporaryDirectory() as folder_path:
             file_share.download_file('test.txt', folder_path)
             assert os.path.exists(os.path.join(folder_path, 'test.txt'))
-            
+
     def test_exists_works(self):
         """
         The ``exists`` method should correctly check for the existence of a file on the remote file share server and return appropriate metadata if the file exists.

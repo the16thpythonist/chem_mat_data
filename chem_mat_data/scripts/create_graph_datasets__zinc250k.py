@@ -24,7 +24,7 @@ SMILES_COLUMN: str = 'smiles'
 #       This is a list of string names of the CSV columns which contain the target values
 #       of the dataset. This can be a single column for regression tasks or multiple columns
 #       for multi-target regression or classification tasks. For the final graph dataset
-#       the target values will be merged into a single numeric vector that contains the 
+#       the target values will be merged into a single numeric vector that contains the
 #       corresponding values in the same order as the column names are defined here.
 TARGET_COLUMNS: List[str] = ['logP', 'qed', 'SAS']
 # :param DATASET_TYPE:
@@ -43,26 +43,26 @@ DESCRIPTION: str = (
     'Representation of Molecules" study by Gómez-Bombarelli et al.'
 )
 # :param METADATA:
-#       A dictionary which will be used as the basis for the metadata that will be added 
+#       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
     'tags': [
-        'Molecules', 
-        'SMILES', 
+        'Molecules',
+        'SMILES',
         'Biology',
         'Drug Discovery',
     ],
     'sources': [
         'https://pubs.acs.org/doi/10.1021/ci049714%2B',
         'https://pubs.acs.org/doi/10.1021/acscentsci.7b00572',
-        'https://www.kaggle.com/datasets/basu369victor/zinc250k',  
+        'https://www.kaggle.com/datasets/basu369victor/zinc250k',
     ],
     'verbose': 'ZINC250K Subset of Drug-like Molecules',
     'target_descriptions': {
         '0': 'logP - Octanol-water partition coefficient',
         '1': 'QED - Quantitative Estimation of Drug-likeness',
         '2': 'SAS - Synthetic Accessibility Score',
-    }
+    },
 }
 
 __TESTING__ = False
@@ -74,18 +74,19 @@ experiment = Experiment.extend(
     glob=globals(),
 )
 
+
 @experiment.hook('add_graph_metadata', default=False, replace=True)
 def add_graph_metadata(e: Experiment, data: dict, graph: dict) -> dict:
     """
     We add the compound id for identification and the molecular weight
     """
-    #graph['graph_name'] = data['Name']
-    #graph['graph_subset'] = data['dataset']
+    # graph['graph_name'] = data['Name']
+    # graph['graph_subset'] = data['dataset']
 
 
 @experiment.hook('load_dataset', default=False, replace=True)
 def load_dataset(e: Experiment) -> Dict[int, dict]:
-    
+
     ## -- Load Dataset --
     e.log('Loading the CSV file from the remote file share server...')
     config = Config()
@@ -93,7 +94,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     file_path: str = file_share.download_file('zinc250.csv', folder_path=e.path)
     df: pd.DataFrame = pd.read_csv(file_path)
     print(df.head())
-    
+
     ## -- Save Dataset --
     e.log('Saving the dataset as CSV and GZipped CSV file...')
     csv_path = os.path.join(e.path, f'{e.DATASET_NAME}.csv')
@@ -107,30 +108,30 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     dataset: Dict[int, dict] = {}
     index: int = 0
     for data in df.to_dict('records'):
-        
         data['smiles'] = data[e.SMILES_COLUMN]
-        
+
         ## -- Molecule Filters --
         # We don't want to use compounds with '.' in the smiles (separate molecules)
         if '.' in data['smiles']:
             continue
-        
+
         # We don't want to use compounds that only consist of a single atom
         mol = Chem.MolFromSmiles(data['smiles'])
         if not mol:
             continue
-        
+
         # We also don't want to accept "molecules" that are essentially just individual atoms
         if len(mol.GetAtoms()) < 2:
             continue
-        
+
         ## -- Target Values --
         # In this dataset we only have one target
         data['targets'] = [data[target_key] for target_key in e.TARGET_COLUMNS]
         dataset[index] = data
-        
+
         index += 1
 
     return dataset
+
 
 experiment.run_if_main()
