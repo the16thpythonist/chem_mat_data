@@ -5,6 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] - Unreleased
+
+### Changed
+
+- **CLI logo coloring.** The "CM" portion of the CMDATA ASCII art banner is now rendered in
+  mint (`#5fd7af`) while "DATA" remains bold white, giving the logo a more distinctive look.
+- **Improved `cmdata --help` text.** Rewrote the top-level help for the `cmdata` CLI using
+  the same `render_help()` / `CODE_STYLE` pill pattern as `cmmanage`. The help now has an
+  introductory paragraph, a description of the `cmdata` interface, and one paragraph per
+  command category (Discover, Download, Cache, Configuration) with inline code pills for
+  command names. Includes a single example block at the end. Fixed "materials sience" typo.
+- **Agent web tool: crawl4ai CLI replaces broken MCP server.** All Claude-backend agent
+  prompts (`IDENTIFY_PROMPT`, `CLAUDE_LINK_PROMPT`) now instruct the agent to use
+  `crwl '<url>' -o markdown-fit` via Bash as the primary web-fetching tool, with `WebFetch`
+  as fallback. The previous `crawl4ai-mcp-server` PyPI package was broken (shipped no source
+  files) and the `mcp__web-search` MCP server caused the agent to hang on large pages.
+- **`cmmanage agent install-plugins`** now installs crawl4ai as a `uv tool`
+  (`uv tool install crawl4ai`) instead of the broken `pip install crawl4ai-mcp-server`.
+  The crawl4ai MCP server entry is no longer written to the config file since the agent
+  uses the `crwl` CLI directly.
+- **Tightened identify-agent verification step.** The `IDENTIFY_PROMPT` procedure now limits
+  the agent to visiting at most one repository link and two URLs total, preventing the
+  previous behavior of spiraling through chains of redirects and hanging.
+
+### Removed
+
+- Removed `web-search` MCP server from `.mcp.json`. This custom MCP server was providing
+  `mcp__web-search__get-single-web-page-content` which the agent would use instead of the
+  intended crawl4ai tool, often hanging on large or slow pages.
+- Removed broken `crawl4ai` MCP server entry from the default agent config
+  (`[agent.claude.mcp_servers.crawl4ai]`).
+
+### Added
+
+- **Dataset discovery pipeline.** New `cmmanage discover` command group that integrates the
+  upstream [Dataset-Discovery-Pipeline](https://github.com/aimat-lab/Dataset-Discovery-Pipeline)
+  as a cheap first-stage filter. It walks the OpenAlex index of chemistry and materials-science
+  papers and applies a fine-tuned TinyLlama-1.1B classifier to flag those likely to release a
+  reusable dataset. Five subcommands cover the full workflow:
+  - `cmmanage discover model-info`: Show the classifier cache location, whether the adapter
+    files are present, and whether the required ML dependencies are importable. Read-only
+    diagnostic — never downloads or modifies anything.
+  - `cmmanage discover model-download`: Download the ~13 MB TinyLlama LoRA adapter archive
+    from the Nextcloud URL configured under `[discovery] classifier_url` and extract it into
+    the user config directory. Supports `--force` to re-download and `--model-url` to override
+    the configured URL.
+  - `cmmanage discover fetch`: Query the OpenAlex `/works` endpoint with cursor pagination,
+    reconstruct abstracts from inverted-index form, and stream results into a JSONL file.
+    Sibling `.cursor` and `.ids` files make runs resumable and de-duplicated across invocations.
+    Supports `--reset` to discard existing state, `--year-min` to filter by publication year,
+    and `--limit` to cap the number of new records per run.
+  - `cmmanage discover score`: Read a JSONL file (typically from `fetch`), load the classifier,
+    and score each record's `title + abstract`. Writes two JSONL outputs: `--out-all` with every
+    record gaining a `prediction` field, and `--out-flagged` with only records above the
+    threshold. Default threshold of 0.05 matches best upstream test-set performance.
+  - `cmmanage discover stream`: Combine `fetch` and `score` into a single streaming pass,
+    writing scored results to a CSV as they come in. Columns: `openalex_id`, `url`, `score`,
+    `flagged`, `publication_year` (plus optional `title`). Rich live terminal progress with
+    toast notifications. Supports `--flagged-only`, `--include-title`, and `--resume/--no-resume`.
+- **`chem_mat_data.discovery` subpackage** with three modules:
+  - `io.py`: `FetchState` class for persistent cursor + seen-ID tracking with context manager
+    support, `iter_jsonl`/`write_jsonl_line` helpers, `build_csv_row` projection with DOI URL
+    normalization and OpenAlex landing-page fallback.
+  - `openalex.py`: OpenAlex API client with cursor pagination, abstract reconstruction from
+    inverted index, configurable concept-ID and publication-type filters, exponential-backoff
+    retries, and consecutive empty-page detection to cross stale cursor positions.
+  - `classifier.py`: TinyLlama-1.1B-Chat LoRA adapter loading with CPU fallback and optional
+    4-bit quantization via bitsandbytes. `ensure_classifier_model()` downloads and extracts
+    the tar.gz archive with atomic rename and cleanup on failure. `Classifier` class with
+    `predict_score` and `predict_batch` methods. Suppresses HuggingFace Hub and transformers
+    noise by default (env vars, logging levels, stdout/stderr redirection, offline mode when
+    base model is cached).
+- **Config file extensions.** New `[discovery]` section in `config.toml` with `classifier_url`
+  pointing to the Nextcloud-hosted adapter archive. New `get_discovery_classifier_url()` and
+  `get_discovery_model_dir()` config accessors.
+- **ML dependencies in dev extras.** Added `transformers>=4.40.0`, `peft>=0.10.0`,
+  `safetensors>=0.4.0`, `accelerate>=0.29.0`, and `bitsandbytes>=0.43.0` (Linux + Python 3.10+)
+  to the `[dev]` extras group.
+- **Rich CLI help text** for all five discovery subcommands, using the `RichHelpCommand` pattern
+  with `render_help()` paragraphs covering purpose, workflow context, and key options.
+- **Comprehensive test suite.** 69 tests across five test files:
+  - `test_discovery_io.py` (13 tests): `iter_jsonl`, `write_jsonl_line`, `FetchState` lifecycle.
+  - `test_discovery_openalex.py` (15 tests): abstract reconstruction, filter building,
+    pagination, empty-page skipping, DOI passthrough.
+  - `test_discovery_classifier.py` (13 tests + 1 slow integration): model download, extraction,
+    classifier loading with mocked torch/transformers/peft.
+  - `test_discovery_cli.py` (7 tests): group registration, panel title, command routing.
+  - `test_discovery_stream.py` (21 tests): `build_csv_row` unit tests, stream CLI end-to-end
+    with canned fetch and classifier, flagged-only filtering, resume/skip semantics.
+- **`slow` pytest marker.** Added alongside the existing `network` marker; default `addopts`
+  excludes both.
+
 ## [1.9.0] - Unreleased
 
 ### Added

@@ -196,3 +196,31 @@ class Config(metaclass=Singleton):
         :returns: The override string, or ``None`` if not configured.
         """
         return self.config_data.get('agent', {}).get(prompt_name)
+
+    # ~ discovery configuration
+    # The following methods provide access to the ``[discovery]`` section of the
+    # config file which controls the TinyLlama-based classifier used for the
+    # dataset discovery pipeline (``cmmanage discover ...``).
+
+    def get_discovery_classifier_url(self) -> Optional[str]:
+        """
+        Returns the download URL of the classifier archive, or ``None`` if unset.
+
+        The archive is expected to be a ``.tar.gz`` bundle containing the
+        fine-tuned LoRA adapter and tokenizer files. On first use, the archive
+        is downloaded to the user config directory and cached there.
+
+        :returns: The classifier URL string, or ``None`` if not configured.
+        """
+        return self.config_data.get('discovery', {}).get('classifier_url')
+
+    def get_discovery_model_dir(self) -> str:
+        """
+        Returns the absolute path to the directory where the classifier is cached.
+
+        The directory is nested inside the user config folder and is created
+        lazily by the classifier loader when the archive is first extracted.
+
+        :returns: Absolute path to the classifier model directory.
+        """
+        return os.path.join(self.config_path, 'discovery', 'classifier_512_tinyllama')

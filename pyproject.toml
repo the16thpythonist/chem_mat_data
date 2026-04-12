@@ -94,6 +94,13 @@ dev = [
     "jaxlib>=0.4.0",
     "jraph>=0.0.6.dev0",
 
+    # Dataset discovery classifier (TinyLlama LoRA inference)
+    "transformers>=4.40.0",
+    "peft>=0.10.0",
+    "safetensors>=0.4.0",
+    "accelerate>=0.29.0",
+    "bitsandbytes>=0.43.0; platform_system=='Linux' and python_version>='3.10'",
+
     # Documentation
     "sphinx>=6.0.0",
     "sphinx-rtd-theme>=1.3.0",
@@ -116,9 +123,10 @@ cmmanage = "chem_mat_data.manage:cli"
 # ====================
 
 [tool.pytest.ini_options]
-addopts = "-m 'not network'"
+addopts = "-m 'not network and not slow'"
 markers = [
     "network: marks tests that require network access to external servers (deselect with '-m \"not network\"')",
+    "slow: marks tests that download large model weights or otherwise take a long time (deselect with '-m \"not slow\"')",
 ]
 
 # Configuration of Build System (Hatchling)

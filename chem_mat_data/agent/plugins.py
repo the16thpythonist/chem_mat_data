@@ -1,15 +1,15 @@
 """
 Plugin installation logic for the agent system.
 
-This module handles the installation of external MCP servers and tools that
-enhance the agent's capabilities. The plugins are installed into the
+This module handles the installation of external tools and MCP servers that
+enhance the agent's capabilities. The MCP servers are installed into the
 ``.mcp-servers/`` directory inside the project root.
 
 Each backend has its own set of plugins:
 
-- **Claude**: ``crawl4ai-mcp-server`` (pip) for advanced web crawling, and
-  ``mcp-file-downloader`` (Node.js) for robust file downloads including
-  browser-mode support.
+- **Claude**: ``crawl4ai`` (uv tool) for advanced web crawling via the
+  ``crwl`` CLI, and ``mcp-file-downloader`` (Node.js) for robust file
+  downloads including browser-mode support.
 - **OpenCode**: ``mcp-file-downloader`` (Node.js) for file downloads. The
   other tools (crawl4ai, websearch) are configured as OpenCode plugins
   separately.
@@ -128,39 +128,49 @@ def install_file_downloader() -> Path:
 
 
 # =========================================================================
-# crawl4ai MCP server (Claude backend)
+# crawl4ai CLI tool (Claude backend)
 # =========================================================================
 
 
 def install_crawl4ai() -> str:
     """
-    Install the crawl4ai MCP server via pip.
+    Install the crawl4ai CLI tool via ``uv tool``.
 
-    Installs the ``crawl4ai-mcp-server`` package which provides the
-    ``crawl4ai-mcp`` command, then runs ``crawl4ai-setup`` to configure
-    the browser backend.
+    Installs the ``crawl4ai`` package as an isolated uv tool which provides
+    the ``crwl`` command, then runs ``crawl4ai-setup`` to download the
+    browser binaries needed for rendering JavaScript-heavy pages.
 
-    :returns: The command name to start the server (``"crawl4ai-mcp"``).
-    :raises PluginInstallError: If pip install or setup fails.
+    The agent invokes crawl4ai through the CLI
+    (``crwl '<url>' -o markdown-fit``) rather than as an MCP server.
+
+    :returns: The command name (``"crwl"``).
+    :raises PluginInstallError: If uv is not available or installation fails.
     """
-    if not _check_command('pip'):
-        raise PluginInstallError('pip is not installed.')
-
-    _run(
-        ['pip', 'install', 'crawl4ai-mcp-server'],
-        description='pip install crawl4ai-mcp-server',
-    )
-    _run(
-        ['crawl4ai-setup'],
-        description='crawl4ai-setup (browser configuration)',
-    )
-
-    if not _check_command('crawl4ai-mcp'):
+    if not _check_command('uv'):
         raise PluginInstallError(
-            'crawl4ai-mcp command not found after installation. '
-            'Check that the pip install target is on your PATH.'
+            'uv is not installed. Please install uv first: '
+            'https://docs.astral.sh/uv/getting-started/installation/'
         )
-    return 'crawl4ai-mcp'
+
+    _run(
+        ['uv', 'tool', 'install', 'crawl4ai'],
+        description='uv tool install crawl4ai',
+    )
+
+    try:
+        _run(
+            ['uvx', '--from', 'crawl4ai', 'crawl4ai-setup'],
+            description='crawl4ai-setup (browser configuration)',
+        )
+    except PluginInstallError:
+        pass
+
+    if not _check_command('crwl'):
+        raise PluginInstallError(
+            'crwl command not found after installation. '
+            'Check that ~/.local/bin is on your PATH.'
+        )
+    return 'crwl'
 
 
 # =========================================================================

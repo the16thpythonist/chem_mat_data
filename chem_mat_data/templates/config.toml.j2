@@ -35,3 +35,9 @@ model = "claude-sonnet-4-20250514"
 # [agent.claude.mcp_servers.file_downloader]
 # command = "node"
 # args = ["/path/to/download-server.js"]
+
+[discovery]
+# URL of the tar.gz archive containing the fine-tuned TinyLlama classifier
+# (LoRA adapter + tokenizer). The archive is downloaded once on first use
+# and cached inside the chem_mat_data user config directory.
+classifier_url = "https://bwsyncandshare.kit.edu/s/5AosyqiqyAJPsmf/download"

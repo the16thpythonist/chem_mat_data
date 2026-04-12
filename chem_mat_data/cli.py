@@ -98,18 +98,56 @@ COMPOUND_THRESHOLDS = [1_000, 10_000, 50_000, 500_000]
 # the object to the console using the rich library.
 
 
+CODE_STYLE = Style(color='grey66', bgcolor='grey19')
+
+
+def render_help(text: str) -> Text:
+    """
+    Convert a help string with backtick code spans and rich markup into a styled
+    Rich ``Text`` object.
+
+    Backtick-delimited spans (e.g. \\`cmdata list\\`) are rendered as pills with a
+    subtle dark background. Rich markup like ``[bold]...[/bold]`` in the remaining
+    text is preserved.
+
+    :param text: The help text string, optionally containing \\`code\\` spans and
+        ``[bold]`` rich markup.
+
+    :returns: A Rich ``Text`` object ready for console rendering.
+    """
+    import re
+
+    result = Text()
+    parts = re.split(r'`([^`]+)`', text)
+    for i, part in enumerate(parts):
+        if i % 2 == 0:
+            result.append_text(Text.from_markup(part))
+        else:
+            result.append(f' {part} ', style=CODE_STYLE)
+
+    return result
+
+
 class RichLogo:
     """
     A rich display which will show the ASlurmX logo in ASCII art when printed.
     """
 
     STYLE = Style(bold=True, color='white')
+    CM_STYLE = Style(bold=True, color='#5fd7af')
+    CM_SPLIT_COL = 19
 
     def __rich_console__(self, console, options):
         text_path = os.path.join(TEMPLATE_PATH, 'logo_text.txt')
         with open(text_path) as file:
             text_string: str = file.read()
-            text = Text(text_string, style=self.STYLE)
+            text = Text()
+            lines = text_string.split('\n')
+            for i, line in enumerate(lines):
+                text.append(line[: self.CM_SPLIT_COL], style=self.CM_STYLE)
+                text.append(line[self.CM_SPLIT_COL :], style=self.STYLE)
+                if i < len(lines) - 1:
+                    text.append('\n')
 
         image_path = os.path.join(TEMPLATE_PATH, 'logo_image.txt')
         with open(image_path) as file:
@@ -124,46 +162,70 @@ class RichLogo:
 
 class RichHelp(RichMixin):
     """
-    Implements the "rich" console rendering of the help text for the command line interface. This help
-    section consists of a brief general description of the CLI and also a brief section containing
-    example use cases of the commands.
+    Implements the "rich" console rendering of the help text for the ``cmdata`` CLI.
+
+    The help consists of an introductory paragraph about ChemMatData, a paragraph
+    framing the purpose of the ``cmdata`` interface, and one paragraph per command
+    category (Discover, Download, Cache, Configuration) with the category name
+    bolded. A single small example block at the end shows the two most common
+    invocations.
     """
 
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> t.Any:
-        yield 'Command Line Interface to the ChemMatDatabase.\n'
-        yield Text(
-            (
-                'The database consists of a collection of datasets chemistry and materials sience. Each datasets contains '
-                'various molecules and/or crystal structures associated with a specific property. The main purpose of these '
-                'datasets is to be used for the training of machine learning models for the prediction of these properties.\n'
-            )
+
+        yield render_help(
+            'ChemMatData is a Python package that provides unified access to chemistry and material science '
+            'datasets for machine learning applications. It is specifically designed for training graph neural '
+            'networks (GNNs) by offering both raw tabular data (CSV/pandas) and processed graph representations. '
+            'The package connects to a remote Nextcloud file share server to distribute datasets and uses a '
+            'local caching system to avoid redundant downloads.\n'
         )
-        yield Text(
-            (
-                'You can print a list of the available datasets using the "list" command.'
-            ),
-            style=Style(color='bright_black'),
+
+        yield render_help(
+            'The `cmdata` command line interface is the user-facing entry point for browsing and downloading '
+            'datasets from the ChemMatData collection. It lets you explore the catalog, inspect dataset metadata '
+            'and statistics, download datasets in either raw or processed graph format, and manage the local '
+            'cache and configuration. The commands are organized into the following categories:\n'
         )
+
+        yield render_help(
+            '[bold]Discover[/bold] commands let you explore the dataset catalog without downloading anything. '
+            'Use `cmdata list` to see all available datasets at a glance, `cmdata info` to view detailed '
+            'metadata for a specific dataset such as the number of elements, target labels, and description, '
+            'and `cmdata stats` to compute a statistical analysis of a dataset once it has been downloaded.\n'
+        )
+
+        yield render_help(
+            '[bold]Download[/bold] commands fetch datasets from the remote file share into the local cache. '
+            'The `cmdata download` command takes a dataset name and retrieves either the raw CSV form '
+            '(containing SMILES strings and target properties) or the processed graph form (with node and '
+            'edge features ready to be consumed by a graph neural network). Downloaded files are cached '
+            'locally so that subsequent loads do not re-fetch the data.\n'
+        )
+
+        yield render_help(
+            '[bold]Cache[/bold] commands manage the local cache of downloaded datasets. You can list the '
+            'currently cached files with `cmdata cache list`, show summary information with `cmdata cache info`, '
+            'remove a specific dataset with `cmdata cache remove`, or wipe the entire cache with '
+            '`cmdata cache clear` to free up disk space.\n'
+        )
+
+        yield render_help(
+            '[bold]Configuration[/bold] commands inspect and modify the local configuration file. '
+            'Use `cmdata config show` to display the current settings (such as the remote file share URL '
+            'and the cache location) and `cmdata config edit` to open the configuration file in your '
+            'default editor for manual changes.\n'
+        )
+
+        yield Text('Example usage:', style=Style(color='bright_black'))
         yield Padding(
-            Syntax(('cmdata list'), lexer='bash', theme='monokai', line_numbers=False),
-            (1, 5),
-        )
-        yield Text(
-            (
-                'To download a dataset, use the "download" command followed by the name of the dataset.'
+            Syntax(
+                'cmdata list\ncmdata download "dataset_name"',
+                lexer='bash',
+                theme='monokai',
+                line_numbers=False,
             ),
-            style=Style(color='bright_black'),
-        )
-        yield (
-            Padding(
-                Syntax(
-                    ('cmdata download "dataset_name"'),
-                    lexer='bash',
-                    theme='monokai',
-                    line_numbers=False,
-                ),
-                (1, 5),
-            )
+            (1, 5),
         )
 
 

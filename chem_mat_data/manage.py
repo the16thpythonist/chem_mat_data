@@ -5,7 +5,8 @@ import yaml
 import time
 import difflib
 from collections import defaultdict
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 import rich_click as click
 from prettytable import PrettyTable, TableStyle
@@ -30,6 +31,24 @@ from chem_mat_data.utils import TEMPLATE_ENV
 from chem_mat_data.utils import CsvListType
 from chem_mat_data.utils import open_file_in_editor
 from chem_mat_data.utils import RichMixin
+
+# Re-exports of the discovery helpers, aliased so that tests can patch them
+# via ``chem_mat_data.manage.<name>`` without importing the submodule.
+from chem_mat_data.discovery.openalex import (
+    fetch_works as discovery_openalex_fetch_works,
+)
+from chem_mat_data.discovery.io import (
+    FetchState as DiscoveryFetchState,
+    iter_jsonl as discovery_iter_jsonl,
+    write_jsonl_line as discovery_write_jsonl_line,
+    build_csv_row as discovery_build_csv_row,
+    STREAM_CSV_BASE_COLUMNS as DISCOVERY_STREAM_CSV_BASE_COLUMNS,
+)
+from chem_mat_data.discovery.classifier import (
+    ensure_classifier_model as discovery_ensure_classifier_model,
+    load_classifier as discovery_load_classifier,
+    is_ml_stack_available as discovery_is_ml_stack_available,
+)
 
 # The path to the "scripts" folder of the experiment modules
 SCRIPTS_PATH: str = os.path.join(PATH, 'scripts')
@@ -390,10 +409,11 @@ class RichAgentInstallPluginsHelp(RichMixin):
         )
 
         yield render_help(
-            '[bold]Claude backend[/bold] plugins: `crawl4ai-mcp-server` (pip) for advanced '
-            'web crawling with JavaScript rendering, and `mcp-file-downloader` (Node.js) for '
-            'robust file downloads with optional browser-mode support. These are configured as '
-            'MCP servers in the `[agent.claude.mcp_servers]` config section.\n'
+            '[bold]Claude backend[/bold] plugins: `crawl4ai` (uv tool) for advanced '
+            'web crawling with JavaScript rendering via the `crwl` CLI, and '
+            '`mcp-file-downloader` (Node.js) for robust file downloads with optional '
+            'browser-mode support. The file downloader is configured as an MCP server '
+            'in the `[agent.claude.mcp_servers]` config section.\n'
         )
 
         yield render_help(
@@ -454,6 +474,191 @@ class RichAgentGroupHelp(RichMixin):
         )
 
 
+class RichDiscoveryGroupHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover`` command group.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'The discovery system is the cheap upstream filter of the dataset-discovery '
+            'pipeline. It walks the OpenAlex index of chemistry and materials-science '
+            'papers and applies a fine-tuned TinyLlama-1.1B classifier to the '
+            '`title + abstract` of each work to flag those likely to release a reusable '
+            'molecular or materials dataset.\n'
+        )
+
+        yield render_help(
+            'The typical workflow is two steps. First, `cmmanage discover fetch` queries '
+            'the OpenAlex `/works` endpoint with cursor pagination, reconstructs each '
+            'abstract from its inverted-index form, and streams the results into a JSONL '
+            'file (with a sibling `.cursor` and `.ids` file so the run can be '
+            'resumed or extended later). Second, `cmmanage discover score` loads the '
+            'classifier adapter from the user config directory and writes both an '
+            '`_all` and an `_flagged` JSONL — the flagged file is the short list '
+            'worth feeding to `cmmanage agent identify` for final LLM verification.\n'
+        )
+
+        yield render_help(
+            'Use `cmmanage discover stream` to interleave the fetch and the classifier '
+            'in a single pass, writing scored results to a CSV as they come in. '
+            'Use `cmmanage discover model-download` to pre-fetch the classifier archive '
+            'to a fresh machine (useful for offline or CI warmup), and '
+            '`cmmanage discover model-info` to inspect where the model is cached and '
+            'whether the required ML dependencies are installed.\n'
+        )
+
+        yield render_help(
+            'The classifier is a ~13 MB LoRA adapter over TinyLlama/TinyLlama-1.1B-Chat-v1.0 '
+            'and is downloaded once from the URL configured under `[discovery] '
+            'classifier_url` in the config file. The ML stack (torch, transformers, peft, '
+            'optionally bitsandbytes) ships with the `dev` extras: install via '
+            '`pip install chem_mat_database[dev]`.\n'
+        )
+
+
+class RichDiscoveryModelInfoHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover model-info`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Show where the TinyLlama LoRA adapter is cached on disk, whether the '
+            'adapter files are present, and whether the required ML dependencies '
+            '(torch, transformers, peft, optionally bitsandbytes) are importable.\n'
+        )
+
+        yield render_help(
+            'This is a read-only diagnostic command — it never downloads anything '
+            'or modifies the filesystem. Use it to verify that a previous '
+            '`cmmanage discover model-download` succeeded or to debug import errors '
+            'when the ML stack is not fully installed.\n'
+        )
+
+
+class RichDiscoveryModelDownloadHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover model-download``
+    command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Download the TinyLlama LoRA adapter archive from the Nextcloud URL '
+            'configured under `[discovery] classifier_url` in the config file and '
+            'extract it into the user config directory. The archive is a ~13 MB '
+            '`tar.gz` containing the adapter weights, tokenizer, and configuration.\n'
+        )
+
+        yield render_help(
+            'Subsequent runs of `cmmanage discover score` or '
+            '`cmmanage discover stream` will use the cached model automatically, '
+            'so this command only needs to run once per machine (or after clearing '
+            'the cache). Use `--force` to re-download even when the adapter is '
+            'already present.\n'
+        )
+
+        yield render_help(
+            'Use `--model-url` to override the configured URL, for example to test '
+            'a different adapter version without editing the config file.\n'
+        )
+
+
+class RichDiscoveryFetchHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover fetch`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Query the OpenAlex `/works` endpoint for chemistry and materials-science '
+            'papers, reconstruct each abstract from its inverted-index representation, '
+            'and stream the results into a JSONL file. Each line contains the fields '
+            '`openalex_id`, `doi`, `title`, `abstract`, and `publication_year`.\n'
+        )
+
+        yield render_help(
+            'Pagination state is persisted in sibling `.cursor` and `.ids` files next '
+            'to the output, so a run can be interrupted and resumed exactly where it '
+            'left off. The `.ids` file also de-duplicates across runs — records '
+            'already fetched in a previous invocation are skipped automatically. Use '
+            '`--reset` to discard any existing state and start from scratch.\n'
+        )
+
+        yield render_help(
+            'The output JSONL is the input expected by `cmmanage discover score`. For '
+            'a combined fetch-and-score workflow in a single pass, use '
+            '`cmmanage discover stream` instead.\n'
+        )
+
+
+class RichDiscoveryScoreHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover score`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Read an input JSONL file (typically produced by `cmmanage discover fetch`), '
+            'load the TinyLlama classifier adapter, and score each record\'s '
+            '`title + abstract` for the likelihood of describing a reusable dataset '
+            'release. Two output JSONL files are written: `--out-all` contains every '
+            'record with an added `prediction` field, and `--out-flagged` contains only '
+            'the records whose score exceeds the threshold.\n'
+        )
+
+        yield render_help(
+            'The flagged file is the short list worth feeding to '
+            '`cmmanage agent identify` for final LLM verification. The default '
+            'threshold of 0.05 matched the best test-set performance in the upstream '
+            'Dataset-Discovery-Pipeline and tends to over-include rather than miss '
+            'genuine hits — this is intentional, as the downstream agent step is the '
+            'precision filter.\n'
+        )
+
+        yield render_help(
+            'The classifier runs on CPU by default and uses 4-bit quantization when '
+            'CUDA and bitsandbytes are available. Use `--device` to force a specific '
+            'device and `--no-quantize` to disable quantization.\n'
+        )
+
+
+class RichDiscoveryStreamHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover stream`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Combine `fetch` and `score` into a single streaming pass: each paper is '
+            'fetched from OpenAlex, immediately classified, and written to a CSV output '
+            'file. This avoids the intermediate JSONL step and provides live terminal '
+            'feedback as papers are processed.\n'
+        )
+
+        yield render_help(
+            'The CSV columns are `openalex_id`, `url`, `score`, `flagged`, and '
+            '`publication_year`. The `url` column contains the DOI link when available '
+            'and falls back to the OpenAlex landing page otherwise. Use `--include-title` '
+            'to append a trailing `title` column, and `--flagged-only` to restrict output '
+            'to papers above the threshold.\n'
+        )
+
+        yield render_help(
+            'Resumable state (`.cursor` and `.ids` sidecars) is maintained next to the '
+            'output file, so a run can be interrupted and continued later without '
+            're-processing already-seen papers. Use `--no-resume` to discard any existing '
+            'state and start fresh.\n'
+        )
+
+
 class RichCommandGroups(RichMixin):
     """
     Rich display element that shows command groups in separate panels.
@@ -498,10 +703,14 @@ class RichCommandGroups(RichMixin):
                 composite_cmd = f'{group_name} {cmd_name}'
                 table.add_row(composite_cmd, short_help)
 
-            # Wrap the table in a panel with the group name as title
+            # Wrap the table in a panel with the group name as title. A group
+            # may override the displayed title by setting a ``display_title``
+            # attribute — used e.g. to keep the panel heading as "Discovery"
+            # while the CLI verb is ``discover``.
+            display_title = getattr(group, 'display_title', None) or group_name.capitalize()
             panel = Panel(
                 table,
-                title=f'[bold]{group_name.capitalize()}[/bold]',
+                title=f'[bold]{display_title}[/bold]',
                 title_align='left',
                 style='bright_black',
             )
@@ -579,6 +788,16 @@ class CLI(click.RichGroup):
         self.agent_group.add_command(self.agent_identify_command)
         self.agent_group.add_command(self.agent_prepare_command)
         self.agent_group.add_command(self.agent_generate_command)
+
+        # discovery command group (CLI verb is `discover`, keeping the
+        # user-visible panel title as "Discovery" via display_title override).
+        self.discovery_group.display_title = 'Discovery'
+        self.add_command(self.discovery_group)
+        self.discovery_group.add_command(self.discovery_model_info_command)
+        self.discovery_group.add_command(self.discovery_model_download_command)
+        self.discovery_group.add_command(self.discovery_fetch_command)
+        self.discovery_group.add_command(self.discovery_score_command)
+        self.discovery_group.add_command(self.discovery_stream_command)
 
     # The maximum width (in characters) for the help text paragraphs. This ensures
     # that the text wraps at a reasonable width even on very wide terminals.
@@ -1863,13 +2082,13 @@ class CLI(click.RichGroup):
         try:
             if backend == 'claude':
                 console.print(
-                    '[cyan]  [bold]\\[1/2][/bold] Installing crawl4ai-mcp-server (pip)...[/cyan]'
+                    '[cyan]  [bold]\\[1/2][/bold] Installing crawl4ai CLI (uv tool)...[/cyan]'
                 )
                 from chem_mat_data.agent.plugins import install_crawl4ai
 
                 install_crawl4ai()
                 console.print(
-                    '[green]  [bold]\\[1/2][/bold] crawl4ai-mcp-server installed[/green]'
+                    '[green]  [bold]\\[1/2][/bold] crawl4ai CLI installed (crwl)[/green]'
                 )
 
                 console.print(
@@ -1885,7 +2104,6 @@ class CLI(click.RichGroup):
                     self.config,
                     'claude',
                     {
-                        'crawl4ai': {'command': 'crawl4ai-mcp', 'args': []},
                         'file_downloader': {
                             'command': 'node',
                             'args': [str(server_js)],
@@ -1900,6 +2118,7 @@ class CLI(click.RichGroup):
                 console.print(
                     Panel(
                         '[bold green]All plugins installed![/bold green]\n\n'
+                        '  crawl4ai is available as the `crwl` command.\n'
                         '  MCP servers have been configured in your config file.\n'
                         '  The agent will automatically use them on the next run.',
                         style='green',
@@ -1943,6 +2162,757 @@ class CLI(click.RichGroup):
                 )
             )
             sys.exit(1)
+
+    ## == DISCOVERY COMMAND GROUP ==
+    # This command group implements the lightweight first stage of the dataset
+    # discovery pipeline: walking OpenAlex for chemistry/materials papers and
+    # scoring their title+abstract with a fine-tuned TinyLlama classifier to
+    # flag likely dataset releases.
+
+    @click.group(
+        'discover',
+        cls=RichHelpGroup,
+        rich_help=RichDiscoveryGroupHelp(),
+        short_help='Crawl OpenAlex and classify papers that release datasets.',
+    )
+    @click.pass_obj
+    def discovery_group(self) -> None:
+        pass
+
+    @click.command(
+        'fetch',
+        cls=RichHelpCommand,
+        rich_help=RichDiscoveryFetchHelp(),
+        short_help='Fetch titles and abstracts of candidate papers from OpenAlex.',
+    )
+    @click.option(
+        '--out',
+        '-o',
+        type=click.Path(dir_okay=False, path_type=str),
+        default='discovery_papers.jsonl',
+        show_default=True,
+        help='Output JSONL path. A sibling `.cursor` and `.ids` file tracks resumable state.',
+    )
+    @click.option(
+        '--limit',
+        '-n',
+        type=int,
+        default=1000,
+        show_default=True,
+        help='Maximum number of new records to fetch in this run.',
+    )
+    @click.option(
+        '--year-min',
+        type=int,
+        default=2010,
+        show_default=True,
+        help='Only include works published from this year onward.',
+    )
+    @click.option(
+        '--reset/--resume',
+        default=False,
+        help='Delete the existing cursor/ids state files before fetching.',
+    )
+    @click.pass_obj
+    def discovery_fetch_command(
+        self,
+        out: str,
+        limit: int,
+        year_min: int,
+        reset: bool,
+    ) -> None:
+        from rich.console import Console
+
+        console = Console()
+        out_path = Path(out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if reset:
+            for suffix in ('.cursor', '.ids'):
+                p = Path(str(out_path) + suffix)
+                if p.exists():
+                    p.unlink()
+
+        state = DiscoveryFetchState(out_path)
+        console.print(
+            f'[cyan]Fetching up to {limit} new papers from OpenAlex '
+            f'(year ≥ {year_min})…[/cyan]'
+        )
+
+        fetched = 0
+        try:
+            with state, out_path.open('a', encoding='utf-8') as out_fp:
+                for record in discovery_openalex_fetch_works(
+                    state=state,
+                    limit=limit,
+                    year_lower_bound=year_min,
+                ):
+                    discovery_write_jsonl_line(out_fp, record)
+                    fetched += 1
+                    if fetched % 50 == 0:
+                        console.print(
+                            f'[dim]  {fetched}/{limit} fetched…[/dim]'
+                        )
+        except KeyboardInterrupt:
+            console.print('[yellow]Interrupted — progress is persisted.[/yellow]')
+
+        console.print(
+            f'[green]Wrote {fetched} new records to {out_path}[/green]'
+        )
+
+    @click.command(
+        'score',
+        cls=RichHelpCommand,
+        rich_help=RichDiscoveryScoreHelp(),
+        short_help='Score papers with the TinyLlama classifier and flag likely dataset releases.',
+    )
+    @click.option(
+        '--in',
+        'input_path',
+        type=click.Path(exists=True, dir_okay=False, path_type=str),
+        required=True,
+        help='Input JSONL file with records containing title and abstract fields.',
+    )
+    @click.option(
+        '--out-all',
+        type=click.Path(dir_okay=False, path_type=str),
+        default='discovery_scored_all.jsonl',
+        show_default=True,
+        help='Output JSONL where every record gains a `prediction` field.',
+    )
+    @click.option(
+        '--out-flagged',
+        type=click.Path(dir_okay=False, path_type=str),
+        default='discovery_scored_flagged.jsonl',
+        show_default=True,
+        help='Output JSONL containing only records with `prediction` above the threshold.',
+    )
+    @click.option(
+        '--threshold',
+        '-t',
+        type=float,
+        default=0.05,
+        show_default=True,
+        help=(
+            'Probability threshold above which a paper is flagged. 0.05 matched '
+            'the best test-set performance in the upstream Dataset-Discovery-Pipeline.'
+        ),
+    )
+    @click.option(
+        '--max-length',
+        type=int,
+        default=512,
+        show_default=True,
+        help='Max tokenized prompt length passed to the classifier.',
+    )
+    @click.option(
+        '--device',
+        type=click.Choice(['auto', 'cpu', 'cuda']),
+        default='auto',
+        show_default=True,
+        help='Device to run inference on. `auto` uses CUDA if available.',
+    )
+    @click.option(
+        '--no-quantize',
+        is_flag=True,
+        default=False,
+        help='Disable 4-bit quantization even when CUDA + bitsandbytes are available.',
+    )
+    @click.option(
+        '--model-url',
+        type=str,
+        default=None,
+        help=(
+            'Override the Nextcloud URL of the classifier archive. '
+            'Defaults to `[discovery] classifier_url` from the config file.'
+        ),
+    )
+    @click.pass_obj
+    def discovery_score_command(
+        self,
+        input_path: str,
+        out_all: str,
+        out_flagged: str,
+        threshold: float,
+        max_length: int,
+        device: str,
+        no_quantize: bool,
+        model_url: Optional[str],
+    ) -> None:
+        from rich.console import Console
+
+        console = Console()
+
+        if not discovery_is_ml_stack_available():
+            click.secho(
+                '❌ Required ML packages (torch, transformers, peft) are not installed.\n'
+                '   Install them via: pip install chem_mat_database[dev]',
+                fg='red',
+            )
+            sys.exit(1)
+
+        resolved_url = model_url or self.config.get_discovery_classifier_url()
+        model_dir = self.config.get_discovery_model_dir()
+
+        console.print(
+            f'[cyan]Loading classifier (device={device}, threshold={threshold})…[/cyan]'
+        )
+        try:
+            discovery_ensure_classifier_model(
+                url=resolved_url, target_dir=model_dir
+            )
+        except ValueError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+
+        effective_device = None if device == 'auto' else device
+        quantize = False if no_quantize else None
+        classifier = discovery_load_classifier(
+            model_dir=model_dir,
+            device=effective_device,
+            quantize=quantize,
+            max_length=max_length,
+        )
+
+        in_path = Path(input_path)
+        all_path = Path(out_all)
+        flagged_path = Path(out_flagged)
+        all_path.parent.mkdir(parents=True, exist_ok=True)
+        flagged_path.parent.mkdir(parents=True, exist_ok=True)
+
+        total = 0
+        flagged = 0
+        with (
+            all_path.open('w', encoding='utf-8') as all_fp,
+            flagged_path.open('w', encoding='utf-8') as flagged_fp,
+        ):
+            for record in discovery_iter_jsonl(in_path):
+                score = classifier.predict_score(
+                    title=record.get('title'),
+                    abstract=record.get('abstract'),
+                )
+                record = {**record, 'prediction': float(score)}
+                discovery_write_jsonl_line(all_fp, record)
+                total += 1
+                if score > threshold:
+                    discovery_write_jsonl_line(flagged_fp, record)
+                    flagged += 1
+
+        console.print(
+            f'[green]Scored {total} records; flagged {flagged} above '
+            f'threshold {threshold}.[/green]'
+        )
+        console.print(f'[dim]  all     → {all_path}[/dim]')
+        console.print(f'[dim]  flagged → {flagged_path}[/dim]')
+
+    @click.command(
+        'stream',
+        cls=RichHelpCommand,
+        rich_help=RichDiscoveryStreamHelp(),
+        short_help='Fetch OpenAlex + classify in a single streaming pass, writing a CSV.',
+    )
+    @click.option(
+        '--out',
+        '-o',
+        type=click.Path(dir_okay=False, path_type=str),
+        default='discovery_stream.csv',
+        show_default=True,
+        help='CSV output file. Sibling `.cursor` and `.ids` files track resumable state.',
+    )
+    @click.option(
+        '--limit',
+        '-n',
+        type=int,
+        default=1000,
+        show_default=True,
+        help='Maximum number of new OpenAlex records to process in this run.',
+    )
+    @click.option(
+        '--year-min',
+        type=int,
+        default=2010,
+        show_default=True,
+        help='Only include works published from this year onward.',
+    )
+    @click.option(
+        '--threshold',
+        '-t',
+        type=float,
+        default=0.05,
+        show_default=True,
+        help=(
+            'Probability threshold above which a paper is flagged. 0.05 matched '
+            'the best test-set performance in the upstream Dataset-Discovery-Pipeline.'
+        ),
+    )
+    @click.option(
+        '--max-length',
+        type=int,
+        default=512,
+        show_default=True,
+        help='Max tokenized prompt length passed to the classifier.',
+    )
+    @click.option(
+        '--device',
+        type=click.Choice(['auto', 'cpu', 'cuda']),
+        default='auto',
+        show_default=True,
+        help='Device to run inference on. `auto` uses CUDA if available.',
+    )
+    @click.option(
+        '--no-quantize',
+        is_flag=True,
+        default=False,
+        help='Disable 4-bit quantization even when CUDA + bitsandbytes are available.',
+    )
+    @click.option(
+        '--model-url',
+        type=str,
+        default=None,
+        help=(
+            'Override the Nextcloud URL of the classifier archive. '
+            'Defaults to `[discovery] classifier_url` from the config file.'
+        ),
+    )
+    @click.option(
+        '--resume/--no-resume',
+        default=True,
+        help='Resume from any existing `.cursor`/`.ids` sidecars next to --out.',
+    )
+    @click.option(
+        '--include-title',
+        is_flag=True,
+        default=False,
+        help='Also write the paper title as a trailing CSV column.',
+    )
+    @click.option(
+        '--flagged-only/--all',
+        default=False,
+        help='Only write rows above the threshold instead of every scored record.',
+    )
+    @click.option(
+        '--verbose',
+        '-v',
+        is_flag=True,
+        default=False,
+        help=(
+            'Show the full classifier load output (transformers warnings, LOAD REPORT, '
+            'HF download progress). Off by default for a quieter CLI.'
+        ),
+    )
+    @click.pass_obj
+    def discovery_stream_command(
+        self,
+        out: str,
+        limit: int,
+        year_min: int,
+        threshold: float,
+        max_length: int,
+        device: str,
+        no_quantize: bool,
+        model_url: Optional[str],
+        resume: bool,
+        include_title: bool,
+        flagged_only: bool,
+        verbose: bool,
+    ) -> None:
+        import contextlib
+        import csv
+        import io
+        import os as _os
+        import warnings
+
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.progress import (
+            BarColumn,
+            Progress,
+            TextColumn,
+            TimeRemainingColumn,
+        )
+
+        console = Console()
+
+        if not discovery_is_ml_stack_available():
+            click.secho(
+                '❌ Required ML packages (torch, transformers, peft) are not installed.\n'
+                '   Install them via: pip install chem_mat_database[dev]',
+                fg='red',
+            )
+            sys.exit(1)
+
+        # Ensure the classifier is downloaded before we touch OpenAlex, so a
+        # misconfigured URL fails fast instead of half-way through a fetch.
+        resolved_url = model_url or self.config.get_discovery_classifier_url()
+        model_dir = self.config.get_discovery_model_dir()
+        try:
+            discovery_ensure_classifier_model(url=resolved_url, target_dir=model_dir)
+        except ValueError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+
+        console.print()
+        console.print(
+            f'  [cyan]Loading classifier[/cyan] '
+            f'[dim](device={device}, threshold={threshold})[/dim]'
+        )
+
+        effective_device = None if device == 'auto' else device
+        quantize = False if no_quantize else None
+
+        # ── Noise suppression during model load ──────────────────────────
+        # In quiet mode (the default) we mute four overlapping sources of
+        # pre-stream output so the progress bar has a clean canvas to paint on:
+        # 1. HF hub's own tqdm download progress.
+        # 2. transformers' own logger (the benign LOAD REPORT from our last turn).
+        # 3. Python deprecation warnings such as the `torch_dtype` / `use_return_dict`
+        #    ones emitted from inside transformers.
+        # 4. The `hf_xet` Rust extension's unauthenticated-requests warning,
+        #    which writes directly to fd 2 and escapes Python-level capture.
+        #    We dodge it by putting transformers into offline mode whenever the
+        #    base model is already in the local HF cache — no Hub call, no
+        #    Rust code path, no warning. On a first-time load the warning will
+        #    appear once and subsequent runs are clean.
+        # As a last-line defence we also redirect stdout/stderr into a buffer so
+        # any Python-level C-extension noise is captured. The buffer is surfaced
+        # on error so we never eat a real stack trace.
+        load_noise = io.StringIO()
+
+        def _maybe_enable_offline_mode() -> None:
+            """Set ``HF_HUB_OFFLINE=1`` if the base model is already cached."""
+            try:
+                import json as _json
+                from huggingface_hub import try_to_load_from_cache
+
+                adapter_cfg = Path(model_dir) / 'adapter_config.json'
+                if not adapter_cfg.exists():
+                    return
+                with adapter_cfg.open(encoding='utf-8') as _f:
+                    base_ckpt = _json.load(_f).get('base_model_name_or_path')
+                if not base_ckpt:
+                    return
+                cached = try_to_load_from_cache(
+                    repo_id=base_ckpt, filename='config.json'
+                )
+                if cached is not None:
+                    _os.environ['HF_HUB_OFFLINE'] = '1'
+                    _os.environ['TRANSFORMERS_OFFLINE'] = '1'
+            except Exception:
+                # Best effort — on failure we just accept the one-time warning.
+                pass
+
+        def _load_classifier():
+            return discovery_load_classifier(
+                model_dir=model_dir,
+                device=effective_device,
+                quantize=quantize,
+                max_length=max_length,
+            )
+
+        try:
+            if verbose:
+                classifier = _load_classifier()
+            else:
+                import logging as _logging
+
+                _os.environ.setdefault('HF_HUB_DISABLE_PROGRESS_BARS', '1')
+                _os.environ.setdefault('TRANSFORMERS_VERBOSITY', 'error')
+                _maybe_enable_offline_mode()
+                # huggingface_hub prints a plain warning about sending
+                # unauthenticated requests via its own logger — silence it
+                # alongside the transformers one.
+                for _name in ('huggingface_hub', 'transformers', 'accelerate', 'peft'):
+                    _logging.getLogger(_name).setLevel(_logging.ERROR)
+
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('ignore', category=DeprecationWarning)
+                    warnings.filterwarnings('ignore', category=FutureWarning)
+                    warnings.filterwarnings('ignore', category=UserWarning)
+                    try:
+                        import transformers.utils.logging as _tf_log
+
+                        _tf_log.set_verbosity_error()
+                    except Exception:
+                        pass
+                    with (
+                        contextlib.redirect_stdout(load_noise),
+                        contextlib.redirect_stderr(load_noise),
+                    ):
+                        classifier = _load_classifier()
+        except Exception:
+            if not verbose and load_noise.getvalue():
+                sys.stderr.write(load_noise.getvalue())
+            raise
+
+        out_path = Path(out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if not resume:
+            for suffix in ('.cursor', '.ids'):
+                p = Path(str(out_path) + suffix)
+                if p.exists():
+                    p.unlink()
+
+        columns = list(DISCOVERY_STREAM_CSV_BASE_COLUMNS)
+        if include_title:
+            columns.append('title')
+
+        # When resuming into an existing CSV, seed seen_ids from the rows
+        # already written so that deleting the .ids sidecar by hand still
+        # produces correct skip behaviour.
+        existing_short_ids: set[str] = set()
+        write_header = True
+        if resume and out_path.exists() and out_path.stat().st_size > 0:
+            write_header = False
+            try:
+                with out_path.open('r', encoding='utf-8', newline='') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        sid = row.get('openalex_id')
+                        if sid:
+                            existing_short_ids.add(sid)
+            except Exception:
+                # Corrupt or partial CSV — fall back to cursor/ids sidecars.
+                pass
+
+        state = DiscoveryFetchState(out_path)
+
+        # Surface the resume state so the user understands whether they are
+        # starting fresh or picking up mid-traversal. Computed here before we
+        # enter the fetch loop so we can show it on the first frame.
+        preload_state = DiscoveryFetchState(out_path)
+        preload_state.load()
+        resume_seen_count = len(preload_state.seen_ids) + len(
+            existing_short_ids - {
+                _short.rsplit('/', 1)[-1] for _short in preload_state.seen_ids
+            }
+        )
+        if resume and (resume_seen_count > 0 or preload_state.cursor != '*'):
+            cursor_preview = (
+                (preload_state.cursor[:32] + '…')
+                if len(preload_state.cursor) > 32
+                else preload_state.cursor
+            )
+            console.print(
+                f'  [dim]Resuming:[/dim] '
+                f'[bold]{resume_seen_count}[/bold] seen IDs, '
+                f'cursor [dim]{cursor_preview}[/dim]'
+            )
+
+        progress = Progress(
+            TextColumn('  [bold cyan]Streaming[/bold cyan]'),
+            BarColumn(bar_width=None),
+            TextColumn('[bold]{task.completed}[/bold]/{task.total}'),
+            TextColumn('• flagged [bold green]{task.fields[flagged]}[/bold green]'),
+            TimeRemainingColumn(),
+            console=console,
+            expand=True,
+        )
+
+        written = 0
+        flagged_count = 0
+        scored_count = 0
+
+        console.print()
+        try:
+            with (
+                progress,
+                state,
+                out_path.open('a', encoding='utf-8', newline='') as csv_fp,
+            ):
+                task_id = progress.add_task('stream', total=limit, flagged=0)
+
+                # Extend seen_ids with any short IDs recovered from the existing
+                # CSV, so the fetcher skips them even if the .ids sidecar is gone.
+                if existing_short_ids:
+                    for short in existing_short_ids:
+                        state.seen_ids.add(f'https://openalex.org/{short}')
+
+                writer = csv.DictWriter(csv_fp, fieldnames=columns)
+                if write_header:
+                    writer.writeheader()
+                    csv_fp.flush()
+
+                for record in discovery_openalex_fetch_works(
+                    state=state,
+                    limit=limit,
+                    year_lower_bound=year_min,
+                ):
+                    score = classifier.predict_score(
+                        title=record.get('title'),
+                        abstract=record.get('abstract'),
+                    )
+                    scored_count += 1
+                    row = discovery_build_csv_row(
+                        record=record,
+                        score=score,
+                        threshold=threshold,
+                        include_title=include_title,
+                    )
+                    is_flagged = bool(row['flagged'])
+                    if is_flagged or not flagged_only:
+                        writer.writerow(row)
+                        csv_fp.flush()
+                        written += 1
+
+                    if is_flagged:
+                        flagged_count += 1
+                        title_display = (record.get('title') or '').strip()
+                        if len(title_display) > 72:
+                            title_display = title_display[:71] + '…'
+                        # Toast printed *above* the pinned progress bar.
+                        # Rich's Progress auto-rewrites the bar after the print.
+                        progress.console.print(
+                            f'  [yellow]{float(score):.3f}[/yellow]  '
+                            f'[dim]{row["openalex_id"]:<14}[/dim]  '
+                            f'{title_display}',
+                            highlight=False,
+                        )
+
+                    progress.update(task_id, advance=1, flagged=flagged_count)
+
+        except KeyboardInterrupt:
+            console.print()
+            console.print(
+                '  [yellow]Interrupted — partial results have been flushed to disk.[/yellow]'
+            )
+
+        written_label = 'flagged-only' if flagged_only else 'all rows'
+        console.print()
+        console.print(
+            Panel(
+                (
+                    f'Scored:  [bold]{scored_count}[/bold]\n'
+                    f'Written: [bold]{written}[/bold]  [dim]({written_label})[/dim]\n'
+                    f'Flagged: [bold green]{flagged_count}[/bold green]  '
+                    f'[dim](threshold {threshold})[/dim]\n'
+                    f'CSV:     [dim]{out_path}[/dim]'
+                ),
+                title='[bold green]Stream complete[/bold green]',
+                title_align='left',
+                style='green',
+                expand=False,
+                padding=(1, 2),
+            )
+        )
+
+        # If the run found nothing and we were resuming, the most common
+        # cause is stale sidecar state that has run past the useful tail of
+        # OpenAlex. Tell the user how to start over.
+        if scored_count == 0 and resume and resume_seen_count > 0:
+            console.print(
+                '  [yellow]No new records were fetched.[/yellow] '
+                'The stored cursor may be past the end of the useful tail of '
+                'OpenAlex or stuck on fully-seen pages.\n'
+                f'  Try [bold]cmmanage discover stream --no-resume[/bold] to start '
+                'fresh, or delete [dim]{0}.cursor[/dim] and [dim]{0}.ids[/dim].'.format(
+                    out_path
+                )
+            )
+        console.print()
+
+    @click.command(
+        'model-download',
+        cls=RichHelpCommand,
+        rich_help=RichDiscoveryModelDownloadHelp(),
+        short_help='Download the classifier archive from Nextcloud into the user config folder.',
+    )
+    @click.option(
+        '--model-url',
+        type=str,
+        default=None,
+        help='Override the URL configured under `[discovery] classifier_url`.',
+    )
+    @click.option(
+        '--force/--no-force',
+        default=False,
+        help='Re-download even when the classifier is already cached locally.',
+    )
+    @click.pass_obj
+    def discovery_model_download_command(
+        self,
+        model_url: Optional[str],
+        force: bool,
+    ) -> None:
+        from rich.console import Console
+
+        console = Console()
+        resolved_url = model_url or self.config.get_discovery_classifier_url()
+        target = self.config.get_discovery_model_dir()
+
+        try:
+            path = discovery_ensure_classifier_model(
+                url=resolved_url, target_dir=target, force=force
+            )
+        except ValueError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+        except Exception as exc:
+            click.secho(f'❌ Download failed: {exc}', fg='red')
+            sys.exit(1)
+
+        console.print(f'[green]Classifier ready at {path}[/green]')
+
+    @click.command(
+        'model-info',
+        cls=RichHelpCommand,
+        rich_help=RichDiscoveryModelInfoHelp(),
+        short_help='Show the classifier cache location and ML dependency status.',
+    )
+    @click.pass_obj
+    def discovery_model_info_command(self) -> None:
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich.text import Text
+
+        console = Console()
+        model_dir = Path(self.config.get_discovery_model_dir())
+        url = self.config.get_discovery_classifier_url()
+        adapter_present = (model_dir / 'adapter_config.json').exists()
+        ml_ok = discovery_is_ml_stack_available()
+
+        table = Table(
+            show_header=False,
+            box=None,
+            padding=(0, 2, 0, 0),
+            expand=True,
+        )
+        table.add_column('label', style='dim', no_wrap=True)
+        table.add_column('value', overflow='fold', ratio=1)
+
+        table.add_row('Model dir:', str(model_dir))
+        table.add_row(
+            'Adapter:',
+            Text(
+                'present' if adapter_present else 'missing (run model-download)',
+                style='green' if adapter_present else 'yellow',
+            ),
+        )
+        table.add_row(
+            'Classifier URL:',
+            Text(url or '<unset>', style='' if url else 'yellow'),
+        )
+        table.add_row(
+            'ML stack:',
+            Text(
+                'torch/transformers/peft OK'
+                if ml_ok
+                else 'missing (pip install chem_mat_database[dev])',
+                style='green' if ml_ok else 'red',
+            ),
+        )
+
+        console.print(
+            Panel(
+                table,
+                title='[bold]Discovery model info[/bold]',
+                title_align='left',
+                style='bright_blue',
+                expand=True,
+                padding=(1, 2),
+            )
+        )
 
     ## == DOCS COMMAND GROUP ==
     # This command group is used to manage the documentation of the package.

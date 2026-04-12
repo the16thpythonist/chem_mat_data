@@ -382,17 +382,12 @@ Follow these steps IN ORDER. Do not skip ahead.
 
 ## Tool usage
 
-You have access to tools via two mechanisms: built-in Claude Code tools and
-optional MCP server tools. MCP tools may or may not be available depending on
-the user's configuration. **Try the preferred tool first; if it is not
-available, use the fallback.**
-
 ### Reading webpages
 
-| Priority | Tool                                | Notes                                               |
-|----------|-------------------------------------|-----------------------------------------------------|
-| 1st      | `mcp__crawl4ai__crawl_webpage`      | Pass URL as the `url` argument. Richer extraction.  |
-| 2nd      | `WebFetch`                          | Built-in fallback. Always available.                |
+| Priority | Tool                                                              | Notes                                                        |
+|----------|-------------------------------------------------------------------|--------------------------------------------------------------|
+| 1st      | `Bash` with `crwl '<url>' -o markdown-fit`                        | Primary tool. Returns clean markdown via crawl4ai.           |
+| 2nd      | `WebFetch`                                                        | Fallback if crwl is not installed or fails.                  |
 
 ### Searching the web
 
@@ -638,10 +633,26 @@ into a machine-learning dataset.
 
 {query_value}
 
+## Tool usage
+
+### Reading webpages
+
+| Priority | Tool                                                              | Notes                                                        |
+|----------|-------------------------------------------------------------------|--------------------------------------------------------------|
+| 1st      | `Bash` with `crwl '<url>' -o markdown-fit`                        | Primary tool. Returns clean markdown via crawl4ai.           |
+| 2nd      | `WebFetch`                                                        | Fallback if crwl is not installed or fails.                  |
+
+### Searching the web
+
+| Tool         | Notes                                        |
+|--------------|----------------------------------------------|
+| `WebSearch`  | Use for finding papers by title.             |
+
 ## Procedure
 
-1. **Locate the paper.** If you received a URL, fetch and read it. If you
-   received a title, search the web to find the paper first, then read it.
+1. **Locate the paper.** If you received a URL, fetch and read it using the
+   tools above. If you received a title, search the web to find the paper
+   first, then read it.
 2. **Scan for dataset indicators.** Look for:
    - A "Data Availability" or "Data Records" section with repository links
      (Zenodo, Figshare, GitHub, OSF, Dryad, MaterialsCloud, NOMAD, etc.).
@@ -653,9 +664,11 @@ into a machine-learning dataset.
      handful of example structures).
    - References to an existing public dataset that the paper extends or
      re-publishes with new data.
-3. **Verify if possible.** If you found repository links, try to visit them to
-   confirm that downloadable data files actually exist (CSV, Excel, SDF, JSON,
-   XYZ bundles, etc.). A dead link or an empty repository counts as "no".
+3. **Verify if possible.** If you found repository links, visit **at most one**
+   repository link to confirm that downloadable data files actually exist (CSV,
+   Excel, SDF, JSON, XYZ bundles, etc.). A dead link or an empty repository
+   counts as "no". Do NOT follow chains of redirects or visit more than two
+   URLs total — the paper content itself is usually sufficient to decide.
 4. **Decide.** Answer YES if the paper publishes or makes accessible molecular
    or materials property data — even if it only appears in supplementary tables
    that would need scraping. Answer NO if the paper is purely methodological,
