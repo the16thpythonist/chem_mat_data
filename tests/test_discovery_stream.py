@@ -8,9 +8,15 @@ Covers:
 - The wired-up ``stream`` command itself, with ``fetch_works`` and
   ``load_classifier`` monkey-patched so the tests stay fast and offline.
 """
+import sys
 import csv
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
+
+if sys.version_info < (3, 10):
+    pytest.skip('manage.py requires Python 3.10+ (pycomex dependency)', allow_module_level=True)
 
 from click.testing import CliRunner
 
