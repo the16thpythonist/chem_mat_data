@@ -11,7 +11,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from chem_mat_data.discovery.openalex import (
+    BLACKLISTED_DOI_PREFIXES,
     DEFAULT_CONCEPT_IDS,
+    DEFAULT_TYPES,
+    _is_blacklisted_doi,
     build_filter_string,
     fetch_works,
     reconstruct_abstract,
@@ -58,11 +61,19 @@ class TestBuildFilterString:
         s = build_filter_string(year_lower_bound=2015)
         parts = s.split(',')
         assert 'has_abstract:true' in parts
+        assert 'language:en' in parts
         assert 'publication_year:>2014' in parts
         # Both canonical concept IDs should be present, pipe-separated.
         concept_entry = next(p for p in parts if p.startswith('concepts.id:'))
         for cid in DEFAULT_CONCEPT_IDS:
             assert cid in concept_entry
+
+    def test_default_types_exclude_book_chapters_and_reviews(self):
+        assert 'book-chapter' not in DEFAULT_TYPES
+        assert 'review-article' not in DEFAULT_TYPES
+        assert 'journal-article' in DEFAULT_TYPES
+        assert 'proceedings-article' in DEFAULT_TYPES
+        assert 'report' in DEFAULT_TYPES
 
     def test_custom_concepts_override_defaults(self):
         s = build_filter_string(
@@ -71,6 +82,30 @@ class TestBuildFilterString:
         )
         concept_entry = next(p for p in s.split(',') if p.startswith('concepts.id:'))
         assert concept_entry == 'concepts.id:https://openalex.org/C12345'
+
+
+class TestIsBlacklistedDoi:
+    """Tests for the DOI-prefix blacklist helper."""
+
+    def test_none_doi_is_not_blacklisted(self):
+        assert _is_blacklisted_doi(None) is False
+
+    def test_empty_doi_is_not_blacklisted(self):
+        assert _is_blacklisted_doi('') is False
+
+    def test_blacklisted_bare_doi(self):
+        assert _is_blacklisted_doi('10.55277/researchhub.xyz') is True
+
+    def test_blacklisted_full_url_doi(self):
+        assert _is_blacklisted_doi('https://doi.org/10.46943/xi.conedu.2025') is True
+
+    def test_clean_doi_is_not_blacklisted(self):
+        assert _is_blacklisted_doi('https://doi.org/10.1038/s41586-023-06735-9') is False
+        assert _is_blacklisted_doi('10.1021/acs.jctc.1c00471') is False
+
+    def test_custom_prefixes(self):
+        assert _is_blacklisted_doi('10.9999/foo', prefixes=('10.9999/',)) is True
+        assert _is_blacklisted_doi('10.1234/bar', prefixes=('10.9999/',)) is False
 
 
 class TestToRecord:
@@ -341,3 +376,37 @@ class TestFetchWorks:
 
         assert len(records) == 1
         assert records[0]['openalex_id'] == 'https://openalex.org/W3'
+
+    def test_blacklisted_doi_records_are_skipped(self, tmp_path):
+        """Records with a blacklisted DOI prefix are skipped but marked seen."""
+        items = [
+            {
+                'id': 'https://openalex.org/W1',
+                'doi': 'https://doi.org/10.55277/researchhub.xyz',
+                'title': 'Spam entry',
+                'abstract_inverted_index': {'spam': [0]},
+                'publication_year': 2025,
+            },
+            {
+                'id': 'https://openalex.org/W2',
+                'doi': 'https://doi.org/10.1038/s41586-023-06735-9',
+                'title': 'Good paper',
+                'abstract_inverted_index': {'real': [0], 'data': [1]},
+                'publication_year': 2023,
+            },
+        ]
+
+        def fake_get(url, params, timeout=30):
+            return _fake_response(items, next_cursor='end')
+
+        state = FetchState(tmp_path / 'papers.jsonl')
+        with patch(
+            'chem_mat_data.discovery.openalex._session_get', side_effect=fake_get
+        ):
+            with state:
+                records = list(fetch_works(state=state, limit=10, year_lower_bound=2010))
+
+        assert len(records) == 1
+        assert records[0]['openalex_id'] == 'https://openalex.org/W2'
+        # The blacklisted record should still be marked as seen.
+        assert 'https://openalex.org/W1' in state.seen_ids

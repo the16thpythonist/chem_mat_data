@@ -24,7 +24,7 @@ function so that tests can monkey-patch it without having to build a fake
 """
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -43,14 +43,31 @@ DEFAULT_CONCEPT_IDS: List[str] = [
     'https://openalex.org/C192562407',
 ]
 
-#: Default ``type=`` filter values accepted by the pipeline.
+#: Default ``type=`` filter values accepted by the pipeline. Book chapters and
+#: review articles are excluded because they almost never release reusable
+#: molecular or materials datasets — they dominated the false-positive list
+#: when the discovery stream was validated against the LLM identify agent.
 DEFAULT_TYPES: List[str] = [
     'journal-article',
     'proceedings-article',
-    'book-chapter',
     'report',
-    'review-article',
 ]
+
+#: DOI prefixes known to yield only spam, placeholder entries, or publishers
+#: that exclusively produce content outside chemistry/materials science (e.g.
+#: education conferences, Turkish book chapter publishers, Brazilian e-book
+#: series). Records whose DOI starts with any of these prefixes are silently
+#: skipped during fetching so they never reach the classifier.
+BLACKLISTED_DOI_PREFIXES: Tuple[str, ...] = (
+    '10.55277/',    # ResearchHub — spam / placeholder entries
+    '10.46943/',    # CONEDU education conference (all 404s)
+    '10.37609/',    # Turkish book chapter publisher (akya)
+    '10.58830/',    # Turkish book chapter publisher (ozgur)
+    '10.56238/',    # Brazilian book chapter publisher (sevened)
+    '10.37885/',    # Brazilian book chapter publisher
+    '10.63330/',    # Brazilian book chapter publisher (aurumpub)
+    '10.29327/',    # Brazilian e-book publisher
+)
 
 #: Fields to request via ``select=`` to keep response payloads small.
 SELECT_FIELDS = 'id,doi,title,abstract_inverted_index,publication_year'
@@ -103,6 +120,12 @@ def build_filter_string(
     """
     Compose the OpenAlex ``filter=`` parameter.
 
+    The filter restricts results to English-language works that have an
+    abstract, belong to at least one of the requested concept categories, and
+    match one of the allowed publication types. Non-English papers are excluded
+    because the TinyLlama classifier produces unreliable (typically very high)
+    scores on text it cannot understand.
+
     :param year_lower_bound: Only works published from this year onward are
         returned. Converted to a strict-greater-than filter on the wire.
     :param concept_ids: Optional concept-ID whitelist. Defaults to
@@ -119,6 +142,7 @@ def build_filter_string(
 
     filters = [
         'has_abstract:true',
+        'language:en',
         'concepts.id:' + '|'.join(concept_ids),
         'type:' + '|'.join(types),
         f'publication_year:>{year_lower_bound - 1}',
@@ -144,6 +168,28 @@ def to_record(obj: Dict[str, Any]) -> Dict[str, Any]:
         'abstract': reconstruct_abstract(obj.get('abstract_inverted_index')),
         'publication_year': obj.get('publication_year'),
     }
+
+
+def _is_blacklisted_doi(
+    doi: Optional[str],
+    prefixes: Tuple[str, ...] = BLACKLISTED_DOI_PREFIXES,
+) -> bool:
+    """
+    Return ``True`` if ``doi`` starts with any of the blacklisted prefixes.
+
+    The function normalises both full URL forms (``https://doi.org/10.xxx``)
+    and bare identifiers (``10.xxx``) before checking.
+    """
+    if not doi:
+        return False
+
+    bare = doi
+    for schema in ('https://doi.org/', 'http://doi.org/'):
+        if bare.startswith(schema):
+            bare = bare[len(schema):]
+            break
+
+    return bare.startswith(prefixes)
 
 
 def _build_session(retries: int = 3) -> requests.Session:
@@ -263,6 +309,10 @@ def fetch_works(
             record = to_record(obj)
             if not record['title'] or not record['abstract']:
                 # Still mark as seen so the next run does not re-examine it.
+                state.mark_seen(oid)
+                continue
+
+            if _is_blacklisted_doi(record.get('doi')):
                 state.mark_seen(oid)
                 continue
 

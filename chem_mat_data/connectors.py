@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import os
+import re
+import time
 import tempfile
 import zipfile
 import shutil
@@ -166,6 +168,207 @@ class ZenodoSource(AbsractOnlineSource):
         try:
             self.cleanup()
         except:
+            pass
+
+
+class FigshareSource(AbsractOnlineSource):
+    """
+    Data source for downloading files from Figshare repositories.
+
+    Figshare has several quirks that make a dedicated source useful:
+
+    - The ``ndownloader`` URLs on some subdomains (e.g. ``springernature.figshare.com``)
+      return HTTP 202 ("Accepted — file is being prepared") instead of the file content.
+      This class normalises the URL to the canonical ``ndownloader.figshare.com`` host
+      and retries on 202 responses.
+    - Many Figshare datasets are distributed as ZIP archives. When ``relative_path`` is
+      given, the archive is automatically extracted and only the requested file path is
+      returned — similar to :class:`ZenodoSource`.
+
+    Example:
+
+    .. code-block:: python
+
+        # Download a single file by Figshare file ID
+        with FigshareSource(file_id=1503990) as src:
+            path = src.fetch()  # returns path to downloaded file
+
+        # Download a ZIP and extract a specific CSV from it
+        with FigshareSource(
+            file_id=25766582,
+            relative_path='PFAS-Map/test_data/PFAS_TTR_Binding.csv',
+        ) as src:
+            csv_path = src.fetch()
+
+        # Alternatively pass a full ndownloader URL instead of a file_id
+        with FigshareSource(
+            url='https://ndownloader.figshare.com/files/25766582',
+            relative_path='PFAS-Map/processed_data/Precalculated_EPA_PFAS_pca_classification.csv',
+        ) as src:
+            csv_path = src.fetch()
+
+    :param file_id: Figshare numeric file ID (mutually exclusive with *url*).
+    :param url: Full ndownloader URL (mutually exclusive with *file_id*).
+    :param relative_path: If given, treat the download as a ZIP archive and extract
+        this path from it. If ``None``, return the raw downloaded file.
+    :param verbose: Show a tqdm progress bar during download.
+    :param max_retries: Number of retry attempts when Figshare returns HTTP 202.
+    :param retry_delay: Seconds to wait between 202 retries.
+    """
+
+    # Regex to extract the numeric file ID from various Figshare ndownloader URL styles.
+    _NDOWNLOADER_RE = re.compile(
+        r'https?://(?:[\w.-]*\.)?figshare\.com/ndownloader/files/(\d+)'
+    )
+
+    def __init__(
+        self,
+        file_id: int | None = None,
+        url: str | None = None,
+        relative_path: str | None = None,
+        verbose: bool = False,
+        max_retries: int = 4,
+        retry_delay: float = 5.0,
+    ):
+        if file_id is None and url is None:
+            raise ValueError('Either file_id or url must be provided')
+        if file_id is not None and url is not None:
+            raise ValueError('Provide file_id or url, not both')
+
+        if url is not None:
+            m = self._NDOWNLOADER_RE.match(url)
+            if m:
+                file_id = int(m.group(1))
+            else:
+                # Accept the URL as-is but warn the user
+                self._raw_url = url
+                file_id = None
+
+        if file_id is not None:
+            self._raw_url = f'https://ndownloader.figshare.com/files/{file_id}'
+
+        self.file_id = file_id
+        self.url = self._raw_url
+        self.relative_path = relative_path
+        self.verbose = verbose
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.temp_dir = None
+
+    def prepare(self):
+        """Create temporary directory for download and extraction."""
+        self.temp_dir = tempfile.mkdtemp(prefix='figshare_')
+
+    def fetch(self) -> str:
+        """
+        Download the file from Figshare, retrying on HTTP 202 responses.
+
+        If ``relative_path`` was specified, the download is treated as a ZIP
+        archive and the requested file is extracted from it.
+
+        :returns: Path to the downloaded (or extracted) file.
+        :raises RuntimeError: If Figshare keeps returning 202 after all retries.
+        :raises ValueError: If ``relative_path`` is not found inside the archive.
+        """
+        if self.temp_dir is None:
+            self.prepare()
+
+        headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                '(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            )
+        }
+
+        # -- download with 202 retry logic --
+        response = None
+        for attempt in range(1, self.max_retries + 1):
+            response = requests.get(
+                self.url,
+                stream=True,
+                headers=headers,
+                timeout=(10, 300),
+                allow_redirects=True,
+            )
+            if response.status_code != 202:
+                break
+            response.close()
+            if attempt < self.max_retries:
+                time.sleep(self.retry_delay)
+
+        if response.status_code == 202:
+            raise RuntimeError(
+                f'Figshare returned HTTP 202 (file being prepared) after '
+                f'{self.max_retries} attempts for {self.url}'
+            )
+        response.raise_for_status()
+
+        # -- write to disk --
+        filename = os.path.basename(self.url.split('?')[0]) or 'downloaded_file'
+        download_path = os.path.join(self.temp_dir, filename)
+        total_size = int(response.headers.get('content-length', 0))
+
+        try:
+            if self.verbose and total_size > 0:
+                with open(download_path, 'wb') as f:
+                    with tqdm(
+                        total=total_size, unit='B', unit_scale=True, desc=filename
+                    ) as pbar:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                f.write(chunk)
+                                pbar.update(len(chunk))
+            else:
+                with open(download_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+        finally:
+            response.close()
+
+        # -- optional ZIP extraction --
+        if self.relative_path is None:
+            return download_path
+
+        extract_dir = os.path.join(self.temp_dir, 'extracted')
+        os.makedirs(extract_dir, exist_ok=True)
+
+        with zipfile.ZipFile(download_path, 'r') as zf:
+            zf.extractall(extract_dir)
+
+        target = os.path.join(extract_dir, self.relative_path)
+        if not os.path.exists(target):
+            # Search recursively as fallback
+            basename = os.path.basename(self.relative_path)
+            for root, _dirs, files in os.walk(extract_dir):
+                if basename in files:
+                    target = os.path.join(root, basename)
+                    break
+
+        if not os.path.exists(target):
+            raise ValueError(
+                f"File '{self.relative_path}' not found in the Figshare archive"
+            )
+
+        return target
+
+    def cleanup(self):
+        """Remove temporary download and extraction files."""
+        if self.temp_dir:
+            if os.path.exists(self.temp_dir):
+                shutil.rmtree(self.temp_dir)
+            self.temp_dir = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.cleanup()
+
+    def __del__(self):
+        try:
+            self.cleanup()
+        except Exception:
             pass
 
 
