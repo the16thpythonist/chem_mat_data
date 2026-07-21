@@ -1,3 +1,8 @@
+# PEP 563: keep annotations as strings so that PEP 604 union syntax (e.g. ``int | None``)
+# used in some signatures is not evaluated at runtime, which would otherwise raise a
+# TypeError on Python 3.9 (where ``type | None`` is not yet supported at runtime).
+from __future__ import annotations
+
 import os
 import tempfile
 import zipfile

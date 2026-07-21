@@ -5,7 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [1.10.0] - Unreleased
+## [1.10.1] - Unreleased
+
+### Changed
+
+- **`release.sh` reduced to build & publish.** The release script no longer bumps the version,
+  runs tests, or creates git commits/tags and GitHub releases. It now only cleans `dist/`, runs
+  `uv build`, and publishes with `uv publish`. Version bumping is handled separately. The script
+  no longer takes a `<major|minor|patch>` argument.
+
+### Fixed
+
+- **Python 3.12 support.** The `requires-python` upper bound was changed from `<=3.12` to
+  `<3.13`. Under PEP 440, `<=3.12` excludes patch releases such as `3.12.7`
+  (since `3.12.7 > 3.12`), which meant common Python 3.12 installations were unable to install
+  the package. `<3.13` correctly includes all of the 3.12.x series.
+- **Python 3.9 import compatibility.** `chem_mat_data/connectors.py` used PEP 604 union
+  syntax (`int | None`) in function signatures, which is evaluated at runtime and raised a
+  `TypeError` on import under Python 3.9. Added `from __future__ import annotations` so the
+  annotations are not evaluated at runtime.
+
+## [1.10.0] - 2026-04-12
 
 ### Changed
 

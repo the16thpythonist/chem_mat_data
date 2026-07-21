@@ -5,6 +5,11 @@ Testing all the code snippets used in the documentation.
 
 def test_readme_example():
 
+    import pytest
+    # The GNN libraries are optional dependencies, skip this doc example if unavailable.
+    pytest.importorskip("torch")
+    pytest.importorskip("torch_geometric")
+
     from torch import Tensor
     from torch_geometric.data import Data
     from torch_geometric.loader import DataLoader

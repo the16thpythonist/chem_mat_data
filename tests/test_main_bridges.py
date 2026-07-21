@@ -8,6 +8,15 @@ NOTE: The GNN libraries used here are not part of the packages main dependencies
 
 import time
 
+import pytest
+
+# These GNN libraries are optional dependencies (see module docstring). If any of them is
+# not installed, skip this entire test module rather than erroring out during collection.
+pytest.importorskip("torch")
+pytest.importorskip("torch_geometric")
+pytest.importorskip("jax")
+pytest.importorskip("jraph")
+
 import torch
 import torch.nn as nn
 from torch_geometric.data import Data
