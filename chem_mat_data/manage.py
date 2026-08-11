@@ -28,6 +28,7 @@ from chem_mat_data.utils import PAGES_PATH
 from chem_mat_data.utils import PROJECT_PATH
 from chem_mat_data.utils import METADATA_PATH
 from chem_mat_data.utils import TEMPLATE_ENV
+from chem_mat_data.agent.manifest import STAGES
 from chem_mat_data.utils import CsvListType
 from chem_mat_data.utils import open_file_in_editor
 from chem_mat_data.utils import RichMixin
@@ -292,142 +293,11 @@ class RichManageHelp(RichMixin):
         )
 
         yield render_help(
-            '[bold]Agent[/bold] commands expose an LLM-based dataset discovery agent that can automatically find '
-            'and process datasets from scientific publications. Given a publication URL, the agent extracts dataset '
-            'download links and can generate processing scripts that convert the raw data into the ChemMatData '
-            'graph format. This is especially useful for rapidly onboarding new datasets from the literature without '
-            'having to manually search for and download the underlying data files.\n'
-        )
-
-
-class RichAgentIdentifyHelp(RichMixin):
-    """
-    Rich display element that renders the help text for the ``agent identify`` command.
-    """
-
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
-
-        yield render_help(
-            'Given a publication URL or paper title, run an LLM agent that reads the '
-            'paper and determines whether it publishes molecular or materials property '
-            'data that could be compiled into a machine-learning dataset.\n'
-        )
-
-        yield render_help(
-            'The agent looks for data availability sections, repository links (Zenodo, '
-            'GitHub, Figshare, etc.), supplementary tables with SMILES or molecular '
-            'formulas, and mentions of DFT calculations or experimental measurements '
-            'on collections of compounds. If given a paper title instead of a URL, the '
-            'agent will search the web to locate the paper first.\n'
-        )
-
-        yield render_help(
-            'The result is a simple yes/no decision accompanied by a short reasoning '
-            'paragraph. A JSON file with both fields is saved to '
-            '`agent/artifacts/identify/`.\n'
-        )
-
-
-class RichAgentPrepareHelp(RichMixin):
-    """
-    Rich display element that renders the help text for the ``agent prepare`` command.
-    """
-
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
-
-        yield render_help(
-            'Given a scientific publication URL, run an LLM agent that navigates the paper, '
-            'searches for associated dataset repositories (Zenodo, GitHub, Figshare, OSF, etc.), '
-            'and downloads the raw data files.\n'
-        )
-
-        yield render_help(
-            'The agent inspects sections such as "Data Availability", supplementary materials, '
-            'and linked external repositories. It prefers tabular formats (`.csv`, `.tsv`, `.xlsx`) '
-            'over archives and avoids downloading duplicate representations. If a `README` with '
-            'schema or column descriptions is available, it is downloaded alongside the data.\n'
-        )
-
-        yield render_help(
-            'Downloaded files are saved into `agent/artifacts/downloads/`. After this command '
-            'completes, run `cmmanage agent generate` to produce a processing script from the '
-            'downloaded data.\n'
-        )
-
-        yield render_help(
-            'The LLM backend is selected from the `[agent]` section of the config file '
-            '(default: `opencode`). Use `--backend` to override, e.g. '
-            '`cmmanage agent --backend claude prepare <url>`.\n'
-        )
-
-
-class RichAgentGenerateHelp(RichMixin):
-    """
-    Rich display element that renders the help text for the ``agent generate`` command.
-    """
-
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
-
-        yield render_help(
-            'Inspect previously downloaded dataset files in `agent/artifacts/downloads/` and '
-            'generate a ChemMatData-compatible processing script that converts the raw data '
-            'into the graph format.\n'
-        )
-
-        yield render_help(
-            'The LLM agent reads the downloaded files (and any accompanying README), studies '
-            'the example scripts in `agent/example_scripts/`, and produces a new Python script '
-            'that extends the base processing template (`scripts/create_graph_datasets.py`). '
-            'The generated script follows the same conventions as hand-written dataset scripts '
-            'and is ready to run locally.\n'
-        )
-
-        yield render_help(
-            'The output is saved to `agent/artifacts/scripts/<dataset>_generated.py`. '
-            'You can then execute it directly with '
-            '`python chem_mat_data/agent/artifacts/scripts/<name>_generated.py` to produce '
-            'the final graph dataset.\n'
-        )
-
-        yield render_help(
-            'This command requires that `cmmanage agent prepare` has been run first so that '
-            'dataset files are present in the downloads directory.\n'
-        )
-
-
-class RichAgentInstallPluginsHelp(RichMixin):
-    """
-    Rich display element that renders the help text for the ``agent install-plugins`` command.
-    """
-
-    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
-
-        yield render_help(
-            "Install the external MCP servers and tools that enhance the agent's "
-            'capabilities. Plugins are installed for the currently active backend only '
-            '(as set in the config file or via `--backend`).\n'
-        )
-
-        yield render_help(
-            '[bold]Claude backend[/bold] plugins: `crawl4ai` (uv tool) for advanced '
-            'web crawling with JavaScript rendering via the `crwl` CLI, and '
-            '`mcp-file-downloader` (Node.js) for robust file downloads with optional '
-            'browser-mode support. The file downloader is configured as an MCP server '
-            'in the `[agent.claude.mcp_servers]` config section.\n'
-        )
-
-        yield render_help(
-            '[bold]OpenCode backend[/bold] plugins: `mcp-file-downloader` (Node.js) for file '
-            'downloads. After installation, the command prints an OpenCode configuration snippet '
-            'that must be added to your OpenCode config manually. The other OpenCode plugins '
-            '(`crawl4ai`, `websearch_cited`) are installed as OpenCode plugins separately.\n'
-        )
-
-        yield render_help(
-            'All MCP servers are installed into the `.mcp-servers/` directory inside the '
-            'project root. The config file is updated automatically with the correct paths '
-            '(Claude backend only). The agent works without these plugins using built-in '
-            'fallback tools, but performs better with them installed.\n'
+            '[bold]Agent[/bold] commands are deterministic helpers supporting the `dataset-extraction` '
+            'skill, which turns a scientific publication into a working processing script. The skill itself lives '
+            'in `.claude/skills/dataset-extraction/` and is invoked from Claude Code; these commands provide the '
+            'two pieces that should not be left to a model - building a clean virtual environment in which to run '
+            'a generated script, and verifying that a finished run actually produced a valid dataset.\n'
         )
 
 
@@ -439,38 +309,170 @@ class RichAgentGroupHelp(RichMixin):
     def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
 
         yield render_help(
-            'The agent system automates the discovery and processing of chemistry and '
-            'materials science datasets from scientific publications. Given a publication '
-            'URL, it can locate the associated raw data files, download them, and generate '
-            'a ChemMatData-compatible processing script that converts the data into the '
-            'graph format used for training graph neural networks.\n'
+            'The `agent` commands are deterministic helpers that support the '
+            '`dataset-extraction` skill. The skill itself - the instructions for finding '
+            'a dataset in a publication, downloading it, and writing a processing script '
+            '- lives in `.claude/skills/dataset-extraction/` and is invoked from Claude '
+            'Code rather than from this CLI.\n'
         )
 
         yield render_help(
-            'The typical workflow consists of two steps. First, '
-            '`cmmanage agent prepare <url>` navigates the publication page, searches for '
-            'linked data repositories (Zenodo, Figshare, GitHub, OSF, supplementary '
-            'materials), and downloads the raw dataset files into '
-            '`agent/artifacts/downloads/`. Second, `cmmanage agent generate` reads those '
-            'files, generates a Python processing script based on the example scripts and '
-            'base template, and then runs and iterates on the script until it produces '
-            'valid output.\n'
+            'Two helpers remain here because they should not depend on a model\'s '
+            'judgement. `cmmanage agent venv` builds a clean virtual environment with the '
+            'project installed, so that generated scripts run in isolation from the '
+            'development environment. `cmmanage agent verify` checks a finished results '
+            'folder against the hard post-conditions: that a message pack dataset and a '
+            '`metadata.yml` exist, that the compound and target counts are sane, and that '
+            'every target index carries a description.\n'
         )
 
         yield render_help(
-            'Before running the main workflow, you can use `cmmanage agent identify <url>` '
-            'to quickly check whether a publication actually contains usable molecular or '
-            'materials property data. Use `cmmanage agent install-plugins` to set up '
-            "optional MCP server plugins that improve the agent's web crawling and file "
-            'download capabilities.\n'
+            'A processing run can exit cleanly and still produce unusable output, because '
+            'molecules that fail conversion are logged and skipped rather than raising. '
+            'Treat a clean `verify` as the definition of success, not the absence of a '
+            'traceback.\n'
+        )
+
+
+class RichAgentVenvHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent venv`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Create a clean virtual environment for running generated dataset processing '
+            'scripts. The environment is built with `uv` and the project is installed into '
+            'it in editable mode together with its development dependencies.\n'
         )
 
         yield render_help(
-            'The LLM backend is selected from the `[agent]` section of the config file '
-            '(default: `opencode`). Use `--backend` to override on any command, e.g. '
-            '`cmmanage agent --backend claude prepare <url>`. The `claude` backend uses '
-            'the Claude Agent SDK and requires either an API key or an OAuth token '
-            'configured in `[agent.claude]`.\n'
+            'The venv is created at `.dataset_work/.venv` by default and is recreated from '
+            'scratch on every invocation, so a broken environment is always one command '
+            'away from being fixed. The path of the resulting Python interpreter is printed '
+            'on the last line of output so that it can be captured by a calling script.\n'
+        )
+
+
+class RichAgentInitHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent init`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Start a new staged extraction run. Creates `.dataset_work/<slug>/` with a '
+            '`manifest.yml` recording every stage as pending, and an empty `downloads/` '
+            'folder for the prepare stage to fill.\n'
+        )
+
+        yield render_help(
+            'The slug is a short identifier for the run and is usually the eventual '
+            'dataset name. The `--url` should be the publication URL, or a concrete '
+            'enough paper title that it can be found by search; deciding whether a '
+            'paper is worth extracting at all happens before this point.\n'
+        )
+
+
+class RichAgentStatusHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent status`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Show where an extraction run stands: the status of each of the six stages, '
+            'any recorded blockers, and which stage comes next.\n'
+        )
+
+        yield render_help(
+            'A stage is `pending` before it runs, `passed` once its gate is clean, '
+            '`blocked` when it hit something needing a human, and `stale` when an '
+            'earlier stage has since been re-run and its result can no longer be '
+            'trusted. This is the first thing to run when picking up a run in a new '
+            'session.\n'
+        )
+
+
+class RichAgentGateHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent gate`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Check a stage against its post-conditions and record the outcome in the '
+            'manifest. A stage whose predecessors have not passed fails immediately, '
+            'because checking a script against metadata that was never agreed produces '
+            'a meaningless verdict.\n'
+        )
+
+        yield render_help(
+            'The gates check concrete things rather than asking whether the stage went '
+            'well: whether a downloaded file is secretly an HTML landing page, whether '
+            '`Experiment.extend` was handed an absolute path, whether the script reaches '
+            'into the scratch directory instead of downloading its own data, and how '
+            'many input rows survived the full run.\n'
+        )
+
+        yield render_help(
+            'Exits non-zero when a gate fails, and marks the stage `blocked` with the '
+            'first error as the blocker. Use `--no-record` to check without writing to '
+            'the manifest, and `--strict` to fail on warnings too.\n'
+        )
+
+
+class RichAgentSetHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent set`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Record a value into the run manifest. This is how each stage hands its '
+            'conclusions to the next one and to the gates.\n'
+        )
+
+        yield render_help(
+            'Scalar keys take a plain value: `source_url`, `dataset_name`, '
+            '`script_path`, `smoke_results_dir`, `results_dir`, `input_rows`, '
+            '`max_drop_rate`, `drop_rate_reason`. The structured keys `metadata_draft` '
+            'and `license` take a JSON object, so a whole finding can be written in one '
+            'call.\n'
+        )
+
+
+class RichAgentVerifyHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent verify`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Verify that a dataset processing run produced complete and usable output. '
+            'Point this at the results folder of a `create_graph_datasets__<name>.py` run, '
+            'which for a default `__DEBUG__` run is '
+            '`chem_mat_data/scripts/results/create_graph_datasets__<name>/debug`.\n'
+        )
+
+        yield render_help(
+            'Errors mean the results are not usable: a missing or empty `.mpack` file, a '
+            'missing or unparseable `metadata.yml`, a zero compound count, or a '
+            '`target_descriptions` mapping that does not cover every target index. '
+            'Warnings flag results that are valid but incomplete, such as missing tags, '
+            'sources, or a compound count low enough to suggest that `__TESTING__` was '
+            'left enabled.\n'
+        )
+
+        yield render_help(
+            'The command exits with a non-zero status when any error is found, so it can '
+            'gate a workflow. Use `--strict` to have warnings fail the check as well.\n'
         )
 
 
@@ -784,10 +786,12 @@ class CLI(click.RichGroup):
 
         # agent command group
         self.add_command(self.agent_group)
-        self.agent_group.add_command(self.agent_install_plugins_command)
-        self.agent_group.add_command(self.agent_identify_command)
-        self.agent_group.add_command(self.agent_prepare_command)
-        self.agent_group.add_command(self.agent_generate_command)
+        self.agent_group.add_command(self.agent_venv_command)
+        self.agent_group.add_command(self.agent_verify_command)
+        self.agent_group.add_command(self.agent_init_command)
+        self.agent_group.add_command(self.agent_status_command)
+        self.agent_group.add_command(self.agent_gate_command)
+        self.agent_group.add_command(self.agent_set_command)
 
         # discovery command group (CLI verb is `discover`, keeping the
         # user-visible panel title as "Discovery" via display_title override).
@@ -1481,687 +1485,427 @@ class CLI(click.RichGroup):
         'agent',
         cls=RichHelpGroup,
         rich_help=RichAgentGroupHelp(),
-        short_help='LLM agent for automated dataset discovery and processing.',
+        short_help='Deterministic helpers for the dataset-extraction skill.',
+    )
+    @click.pass_obj
+    def agent_group(self) -> None:
+        pass
+
+    @click.command(
+        'venv',
+        cls=RichHelpCommand,
+        rich_help=RichAgentVenvHelp(),
+        short_help='Create a clean virtual environment for running generated scripts.',
     )
     @click.option(
-        '--backend',
-        '-b',
-        type=click.Choice(['opencode', 'claude']),
+        '--path',
+        type=click.Path(file_okay=False, path_type=str),
         default=None,
-        help='LLM backend to use. Overrides the config file setting.',
+        help='Where to create the venv. Defaults to `.dataset_work/.venv`.',
     )
     @click.pass_obj
-    def agent_group(
+    def agent_venv_command(
         self,
-        backend: str | None,
+        path: Optional[str],
     ) -> None:
-        if backend:
-            self._agent_backend_name = backend
-        else:
-            self._agent_backend_name = self.config.get_agent_backend()
+        from pathlib import Path as _Path
+        from rich.console import Console
 
-    #: Friendly display names for common MCP and built-in tool names.
-    _TOOL_DISPLAY_NAMES: Dict[str, str] = {
-        'mcp__file_downloader__download_file': 'Download',
-        'mcp__crawl4ai__crawl_webpage': 'Crawl',
-        'mcp__crawl4ai__crawl_website': 'Crawl',
-        'WebFetch': 'Fetch',
-        'WebSearch': 'Search',
-        'ToolSearch': 'ToolSearch',
-    }
+        from chem_mat_data.agent.environment import (
+            create_agent_venv,
+            EnvironmentSetupError,
+        )
+
+        console = Console()
+        venv_path = _Path(path) if path else None
+
+        console.print('[cyan]Creating virtual environment (this may take a while)...[/cyan]')
+        try:
+            python_path = create_agent_venv(venv_path)
+        except EnvironmentSetupError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+
+        console.print('[green]✓ virtual environment ready[/green]')
+        # Printed bare on the last line so a calling script can capture it.
+        click.echo(str(python_path))
+
+    @click.command(
+        'verify',
+        cls=RichHelpCommand,
+        rich_help=RichAgentVerifyHelp(),
+        short_help='Check that a processing run produced a valid dataset.',
+    )
+    @click.argument(
+        'results_dir',
+        type=click.Path(path_type=str),
+    )
+    @click.option(
+        '--strict',
+        is_flag=True,
+        default=False,
+        help='Treat warnings as failures as well.',
+    )
+    @click.pass_obj
+    def agent_verify_command(
+        self,
+        results_dir: str,
+        strict: bool,
+    ) -> None:
+        from rich.console import Console
+
+        from chem_mat_data.agent.verification import verify_results
+
+        console = Console()
+        report = verify_results(results_dir)
+
+        console.print()
+        console.print(f'[bold]Verifying[/bold] [dim]{report.results_dir}[/dim]')
+        console.print()
+
+        if report.dataset_name:
+            console.print(f'  dataset    [bold]{report.dataset_name}[/bold]')
+        if report.compounds is not None:
+            console.print(f'  compounds  [bold]{report.compounds}[/bold]')
+        if report.targets is not None:
+            console.print(f'  targets    [bold]{report.targets}[/bold]')
+        console.print()
+
+        for issue in report.errors:
+            console.print(f'  [bold red]✗[/bold red] {issue.message}')
+        for issue in report.warnings:
+            console.print(f'  [yellow]![/yellow] {issue.message}')
+
+        if report.ok and not report.warnings:
+            console.print('  [bold green]✓[/bold green] all checks passed')
+
+        console.print()
+
+        if not report.ok:
+            count = len(report.errors)
+            console.print(
+                f'[bold red]FAILED[/bold red] - {count} error(s). '
+                'The results are not usable as they stand.'
+            )
+            sys.exit(1)
+
+        if strict and report.warnings:
+            count = len(report.warnings)
+            console.print(
+                f'[bold red]FAILED[/bold red] - {count} warning(s) with --strict.'
+            )
+            sys.exit(1)
+
+        if report.warnings:
+            console.print(
+                '[green]PASSED[/green] with warnings - the dataset is valid but '
+                'incomplete.'
+            )
+        else:
+            console.print('[bold green]PASSED[/bold green]')
+
+    ## -- staged extraction pipeline --
+    # The dataset-extraction skill walks a publication through six gated stages. The
+    # commands below own the state that has to survive between those stages, and the
+    # gates that decide whether a stage may be considered done.
 
     @staticmethod
-    def _parse_tool_input(raw_input: str) -> dict:
+    def _render_gate_report(console, report) -> None:
         """
-        Try to parse a tool input string as a dict. Handles both JSON and
-        Python dict repr formats.
+        Print a gate report to the console.
+
+        :param console: A Rich Console.
+        :param report: The VerificationReport to render.
         """
-        import ast
-        import json
+        if report.dataset_name:
+            console.print(f'  dataset    [bold]{report.dataset_name}[/bold]')
+        if report.compounds is not None:
+            console.print(f'  compounds  [bold]{report.compounds}[/bold]')
+        if report.targets is not None:
+            console.print(f'  targets    [bold]{report.targets}[/bold]')
+        if report.dataset_name or report.compounds is not None:
+            console.print()
 
-        if not raw_input or not isinstance(raw_input, str):
-            return {}
+        for issue in report.errors:
+            console.print(f'  [bold red]✗[/bold red] {issue.message}')
+        for issue in report.warnings:
+            console.print(f'  [yellow]![/yellow] {issue.message}')
 
-        # Try JSON first
-        try:
-            parsed = json.loads(raw_input)
-            if isinstance(parsed, dict):
-                return parsed
-        except (json.JSONDecodeError, TypeError):
-            pass
+        if report.ok and not report.warnings:
+            console.print('  [bold green]✓[/bold green] all checks passed')
 
-        # Try Python literal
-        try:
-            parsed = ast.literal_eval(raw_input)
-            if isinstance(parsed, dict):
-                return parsed
-        except (ValueError, SyntaxError):
-            pass
+    @click.command(
+        'init',
+        cls=RichHelpCommand,
+        rich_help=RichAgentInitHelp(),
+        short_help='Start a new staged extraction run.',
+    )
+    @click.argument('slug', type=str)
+    @click.option(
+        '--url',
+        '-u',
+        type=str,
+        default=None,
+        help='Publication URL or a concrete paper title to extract from.',
+    )
+    @click.option(
+        '--force',
+        is_flag=True,
+        default=False,
+        help='Overwrite an existing manifest for this slug.',
+    )
+    @click.pass_obj
+    def agent_init_command(
+        self,
+        slug: str,
+        url: Optional[str],
+        force: bool,
+    ) -> None:
+        from rich.console import Console
 
-        return {}
+        from chem_mat_data.agent.manifest import Manifest, work_dir_for
 
-    @staticmethod
-    def _format_tool_summary(name: str, parsed: dict, raw_input: str) -> str:
-        """
-        Extract the most relevant field from a tool call for display.
+        console = Console()
 
-        Returns a short, human-readable summary string.
-        """
-        # For known tools, pick the most meaningful field
-        if name in (
-            'WebFetch',
-            'mcp__crawl4ai__crawl_webpage',
-            'mcp__crawl4ai__crawl_website',
-        ):
-            return parsed.get('url', raw_input)
+        if Manifest.exists(slug) and not force:
+            click.secho(
+                f'❌ a manifest for "{slug}" already exists. '
+                f'Use --force to start over, or `cmmanage agent status {slug}` '
+                'to see where it stands.',
+                fg='red',
+            )
+            sys.exit(1)
 
-        if name == 'WebSearch':
-            return parsed.get('query', raw_input)
+        manifest = Manifest.create(slug, source_url=url)
+        manifest_path = manifest.save()
 
-        if name == 'ToolSearch':
-            return parsed.get('query', raw_input)
-
-        if name == 'mcp__file_downloader__download_file':
-            url = parsed.get('url', '')
-            fname = parsed.get('filename', '')
-            if fname:
-                # Show just the basename
-                fname = fname.rsplit('/', 1)[-1] if '/' in fname else fname
-            if url and fname:
-                return f'{fname}  [dim]from[/dim]  {url}'
-            return url or fname or raw_input
-
-        if name == 'Bash':
-            cmd = parsed.get('command', raw_input)
-            if len(cmd) > 120:
-                cmd = cmd[:117] + '...'
-            return cmd
-
-        if name == 'Read':
-            path = parsed.get('file_path', raw_input)
-            return path
-
-        if name in ('Glob', 'Grep'):
-            pattern = parsed.get('pattern', '')
-            path = parsed.get('path', '')
-            if pattern and path:
-                return f'{pattern}  [dim]in[/dim]  {path}'
-            return pattern or raw_input
-
-        if name == 'Edit':
-            return parsed.get('file_path', raw_input)
-
-        if name == 'Write':
-            return parsed.get('file_path', raw_input)
-
-        # Fallback: show the first string value from the dict, or raw input
-        if parsed:
-            for v in parsed.values():
-                if isinstance(v, str) and v:
-                    val = v if len(v) <= 120 else v[:117] + '...'
-                    return val
-
-        val = raw_input if len(raw_input) <= 120 else raw_input[:117] + '...'
-        return val
-
-    @classmethod
-    def _make_agent_event_callback(cls, console):
-        """
-        Create an ``on_event`` callback that renders intermediate agent steps
-        to the Rich console.
-
-        Text events are printed as indented paragraphs with a leading bullet.
-        Tool-call events are printed as compact sub-bullets with the tool name
-        and the most relevant argument.
-
-        :param console: A :class:`rich.console.Console` instance.
-
-        :returns: A callback suitable for the ``on_event`` parameter.
-        """
-
-        def on_event(event: dict) -> None:
-            etype = event.get('type', '')
-            if etype == 'text':
-                content = event.get('content', '').strip()
-                if not content:
-                    return
-                # First line gets the bullet, continuation lines are indented
-                lines = [l.strip() for l in content.split('\n') if l.strip()]
-                if not lines:
-                    return
-                console.print(f'  [bright_cyan]●[/bright_cyan] {lines[0]}')
-                for line in lines[1:]:
-                    console.print(f'    {line}', style='dim')
-
-            elif etype == 'tool_call':
-                name = event.get('name', 'unknown')
-                raw_input = str(event.get('input', ''))
-                parsed = cls._parse_tool_input(raw_input)
-
-                display_name = cls._TOOL_DISPLAY_NAMES.get(name, name)
-                summary = cls._format_tool_summary(name, parsed, raw_input)
-
-                console.print(
-                    f'    [dim]◦[/dim] [bold bright_black]{display_name}[/bold bright_black]'
-                    f' [dim]→[/dim] {summary}'
-                )
-
-            elif etype == 'tool_result':
-                pass  # silently consumed; too verbose to display
-
-        return on_event
-
-    def _agent_header_panel(self, console, title: str, fields: dict) -> None:
-        """
-        Print a styled header panel for an agent command.
-
-        :param console: Rich Console.
-        :param title: Panel title (e.g. "Prepare Dataset").
-        :param fields: Dict of label -> value pairs to display.
-        """
-        from rich.panel import Panel
-        from rich.text import Text
-
-        lines = Text()
-        for i, (label, value) in enumerate(fields.items()):
-            if i > 0:
-                lines.append('\n')
-            lines.append(f'  {label}  ', style='dim')
-            lines.append(str(value), style='bold')
+        work = work_dir_for(slug)
+        (work / 'downloads').mkdir(parents=True, exist_ok=True)
 
         console.print()
-        console.print(
-            Panel(
-                lines,
-                title=f'[bold]Agent: {title}[/bold]',
-                title_align='left',
-                style='bright_blue',
-                expand=True,
-                padding=(1, 1),
-            )
-        )
+        console.print(f'[green]✓[/green] initialised extraction run [bold]{slug}[/bold]')
+        console.print(f'  manifest   [dim]{manifest_path}[/dim]')
+        console.print(f'  downloads  [dim]{work / "downloads"}[/dim]')
+        console.print()
+        console.print('  next stage [bold]prepare[/bold]')
         console.print()
 
     @click.command(
-        'identify',
+        'status',
         cls=RichHelpCommand,
-        rich_help=RichAgentIdentifyHelp(),
-        short_help='Check whether a paper publishes usable molecular/materials data.',
+        rich_help=RichAgentStatusHelp(),
+        short_help='Show the stage status of an extraction run.',
     )
-    @click.argument('query', type=str)
+    @click.argument('slug', type=str)
     @click.pass_obj
-    def agent_identify_command(
+    def agent_status_command(
         self,
-        query: str,
-    ) -> None:
-        import os
-        from rich.console import Console
-        from rich.panel import Panel
-        from rich.text import Text
-
-        from chem_mat_data.agent.extraction_agent import identify_dataset
-
-        console = Console()
-        backend = self._agent_backend_name
-        backend_config = self.config.get_agent_backend_config(backend)
-        model = backend_config.get('model', '')
-        backend_label = f'{backend} ({model})' if model else backend
-
-        self._agent_header_panel(
-            console,
-            'Identify Dataset',
-            {
-                'Query': query,
-                'Backend': backend_label,
-            },
-        )
-
-        on_event = self._make_agent_event_callback(console)
-
-        try:
-            if backend == 'opencode':
-                with console.status(
-                    '[bold cyan]Agent is running...[/bold cyan] '
-                    '[dim](intermediate steps not available for this backend)[/dim]',
-                    spinner='dots',
-                ):
-                    result = identify_dataset(
-                        query,
-                        backend_name=backend,
-                        config=self.config,
-                    )
-            else:
-                result = identify_dataset(
-                    query,
-                    backend_name=backend,
-                    config=self.config,
-                    on_event=on_event,
-                )
-
-        except Exception as exc:
-            console.print()
-            console.print(
-                Panel(
-                    f'[bold red]Identify failed[/bold red]\n\n{exc}',
-                    style='red',
-                    expand=True,
-                )
-            )
-            sys.exit(1)
-
-        decision = result.get('decision', 'unknown')
-        reasoning = result.get('reasoning', '')
-        output_path = result.get('output_path', '')
-
-        if decision == 'yes':
-            decision_style = 'bold green'
-            panel_style = 'green'
-            decision_display = 'YES'
-        elif decision == 'no':
-            decision_style = 'bold red'
-            panel_style = 'red'
-            decision_display = 'NO'
-        else:
-            decision_style = 'bold yellow'
-            panel_style = 'yellow'
-            decision_display = decision.upper()
-
-        body = Text()
-        body.append('Decision: ', style='dim')
-        body.append(decision_display, style=decision_style)
-        body.append('\n\n')
-        body.append('Reasoning:\n', style='dim')
-        body.append(reasoning)
-        if output_path:
-            body.append('\n\n')
-            body.append('Saved to: ', style='dim')
-            body.append(str(os.path.relpath(output_path)), style='bold')
-
-        console.print()
-        console.print(
-            Panel(
-                body,
-                title='[bold]Identification Result[/bold]',
-                title_align='left',
-                style=panel_style,
-                expand=True,
-                padding=(1, 2),
-            )
-        )
-
-    @click.command(
-        'prepare',
-        cls=RichHelpCommand,
-        rich_help=RichAgentPrepareHelp(),
-        short_help='Discover and download dataset files from a publication URL.',
-    )
-    @click.argument('link', type=str)
-    @click.pass_obj
-    def agent_prepare_command(
-        self,
-        link: str,
+        slug: str,
     ) -> None:
         from rich.console import Console
-        from rich.panel import Panel
-        from rich.text import Text
 
-        from chem_mat_data.agent.extraction_agent import (
-            discover_and_download,
-            DOWNLOADS_DIR,
+        from chem_mat_data.agent.manifest import (
+            Manifest,
+            STAGES,
+            PASSED,
+            BLOCKED,
+            STALE,
         )
 
         console = Console()
-        backend = self._agent_backend_name
-        backend_config = self.config.get_agent_backend_config(backend)
-        model = backend_config.get('model', '')
-        backend_label = f'{backend} ({model})' if model else backend
-
-        self._agent_header_panel(
-            console,
-            'Prepare Dataset',
-            {
-                'Publication': link,
-                'Backend': backend_label,
-            },
-        )
-
-        # Snapshot files before the agent runs
-        existing_files = set()
-        if DOWNLOADS_DIR.exists():
-            existing_files = {p.name for p in DOWNLOADS_DIR.iterdir() if p.is_file()}
-
-        on_event = self._make_agent_event_callback(console)
 
         try:
-            if backend == 'opencode':
-                with console.status(
-                    '[bold cyan]Agent is running...[/bold cyan] '
-                    '[dim](intermediate steps not available for this backend)[/dim]',
-                    spinner='dots',
-                ):
-                    result = discover_and_download(
-                        link,
-                        backend_name=backend,
-                        config=self.config,
-                    )
-            else:
-                result = discover_and_download(
-                    link,
-                    backend_name=backend,
-                    config=self.config,
-                    on_event=on_event,
-                )
-
-        except Exception as exc:
-            console.print()
-            console.print(
-                Panel(
-                    f'[bold red]Prepare failed[/bold red]\n\n{exc}',
-                    style='red',
-                    expand=True,
-                )
-            )
-            sys.exit(1)
-
-        # Discover new files
-        new_files = []
-        if DOWNLOADS_DIR.exists():
-            new_files = [
-                p.name
-                for p in sorted(DOWNLOADS_DIR.iterdir())
-                if p.is_file() and p.name not in existing_files
-            ]
-
-        # Build result panel
-        body = Text()
-        if new_files:
-            body.append(f'Downloaded {len(new_files)} file(s) to ', style='')
-            body.append('agent/artifacts/downloads/', style='bold')
-            body.append('\n\n')
-            for fname in new_files:
-                body.append(f'  {fname}\n', style='dim')
-        else:
-            body.append('Agent response:\n', style='dim')
-            # Show truncated response
-            display = result.strip()
-            if len(display) > 500:
-                display = display[:500] + '...'
-            body.append(display + '\n')
-
-        body.append('\nRun ', style='dim')
-        body.append('cmmanage agent generate', style='bold')
-        body.append(' to create a processing script.', style='dim')
-
-        console.print()
-        console.print(
-            Panel(
-                body,
-                title='[bold green]Prepare complete[/bold green]',
-                title_align='left',
-                style='green',
-                expand=True,
-                padding=(1, 2),
-            )
-        )
-
-    @click.command(
-        'generate',
-        cls=RichHelpCommand,
-        rich_help=RichAgentGenerateHelp(),
-        short_help='Generate a processing script for the downloaded dataset.',
-    )
-    @click.pass_obj
-    def agent_generate_command(
-        self,
-    ) -> None:
-        import os
-        from rich.console import Console
-        from rich.panel import Panel
-        from rich.text import Text
-
-        from chem_mat_data.agent.extraction_agent import (
-            generate_processing_script,
-            get_downloaded_files,
-        )
-        from chem_mat_data.agent.plugins import create_agent_venv, PluginInstallError
-
-        console = Console()
-        backend = self._agent_backend_name
-        backend_config = self.config.get_agent_backend_config(backend)
-        model = backend_config.get('model', '')
-        backend_label = f'{backend} ({model})' if model else backend
-
-        # List dataset files for the header
-        try:
-            downloaded = get_downloaded_files()
-            skip_names = {'readme', 'download_recipe'}
-            dataset_files = [
-                p.name
-                for p in downloaded
-                if not any(s in p.name.lower() for s in skip_names)
-            ]
-        except FileNotFoundError:
-            console.print()
-            console.print(
-                Panel(
-                    '[bold red]No dataset files found[/bold red]\n\n'
-                    'Run [bold]cmmanage agent prepare <url>[/bold] first to download dataset files.',
-                    style='red',
-                    expand=True,
-                )
-            )
-            sys.exit(1)
-
-        self._agent_header_panel(
-            console,
-            'Generate Script',
-            {
-                'Dataset files': ', '.join(dataset_files)
-                if dataset_files
-                else '(none)',
-                'Backend': backend_label,
-            },
-        )
-
-        # Set up a fresh venv for the agent to run generated scripts in
-        console.print(
-            '  [bright_cyan]●[/bright_cyan] Setting up virtual environment...'
-        )
-        try:
-            venv_python = create_agent_venv()
-            console.print(
-                f'  [bright_cyan]●[/bright_cyan] Venv ready: [dim]{venv_python}[/dim]'
-            )
-        except PluginInstallError as exc:
-            console.print()
-            console.print(
-                Panel(
-                    f'[bold red]Venv setup failed[/bold red]\n\n{exc}',
-                    style='red',
-                    expand=True,
-                )
-            )
-            sys.exit(1)
-
-        console.print()
-        on_event = self._make_agent_event_callback(console)
-
-        try:
-            if backend == 'opencode':
-                with console.status(
-                    '[bold cyan]Agent is running...[/bold cyan] '
-                    '[dim](intermediate steps not available for this backend)[/dim]',
-                    spinner='dots',
-                ):
-                    script_path = generate_processing_script(
-                        backend_name=backend,
-                        config=self.config,
-                        venv_python=venv_python,
-                    )
-            else:
-                script_path = generate_processing_script(
-                    backend_name=backend,
-                    config=self.config,
-                    on_event=on_event,
-                    venv_python=venv_python,
-                )
-
+            manifest = Manifest.load(slug)
         except FileNotFoundError as exc:
-            console.print()
-            console.print(
-                Panel(
-                    f'[bold red]Generate failed[/bold red]\n\n{exc}',
-                    style='red',
-                    expand=True,
-                )
-            )
-            sys.exit(1)
-        except Exception as exc:
-            console.print()
-            console.print(
-                Panel(
-                    f'[bold red]Generate failed[/bold red]\n\n{exc}',
-                    style='red',
-                    expand=True,
-                )
-            )
+            click.secho(f'❌ {exc}', fg='red')
             sys.exit(1)
 
-        # Build result panel
-        rel_path = os.path.relpath(script_path)
-        body = Text()
-        body.append(str(rel_path), style='bold')
-        body.append('\n\n')
-        body.append('Run it with:\n', style='dim')
-        body.append(f'  python {rel_path}', style='bold')
+        symbols = {
+            PASSED: '[bold green]✓[/bold green]',
+            BLOCKED: '[bold red]✗[/bold red]',
+            STALE: '[yellow]~[/yellow]',
+        }
 
         console.print()
-        console.print(
-            Panel(
-                body,
-                title='[bold green]Script generated[/bold green]',
-                title_align='left',
-                style='green',
-                expand=True,
-                padding=(1, 2),
-            )
-        )
+        console.print(f'[bold]{manifest.slug}[/bold]')
+        if manifest.source_url:
+            console.print(f'[dim]{manifest.source_url}[/dim]')
+        console.print()
+
+        for stage in STAGES:
+            state = manifest.state(stage)
+            symbol = symbols.get(state.status, '[dim]·[/dim]')
+            console.print(f'  {symbol} {stage:<13} [dim]{state.status}[/dim]')
+            if state.blocker:
+                console.print(f'      [red]{state.blocker}[/red]')
+            elif state.notes:
+                console.print(f'      [dim]{state.notes}[/dim]')
+
+        console.print()
+
+        if manifest.complete:
+            console.print('[bold green]All stages passed.[/bold green]')
+        else:
+            console.print(f'  next stage [bold]{manifest.next_stage()}[/bold]')
+        console.print()
 
     @click.command(
-        'install-plugins',
+        'gate',
         cls=RichHelpCommand,
-        rich_help=RichAgentInstallPluginsHelp(),
-        short_help='Install MCP server plugins for the active agent backend.',
+        rich_help=RichAgentGateHelp(),
+        short_help='Check a stage against its post-conditions.',
+    )
+    @click.argument('stage', type=click.Choice(STAGES))
+    @click.argument('slug', type=str)
+    @click.option(
+        '--strict',
+        is_flag=True,
+        default=False,
+        help='Treat warnings as failures as well.',
+    )
+    @click.option(
+        '--record/--no-record',
+        default=True,
+        help='Record the outcome in the manifest. On by default.',
     )
     @click.pass_obj
-    def agent_install_plugins_command(
+    def agent_gate_command(
         self,
+        stage: str,
+        slug: str,
+        strict: bool,
+        record: bool,
     ) -> None:
         from rich.console import Console
-        from rich.panel import Panel
 
-        from chem_mat_data.agent.plugins import (
-            install_opencode_plugins,
-            get_opencode_config_snippet,
-            PluginInstallError,
-        )
+        from chem_mat_data.agent.manifest import Manifest, PASSED, BLOCKED
+        from chem_mat_data.agent.gates import run_gate
 
         console = Console()
-        backend = self._agent_backend_name
-
-        console.print()
-        console.print(
-            Panel(
-                f'[bold]Install Agent Plugins[/bold]\n[dim]Backend: {backend}[/dim]',
-                style='bright_blue',
-                expand=False,
-            )
-        )
-        console.print()
 
         try:
-            if backend == 'claude':
-                console.print(
-                    '[cyan]  [bold]\\[1/2][/bold] Installing crawl4ai CLI (uv tool)...[/cyan]'
-                )
-                from chem_mat_data.agent.plugins import install_crawl4ai
+            manifest = Manifest.load(slug)
+        except FileNotFoundError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
 
-                install_crawl4ai()
-                console.print(
-                    '[green]  [bold]\\[1/2][/bold] crawl4ai CLI installed (crwl)[/green]'
-                )
+        report = run_gate(stage, manifest)
 
-                console.print(
-                    '[cyan]  [bold]\\[2/2][/bold] Installing mcp-file-downloader (npm)...[/cyan]'
-                )
-                from chem_mat_data.agent.plugins import (
-                    install_file_downloader,
-                    _update_config_mcp_servers,
-                )
+        console.print()
+        console.print(f'[bold]Gate:[/bold] {stage}  [dim]({slug})[/dim]')
+        console.print()
+        self._render_gate_report(console, report)
+        console.print()
 
-                server_js = install_file_downloader()
-                _update_config_mcp_servers(
-                    self.config,
-                    'claude',
-                    {
-                        'file_downloader': {
-                            'command': 'node',
-                            'args': [str(server_js)],
-                        },
-                    },
-                )
-                console.print(
-                    '[green]  [bold]\\[2/2][/bold] mcp-file-downloader installed[/green]'
-                )
+        failed = (not report.ok) or (strict and report.warnings)
 
-                console.print()
-                console.print(
-                    Panel(
-                        '[bold green]All plugins installed![/bold green]\n\n'
-                        '  crawl4ai is available as the `crwl` command.\n'
-                        '  MCP servers have been configured in your config file.\n'
-                        '  The agent will automatically use them on the next run.',
-                        style='green',
-                        expand=False,
-                    )
+        if record:
+            if failed:
+                blocker = (
+                    report.errors[0].message
+                    if report.errors
+                    else 'warnings treated as failures under --strict'
                 )
-
-            elif backend == 'opencode':
-                console.print(
-                    '[cyan]  [bold]\\[1/1][/bold] Installing mcp-file-downloader...[/cyan]'
-                )
-                server_js = install_opencode_plugins(self.config)
-                console.print(
-                    '[green]  [bold]\\[1/1][/bold] mcp-file-downloader installed[/green]'
-                )
-
-                snippet = get_opencode_config_snippet(server_js)
-                console.print()
-                console.print(
-                    Panel(
-                        '[bold green]Plugins installed![/bold green]\n\n'
-                        '  The mcp-file-downloader has been installed.\n'
-                        '  You still need to configure OpenCode manually.\n\n'
-                        f'[dim]{snippet}[/dim]',
-                        style='green',
-                        expand=False,
-                    )
-                )
-
+                manifest.mark(stage, BLOCKED, blocker=blocker)
             else:
-                click.secho(f'❌ Unknown backend: {backend}', fg='red')
+                note = (
+                    f'{len(report.warnings)} warning(s)' if report.warnings else None
+                )
+                manifest.mark(stage, PASSED, notes=note)
+            manifest.save()
+
+        if failed:
+            count = len(report.errors)
+            console.print(
+                f'[bold red]BLOCKED[/bold red] at stage [bold]{stage}[/bold] '
+                f'- {count} error(s).'
+            )
+            console.print(
+                '[dim]This needs a human decision. Explain the problem plainly, '
+                'say what was tried, and say what you need.[/dim]'
+            )
+            console.print()
+            sys.exit(1)
+
+        next_stage = manifest.next_stage()
+        if report.warnings:
+            console.print('[green]PASSED[/green] with warnings.')
+        else:
+            console.print(f'[bold green]PASSED[/bold green] - stage {stage} complete.')
+        if next_stage:
+            console.print(f'  next stage [bold]{next_stage}[/bold]')
+        console.print()
+
+    @click.command(
+        'set',
+        cls=RichHelpCommand,
+        rich_help=RichAgentSetHelp(),
+        short_help='Record a value into the run manifest.',
+    )
+    @click.argument('slug', type=str)
+    @click.argument('key', type=str)
+    @click.argument('value', type=str)
+    @click.pass_obj
+    def agent_set_command(
+        self,
+        slug: str,
+        key: str,
+        value: str,
+    ) -> None:
+        from rich.console import Console
+
+        from chem_mat_data.agent.manifest import Manifest
+
+        console = Console()
+
+        try:
+            manifest = Manifest.load(slug)
+        except FileNotFoundError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+
+        # Scalar fields are set directly; the structured sections take a JSON blob so
+        # that the whole metadata draft or license finding can be written in one go.
+        structured = {'metadata_draft', 'license'}
+        scalars = {
+            'source_url': str,
+            'dataset_name': str,
+            'script_path': str,
+            'smoke_results_dir': str,
+            'results_dir': str,
+            'drop_rate_reason': str,
+            'input_rows': int,
+            'max_drop_rate': float,
+        }
+
+        if key in structured:
+            try:
+                parsed = json.loads(value)
+            except json.JSONDecodeError as exc:
+                click.secho(f'❌ {key} expects JSON: {exc}', fg='red')
+                sys.exit(1)
+            if not isinstance(parsed, dict):
+                click.secho(f'❌ {key} expects a JSON object', fg='red')
+                sys.exit(1)
+            setattr(manifest, key, parsed)
+
+        elif key in scalars:
+            try:
+                setattr(manifest, key, scalars[key](value))
+            except ValueError:
+                click.secho(
+                    f'❌ {key} expects a {scalars[key].__name__} value, got {value!r}',
+                    fg='red',
+                )
                 sys.exit(1)
 
-        except PluginInstallError as exc:
-            console.print()
-            console.print(
-                Panel(
-                    f'[bold red]Plugin installation failed[/bold red]\n\n{exc}',
-                    style='red',
-                    expand=False,
-                )
-            )
+        else:
+            valid = ', '.join(sorted(structured | set(scalars)))
+            click.secho(f'❌ unknown key {key!r}. Valid keys: {valid}', fg='red')
             sys.exit(1)
+
+        manifest.save()
+        console.print(f'[green]✓[/green] {slug}: set [bold]{key}[/bold]')
 
     ## == DISCOVERY COMMAND GROUP ==
     # This command group implements the lightweight first stage of the dataset

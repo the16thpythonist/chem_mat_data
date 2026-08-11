@@ -5,6 +5,7 @@ tests/artifacts/
 .mcp-servers/
 benchmark_results/
 chem_mat_data/agent/artifacts/
+.dataset_work/
 
 # Byte-compiled / optimized / DLL files
 */__pycache__/*
