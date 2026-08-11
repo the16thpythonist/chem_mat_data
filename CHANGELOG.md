@@ -5,6 +5,233 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- **`half_life` re-sourced onto a license we can actually redistribute under.** The
+  script downloaded the ChemRxiv preprint's supplementary workbook, which is
+  **CC-BY-NC-ND-4.0** — NoDerivatives makes redistributing a processed graph dataset
+  derived from it unsafe. The published ACS version of the same paper
+  (`10.1021/acs.estlett.3c00526`) is **CC-BY-4.0** and carries identical data, so the
+  script now fetches that instead, via Europe PMC (`PMC10569042`), because the
+  pubs.acs.org supplementary URL 403s every scripted client.
+
+  The dataset itself is unchanged: replaying the original filter logic against the new
+  source yields exactly the same 892 compounds and the same single `Geometric mean
+  DT50` target, confirmed by a full re-run. `sources` now names the published DOI, the
+  Europe PMC endpoint and enviPath, and a new `notes` field records the CC-BY
+  attribution requirement, enviPath's academic/non-commercial restriction, and the fact
+  that values at the extremes of the target range are censoring artefacts rather than
+  measurements. The description now also states that the SMILES are desalted and
+  stereochemistry-stripped, so stereoisomers are merged into one entry.
+
+  The two heuristic filters (multi-component SMILES, single-atom molecules) are retained
+  and explicitly commented as legacy, so the published compound count stays stable at
+  892. They would not be applied to a dataset added today.
+
+### Added
+
+- **The license gate now checks provenance, not just an identifier.** A permissive
+  license on a publication says nothing about a database the publication merely
+  aggregated, and that is where the binding restriction usually lives. The license
+  stage must now state `upstream_database` explicitly — `null` when the publication is
+  the original source — and naming one additionally requires `upstream_terms_url` and
+  `upstream_license`, with anything non-permissive escalating to a human.
+
+  This closes a real miss found by running the skill end to end: a CC-BY-4.0 paper
+  republishing data from enviPath, whose terms permit only academic and non-commercial
+  use and forbid systematic redistribution of substantial portions of the database. The
+  gate passed it outright.
+
+- **The license gate warns on preprint/published divergence.** When the evidence URL and
+  the run's source URL are on different hosts, it flags that the same work often carries
+  different licenses in its two forms — exactly the CC-BY-NC-ND versus CC-BY split
+  above.
+
+- **Europe PMC and ChemRxiv routes documented** in `references/data-sources.md`. The
+  Europe PMC `supplementaryFiles` endpoint serves publisher-deposited SI as a plain ZIP
+  with no bot check, and is the standard way around a 403 on a publisher's own SI URL.
+  It was the highest-leverage discovery of the end-to-end test and was absent from the
+  skill. The ChemRxiv section records that the article id is not the DOI, that the old
+  `public-api/v1` endpoint is dead, and that OpenAlex resolves the opaque id when
+  Crossref and Europe PMC search do not.
+
+- 13 tests covering the provenance chain and the host-divergence warning, including a
+  regression test reproducing the exact case the gate originally missed.
+
+- **The extraction workflow is now six gated stages.** `prepare` (locate and download),
+  `metadata` (assemble the descriptive fields), `license` (establish that
+  redistribution is permitted), `script` (write and smoke-test on 50 elements),
+  `execute` (full run and drop-rate analysis), `verification` (final independent pass).
+  Each stage ends at a gate that must pass before the next may begin, and a stage whose
+  predecessors have not passed refuses to evaluate rather than producing a meaningless
+  verdict.
+
+- **`cmmanage agent init | status | gate | set`.** `init` starts a run and creates
+  `.dataset_work/<slug>/manifest.yml`; `status` shows where every stage stands and what
+  is blocking; `gate <stage> <slug>` checks a stage's post-conditions, records the
+  outcome, and exits non-zero on failure; `set` records a stage's conclusions into the
+  manifest for the next stage and the gates to consume. The existing `agent verify` is
+  unchanged and still works on a bare results directory.
+
+- **A resumable per-run manifest** (`chem_mat_data/agent/manifest.py`). Stage status,
+  blockers, the metadata draft, the license finding and the run paths all survive
+  between sessions, so a run blocked on something only a human can resolve can be
+  picked up later. Re-running a stage marks every later stage `stale`: re-deciding the
+  metadata after the script was written means the script no longer reflects what was
+  approved, and that becomes visible rather than being silently accepted.
+
+- **Per-stage gates** (`chem_mat_data/agent/gates.py`) that check concrete facts rather
+  than asking whether a stage went well. Notably: whether a downloaded file is secretly
+  an HTML landing page (the most common way `prepare` fails while appearing to
+  succeed), whether `Experiment.extend` was handed an absolute path, whether the script
+  reaches back into `.dataset_work` instead of downloading its own data, whether the
+  smoke run's target count matches the approved metadata, whether `__TESTING__` was
+  left enabled, and whether what landed in `metadata.yml` matches what the metadata
+  stage approved.
+
+- **A license stage with an enforced policy.** Public domain, CC-BY, MIT, BSD and
+  Apache pass. NonCommercial, ShareAlike, copyleft, custom terms, and **no license at
+  all** escalate to a human, whose decision is recorded as an explicit
+  `human_override` carrying a mandatory reason. The matcher is written so that
+  `CC-BY-SA` cannot be accidentally matched by the `CC-BY` prefix. Policy and research
+  guidance are documented in `references/license.md`.
+
+- **A drop-rate check on the execute gate.** The final compound count is compared
+  against the recorded input row count: above 2% it warns, above 10% it escalates,
+  overridable per dataset with `max_drop_rate` plus a required `drop_rate_reason`.
+  This is the only thing that catches a run which completed cleanly while quietly
+  discarding most of its input, since molecules that fail conversion are logged and
+  skipped rather than raising.
+
+- **Interactive escalation.** When a stage hits something it cannot fix - a paywall, an
+  ambiguous license, an unparseable format - the skill stops and asks the user with a
+  concrete question stating what is blocking, what was tried, and what is needed,
+  rather than working around it or failing silently.
+
+- **Independent subagents for the license and verification stages.** Both are judgement
+  calls where the main agent has a conflict of interest: an agent invested in making a
+  dataset work reads an ambiguous license charitably and calls a marginal run good. The
+  other four stages stay in one thread of context, because prepare, metadata and script
+  share an understanding of the data that a subagent boundary would force to be
+  re-derived.
+
+- 81 tests in `tests/test_agent_pipeline.py` covering the manifest state machine, all
+  six gates, and the license and drop-rate policies.
+
+- **`cmmanage agent venv`** — builds a clean `uv` virtual environment at
+  `.dataset_work/.venv` with the project installed editable, so generated scripts run
+  in isolation from the development environment. Prints the interpreter path on the
+  last line for capture by a calling script.
+
+- **`cmmanage agent verify <results-dir>`** — asserts the hard post-conditions of a
+  processing run: a non-empty `.mpack` and a parseable `metadata.yml` exist, the
+  compound and target counts are sane, and `target_descriptions` covers every target
+  index. Exits non-zero on error so it can gate a workflow; `--strict` also fails on
+  warnings. Warnings cover missing tags/sources/description and a compound count at or
+  below 50, which is the signature of a run left in `__TESTING__` mode.
+
+  This check is implemented in Python rather than left to the agent deliberately: a
+  processing run can exit cleanly while producing an unusable dataset, because
+  molecules that fail conversion are logged and skipped rather than raising.
+
+- `chem_mat_data/agent/verification.py` with `verify_results()` and a
+  `VerificationReport` that partitions issues into errors and warnings, plus 20 unit
+  tests in `tests/test_agent_verification.py` — the agent module previously had no
+  test coverage at all.
+### Changed
+
+- **The skill's page-reading tool table now reflects reality.** All three documented
+  options failed simultaneously in testing — `defuddle` was not installed, `crwl` had no
+  Chromium (`playwright install chromium` is a separate step whose absence the error
+  message does not explain), and `WebFetch` is 403'd by ChemRxiv. `defuddle` is now the
+  primary with `crwl` and `WebFetch` behind it, each carrying its install command, and
+  the skill says to check a tool exists before relying on it. Troubleshooting gained an
+  escalation order for 403s that puts Europe PMC first, plus a warning against Playwright
+  click-throughs: they may fetch a file once, but a generated script cannot use a route
+  that needs a scripted browser.
+
+- **Two documentation contradictions removed.** The canonical template in
+  `script-anatomy.md` used integer `target_descriptions` keys while `metadata.md`
+  mandates strings. And "`METADATA` must reproduce the approved `metadata_draft`
+  exactly" was misleading — the draft's `description` reaches `metadata.yml` through the
+  `DESCRIPTION` parameter rather than through `METADATA`, and `dataset_name`,
+  `dataset_type` and `target_count` do not belong in `METADATA` at all. Following it
+  literally fails the verification gate at the final stage; the skill now carries the
+  field-by-field mapping.
+
+- **Dataset extraction moved from Python prompts into a Claude Code skill.** The
+  instructions that drive the publication → processing-script workflow now live in
+  `.claude/skills/dataset-extraction/` as editable prose rather than as format strings
+  in `chem_mat_data/agent/prompts.py`. The skill is human-invoked from Claude Code
+  (`/dataset-extraction <url>`) and takes a publication URL or a concrete paper title
+  as its input; deciding whether a paper is worth extracting happens beforehand.
+
+  The skill uses progressive disclosure: a workflow-level `SKILL.md` plus five
+  reference files (`script-anatomy.md`, `metadata.md`, `license.md`,
+  `data-sources.md`, `troubleshooting.md`) and four worked examples covering the
+  archetypes — a plain SMILES CSV, an archive/custom text format, an `.xyz` bundle,
+  and a transition-metal complex dataset. The TMC example documents the fact that TMC
+  scripts do *not* extend the base template but build a standalone `Experiment` around
+  `MetalOrganicProcessing`.
+
+  It ends at a verified local script; uploading to the remote share remains a
+  deliberate `cmmanage metadata upload` step.
+
+- **Generated scripts are written to `chem_mat_data/scripts/`** alongside the existing
+  `create_graph_datasets__*.py` files, instead of to an artifacts folder inside the
+  package. Because they now sit next to the base template, `Experiment.extend()` takes
+  a *relative* path, which removes the previous requirement to hardcode a machine-
+  specific absolute path.
+
+- **Working files moved out of the package.** Downloads and identify results go to a
+  gitignored `.dataset_work/` at the repository root rather than
+  `chem_mat_data/agent/artifacts/`, which was inside the installed package and caused
+  agent runs to write into the source tree. The run venv moved likewise, to
+  `.dataset_work/.venv`.
+
+- **Filtering policy made consistent.** The prompts forbade heuristic row filtering
+  while the bundled example scripts filtered multi-component SMILES and single-atom
+  molecules. The skill states one policy — skip only rows with missing/unparseable
+  SMILES or missing targets, preferring the `-1` sentinel — and flags the older
+  filtering scripts as legacy.
+
+- **`target_descriptions` keys standardised on strings.** Both `'0'` and `0` occur in
+  the existing metadata (24 string vs 2 int); the skill documents the string form and
+  `verify` accepts either.
+### Removed
+
+- **The OpenCode backend and the whole runtime agent layer.** Deleted
+  `agent/backend.py`, `agent/opencode_client.py`, `agent/prompts.py` (731 lines of
+  prompt templates in two near-duplicate backend variants) and
+  `agent/extraction_agent.py`. Dropped `opencode-ai` from the dependencies and the
+  `claude` optional-dependency group along with `claude-agent-sdk`. Skills are a Claude
+  Code concept, so maintaining the dual prompt variants no longer bought anything.
+
+- **`cmmanage agent identify|prepare|generate|install-plugins`.** These invoked the
+  deleted backends; their behaviour is now the skill's three stages. `manage.py` lost
+  ~660 lines.
+
+- `agent/plugins.py`, replaced by the leaner `agent/environment.py` which retains only
+  the venv management. The MCP-server and crawl4ai installers went with the
+  `install-plugins` command — the skill installs crawl4ai with a one-line
+  `uv tool install crawl4ai` when it is wanted, and falls back to `defuddle`/`WebFetch`
+  when it is not.
+
+- `Config.get_agent_backend()`, `get_agent_backend_config()` and
+  `get_agent_prompt_override()`, which configured the removed backends.
+
+- `chem_mat_data/agent/example_scripts/`, whose three files were byte-identical copies
+  of scripts already present in `chem_mat_data/scripts/`.
+### Fixed
+
+- **`create_agent_venv` installed into the wrong environment.** The function built an
+  environment dict setting `VIRTUAL_ENV` but never passed it to the subprocess, so
+  `uv pip install -e .[dev]` was not guaranteed to target the freshly created venv.
+  `_run()` now accepts and forwards `env`, and `CONDA_PREFIX` is cleared so an active
+  conda environment cannot capture the install.
+
 ## [1.10.1] - Unreleased
 
 ### Changed

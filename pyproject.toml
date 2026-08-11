@@ -66,16 +66,12 @@ dependencies = [
     "pydantic>=1.10.0,<3.0",
     "parsimonious>=0.10.0,<1.0",
     "polars>=0.20.0",
-    "opencode-ai",
 ]
 
 # Optional Dependencies
 # =====================
 
 [project.optional-dependencies]
-claude = [
-    "claude-agent-sdk>=0.1.0; python_version>='3.10'",
-]
 dev = [
     # Testing dependencies
     "pytest>=7.0.0",
@@ -108,8 +104,6 @@ dev = [
     # Build tools
     "build>=0.10.0",
 
-    # Agent SDK
-    "claude-agent-sdk>=0.1.0; python_version>='3.10'",
 ]
 
 # Executable Scripts

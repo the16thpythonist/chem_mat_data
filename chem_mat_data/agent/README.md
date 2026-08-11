@@ -1,87 +1,42 @@
-# AI Coding Agent for Dataset Discovery and Processing
+# Agent helpers
 
-**Required Tools**
-Crawlfetch: github.com/unclecode/crawl4ai
-MCP File Downloader: github.com/abs222222/mcp-file-downloader
-Websearch: github.com/ghoulr/opencode-websearch-cited
+This package no longer contains an agent. The workflow that turns a scientific
+publication into a ChemMatData processing script now lives as a **Claude Code skill**
+at [`.claude/skills/dataset-extraction/`](../../.claude/skills/dataset-extraction/),
+where the instructions, the script template, the metadata specification and the four
+worked examples are all editable as prose rather than as prompt strings in Python.
 
-**How to use**
-1. opencode serve --port 54321 --print-logs
-2. cmmanage agent process <link>
-3. cmmanage agent generate
-4. python chem_mat_data/agent/artifacts/scripts/<name>_generated.py 
+To use it, open Claude Code in this repository and invoke the skill:
 
-**OpenCode Configurations**
 ```
-"mcp": {
-    "file_downloader": {
-        "type": "local",
-        "command": ["node", "<absolute path>/chem_mat_data/.mcp-file-downloader/download-server.js"],
-        "enabled": true,
-        "timeout": 15000
-    }
-},
-"provider": {
-    "openai": {
-        "options": {
-            "websearch_cited": {
-                "model": "gpt-5.2"
-            }
-        }
-    }
-},
-"plugin": [
-    "opencode-websearch-cited@1.2.0"
-],
-"agent": {
-    "dataset-links": {
-        "description": "Download the dataset files from the provided publication.",
-        "permission": {
-            "websearch_*": "allow",
-            "crawlfetch": "allow",
-            "webfetch": "deny",
-            "file_downloader_*": "allow",
-            "bash": "deny",
-            "read": "deny",
-            "glob": "deny",
-            "grep": "deny",
-            "list": "deny",
-            "edit": "deny",
-            "patch": "deny",
-            "codesearch": "deny",
-            "skill": "deny",
-            "todowrite": "deny",
-            "todoread": "deny",
-            "question": "deny",
-            "task": {
-                "*": "deny"
-            }
-        }
-    },
-    "script-generation": {
-        "description": "Generate a processing script for the downloaded dataset.",
-        "permission": {
-            "websearch_*": "deny",
-            "crawlfetch": "deny",
-            "webfetch": "deny",
-            "file_downloader_*": "deny",
-            "bash": "allow",
-            "read": "allow",
-            "glob": "allow",
-            "grep": "allow",
-            "list": "allow",
-            "edit": "deny",
-            "patch": "deny",
-            "codesearch": "allow",
-            "skill": "deny",
-            "todowrite": "deny",
-            "todoread": "deny",
-            "question": "deny",
-            "task": {
-                "*": "deny"
-            }
-        }
-    }
-}
+/dataset-extraction https://www.nature.com/articles/sdata201686
 ```
 
+The skill covers three stages - deciding whether a paper publishes usable data,
+downloading the dataset files, and writing plus running plus verifying the processing
+script. It stops at a verified local script; uploading to the remote share stays a
+deliberate step (`cmmanage metadata upload`).
+
+## What is left here
+
+Two helpers that should not depend on a model's judgement, both exposed through the
+`cmmanage agent` command group:
+
+| Module | Command | Purpose |
+|---|---|---|
+| `environment.py` | `cmmanage agent venv` | Build a clean `uv` virtual environment with the project installed, so generated scripts run in isolation. |
+| `verification.py` | `cmmanage agent verify <results-dir>` | Assert the hard post-conditions of a run: the `.mpack` and `metadata.yml` exist, the compound and target counts are sane, and every target index has a description. |
+
+`verify` exits non-zero on failure and is what the skill treats as the definition of
+success - a processing script can exit cleanly while still having produced an unusable
+dataset, because molecules that fail conversion are logged and skipped rather than
+raising.
+
+## Optional tooling
+
+Stage 1 of the skill reads publication pages with [crawl4ai](https://github.com/unclecode/crawl4ai),
+falling back to the `defuddle` skill and then `WebFetch`. It is optional:
+
+```bash
+uv tool install crawl4ai
+```
