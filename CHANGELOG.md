@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **The prepare gate accepted garbage and rejected real data.** It checked file size and
+  an HTML byte prefix, and nothing else, which made it simultaneously too loose and too
+  tight. All of these passed: a `BP.csv` containing the literal text `Not Found`, a
+  repository JSON record saved as a CSV, a header row with nothing under it, an XML
+  access-denied document. Meanwhile a genuine two-row `license_compounds.csv` was
+  **rejected**, because the documentation-name list was matched as a bare substring of
+  the filename.
+
+  Now: the directory must contain at least one file that parses as a table with a data
+  row — asked of the directory rather than each file, so ancillary records and notes
+  alongside the real data stay welcome, and reading a bounded prefix rather than a
+  multi-gigabyte archive in full. Documentation names match the whole stem, so `LICENSE`
+  is documentation and `license_compounds.csv` is data. When nothing qualifies, the
+  error lists what was excluded, so it is diagnosable rather than mystifying.
+
+  The recipe check required only that the substring `http` appear somewhere, so
+  `see the paper at http://doi.org/10.1000/xyz` counted as recording a URL while
+  recording nothing downloadable. It now requires at least one URL whose host is not a
+  DOI resolver.
+
+- **A truncated download silently disabled the drop-rate check.** `compounds >
+  input_rows` only warned. That combination means `input_rows` was counted from a
+  different file than the script fetched — usually a truncated copy in `downloads/` —
+  which makes the drop-rate denominator wrong, so no drop can ever look large. Left as a
+  warning it turned the execute gate's one quantitative safeguard into a no-op. Now an
+  error, downgraded to a warning when `drop_rate_reason` records why, since the check is
+  uninformative either way and that should stay visible.
+
+- **The "no README captured" warning fired even when the schema was documented.** In the
+  real validation run the agent's own `download_recipe.md` described all 798 columns,
+  their units and the value range better than any README, and the gate warned anyway.
+  It now asks whether the schema is documented *anywhere* — a README or a description of
+  the columns in the recipe — and is reworded accordingly. Noise is what teaches a reader
+  to skim warnings. 27 tests added.
+
 - **The final gate checked four fields while claiming to check the metadata.** Its
   docstring said it "confirms that what ended up in `metadata.yml` actually matches what
   the metadata stage approved"; it compared `verbose`, `description`, `tags` and
