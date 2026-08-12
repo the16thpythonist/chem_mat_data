@@ -9,6 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Target values are now measured, and units are checked against them.** Units are the
+  highest-consequence claim the pipeline makes and had no verification anywhere:
+  `elanos_bp` shipped for months describing a boiling point "in Kelvin" whose minimum is
+  −88.6. Stage 6 was told to confirm the values match the range the paper reports, with
+  no reference point recorded and no mechanical backstop.
+
+  `gate_execute` now streams per-target statistics out of the message pack — min, max,
+  mean, distinct count, missing count — and prints them whether or not anything is
+  wrong, so the stage-6 subagent is handed the numbers instead of deriving them.
+  Streaming rather than loading is the difference between 3 MB and 69 MB of resident
+  memory on a 29 MB dataset, and between working and not working on the multi-gigabyte
+  ones; the whole check costs 0.07 s.
+
+  Three checks are built on it. A target described in an absolute-scale unit whose
+  values go negative is an error — this is the one that catches a mislabelled unit, and
+  the only one that could have, since comparing a declared range against an observed one
+  proves nothing when a confused agent writes the same wrong unit on both sides. A
+  target with the same value in every row is an error. An optional `target_ranges` in
+  the metadata draft, recorded per index with the URL it was read from, is checked when
+  present.
+
+  `target_ranges` is deliberately **not** required. Many papers state no range, and a
+  mandatory field would launder a guess into a verified-looking fact — worse than having
+  no check. The unit vocabulary is likewise deliberately tiny and skips anything
+  log-transformed, since most chemical targets legitimately go negative and a false
+  positive here teaches the reader to ignore the check.
+
+  Distinct-value counting stops at 64 and says so (`64+`), rather than reporting the cap
+  as an exact total. 22 tests added.
+
 - **`record_url`, and `source_url` is no longer settable.** The manifest had one URL
   field and a run needs three: where it began, which repository record the files came
   from, and the direct download link. With nowhere to record the second or third, the

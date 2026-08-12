@@ -302,10 +302,28 @@ cmmanage agent set <slug> metadata_draft '{
   "target_descriptions": {
     "0": "col_a - what it is, with units",
     "1": "col_b - what it is, with units"
+  },
+  "target_ranges": {
+    "0": {"min": -88.6, "max": 548.0, "source": "https://doi.org/... Table 2"}
   }
 }'
 cmmanage agent gate metadata <slug>
 ```
+
+`target_ranges` is **optional**. Record it per target index when the paper states the
+range its values span, with the URL you read it from. The execute stage then checks the
+data against it, which catches a wrong target column, a unit conversion, or the wrong
+file — mistakes that otherwise survive every other check.
+
+**Do not invent these numbers.** Many papers state no range; omitting the key entirely is
+the correct answer there, and a fabricated range is worse than no check because it
+launders a guess into a verified-looking fact.
+
+Units get a check of their own regardless. The execute stage refuses a target described
+in an absolute-scale unit whose values go negative — a boiling point "in Kelvin" with a
+minimum of −88.6 is the real case this exists for, and it is the one mistake that
+comparing a declared range against an observed one cannot catch, since a confused agent
+writes the same wrong unit on both sides.
 
 Checks: `dataset_name` is lowercase snake_case; `dataset_type` is regression or
 classification; `verbose`, `description`, `tags`, `sources` present;

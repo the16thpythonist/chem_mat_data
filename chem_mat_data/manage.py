@@ -1811,6 +1811,25 @@ class CLI(click.RichGroup):
         if report.dataset_name or report.compounds is not None:
             console.print()
 
+        # The observed target statistics are printed whether or not anything is wrong.
+        # Stage 6 is asked to confirm the values match what the paper reports, and this
+        # is the only place those numbers appear without someone computing them.
+        if getattr(report, 'target_statistics', None):
+            for stat in report.target_statistics:
+                if stat.minimum is None:
+                    console.print(f'  target {stat.index}   [dim]no finite values[/dim]')
+                    continue
+                distinct = f'{stat.unique}{"+" if stat.unique_capped else ""} distinct'
+                console.print(
+                    f'  target {stat.index}   '
+                    f'[bold]{stat.minimum:g}[/bold] … [bold]{stat.maximum:g}[/bold]'
+                    f'   mean {stat.mean:g}'
+                    f'   [dim]n={stat.count}, {distinct}'
+                    + (f', {stat.missing} missing' if stat.missing else '')
+                    + '[/dim]'
+                )
+            console.print()
+
         for issue in report.errors:
             console.print(f'  [bold red]✗[/bold red] {issue.message}')
         for issue in report.warnings:

@@ -17,10 +17,13 @@ Used by the ``cmmanage agent verify`` command and by the ``dataset-extraction`` 
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import msgpack
+import numpy as np
 import yaml
 
 
@@ -64,6 +67,10 @@ class VerificationReport:
     dataset_name: Optional[str] = None
     compounds: Optional[int] = None
     targets: Optional[int] = None
+    #: Observed per-target statistics, when they were computed. Carried on the report so
+    #: that whoever reads it - a human, or the stage-6 subagent - has the actual numbers
+    #: to hold against the paper rather than having to derive them.
+    target_statistics: List['TargetStatistics'] = field(default_factory=list)
 
     @property
     def errors(self) -> List[VerificationIssue]:
@@ -111,6 +118,149 @@ def normalize_target_description_keys(
         except (TypeError, ValueError):
             continue
     return normalized
+
+
+#: Distinct-value counting stops here. The count exists only to tell a continuous
+#: target from a constant or a handful of classes, and an unbounded set would
+#: reintroduce the memory cost that streaming exists to avoid.
+UNIQUE_CAP: int = 64
+
+
+@dataclass
+class TargetStatistics:
+    """
+    Observed statistics for one target index across a whole dataset.
+
+    :param index: Position of the target in the ``graph_labels`` vector.
+    :param count: Number of finite values seen.
+    :param minimum: Smallest finite value.
+    :param maximum: Largest finite value.
+    :param mean: Arithmetic mean of the finite values.
+    :param unique: Number of distinct finite values, which distinguishes a real-valued
+        target from a constant or a handful of classes mislabelled as regression.
+        Counting stops at :data:`UNIQUE_CAP`; see :attr:`unique_capped`.
+    :param unique_capped: True when counting hit the cap, so ``unique`` is a floor
+        rather than a total. Reported separately because a capped count printed as an
+        exact one is a wrong number, and the whole purpose of these statistics is to
+        be trustworthy at a glance.
+    :param missing: Number of entries that were absent or not finite.
+    """
+
+    index: int
+    count: int = 0
+    minimum: Optional[float] = None
+    maximum: Optional[float] = None
+    mean: Optional[float] = None
+    unique: int = 0
+    unique_capped: bool = False
+    missing: int = 0
+
+
+def _ext_hook(code: int, data: bytes) -> Any:
+    """
+    Decode the numpy extension type used by the dataset message pack format.
+
+    Deliberately a local copy of ``chem_mat_data.data.ext_hook`` rather than an import
+    of it: that module pulls in RDKit, which costs about a second, and the gates that
+    call this run in milliseconds. The wire format is four lines and does not move.
+
+    :param code: The msgpack extension type code.
+    :param data: The packed payload.
+
+    :returns: A numpy array for code 1, the raw payload otherwise.
+    """
+    if code == 1:
+        unpacked = msgpack.unpackb(data)
+        return np.frombuffer(
+            unpacked['data'], dtype=unpacked['dtype']
+        ).reshape(unpacked['shape'])
+    return data
+
+
+def stream_target_statistics(mpack_path: str | Path) -> List[TargetStatistics]:
+    """
+    Compute per-target statistics without holding the dataset in memory.
+
+    Reads one graph at a time out of the message pack. This matters more than it
+    sounds: ``load_graphs`` materialises the entire dataset, which is 69 MB of resident
+    memory for a 29 MB file and simply impossible for the multi-gigabyte datasets in
+    this collection. Streaming the same file costs about 3 MB and a tenth of a second,
+    so a gate can afford to do it on every run.
+
+    Non-finite and missing entries are counted rather than skipped silently, since a
+    target that is half NaN is a finding in itself.
+
+    Example:
+
+    .. code-block:: python
+
+        for stat in stream_target_statistics('results/debug/esol.mpack'):
+            print(stat.index, stat.minimum, stat.maximum)
+
+    :param mpack_path: Path to the uncompressed ``.mpack`` dataset file.
+
+    :returns: One :class:`TargetStatistics` per target index, in order. Empty when the
+        file cannot be read as a dataset.
+    """
+    accumulators: Dict[int, Dict[str, Any]] = {}
+
+    try:
+        with open(mpack_path, 'rb') as file:
+            unpacker = msgpack.Unpacker(file, ext_hook=_ext_hook, raw=False)
+            count = unpacker.read_array_header()
+            for _ in range(count):
+                graph = unpacker.unpack()
+                if not isinstance(graph, dict):
+                    continue
+                labels = graph.get('graph_labels')
+                if labels is None:
+                    continue
+
+                for index, raw in enumerate(labels):
+                    entry = accumulators.setdefault(
+                        index,
+                        {'total': 0.0, 'count': 0, 'missing': 0, 'capped': False,
+                         'min': None, 'max': None, 'values': set()},
+                    )
+                    try:
+                        value = float(raw)
+                    except (TypeError, ValueError):
+                        entry['missing'] += 1
+                        continue
+                    if not math.isfinite(value):
+                        entry['missing'] += 1
+                        continue
+
+                    entry['count'] += 1
+                    entry['total'] += value
+                    entry['min'] = value if entry['min'] is None else min(entry['min'], value)
+                    entry['max'] = value if entry['max'] is None else max(entry['max'], value)
+                    # Capped: the count only has to distinguish "continuous" from "a
+                    # few classes", and an unbounded set on a 3-million-row dataset
+                    # would defeat the point of streaming.
+                    if len(entry['values']) < UNIQUE_CAP:
+                        entry['values'].add(value)
+                    else:
+                        entry['capped'] = True
+    except (OSError, ValueError, msgpack.exceptions.UnpackException):
+        return []
+
+    statistics: List[TargetStatistics] = []
+    for index in sorted(accumulators):
+        entry = accumulators[index]
+        statistics.append(
+            TargetStatistics(
+                index=index,
+                count=entry['count'],
+                minimum=entry['min'],
+                maximum=entry['max'],
+                mean=(entry['total'] / entry['count']) if entry['count'] else None,
+                unique=len(entry['values']),
+                unique_capped=entry['capped'],
+                missing=entry['missing'],
+            )
+        )
+    return statistics
 
 
 def verify_results(results_dir: str | Path) -> VerificationReport:
