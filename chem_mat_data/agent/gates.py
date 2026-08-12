@@ -19,6 +19,7 @@ errors and warnings are reported uniformly and a caller can act on the distincti
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import List, Optional
@@ -387,6 +388,94 @@ def gate_metadata(manifest: Manifest) -> VerificationReport:
     return report
 
 
+def check_experiment_record(
+    report: VerificationReport,
+    results_dir: Optional[str],
+    script_path: Optional[str] = None,
+    label: str = '',
+) -> None:
+    """
+    Check a results folder against the record pycomex wrote about the run.
+
+    Every other check in this module compares one thing the agent declared against
+    another thing the same agent declared. This one does not: ``experiment_meta.json``
+    is written by the experiment framework, so it can contradict the agent, and it is
+    the only independent witness available to the gates.
+
+    What it catches that nothing else does: a run that raised partway through still
+    leaves a plausible-looking folder behind, with a message pack, a metadata file and
+    sane-looking counts, because molecules that fail conversion are logged and skipped
+    rather than raising. Such a folder passes every structural check. ``status`` and
+    ``has_error`` say plainly that it should not.
+
+    Comparing ``name`` against the script filename additionally catches a results
+    directory left over from a different script - stale output being read as though it
+    belonged to this run.
+
+    :param report: The report to add issues to.
+    :param results_dir: The results folder to inspect.
+    :param script_path: Path of the script that should have produced it, if known.
+    :param label: Prefix for messages, e.g. ``'smoke run'``.
+
+    :returns: Nothing; issues are added to ``report``.
+    """
+    prefix = f'{label}: ' if label else ''
+
+    if not results_dir:
+        return
+
+    meta_path = Path(results_dir) / 'experiment_meta.json'
+    if not meta_path.is_file():
+        report.add(
+            WARNING,
+            f'{prefix}no experiment_meta.json in the results folder - the run record '
+            'cannot be checked, so a crashed run would look like a successful one',
+        )
+        return
+
+    try:
+        meta = json.loads(meta_path.read_text())
+    except (OSError, ValueError) as exc:
+        report.add(WARNING, f'{prefix}experiment_meta.json could not be read: {exc}')
+        return
+
+    if not isinstance(meta, dict):
+        report.add(WARNING, f'{prefix}experiment_meta.json is not a mapping')
+        return
+
+    ## -- did the run actually finish? --
+    # Asserted positively against pycomex's own definition of success rather than by
+    # listing failure values, so a run killed while still 'running' is caught too.
+    status = str(meta.get('status', '')).strip().lower()
+    if status != 'done':
+        detail = f' ({meta["error_type"]})' if meta.get('error_type') else ''
+        report.add(
+            ERROR,
+            f'{prefix}the experiment record reports status {status or "unknown"!r}'
+            f'{detail}, not "done" - these results come from a run that did not '
+            'finish. A partial run still leaves a complete-looking folder behind.',
+        )
+
+    if meta.get('has_error'):
+        error_type = meta.get('error_type') or 'unknown error'
+        report.add(
+            ERROR,
+            f'{prefix}the experiment record reports has_error=True ({error_type}) - '
+            'the run raised, and its output cannot be trusted',
+        )
+
+    ## -- do these results belong to this script? --
+    if script_path:
+        expected = Path(script_path).stem
+        recorded = str(meta.get('name', '')).strip()
+        if recorded and expected and recorded != expected:
+            report.add(
+                ERROR,
+                f'{prefix}the results were produced by {recorded!r} but the recorded '
+                f'script is {expected!r} - this folder belongs to a different run',
+            )
+
+
 def _classify_override(override: dict) -> dict:
     """
     Work out what a recorded ``human_override`` means, without acting on it yet.
@@ -723,6 +812,13 @@ def gate_script(manifest: Manifest) -> VerificationReport:
         report.add(ERROR, 'no smoke_results_dir recorded - the smoke run did not run')
         return report
 
+    check_experiment_record(
+        report,
+        manifest.smoke_results_dir,
+        script_path=manifest.script_path,
+        label='smoke run',
+    )
+
     smoke_report = verify_results(manifest.smoke_results_dir)
     for issue in smoke_report.issues:
         # A 50-element smoke run is meant to look like a testing run, so the low
@@ -772,6 +868,10 @@ def gate_execute(manifest: Manifest) -> VerificationReport:
     if not manifest.results_dir:
         report.add(ERROR, 'no results_dir recorded - the full run did not run')
         return report
+
+    check_experiment_record(
+        report, manifest.results_dir, script_path=manifest.script_path
+    )
 
     ## -- testing mode must be off --
     if manifest.script_path:
@@ -865,6 +965,10 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
     if not manifest.results_dir:
         report.add(ERROR, 'no results_dir recorded')
         return report
+
+    check_experiment_record(
+        report, manifest.results_dir, script_path=manifest.script_path
+    )
 
     run_report = verify_results(manifest.results_dir)
     for issue in run_report.issues:

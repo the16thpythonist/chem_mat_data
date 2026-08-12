@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **The gates now read the record the experiment framework wrote, not only what the
+  agent declared.** Pycomex writes `experiment_meta.json` into every results directory —
+  `name`, `status`, `has_error`, `error_type` — and nothing under `chem_mat_data/agent/`
+  read it. That mattered because every other gate check compares one thing the agent
+  declared against another thing the same agent declared; this file is the only witness
+  available that can contradict it.
+
+  The concrete failure: a run that raises partway through still leaves a folder holding
+  a message pack, a `metadata.yml` and plausible counts, because molecules that fail
+  conversion are logged and skipped rather than raising. Such a folder passed all six
+  gates. Verified by taking the real completed `elanos_bp` results and flipping the
+  record to `status: failed` — `gate_execute` now fails it, and previously did not.
+
+  `gate_script`, `gate_execute` and `gate_verification` each check that the run reached
+  `status: done`, that `has_error` is not set, and that the recorded experiment name
+  matches the script it is supposed to have come from — the last catching a stale
+  results directory left over from a different script. Status is asserted positively
+  against `done`, taken from pycomex's own definition of success, so a process killed
+  while still `running` is caught as well as one that raised.
+
+  A missing or unparseable record warns rather than failing, since results predating it
+  are legitimate; the warning says plainly that a crashed run cannot be distinguished
+  from a successful one without it. 14 tests added.
+
 - **A completeness check on pages the prepare stage reads.** A reader can return a
   partial capture and say nothing about it: clean exit, plausible document, no marker
   where the rest should be. That happened once in testing — 83.6 KB of a Springer
