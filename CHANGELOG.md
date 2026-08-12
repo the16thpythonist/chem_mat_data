@@ -7,7 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **`cmmanage agent block`, so a blocked run can record why.** The skill teaches the
+  agent to compose a careful escalation — what is blocking, what was tried with which
+  URLs and tools, what is needed — and then told it to persist that by running the gate,
+  which records the gate's own mechanical first error instead. On a paywalled paper the
+  manifest ended up saying `no data files in the downloads directory`, and `agent set`
+  rejected `blocker` and `notes`, so the diagnosis had nowhere to go.
+
+  The sharper defect was that `blocked` distinguishes nothing: every failed gate records
+  it, including ones the agent fixes moments later, so a reader resuming cold could not
+  tell "needs a person with a subscription to this journal" from "the draft had not been
+  written yet". A stage escalated with `agent block --why ... [--detail ...]` now renders
+  as `blocked - needs a human` against `blocked - gate failure, resumable`, with the
+  reason underneath.
+
 ### Fixed
+
+- **`Manifest.mark` discarded what it was not replacing.** It rebuilt the stage state
+  from scratch, so recording a blocker and then running the gate — the order the skill
+  prescribes — erased the diagnosis and kept the symptom. Gate output (`blocker`,
+  `warnings`, `errors`) is still replaced wholesale, since it describes the run that just
+  happened; the human-escalation fields persist across status changes and are cleared
+  when the stage passes, because a resolved blocker is resolved and a stale one would be
+  its own quiet lie. 11 tests added.
 
 - **The prepare gate accepted garbage and rejected real data.** It checked file size and
   an HTML byte prefix, and nothing else, which made it simultaneously too loose and too

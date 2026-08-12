@@ -392,6 +392,33 @@ class RichAgentToolsHelp(RichMixin):
         )
 
 
+class RichAgentBlockHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent block`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Record that a stage is waiting on a person, and what they have to resolve. '
+            'Run it *after* the gate: the gate records the symptom, this records the '
+            'diagnosis.\n'
+        )
+
+        yield render_help(
+            'The distinction matters because `blocked` on its own does not carry it. '
+            'Every failed gate records `blocked`, including ones the agent fixes moments '
+            'later, so someone resuming a run cold cannot tell "needs a person with a '
+            'subscription to this journal" from "the draft had not been written yet". '
+            'A stage marked this way renders as `needs a human` in `agent status`.\n'
+        )
+
+        yield render_help(
+            'The escalation survives later gate runs on the same stage, and is cleared '
+            'when the stage passes - a resolved blocker is resolved.\n'
+        )
+
+
 class RichAgentInitHelp(RichMixin):
     """
     Rich display element that renders the help text for the ``agent init`` command.
@@ -837,6 +864,7 @@ class CLI(click.RichGroup):
         self.agent_group.add_command(self.agent_status_command)
         self.agent_group.add_command(self.agent_gate_command)
         self.agent_group.add_command(self.agent_set_command)
+        self.agent_group.add_command(self.agent_block_command)
 
         # discovery command group (CLI verb is `discover`, keeping the
         # user-visible panel title as "Discovery" via display_title override).
@@ -1941,7 +1969,23 @@ class CLI(click.RichGroup):
         for stage in STAGES:
             state = manifest.state(stage)
             symbol = symbols.get(state.status, '[dim]·[/dim]')
-            console.print(f'  {symbol} {stage:<13} [dim]{state.status}[/dim]')
+            # "blocked" alone does not say whether anyone needs to do anything. Every
+            # failed gate records it, so the two cases are worth telling apart on the
+            # line a resuming reader looks at first.
+            qualifier = ''
+            if state.status == BLOCKED:
+                qualifier = (
+                    ' [bold red]- needs a human[/bold red]'
+                    if state.needs_human
+                    else ' [dim]- gate failure, resumable[/dim]'
+                )
+            console.print(
+                f'  {symbol} {stage:<13} [dim]{state.status}[/dim]{qualifier}'
+            )
+            if state.escalation:
+                console.print(f'      [bold]{state.escalation}[/bold]')
+                if state.escalation_detail:
+                    console.print(f'      [dim]{state.escalation_detail}[/dim]')
 
             # notes, errors and warnings are not alternatives - a blocked stage has a
             # blocker and may also have warnings worth reading before deciding what to
@@ -2057,6 +2101,68 @@ class CLI(click.RichGroup):
             console.print(f'[bold green]PASSED[/bold green] - stage {stage} complete.')
         if next_stage:
             console.print(f'  next stage [bold]{next_stage}[/bold]')
+        console.print()
+
+    @click.command(
+        'block',
+        cls=RichHelpCommand,
+        rich_help=RichAgentBlockHelp(),
+        short_help='Record that a stage is waiting on a human decision.',
+    )
+    @click.argument('stage', type=click.Choice(STAGES))
+    @click.argument('slug', type=str)
+    @click.option(
+        '--why',
+        required=True,
+        type=str,
+        help='One line: what the human has to decide or provide.',
+    )
+    @click.option(
+        '--detail',
+        type=str,
+        default=None,
+        help='What was tried, which URLs and tools, what the options are.',
+    )
+    @click.pass_obj
+    def agent_block_command(
+        self,
+        stage: str,
+        slug: str,
+        why: str,
+        detail: Optional[str],
+    ) -> None:
+        from rich.console import Console
+
+        from chem_mat_data.agent.manifest import Manifest
+
+        console = Console()
+        try:
+            manifest = Manifest.load(slug)
+        except FileNotFoundError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+
+        try:
+            manifest.escalate(stage, why=why, detail=detail)
+        except ValueError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+
+        manifest.save()
+
+        console.print()
+        console.print(
+            f'[bold red]✗[/bold red] {slug}: stage [bold]{stage}[/bold] is blocked '
+            'and needs a human'
+        )
+        console.print(f'      {why}')
+        if detail:
+            console.print(f'      [dim]{detail}[/dim]')
+        console.print()
+        console.print(
+            '[dim]Recorded in the manifest, so it survives this session. Put the same '
+            'question to the human now.[/dim]'
+        )
         console.print()
 
     @click.command(
