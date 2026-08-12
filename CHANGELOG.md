@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **A rejected licence passed the final gate, and an approved one waived every other
+  check.** Two defects in how a human decision was honoured.
+
+  `gate_verification` guarded its licence check with `if not override and not
+  is_permissive(identifier)`. A `rejected` override is a non-empty dict, so `not
+  override` was false and the check was skipped entirely — a dataset a human had
+  explicitly refused passed the last gate. Reproduced on the real `elanos_bp` manifest:
+  flipping the decision to `rejected` still returned `ok=True`. Removing the override
+  altogether also passed, because that check read only the top-level identifier
+  (`CC-BY-4.0`, permissive) and never re-examined `upstream_license` — so the final gate
+  never re-tested the provenance the licence gate had escalated on. It now re-runs
+  `gate_license` rather than reimplementing a weaker version of it.
+
+  `gate_license` returned as soon as it saw an approved override, before the identifier,
+  redistribution, attribution, upstream-provenance and host-divergence checks had run. An
+  approval given for one stated reason therefore silently waived every other finding,
+  including the upstream check added after the half-life run. Checks now run first and the
+  decision is applied afterwards: an approval **downgrades** errors to warnings prefixed
+  `waived by human override:` and reports how many, so what was waived stays legible in
+  every later gate run and in the manifest. A rejection is final and waives nothing; a
+  malformed or unreasoned override is a defect in the record rather than a decision and
+  cannot waive anything.
+
+  12 tests added. One existing fixture was corrected rather than worked around: the
+  verification-gate fixture omitted `upstream_database`, which the licence gate has
+  required since the provenance change and the weaker check never enforced.
+
 ### Changed
 
 - **Gate findings are recorded verbatim instead of counted, and `agent status` shows
