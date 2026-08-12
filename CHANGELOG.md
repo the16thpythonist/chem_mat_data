@@ -9,6 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **"Re-run the stale stage" read as "reprocess the dataset".** The `execute` stage warns
+  that processing can take hours, so telling a reader to re-run it after a staleness
+  cascade sounded enormous — and `license.md` sends every CC-BY dataset with an
+  attribution requirement into exactly that cascade by design, so the misreading is the
+  common case. Gates execute nothing; they read files. On the real completed run all
+  three re-pass in 64–131 ms. The instruction now says to re-run the *gate* first and
+  only redo the work if that fails.
+
+- **The skill documented a failure mode that does not exist.** It warned that putting
+  `description` in `METADATA` rather than `DESCRIPTION` "is the way to fail that gate at
+  the very last stage". The template does `metadata.update(e.METADATA)`, so it lands in
+  `metadata.yml` and passes. Replaced with what is actually true: `METADATA` is merged
+  over `DESCRIPTION`, either works, and what the gate checks is that whichever one
+  reaches `metadata.yml` matches the approved draft verbatim.
+
+- **`examples/xyz_3d.py` contradicted the rule it illustrates.** Stage 4 requires
+  `load_dataset` to download from the original URL; the example sets a local
+  `SOURCE_PATH`, contains no download code at all, and passes the self-containment check
+  only because two DOIs in `METADATA['sources']` satisfy the `https?://` search. It is
+  now labelled as the one archetype where the intermediate base fetches the data, states
+  plainly that it is not reproducible on another machine as written, and warns against
+  reading its passing gate as confirmation.
+
+### Added
+
+- **Guidance for a paper that publishes several datasets**, of which the skill previously
+  had none — while the paper used to validate it publishes nine across nine repository
+  records, and the manifest is single-valued throughout. One run, one dataset, one slug;
+  enumerate what the paper releases before `init` and say which one is being extracted.
+
+- **A specification for `input_rows`**, which had a trailing comment for documentation
+  despite being the denominator of the only check that catches silent data loss. Count
+  candidate rows in the file the script will download, exclude the header, sum across
+  concatenated files, and do not count a truncated scratch copy.
+
 - **`agent set` changed state without invalidating anything.** The staleness model
   guarded `gate`, but `set` is where state actually changes, and it changed no stage
   status at all: replacing the entire approved `metadata_draft` on a fully passed run

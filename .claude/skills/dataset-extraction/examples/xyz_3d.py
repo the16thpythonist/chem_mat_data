@@ -22,6 +22,25 @@ and produces RDKit ``Mol`` objects. The worker accepts a ``mol`` key in place of
 ``smiles``, which is what makes this path work at all.
 
 Name the file ``create_graph_datasets__from_xyz__<name>.py`` to match the convention.
+
+**This is the one archetype that does not download its own data, and the exception is
+deliberate.** Stage 4 otherwise requires ``load_dataset`` to fetch from the original URL
+and forbids reading ``.dataset_work/``. Here the intermediate base owns ``load_dataset``
+entirely, and resolves ``SOURCE_PATH`` itself - using the local path when it exists and
+otherwise fetching a bundle of that name from the remote share.
+
+That means this script as written is **not** self-contained in the sense stage 4 means:
+a fresh checkout on another machine cannot reproduce the dataset from it, because the
+bundle has to be there already. Two consequences worth knowing before you copy it:
+
+- If you are adding a *new* xyz dataset from a publication, you still need real download
+  logic. Override ``load_dataset``, fetch and unpack the archive from its published URL
+  into a cache directory, and point ``SOURCE_PATH`` at that - or extend the base template
+  directly rather than this one.
+- The script gate's self-containment check looks for an ``http`` URL anywhere in the
+  source. The DOIs in ``METADATA['sources']`` below satisfy it, so this file passes that
+  check without containing a single line of download code. Do not read a passing gate as
+  confirmation that you got this right.
 """
 
 import os
