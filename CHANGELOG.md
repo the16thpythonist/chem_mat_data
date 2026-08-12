@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`record_url`, and `source_url` is no longer settable.** The manifest had one URL
+  field and a run needs three: where it began, which repository record the files came
+  from, and the direct download link. With nowhere to record the second or third, the
+  `elanos_bp` run put the download URL into `source_url` — not carelessly, but because
+  that was the only slot available. The cost was silent: the licence gate's
+  preprint/published check compares the evidence host against `source_url`, so it ended
+  up comparing `zenodo.org` with `zenodo.org` and never fired.
+
+  `source_url` is now written once by `init --url` and refused by `agent set`, with an
+  error naming `record_url` and `download_recipe.md` as the right homes. `record_url`
+  holds the repository record's landing page.
+
+  The divergence check now compares against `record_url` where present, falling back to
+  `source_url`, which is also the *right* comparison rather than merely a working one.
+  The question worth asking is whether the licence was read on the host that served the
+  files; a paper on a publisher with its data on Zenodo is the ordinary arrangement and
+  now stays silent, while a ChemRxiv preprint whose licence was read on the published
+  ACS version still warns. Without this, documenting `source_url` as read-only earlier
+  in this changelog would have made that warning fire on essentially every run.
+
+  Manifests written before the field existed load unchanged. 7 tests added.
+
 - **The gates now read the record the experiment framework wrote, not only what the
   agent declared.** Pycomex writes `experiment_meta.json` into every results directory —
   `name`, `status`, `has_error`, `error_type` — and nothing under `chem_mat_data/agent/`

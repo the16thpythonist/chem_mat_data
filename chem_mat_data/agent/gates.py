@@ -715,14 +715,22 @@ def gate_license(manifest: Manifest) -> VerificationReport:
                 )
 
     ## -- preprint vs published version --
-    source_host = _host(manifest.source_url)
+    # Compared against the *record* the files came from, not the publication. A paper
+    # on a publisher and its data on Zenodo is the ordinary arrangement and says
+    # nothing; the question worth asking is whether the license was read on the same
+    # host that served the download - a ChemRxiv preprint against its published ACS
+    # version being the case that motivated this. Falls back to source_url for runs
+    # that never recorded a record_url.
+    compared_url = manifest.record_url or manifest.source_url
+    compared_label = 'the data record' if manifest.record_url else 'the run source'
+    compared_host = _host(compared_url)
     evidence_host = _host(evidence)
-    if source_host and evidence_host and source_host != evidence_host:
+    if compared_host and evidence_host and compared_host != evidence_host:
         report.add(
             WARNING,
-            f'the license was established on {evidence_host} but the run started from '
-            f'{source_host}. Preprint and published versions of the same work often '
-            'carry different licenses - confirm the file actually used is covered by '
+            f'the license was established on {evidence_host} but {compared_label} is '
+            f'on {compared_host}. The same work often exists in two versions under '
+            'different licenses - confirm the files actually downloaded are covered by '
             'the license recorded here.',
         )
 

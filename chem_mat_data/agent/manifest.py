@@ -172,7 +172,13 @@ class Manifest:
 
     :param slug: Short identifier for this extraction run; also the working directory
         name.
-    :param source_url: The publication URL or title the run started from.
+    :param source_url: The publication URL or title the run started from. Set once by
+        ``init`` and never afterwards - it records where the run *began*, which is what
+        makes it usable as a fixed point to compare later findings against.
+    :param record_url: Landing page of the data repository record the files actually
+        came from, e.g. the Zenodo or Figshare record. Distinct from ``source_url``:
+        the publication and the data it points at are normally on different hosts, and
+        the license question is about the record, not the paper.
     :param dataset_name: The eventual ``DATASET_NAME``, once decided.
     :param stages: Per-stage state, keyed by stage name.
     :param metadata_draft: The human-authored metadata fields assembled by the
@@ -191,6 +197,7 @@ class Manifest:
 
     slug: str
     source_url: Optional[str] = None
+    record_url: Optional[str] = None
     dataset_name: Optional[str] = None
     stages: Dict[str, StageState] = field(default_factory=dict)
     metadata_draft: Dict[str, Any] = field(default_factory=dict)
@@ -278,6 +285,7 @@ class Manifest:
         return cls(
             slug=data.get('slug', slug),
             source_url=data.get('source_url'),
+            record_url=data.get('record_url'),
             dataset_name=data.get('dataset_name'),
             stages=stages,
             metadata_draft=data.get('metadata_draft') or {},
@@ -307,6 +315,7 @@ class Manifest:
         data: Dict[str, Any] = {
             'slug': self.slug,
             'source_url': self.source_url,
+            'record_url': self.record_url,
             'dataset_name': self.dataset_name,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
