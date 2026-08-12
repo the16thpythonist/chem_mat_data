@@ -857,7 +857,42 @@ class TestExecuteGate:
         manifest = self.build(work_root, scripts_dir, tmp_path, input_rows=None)
         report = gate_execute(manifest)
         assert report.ok
-        assert any('drop rate' in issue.message for issue in report.warnings)
+
+    def test_more_compounds_than_input_rows_is_an_error(
+        self, work_root, scripts_dir, tmp_path
+    ):
+        """
+        The silent case: `input_rows` counted from a truncated scratch download.
+
+        The script fetches the whole file, so the output exceeds the recorded input and
+        the drop-rate denominator is wrong - meaning no drop can ever look large. Left
+        as a warning this turned the execute gate's one quantitative check into a no-op.
+        """
+        manifest = self.build(
+            work_root, scripts_dir, tmp_path, input_rows=500, compounds=1000
+        )
+        report = gate_execute(manifest)
+
+        assert not report.ok
+        assert any('more compounds' in issue.message for issue in report.errors)
+
+    def test_more_compounds_than_input_rows_can_be_overridden(
+        self, work_root, scripts_dir, tmp_path
+    ):
+        """
+        An understood difference is recorded rather than worked around.
+
+        It stays visible as a warning: whatever the reason, the drop-rate check really
+        is uninformative once the denominator describes a different file.
+        """
+        manifest = self.build(
+            work_root, scripts_dir, tmp_path, input_rows=500, compounds=1000
+        )
+        manifest.drop_rate_reason = 'input_rows counted the deduplicated source'
+        report = gate_execute(manifest)
+
+        assert report.ok, [i.message for i in report.errors]
+        assert any('more compounds' in issue.message for issue in report.warnings)
 
 
 class TestVerificationGate:

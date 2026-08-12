@@ -199,9 +199,81 @@ def _data_files(downloads_dir: Path) -> List[Path]:
     return sorted(
         path
         for path in downloads_dir.rglob('*')
-        if path.is_file()
-        and not any(name in path.name.lower() for name in NON_DATA_NAMES)
+        if path.is_file() and not is_documentation_name(path)
     )
+
+
+def is_documentation_name(path: Path) -> bool:
+    """
+    Return whether a filename marks the file as documentation rather than data.
+
+    The whole stem must be the name: ``LICENSE`` and ``README.md`` are documentation,
+    ``license_compounds.csv`` is data about licensed compounds. A substring test
+    excluded the latter, so the gate rejected legitimate downloads while accepting a
+    file containing the words "Not Found".
+
+    Erring towards *including* a file is safe here. A documentation file that slips
+    through is checked for emptiness and for being a saved web page, which it passes,
+    and the directory-level table check only requires that *something* present is
+    tabular.
+
+    :param path: The downloaded file.
+
+    :returns: True when the name marks it as documentation.
+    """
+    return path.stem.lower() in NON_DATA_NAMES
+
+
+def parses_as_table(path: Path, max_bytes: int = 1_000_000) -> bool:
+    """
+    Return whether a file reads as a table with at least one data row.
+
+    Only the first ``max_bytes`` are examined. The failures this separates - an error
+    page saved as a CSV, a JSON record dump, a header row with nothing under it - all
+    show up immediately, and reading a multi-gigabyte archive in full to prove it is
+    data would cost more than the check is worth.
+
+    Deliberately permissive about shape: a single-column list of SMILES is a legitimate
+    dataset, so no minimum column count is imposed. A file too large to have been read
+    in full, or in a format pandas cannot sniff, is *not* treated as a failure - the
+    question asked here is only whether at least one file in the directory is plainly
+    tabular.
+
+    :param path: The file to inspect.
+    :param max_bytes: How much of the file to read.
+
+    :returns: True when the prefix parses as a table with a data row.
+    """
+    try:
+        with open(path, 'rb') as file:
+            prefix = file.read(max_bytes)
+    except OSError:
+        return False
+
+    if not prefix.strip():
+        return False
+
+    text = prefix.decode('utf-8', errors='replace')
+    # A partial read almost always ends mid-line; dropping the tail avoids rejecting a
+    # good file over a truncated final row.
+    if len(prefix) == max_bytes and '\n' in text:
+        text = text[: text.rindex('\n')]
+
+    stripped = text.lstrip()
+    if stripped.startswith(('{', '[', '<')):
+        return False
+
+    try:
+        import pandas as pd
+        from io import StringIO
+
+        frame = pd.read_csv(
+            StringIO(text), sep=None, engine='python', nrows=8, on_bad_lines='skip'
+        )
+    except Exception:
+        return False
+
+    return len(frame) >= 1 and len(frame.columns) >= 1
 
 
 def _looks_like_html(path: Path) -> bool:
@@ -249,10 +321,13 @@ def gate_prepare(manifest: Manifest) -> VerificationReport:
 
     data_files = _data_files(downloads)
     if not data_files:
+        excluded = sorted(
+            path.name for path in downloads.rglob('*') if path.is_file()
+        )
         report.add(
             ERROR,
-            'no data files in the downloads directory (only README/recipe files '
-            'were found)',
+            'no data files in the downloads directory - everything present was treated '
+            f'as documentation: {excluded or "the directory is empty"}',
         )
     else:
         for path in data_files:
@@ -265,6 +340,19 @@ def gate_prepare(manifest: Manifest) -> VerificationReport:
                     'was saved instead of the file behind it',
                 )
 
+        # Asked of the directory rather than of each file, so that ancillary JSON
+        # records and notes alongside the real data stay welcome. What it rules out is
+        # a downloads folder where *nothing* is tabular: an error page saved as a CSV,
+        # a repository record dump, a header row with no rows under it.
+        if not any(parses_as_table(path) for path in data_files):
+            names = ', '.join(path.name for path in data_files)
+            report.add(
+                ERROR,
+                f'nothing in the downloads directory parses as a table with data rows '
+                f'({names}). A saved error page, a repository record or a header-only '
+                'file looks like a download but has nothing in it.',
+            )
+
     recipe = downloads / 'download_recipe.md'
     if not recipe.exists():
         report.add(
@@ -276,16 +364,50 @@ def gate_prepare(manifest: Manifest) -> VerificationReport:
         text = recipe.read_text(errors='replace')
         if not text.strip():
             report.add(ERROR, 'download_recipe.md is empty')
-        elif 'http' not in text:
-            report.add(ERROR, 'download_recipe.md records no URL')
+        else:
+            # A DOI resolves to a landing page, not to a file, so a recipe containing
+            # only DOIs records nothing the script stage can download from - and
+            # "records a URL" was previously satisfied by the substring "http".
+            hosts = {
+                _host(url)
+                for url in re.findall(r'https?://[^\s<>)"\']+', text)
+            }
+            downloadable = {
+                host
+                for host in hosts
+                if host and host not in ('doi.org', 'dx.doi.org')
+            }
+            if not hosts:
+                report.add(ERROR, 'download_recipe.md records no URL')
+            elif not downloadable:
+                report.add(
+                    ERROR,
+                    'download_recipe.md records only DOI links, which resolve to '
+                    'landing pages. The script stage needs the direct file URL it '
+                    'should download from.',
+                )
 
+    ## -- is the schema documented anywhere? --
+    # A README is one way; the recipe describing the columns is another, and in
+    # practice a better one. Warning about a missing README while the agent's own
+    # recipe documents every column is noise that trains the reader to skim.
     readme_found = any(
         'readme' in path.name.lower() for path in downloads.rglob('*') if path.is_file()
     )
-    if not readme_found:
+    schema_documented = readme_found
+    if not schema_documented and recipe.exists():
+        recipe_text = recipe.read_text(errors='replace').lower()
+        schema_documented = any(
+            marker in recipe_text
+            for marker in ('schema', 'column', 'field', 'units', 'unit)')
+        )
+
+    if not schema_documented:
         report.add(
             WARNING,
-            'no README captured - column meanings and units will have to be inferred',
+            'no schema documentation captured - neither a README nor a description of '
+            'the columns in download_recipe.md. Column meanings and units will have to '
+            'be inferred, which is where units go wrong.',
         )
 
     return report
@@ -1028,11 +1150,33 @@ def gate_execute(manifest: Manifest) -> VerificationReport:
     if manifest.input_rows and run_report.compounds:
         dropped = manifest.input_rows - run_report.compounds
         if dropped < 0:
-            report.add(
-                WARNING,
-                f'more compounds ({run_report.compounds}) than recorded input rows '
-                f'({manifest.input_rows}) - is input_rows correct?',
+            # More output than input means input_rows does not describe the file the
+            # script actually downloaded - most often because the scratch copy was
+            # truncated and counted, while the script fetched the whole thing. That is
+            # the one prepare-stage failure nothing else catches, and left as a warning
+            # it silently turns the drop-rate check below into a no-op: the denominator
+            # is wrong, so no drop can ever look large.
+            explained = bool(str(manifest.drop_rate_reason or '').strip())
+            message = (
+                f'the run produced more compounds ({run_report.compounds}) than the '
+                f'recorded input_rows ({manifest.input_rows}). input_rows does not '
+                'describe the file the script downloaded - most likely the copy in '
+                'downloads/ was truncated - so the drop-rate check below is meaningless.'
             )
+            if explained:
+                # An explanation was recorded, so this is a known difference rather
+                # than an undetected truncation. It stays visible as a warning: the
+                # drop-rate check really is uninformative here, whatever the reason.
+                report.add(
+                    WARNING,
+                    f'{message} Recorded reason: {manifest.drop_rate_reason}',
+                )
+            else:
+                report.add(
+                    ERROR,
+                    f'{message} Recount against the real source and re-run the prepare '
+                    'stage, or record drop_rate_reason if the difference is understood.',
+                )
         else:
             rate = dropped / manifest.input_rows
             threshold = (
