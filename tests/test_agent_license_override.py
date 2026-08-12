@@ -283,3 +283,54 @@ def test_verification_surfaces_the_waiver_rather_than_hiding_it(work_root, tmp_p
     report = gate_verification(manifest)
 
     assert any('waived by human override' in i.message for i in report.warnings)
+
+
+# -- --strict must not re-ask a question a human already answered --
+
+def test_waived_findings_are_marked_acknowledged(work_root):
+    """
+    They stay visible, but `--strict` must not treat them as failures.
+
+    Downgrading a waived error to a warning (so what was waived stays legible) and
+    telling stage 6 to run `--strict` combined into a run whose licence a human had
+    approved being permanently unable to pass the final gate, reporting the incoherent
+    "BLOCKED - 0 error(s)".
+    """
+    manifest = build(
+        work_root,
+        licence(human_override={'decision': 'approved', 'reason': 'data record only'}),
+    )
+
+    report = gate_license(manifest)
+
+    assert report.warnings
+    assert all(issue.acknowledged for issue in report.warnings)
+    assert report.unacknowledged_warnings == []
+
+
+def test_the_acknowledged_flag_survives_into_the_final_gate(work_root, tmp_path):
+    manifest = build(
+        work_root,
+        licence(human_override={'decision': 'approved', 'reason': 'data record only'}),
+        complete=True,
+        tmp_path=tmp_path,
+    )
+
+    report = gate_verification(manifest)
+
+    waived = [i for i in report.warnings if 'waived by human override' in i.message]
+    assert waived
+    assert all(issue.acknowledged for issue in waived)
+
+
+def test_an_unreviewed_warning_is_still_strict_material(work_root):
+    """The flag must not become a blanket exemption for every warning."""
+    record = licence(
+        upstream_database=None,
+        human_override={'decision': 'approved', 'reason': 'fine'},
+    )
+    record.pop('attribution')
+
+    report = gate_license(build(work_root, record))
+
+    assert any(not issue.acknowledged for issue in report.warnings)
