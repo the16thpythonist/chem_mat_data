@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **A completeness check on pages the prepare stage reads.** A reader can return a
+  partial capture and say nothing about it: clean exit, plausible document, no marker
+  where the rest should be. That happened once in testing — 83.6 KB of a Springer
+  article ending mid-document at "Case studies", with no Data Availability section — and
+  the danger is not failing to notice, it is concluding that *the paper* omits what the
+  reader dropped. Those two produce identical evidence.
+
+  The skill now tells the agent to confirm a document is complete before drawing any
+  conclusion from an absence, judged **by structure rather than by size**: an article
+  that never reaches its References or back matter did not finish loading. 83.6 KB is
+  not obviously short, which is why a byte threshold would not have caught it. Recovery
+  is a documented, verified retry that waits for the network to settle rather than
+  snapshotting early:
+
+  ```bash
+  crwl '<url>' -o markdown -c "wait_until=networkidle,page_timeout=90000,delay_before_return_html=2"
+  ```
+
+  `markdown-fit` stays the default. It was initially suspected as the cause — it is a
+  content-filtering mode — but that did not survive checking: three consecutive runs of
+  the same article returned byte-identical output (162,721 bytes) containing Data
+  Availability, References and every repository link. Raw markdown returns 45% more
+  bytes and no more substance. The truncation was a partial render, so switching modes
+  would not have prevented it, and the proposed switch was dropped.
+
 ### Fixed
 
 - **Prose in a matched licence field escalated for the wrong reason.** `redistribution`
