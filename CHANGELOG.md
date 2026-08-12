@@ -7,7 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`agent set` changed state without invalidating anything.** The staleness model
+  guarded `gate`, but `set` is where state actually changes, and it changed no stage
+  status at all: replacing the entire approved `metadata_draft` on a fully passed run
+  left all six stages `passed`. That made every gate comparing the manifest against
+  reality — the dataset-name check, the target ranges, the script-name match — satisfiable
+  by editing the manifest to agree with whatever the run happened to do. Each key now
+  invalidates the stage it belongs to and everything after it, and `set` reports what it
+  marked stale.
+
+- **A damaged manifest loaded as an empty one.** The file was rewritten in place with a
+  plain truncating `open` on every `set` and every `gate`, and `load` filled every gap
+  with a default. A manifest truncated by an interruption therefore loaded *without
+  error*, reporting every stage pending — so a resuming agent would re-download,
+  re-license and re-script a finished run, and the recorded human licence decision would
+  be silently gone. Saves are now written to a temporary file and moved into place, the
+  previous version is kept as `manifest.yml.bak`, and a file missing its structure raises
+  `ManifestDamagedError` naming the backup instead of pretending to be a fresh run. An
+  individual missing *stage* still defaults to pending, so older manifests keep loading.
+
+- **`init --force` discarded a recorded human decision.** It built a fresh manifest over
+  the old one, deleting any `license.human_override` — a person's verbatim words, often
+  the product of an email exchange — while leaving the downloads that made the run cheap
+  to resume. It now archives the previous manifest as `manifest.<created_at>.yml`, and
+  refuses outright when an override is present, quoting the decision so the choice to
+  discard it has to be made deliberately.
+
 ### Added
+
+- **`cmmanage agent list`**, because there was no way to enumerate `.dataset_work/` and a
+  human returning to a blocked run had to already know its slug — which is exactly what
+  gets forgotten. Runs waiting on a human sort first, then blocked ones, then the rest.
+  A manifest that cannot be read is listed as damaged rather than skipped. 16 tests added.
 
 - **`cmmanage agent block`, so a blocked run can record why.** The skill teaches the
   agent to compose a careful escalation — what is blocking, what was tried with which
