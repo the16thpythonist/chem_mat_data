@@ -108,6 +108,14 @@ class StageState:
     :param errors: Every error message the gate emitted, verbatim. A blocked stage is
         the one most likely to be resumed cold in a later session, which is exactly
         when keeping only the first error costs the most.
+    :param needs_human: Whether this stage is waiting on a person rather than on more
+        work by the agent. ``BLOCKED`` alone cannot express that: every failed gate
+        records it, including ones the agent fixes moments later, so a reader resuming
+        cold cannot tell "needs someone with a subscription to this journal" from "the
+        draft had not been written yet".
+    :param escalation: One line saying what a person has to decide or provide.
+    :param escalation_detail: Whatever else is worth carrying - what was tried, which
+        URLs, which tools, what the options are.
     """
 
     status: str = PENDING
@@ -116,6 +124,9 @@ class StageState:
     notes: Optional[str] = None
     warnings: List[str] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
+    needs_human: bool = False
+    escalation: Optional[str] = None
+    escalation_detail: Optional[str] = None
 
     def to_dict(self) -> dict:
         """Serialise to a plain dict, dropping empty fields."""
@@ -130,6 +141,12 @@ class StageState:
             data['warnings'] = list(self.warnings)
         if self.errors:
             data['errors'] = list(self.errors)
+        if self.needs_human:
+            data['needs_human'] = True
+        if self.escalation:
+            data['escalation'] = self.escalation
+        if self.escalation_detail:
+            data['escalation_detail'] = self.escalation_detail
         return data
 
     @classmethod
@@ -151,6 +168,9 @@ class StageState:
             notes=data.get('notes'),
             warnings=_string_list(data.get('warnings')),
             errors=_string_list(data.get('errors')),
+            needs_human=bool(data.get('needs_human', False)),
+            escalation=data.get('escalation'),
+            escalation_detail=data.get('escalation_detail'),
         )
 
 
@@ -391,6 +411,14 @@ class Manifest:
         if status not in (PENDING, PASSED, BLOCKED, STALE):
             raise ValueError(f'unknown status: {status!r}')
 
+        # Gate output - blocker, warnings, errors - always belongs to the run that just
+        # happened and is replaced wholesale. The human-escalation fields are different:
+        # they record a judgement about what this stage needs from a person, which a
+        # subsequent gate run does not supersede. Recording a blocker and then running
+        # the gate used to erase the blocker, so the diagnosis lost to the symptom.
+        previous = self.stages.get(stage, StageState())
+        resolved = status == PASSED
+
         self.stages[stage] = StageState(
             status=status,
             at=_timestamp(),
@@ -398,6 +426,11 @@ class Manifest:
             notes=notes,
             warnings=list(warnings or []),
             errors=list(errors or []),
+            # Cleared on success: a stage that has passed is not waiting on anyone, and
+            # a stale escalation would be its own quiet lie.
+            needs_human=False if resolved else previous.needs_human,
+            escalation=None if resolved else previous.escalation,
+            escalation_detail=None if resolved else previous.escalation_detail,
         )
 
         if status == PASSED:
@@ -409,6 +442,51 @@ class Manifest:
                         at=_timestamp(),
                         notes=f'invalidated by a re-run of the {stage} stage',
                     )
+
+    def escalate(
+        self,
+        stage: str,
+        why: str,
+        detail: Optional[str] = None,
+    ) -> None:
+        """
+        Record that a stage is waiting on a person, and what they have to resolve.
+
+        The gate records the symptom - "no data files in the downloads directory" - and
+        this records the diagnosis: that the article is paywalled, what was tried, and
+        what is needed. Both are worth keeping, and the symptom alone is what a reader
+        resuming a week later would otherwise find.
+
+        Marks the stage blocked if it is not already, since a stage waiting on a human
+        is by definition not done.
+
+        Example:
+
+        .. code-block:: python
+
+            manifest.escalate(
+                'prepare',
+                why='the supplementary data is behind an ACS login',
+                detail='crwl 403, no preprint found, direct SI URL redirects to login',
+            )
+
+        :param stage: The stage that is blocked.
+        :param why: One line stating what a person has to decide or provide.
+        :param detail: Anything else worth carrying - what was tried, the options.
+
+        :raises ValueError: If the stage is not recognised, or ``why`` is empty.
+        """
+        _check_stage(stage)
+        if not str(why or '').strip():
+            raise ValueError('an escalation must say what the human has to resolve')
+
+        state = self.stages.get(stage, StageState())
+        state.status = BLOCKED
+        state.at = _timestamp()
+        state.needs_human = True
+        state.escalation = str(why).strip()
+        state.escalation_detail = str(detail).strip() if detail else None
+        self.stages[stage] = state
 
     def next_stage(self) -> Optional[str]:
         """

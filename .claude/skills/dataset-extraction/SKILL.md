@@ -118,11 +118,26 @@ offer the options of downloading it manually into
 `.dataset_work/<slug>/downloads/`, supplying an alternative URL, or abandoning this
 paper.
 
-Before asking, record the blocker so it survives the session:
+Before asking, record it so it survives the session — **both halves**:
 
 ```bash
-cmmanage agent gate <stage> <slug>     # marks the stage blocked with the first error
+cmmanage agent gate <stage> <slug>          # the symptom: what the gate found
+cmmanage agent block <stage> <slug> \
+  --why 'the supplementary data is behind an ACS login' \
+  --detail 'crwl 403 on the article page; no preprint found; SI URL redirects to login'
 ```
+
+The gate records the symptom, which is mechanical and often unilluminating — a paywalled
+paper leaves `no data files in the downloads directory`. `agent block` records the
+diagnosis, in your words, and marks the stage as **waiting on a person** rather than
+merely failed.
+
+That distinction is the point. Every failed gate records `blocked`, including ones you
+fix thirty seconds later, so without this a reader resuming the run days later cannot
+tell a paywall from an unwritten draft. `agent status` renders the two differently.
+
+Run `block` *after* the gate. The escalation then survives later gate runs on that
+stage, and is cleared automatically when the stage finally passes.
 
 If the user resolves it, re-run the gate and continue. If they choose to abandon, stop
 cleanly and say what was left behind.
