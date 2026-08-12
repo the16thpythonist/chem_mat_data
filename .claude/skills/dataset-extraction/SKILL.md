@@ -569,9 +569,26 @@ that the target values are in the range the paper reports, that the units in
 appear in the processed CSV. Have it report findings, not reassurance.
 
 The gate itself checks: every earlier stage passed; the results verify; **what landed
-in `metadata.yml` matches what the metadata stage approved** (the script carries its
-own `METADATA` literal, so the two can silently diverge); and the license conclusion
-still holds.
+in `metadata.yml` matches what the metadata stage approved** — `verbose`, `description`,
+`tags`, `sources`, every `target_descriptions` entry, the task type, and the dataset
+name against the file actually written, since the script carries its own `METADATA`
+literal and the two can silently diverge; and the license conclusion still holds.
+
+Note what that does **not** establish: that the approved metadata was right to begin
+with. An agent wrong about a unit writes the same wrong string into the draft and into
+the script, so both sides agree. The value checks in stage 5 are what catch that — which
+is why the subagent is asked to hold the printed target statistics against the paper
+rather than against the manifest.
+
+Run it strictly, so that a wording difference has to be looked at rather than skimmed:
+
+```bash
+cmmanage agent gate verification <slug> --strict
+```
+
+`--strict` treats warnings as failures. At the final gate that is what you want: every
+warning here is either a divergence from what was approved or a licence caveat, and both
+deserve a decision rather than a glance.
 
 Act on what the subagent reports. If it finds a real problem, fix it and re-run the
 affected stage — which will mark the later stages stale, as it should.

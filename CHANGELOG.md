@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **The final gate checked four fields while claiming to check the metadata.** Its
+  docstring said it "confirms that what ended up in `metadata.yml` actually matches what
+  the metadata stage approved"; it compared `verbose`, `description`, `tags` and
+  `sources`, and nothing else. Probed on a real manifest, replacing the approved
+  `target_descriptions`, `dataset_type` and `dataset_name` produced **zero** issues —
+  and `target_descriptions` is the only per-target place units live, while
+  `dataset_name` is the identifier a user passes to `load_smiles_dataset`.
+
+  Now compared: `target_descriptions` index by index, with a wording difference warning
+  and a missing approved index erroring; `dataset_type` against the written
+  `target_type`, erroring on a mismatch since the value is categorical; and
+  `dataset_name` against the message pack actually written, checked only when one
+  exists so a partial run degrades rather than raising. Integer and string keys compare
+  equal, as both forms occur in the shipped metadata.
+
+  The docstring is corrected, and now also states what the gate does *not* establish:
+  that the approved metadata was right in the first place. An agent wrong about a unit
+  writes the same wrong string into the draft and the script, so both sides agree — the
+  observed-value checks in the execute stage are what catch that. A gate that overclaims
+  in its own documentation is how the next reader concludes a check exists when it does
+  not.
+
+  Stage 6 now also documents `cmmanage agent gate verification --strict`, which treats
+  warnings as failures. At the final gate every warning is either a divergence from what
+  was approved or a licence caveat, and both deserve a decision rather than a glance.
+  8 tests added.
+
 - **The `.mpack` and the `.csv` of the same run were a full permutation of each other.**
   This is a base-template defect, so it affects every dataset in the collection rather
   than only skill-produced ones, and it is the only one found in this round that

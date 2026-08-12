@@ -1072,10 +1072,22 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
     """
     Final pass over the whole run.
 
-    Re-runs the full results check and additionally confirms that what ended up in
-    ``metadata.yml`` actually matches what the metadata stage approved. The two can
-    diverge silently: the script carries its own ``METADATA`` literal, and nothing
-    before this point compares it against the draft that was agreed.
+    Re-runs the full results check, re-runs the license gate, and compares what ended up
+    in ``metadata.yml`` against what the metadata stage approved. The two can diverge
+    silently, because the script carries its own ``METADATA`` literal and nothing before
+    this point compares it against the agreed draft.
+
+    Specifically compared: ``verbose``, ``description``, ``tags``, ``sources``, the
+    per-target ``target_descriptions``, ``dataset_type`` against the written
+    ``target_type``, and ``dataset_name`` against the message pack that was written.
+    Wording differences warn; a missing approved field, a changed task type or a
+    renamed dataset are errors.
+
+    What this does **not** do is confirm that the approved metadata was right in the
+    first place. An agent confidently wrong about a unit writes the same wrong string
+    into the draft and into the script, and both sides agree. The observed-value checks
+    in :func:`gate_execute` are what catch that; this gate catches drift between what
+    was agreed and what shipped.
 
     :param manifest: The run manifest.
 
@@ -1142,6 +1154,65 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
                     f'{key} approved in the metadata stage but absent from '
                     f'metadata.yml: {missing}',
                 )
+
+        ## -- per-target descriptions --
+        # The only per-target place units live, and the script carries its own METADATA
+        # literal, so this is where the approved draft and what actually shipped can
+        # silently diverge. Divergence warns, to match how verbose/description are
+        # treated; an approved index going missing entirely is an error, because a
+        # target with no description is unusable to whoever downloads it.
+        approved_descriptions = normalize_target_description_keys(
+            draft.get('target_descriptions') or {}
+        )
+        written_descriptions = normalize_target_description_keys(
+            written.get('target_descriptions') or {}
+        )
+        for index in sorted(approved_descriptions):
+            approved_text = str(approved_descriptions[index] or '').strip()
+            actual_text = str(written_descriptions.get(index, '') or '').strip()
+            if not approved_text:
+                continue
+            if not actual_text:
+                report.add(
+                    ERROR,
+                    f'target {index} was described in the approved metadata but has no '
+                    'description in metadata.yml',
+                )
+            elif approved_text != actual_text:
+                report.add(
+                    WARNING,
+                    f'the description of target {index} in metadata.yml differs from '
+                    f'the approved draft: {actual_text!r} against {approved_text!r}',
+                )
+
+        ## -- the task type --
+        # Categorical, so a mismatch is unambiguous rather than a wording difference.
+        approved_type = str(draft.get('dataset_type', '')).strip().lower()
+        written_types = [
+            str(item).strip().lower() for item in (written.get('target_type') or [])
+        ]
+        if approved_type and written_types and approved_type not in written_types:
+            report.add(
+                ERROR,
+                f'the metadata stage approved a {approved_type!r} dataset but '
+                f'metadata.yml declares {written_types} - a downstream user will load '
+                'this with the wrong task',
+            )
+
+    ## -- the dataset name --
+    # The identifier a user types into load_smiles_dataset. Checked against the file
+    # that was actually written rather than against the draft alone, and only when a
+    # message pack exists, so a partial run degrades instead of raising.
+    approved_name = str((manifest.metadata_draft or {}).get('dataset_name', '')).strip()
+    if approved_name:
+        mpack_paths = sorted(Path(manifest.results_dir).glob('*.mpack'))
+        if mpack_paths and mpack_paths[0].stem != approved_name:
+            report.add(
+                ERROR,
+                f'the dataset was saved as {mpack_paths[0].stem!r} but the metadata '
+                f'stage approved the name {approved_name!r} - this is the identifier '
+                'a user passes to load_smiles_dataset',
+            )
 
     ## -- the license conclusion must still hold --
     # Re-run the real gate rather than re-implementing a weaker version of it. The
