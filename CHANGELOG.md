@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Prose in a matched licence field escalated for the wrong reason.** `redistribution`
+  and `upstream_license` are compared against fixed vocabularies, but the documentation
+  invited free text into both, and the real `elanos_bp` run duly recorded a paragraph in
+  each. The consequence was worse than untidy: a sentence explaining that an upstream is
+  CC0 failed `is_permissive` exactly like a sentence explaining that it forbids
+  redistribution, so the escalation carried no information — the gate was testing
+  "did the agent write something that isn't an SPDX tag", not "is the upstream
+  permissive". A genuinely open upstream could not be expressed at all.
+
+  Both fields are now constrained and the gate names prose as prose instead of reporting
+  a paragraph back as though it were a value. `redistribution` takes a verdict
+  (`allowed`/`permitted`/`yes`, or `forbidden`/`no`/`denied`/`prohibited`/`restricted`/
+  `unclear`/`unknown`); `upstream_license` takes a licence identifier, `proprietary` for
+  stated-but-restrictive terms, or `none`. The reasoning belongs in `attribution` or the
+  override reason, which are read by humans and not matched. No new manifest fields.
+
+  `SKILL.md` and `references/license.md` are corrected with it — both carried examples
+  that would now fail their own gate, including two added earlier in this changelog
+  entry. 18 tests added, and an existing provenance test was split so that a restrictive
+  *identifier* and a restrictive *description* are both covered rather than conflated.
+
 - **A rejected licence passed the final gate, and an approved one waived every other
   check.** Two defects in how a human decision was honoured.
 
