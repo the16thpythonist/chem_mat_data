@@ -35,6 +35,7 @@ from chem_mat_data.agent.manifest import (
 from chem_mat_data.agent.verification import (
     ERROR,
     WARNING,
+    VerificationIssue,
     VerificationReport,
     normalize_target_description_keys,
     verify_results,
@@ -341,6 +342,97 @@ def gate_metadata(manifest: Manifest) -> VerificationReport:
     return report
 
 
+def _classify_override(override: dict) -> dict:
+    """
+    Work out what a recorded ``human_override`` means, without acting on it yet.
+
+    Separated from applying it so that the automatic checks can run first: a human
+    approving a license for one stated reason should still be *told* what else the
+    gate found, rather than having those findings silently discarded.
+
+    :param override: The ``human_override`` mapping, possibly empty.
+
+    :returns: A mapping with ``state`` - one of ``absent``, ``approved``, ``rejected``,
+        ``malformed``, ``unreasoned`` - and ``reason``.
+    """
+    if not override:
+        return {'state': 'absent', 'reason': ''}
+
+    decision = str(override.get('decision', '')).lower()
+    reason = str(override.get('reason', '') or '').strip()
+
+    if decision not in ('approved', 'rejected'):
+        return {'state': 'malformed', 'reason': reason}
+    if decision == 'rejected':
+        return {'state': 'rejected', 'reason': reason}
+    if not reason:
+        return {'state': 'unreasoned', 'reason': ''}
+    return {'state': 'approved', 'reason': reason}
+
+
+def _apply_override(
+    report: VerificationReport,
+    override_state: dict,
+    identifier: Optional[str],
+) -> None:
+    """
+    Apply a human license decision to an already-populated report.
+
+    An approval downgrades the errors found to warnings, each prefixed so that what was
+    waived stays legible in every later gate run and in the manifest. It does not erase
+    them: the human approved the dataset, not the disappearance of the reasons.
+
+    A rejection is final and adds an error of its own; a malformed or unreasoned
+    override is a defect in the record rather than a decision, and cannot waive
+    anything.
+
+    :param report: The report to modify in place.
+    :param override_state: The mapping returned by :func:`_classify_override`.
+    :param identifier: The license identifier, for the message.
+    """
+    state = override_state['state']
+
+    if state == 'absent':
+        return
+
+    if state == 'malformed':
+        report.add(
+            ERROR,
+            'license human_override must record decision: approved | rejected',
+        )
+        return
+
+    if state == 'unreasoned':
+        report.add(ERROR, 'an approved license override must record a reason')
+        return
+
+    if state == 'rejected':
+        report.add(
+            ERROR,
+            'the license was reviewed and rejected: '
+            f'{override_state["reason"] or "no reason recorded"}',
+        )
+        return
+
+    ## -- approved: downgrade, do not delete --
+    waived = 0
+    for index, issue in enumerate(report.issues):
+        if issue.level == ERROR:
+            waived += 1
+            report.issues[index] = VerificationIssue(
+                level=WARNING,
+                message=f'waived by human override: {issue.message}',
+            )
+
+    summary = (
+        f'license {identifier!r} approved by human override: '
+        f'{override_state["reason"]}'
+    )
+    if waived:
+        summary += f' [{waived} check(s) waived - listed below]'
+    report.issues.insert(0, VerificationIssue(level=WARNING, message=summary))
+
+
 def gate_license(manifest: Manifest) -> VerificationReport:
     """
     Check that the license stage reached a defensible, evidenced conclusion.
@@ -375,7 +467,13 @@ def gate_license(manifest: Manifest) -> VerificationReport:
 
     identifier = license_info.get('identifier')
     evidence = license_info.get('evidence_url')
-    override = license_info.get('human_override') or {}
+
+    # The override is classified now but applied at the *end*, after every automatic
+    # check has run. Returning here - which is what this did - meant an approval given
+    # for one reason silently waived every other check too, including the upstream
+    # provenance check that exists because a previous run shipped a dataset whose
+    # upstream forbade redistribution.
+    override_state = _classify_override(license_info.get('human_override') or {})
 
     if not evidence:
         report.add(
@@ -384,39 +482,13 @@ def gate_license(manifest: Manifest) -> VerificationReport:
             'can check',
         )
 
-    ## -- an explicit human decision overrides the automatic policy --
-    if override:
-        decision = str(override.get('decision', '')).lower()
-        if decision not in ('approved', 'rejected'):
-            report.add(
-                ERROR,
-                'license human_override must record decision: approved | rejected',
-            )
-        elif decision == 'rejected':
-            report.add(
-                ERROR,
-                'the license was reviewed and rejected: '
-                f'{override.get("reason", "no reason recorded")}',
-            )
-        elif not str(override.get('reason', '')).strip():
-            report.add(ERROR, 'an approved license override must record a reason')
-        else:
-            report.add(
-                WARNING,
-                f'license {identifier!r} approved by human override: '
-                f'{override.get("reason")}',
-            )
-        return report
-
     if not identifier:
         report.add(
             ERROR,
             'no license identified. A dataset with no stated license is not clearly '
             'redistributable and needs a human decision.',
         )
-        return report
-
-    if not is_permissive(identifier):
+    elif not is_permissive(identifier):
         report.add(
             ERROR,
             f'license {identifier!r} is not on the permissive list (public domain, '
@@ -493,6 +565,9 @@ def gate_license(manifest: Manifest) -> VerificationReport:
             'carry different licenses - confirm the file actually used is covered by '
             'the license recorded here.',
         )
+
+    ## -- the human decision, applied to everything found above --
+    _apply_override(report, override_state, identifier)
 
     return report
 
@@ -763,13 +838,16 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
                 )
 
     ## -- the license conclusion must still hold --
-    license_info = manifest.license or {}
-    override = license_info.get('human_override') or {}
-    if not override and not is_permissive(license_info.get('identifier')):
-        report.add(
-            ERROR,
-            'the recorded license is not permissive and carries no human override',
-        )
+    # Re-run the real gate rather than re-implementing a weaker version of it. The
+    # previous check asked only whether the top-level identifier was permissive *or*
+    # an override key existed, which meant a `rejected` override read as an approval
+    # (a rejection is a non-empty dict, so `not override` was False), and a permissive
+    # paper license waved through an upstream database that forbids redistribution.
+    license_report = gate_license(manifest)
+    for issue in license_report.errors:
+        report.add(ERROR, f'license: {issue.message}')
+    for issue in license_report.warnings:
+        report.add(WARNING, f'license: {issue.message}')
 
     return report
 

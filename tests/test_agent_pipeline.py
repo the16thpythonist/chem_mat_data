@@ -847,10 +847,13 @@ class TestVerificationGate:
     def build(self, tmp_path, written_extra=None) -> Manifest:
         manifest = Manifest.create('demo')
         manifest.metadata_draft = valid_draft()
+        # A license that satisfies the license gate in full, since the verification
+        # gate now re-runs that gate rather than applying a weaker check of its own.
         manifest.license = {
             'identifier': 'CC-BY-4.0',
             'evidence_url': 'https://example.org',
             'attribution': 'cite',
+            'upstream_database': None,
         }
         for stage in ('prepare', 'metadata', 'license', 'script', 'execute'):
             manifest.mark(stage, PASSED)
