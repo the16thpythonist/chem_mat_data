@@ -51,6 +51,18 @@ blocker, plus the next stage to run. Start from there rather than beginning agai
 `stale` stage passed once but an earlier stage has since been re-run, so its result no
 longer reflects what was approved — re-run it.
 
+**To inspect a gate without consequences, use `--no-record`:**
+
+```bash
+cmmanage agent gate <stage> <slug> --no-record    # report only, manifest untouched
+```
+
+`agent status` shows *that* a stage warned, not what the warning said, and re-running a
+gate normally re-records the outcome — which marks every later stage stale and costs you
+the run. `--no-record` prints the full warning and error text and changes nothing, so
+reach for it whenever you are reading rather than advancing. `--strict` additionally
+treats warnings as failures.
+
 ## Recording state
 
 Each stage hands its conclusions to the next through the manifest:
@@ -336,10 +348,11 @@ cmmanage agent set <slug> license '{
 `agent set` **replaces the whole license object**, so you must re-send every field. An
 override that arrives alone silently deletes `upstream_database`, `upstream_terms_url`,
 `upstream_license` and `attribution` — the exact evidence that justified escalating.
-Read the current value back and merge rather than retyping from memory:
+Read the current value back and merge rather than retyping from memory. `agent status`
+does **not** print it — read the manifest directly:
 
 ```bash
-cmmanage agent status <slug>            # shows the recorded license
+cat .dataset_work/<slug>/manifest.yml    # the `license:` block holds every recorded field
 ```
 
 An override without a reason fails the gate. Never write one on your own judgement —

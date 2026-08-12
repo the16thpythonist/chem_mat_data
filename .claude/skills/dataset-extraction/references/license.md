@@ -163,8 +163,9 @@ to. Then record their decision verbatim:
 set` replaces the whole `license` object, so an override submitted on its own deletes
 `upstream_database`, `upstream_terms_url`, `upstream_license` and `attribution` — the
 very evidence that justified escalating in the first place, leaving a record that says
-a human approved something without saying what. Read the current value back with
-`cmmanage agent status <slug>` and merge into it.
+a human approved something without saying what. Read the current value back from
+`.dataset_work/<slug>/manifest.yml` — `cmmanage agent status` does not print the license
+block — and merge into it.
 
 `decision` is `approved` or `rejected`, and an approval **must** carry a reason — the
 gate rejects one without. Record the human's words verbatim rather than paraphrasing
