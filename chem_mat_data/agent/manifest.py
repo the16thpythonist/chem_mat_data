@@ -68,6 +68,27 @@ def work_dir_for(slug: str) -> Path:
     return WORK_DIR / slug
 
 
+def _string_list(value: Any) -> List[str]:
+    """
+    Coerce a loaded YAML value into a list of strings.
+
+    A hand-edited manifest is a normal thing to encounter - the whole point of the
+    file is that a human can read and repair it - so a scalar where a list belongs
+    should not crash a resume.
+
+    :param value: Whatever was loaded from the manifest.
+
+    :returns: A list of strings, empty when there is nothing usable.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, (list, tuple)):
+        return [str(item) for item in value if item is not None]
+    return [str(value)]
+
+
 @dataclass
 class StageState:
     """
@@ -77,13 +98,24 @@ class StageState:
         :data:`STALE`.
     :param at: ISO timestamp of the last status change.
     :param blocker: Plain-language description of what is blocking, when blocked.
-    :param notes: Free-form notes the stage wants to carry forward.
+        The headline reason only; see :attr:`errors` for the full set.
+    :param notes: Free-form notes the stage wants to carry forward, such as why a
+        previously passed stage was invalidated.
+    :param warnings: Every warning message the gate emitted, verbatim. Recorded
+        because a count is not actionable: the difference between "a human waived
+        this for a stated reason" and "the upstream forbids derivative works" is a
+        warning that both render as ``1 warning(s)``.
+    :param errors: Every error message the gate emitted, verbatim. A blocked stage is
+        the one most likely to be resumed cold in a later session, which is exactly
+        when keeping only the first error costs the most.
     """
 
     status: str = PENDING
     at: Optional[str] = None
     blocker: Optional[str] = None
     notes: Optional[str] = None
+    warnings: List[str] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Serialise to a plain dict, dropping empty fields."""
@@ -94,6 +126,10 @@ class StageState:
             data['blocker'] = self.blocker
         if self.notes:
             data['notes'] = self.notes
+        if self.warnings:
+            data['warnings'] = list(self.warnings)
+        if self.errors:
+            data['errors'] = list(self.errors)
         return data
 
     @classmethod
@@ -113,6 +149,8 @@ class StageState:
             at=data.get('at'),
             blocker=data.get('blocker'),
             notes=data.get('notes'),
+            warnings=_string_list(data.get('warnings')),
+            errors=_string_list(data.get('errors')),
         )
 
 
@@ -319,6 +357,8 @@ class Manifest:
         status: str,
         blocker: Optional[str] = None,
         notes: Optional[str] = None,
+        warnings: Optional[List[str]] = None,
+        errors: Optional[List[str]] = None,
     ) -> None:
         """
         Record the outcome of a stage.
@@ -333,6 +373,8 @@ class Manifest:
             :data:`STALE`.
         :param blocker: Plain-language description of the blocker, when blocked.
         :param notes: Free-form notes to carry forward.
+        :param warnings: Every warning the gate emitted, verbatim.
+        :param errors: Every error the gate emitted, verbatim.
 
         :raises ValueError: If the stage or status is not recognised.
         """
@@ -345,6 +387,8 @@ class Manifest:
             at=_timestamp(),
             blocker=blocker,
             notes=notes,
+            warnings=list(warnings or []),
+            errors=list(errors or []),
         )
 
         if status == PASSED:
