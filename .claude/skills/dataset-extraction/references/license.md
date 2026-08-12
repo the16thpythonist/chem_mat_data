@@ -115,9 +115,24 @@ and when the data was compiled from a database:
   "attribution": "Cite Hafner, Fenner & Scheidegger, Environ. Sci. Technol. Lett. 2023.",
   "upstream_database": "enviPath / EAWAG-SOIL",
   "upstream_terms_url": "https://envipath.org/terms",
-  "upstream_license": "academic and non-commercial use only; systematic redistribution prohibited"
+  "upstream_license": "proprietary"
 }
 ```
+
+**`redistribution` and `upstream_license` are matched, not read.** The gate compares
+them against fixed vocabularies, so a sentence in either is not untidy — it is
+unreadable to the check, and worse, it fails in a way that looks like a restriction. A
+paragraph explaining that the upstream is CC0 escalates exactly like a paragraph
+explaining that it forbids redistribution, which makes the escalation meaningless.
+
+| Field | Allowed values |
+|---|---|
+| `redistribution` | `allowed` / `permitted` / `yes`, or `forbidden` / `no` / `denied` / `prohibited` / `restricted` / `unclear` / `unknown` |
+| `upstream_license` | a license identifier (`CC-BY-4.0`, `MIT`, `CC0-1.0`), or `proprietary` for stated-but-restrictive terms, or `none` where no license is stated |
+
+The gate rejects prose in either field with a message saying so. Put the terms you
+found — the quoted restriction, the reasoning — in `attribution`, or in the override
+reason when it escalates. Those fields are read by humans and are not matched.
 
 - `identifier` — an SPDX-style identifier where one exists (`CC-BY-4.0`, `MIT`,
   `CC0-1.0`). Casing and separators do not matter; the gate normalises them. Omit it
@@ -151,7 +166,7 @@ to. Then record their decision verbatim:
   "attribution": "Cite ...",
   "upstream_database": "enviPath",
   "upstream_terms_url": "https://envipath.org/terms",
-  "upstream_license": "Academic and non-commercial use only; systematic redistribution forbidden.",
+  "upstream_license": "proprietary",
   "human_override": {
     "decision": "approved",
     "reason": "Non-commercial use only; ChemMatData is an academic project and the authors confirmed by email on 2026-08-01."

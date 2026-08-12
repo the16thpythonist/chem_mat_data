@@ -103,7 +103,7 @@ def licence(**overrides) -> dict:
         'attribution': 'Cite the paper.',
         'upstream_database': 'US EPA EPI Suite',
         'upstream_terms_url': 'https://example.gov/terms',
-        'upstream_license': 'No open license; forbids derivative works.',
+        'upstream_license': 'proprietary',
     }
     record.update(overrides)
     return record

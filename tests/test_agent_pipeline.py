@@ -479,11 +479,32 @@ class TestLicenseProvenance:
             self.build(
                 upstream_database='enviPath',
                 upstream_terms_url='https://envipath.org/terms',
-                upstream_license='academic and non-commercial use only',
+                upstream_license='proprietary',
             )
         )
         assert not report.ok
         assert any('not permissive' in issue.message for issue in report.errors)
+
+    def test_named_upstream_described_in_prose_is_an_error(self, work_root):
+        """
+        Prose escalates, but for its own reason.
+
+        It used to reach the permissive check and fail there, which meant a sentence
+        saying the upstream is CC0 and a sentence saying it forbids redistribution
+        escalated identically. The gate now asks for the identifier instead.
+        """
+        report = gate_license(
+            self.build(
+                upstream_database='enviPath',
+                upstream_terms_url='https://envipath.org/terms',
+                upstream_license='academic and non-commercial use only',
+            )
+        )
+        assert not report.ok
+        assert any(
+            'must be a license identifier' in issue.message
+            for issue in report.errors
+        )
 
     def test_named_upstream_without_terms_url_is_an_error(self, work_root):
         report = gate_license(

@@ -323,9 +323,21 @@ cmmanage agent set <slug> license '{
   "attribution": "Cite ... ; credit the upstream database.",
   "upstream_database": "US EPA EPI Suite (values from the SRC PHYSPROP database)",
   "upstream_terms_url": "https://www.epa.gov/...",
-  "upstream_license": "No open license; EPA grants personal/business use only and forbids preparing derivative works."
+  "upstream_license": "proprietary"
 }'
 ```
+
+**`redistribution` and `upstream_license` are matched against fixed vocabularies, not
+read.** Write a verdict, not a sentence — the gate rejects prose in either field,
+because a paragraph explaining that the upstream is CC0 is indistinguishable to it from
+one explaining that the upstream forbids redistribution.
+
+| Field | Allowed values |
+|---|---|
+| `redistribution` | `allowed` / `permitted` / `yes`, or `forbidden` / `no` / `restricted` / `unclear` |
+| `upstream_license` | a license identifier (`CC-BY-4.0`, `MIT`, `CC0-1.0`), or `proprietary`, or `none` |
+
+The reasoning belongs in `attribution`, or in the override reason if it escalates.
 
 `upstream_database` is **not optional** — omitting the key fails the gate even when the
 publication is the original source. Say `null` deliberately rather than leaving it out.

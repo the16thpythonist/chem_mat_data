@@ -67,6 +67,21 @@ PERMISSIVE_LICENSES: set = {
     'odc-by',
 }
 
+#: Values of ``redistribution`` that the gate reads as "yes".
+REDISTRIBUTION_ALLOWED: tuple = ('allowed', 'yes', 'permitted')
+
+#: Values of ``redistribution`` that the gate reads as "no". Recognised explicitly so
+#: that a stated refusal is reported as a refusal, rather than as a formatting problem.
+REDISTRIBUTION_DENIED: tuple = (
+    'forbidden',
+    'no',
+    'denied',
+    'prohibited',
+    'restricted',
+    'unclear',
+    'unknown',
+)
+
 #: Names of files in the downloads folder that are documentation rather than data.
 NON_DATA_NAMES: tuple = ('readme', 'download_recipe', 'license', 'licence', 'manifest')
 
@@ -96,6 +111,36 @@ def normalize_license(identifier: str) -> str:
     text = re.sub(r'[_\s]+', '-', text)
     text = re.sub(r'-+', '-', text)
     return text.strip('-')
+
+
+def looks_like_identifier(value: Optional[str]) -> bool:
+    """
+    Return whether a value is a license identifier rather than a sentence about one.
+
+    The gate matches license fields against a fixed list, so prose in one of them is
+    not merely untidy - it is unreadable to the check. "No open license; EPA grants
+    only personal use" and "CC0-1.0 applies to the whole record" both fail
+    :func:`is_permissive`, the first correctly and the second not, and the gate cannot
+    tell those two cases apart. Detecting prose lets it say so instead of silently
+    treating every sentence as a restriction.
+
+    The test is deliberately loose: identifiers are short and wordless, descriptions
+    are neither.
+
+    :param value: The candidate string.
+
+    :returns: True when the value is shaped like an identifier.
+    """
+    if not value:
+        return False
+
+    text = str(value).strip()
+    if len(text) > 40:
+        return False
+    if len(text.split()) > 4:
+        return False
+    # Sentence punctuation is the giveaway that survives length limits.
+    return not re.search(r'[.;:!?]\s', text)
 
 
 def is_permissive(identifier: Optional[str]) -> bool:
@@ -496,12 +541,25 @@ def gate_license(manifest: Manifest) -> VerificationReport:
             'need a human decision recorded as a license override.',
         )
 
-    redistribution = str(license_info.get('redistribution', '')).lower()
-    if redistribution and redistribution not in ('allowed', 'yes', 'permitted'):
-        report.add(
-            ERROR,
-            f'the license stage concluded redistribution is {redistribution!r}',
-        )
+    redistribution = str(license_info.get('redistribution', '')).strip().lower()
+    if redistribution and redistribution not in REDISTRIBUTION_ALLOWED:
+        if redistribution in REDISTRIBUTION_DENIED:
+            report.add(
+                ERROR,
+                f'the license stage concluded redistribution is {redistribution!r}',
+            )
+        else:
+            # Anything else is a sentence about redistribution rather than a verdict on
+            # it. Saying so beats reporting a paragraph back as though it were a value.
+            report.add(
+                ERROR,
+                '"redistribution" must be one of '
+                f'{"/".join(REDISTRIBUTION_ALLOWED)} or '
+                f'{"/".join(REDISTRIBUTION_DENIED)} - the gate matches it exactly. '
+                f'Got prose: {redistribution[:60]!r}... Put the reasoning in '
+                '"attribution" or in the human override reason, and record the verdict '
+                'here.',
+            )
 
     if not str(license_info.get('attribution', '')).strip():
         report.add(
@@ -545,6 +603,19 @@ def gate_license(manifest: Manifest) -> VerificationReport:
                     'established. Upstream databases frequently restrict '
                     'redistribution regardless of the publication license, so this '
                     'needs a human decision.',
+                )
+            elif not looks_like_identifier(upstream_license):
+                # Prose here fails is_permissive for the wrong reason: a sentence
+                # saying the upstream is CC0 escalates exactly like one saying it
+                # forbids redistribution, so an escalation stops meaning anything.
+                report.add(
+                    ERROR,
+                    f'"upstream_license" must be a license identifier - CC-BY-4.0, '
+                    'MIT, CC0-1.0, "proprietary", or "none" when there is no stated '
+                    'license - because the gate matches it against a fixed list. Got '
+                    f'prose: {str(upstream_license)[:60]!r}... A sentence is '
+                    'indistinguishable from a restriction here, so quote the terms in '
+                    'the override reason and record the identifier itself.',
                 )
             elif not is_permissive(upstream_license):
                 report.add(
