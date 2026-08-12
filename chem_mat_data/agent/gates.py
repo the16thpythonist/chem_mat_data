@@ -39,6 +39,7 @@ from chem_mat_data.agent.verification import (
     VerificationIssue,
     VerificationReport,
     normalize_target_description_keys,
+    stream_target_statistics,
     verify_results,
 )
 
@@ -386,6 +387,117 @@ def gate_metadata(manifest: Manifest) -> VerificationReport:
                     )
 
     return report
+
+
+#: Units whose scale makes a negative value impossible, matched against the target
+#: description. Deliberately tiny and conservative: a false positive here teaches the
+#: reader to ignore the check, which costs more than the misses. Anything that might be
+#: log-transformed, a difference, or a gauge measurement is excluded by the `log` guard
+#: below and by simply not being listed - most chemical targets legitimately go
+#: negative.
+NON_NEGATIVE_UNITS: tuple = (
+    (r'\bkelvin\b|\(\s*K\s*\)', 'kelvin, an absolute temperature scale'),
+    (r'\bg/mol\b|\bmolecular weight\b|\bmolar mass\b', 'a molecular mass'),
+)
+
+
+def check_target_plausibility(
+    report: VerificationReport,
+    statistics: List,
+    draft: dict,
+) -> None:
+    """
+    Check observed target values against what their descriptions claim they are.
+
+    This is the one check that catches a *mislabelled unit*, which no comparison of
+    declared against observed can: an agent confidently wrong about units writes the
+    same wrong string on both sides, so the two agree and prove nothing. Physics does
+    not agree with it. A target described in kelvin cannot hold negative values, and
+    `elanos_bp` shipped for months describing a boiling point "in Kelvin" whose
+    minimum is -88.6.
+
+    Ranges are checked only when the metadata draft states them, and are optional by
+    design. A required field would be an invitation to fabricate numbers for the many
+    papers that state no range, which is worse than having no check.
+
+    :param report: The report to add issues to.
+    :param statistics: Observed :class:`TargetStatistics`, one per target index.
+    :param draft: The approved metadata draft.
+
+    :returns: Nothing; issues are added to ``report``.
+    """
+    descriptions = normalize_target_description_keys(
+        draft.get('target_descriptions') or {}
+    )
+    declared = draft.get('target_ranges') or {}
+
+    for stat in statistics:
+        key = str(stat.index)
+        # normalize_target_description_keys returns integer keys, whatever the draft
+        # used, so look up by the index rather than by its string form.
+        description = str(descriptions.get(stat.index, '') or '')
+
+        ## -- a unit that cannot be negative, holding negative values --
+        if stat.minimum is not None and stat.minimum < 0 and description:
+            # A log-transformed anything is routinely negative, whatever the underlying
+            # unit is, so the mention of a log takes the target out of scope entirely.
+            if not re.search(r'\blog', description, re.IGNORECASE):
+                for pattern, label in NON_NEGATIVE_UNITS:
+                    if re.search(pattern, description, re.IGNORECASE):
+                        report.add(
+                            ERROR,
+                            f'target {key} is described as {label} but its minimum is '
+                            f'{stat.minimum:g}. Either the unit in the description is '
+                            'wrong or the values are not what the description says '
+                            f'they are. Description: {description!r}',
+                        )
+                        break
+
+        ## -- a constant column --
+        if stat.count and stat.unique == 1:
+            report.add(
+                ERROR,
+                f'target {key} has the same value in every row ({stat.minimum:g}) - '
+                'this is almost always the wrong column',
+            )
+
+        ## -- missing values --
+        if stat.missing:
+            report.add(
+                WARNING,
+                f'target {key} has {stat.missing} missing or non-finite value(s) out '
+                f'of {stat.missing + stat.count}',
+            )
+
+        ## -- the declared range, when one was recorded --
+        bounds = declared.get(key) or declared.get(stat.index)
+        if not isinstance(bounds, dict):
+            continue
+
+        low = bounds.get('min')
+        high = bounds.get('max')
+        if not isinstance(low, (int, float)) or not isinstance(high, (int, float)):
+            continue
+        if stat.minimum is None or stat.maximum is None:
+            continue
+
+        span = float(high) - float(low)
+        tolerance = abs(span) * 0.01 if span else 1e-6
+
+        if stat.minimum < low - tolerance or stat.maximum > high + tolerance:
+            report.add(
+                ERROR,
+                f'target {key} runs {stat.minimum:g}..{stat.maximum:g} but the source '
+                f'states {low:g}..{high:g}. Values outside the published range mean '
+                'the wrong column, the wrong units, or the wrong file.',
+            )
+        elif span and (stat.maximum - stat.minimum) < abs(span) * 0.1:
+            report.add(
+                WARNING,
+                f'target {key} covers {stat.minimum:g}..{stat.maximum:g}, under a tenth '
+                f'of the published {low:g}..{high:g} - check this is the whole dataset '
+                'rather than one split',
+            )
 
 
 def check_experiment_record(
@@ -900,6 +1012,17 @@ def gate_execute(manifest: Manifest) -> VerificationReport:
     report.dataset_name = run_report.dataset_name
     report.compounds = run_report.compounds
     report.targets = run_report.targets
+
+    ## -- what the target values actually look like --
+    # Computed unconditionally and carried on the report, so the stage-6 subagent is
+    # handed the numbers to hold against the paper rather than having to derive them,
+    # and so a human reading the gate output can see the target at a glance.
+    mpack_paths = sorted(Path(manifest.results_dir).glob('*.mpack'))
+    if mpack_paths:
+        report.target_statistics = stream_target_statistics(mpack_paths[0])
+        check_target_plausibility(
+            report, report.target_statistics, manifest.metadata_draft or {}
+        )
 
     ## -- drop rate --
     if manifest.input_rows and run_report.compounds:
