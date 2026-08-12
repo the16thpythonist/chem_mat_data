@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The `.mpack` and the `.csv` of the same run were a full permutation of each other.**
+  This is a base-template defect, so it affects every dataset in the collection rather
+  than only skill-produced ones, and it is the only one found in this round that
+  corrupts data consumers actually use. Measured on a real run: 5432 graphs, 5432 CSV
+  rows, **5432 of 5432 rows mismatched positionally**, with identical contents. Anyone
+  joining the two artifacts by row index got a different compound in every row, and
+  nothing detected it because both files existed and both had the right length — the
+  only checks there were.
+
+  Cause: graphs are collected off a multiprocessing output queue in *completion* order,
+  which is arbitrary, while `save_csv` writes the dataset in *source* order, and the
+  worker carried no index with which to reconcile them. The worker now carries the
+  source index and the results are sorted back into dataset order before saving.
+
+  A second, independent bug in the same region: `save_csv` ran *before* the
+  `__TESTING__` truncation, so every smoke run wrote a full-length CSV beside a
+  50-graph message pack — two artifacts of one run disagreeing about the size of the
+  dataset, which also defeats any check that compares them. The CSV is now written
+  after the truncation.
+
+  `verify_results` gains a cross-artifact check: the row counts must match and the
+  first 64 SMILES must agree. **This reports an error on any results directory produced
+  before this fix**, correctly — those two files really do disagree. Regenerate, or
+  expect the final gate to say so.
+
+  Also sets `allow_unicode=True` on the metadata dump, so a target description carrying
+  a degree sign is written as `°C` rather than the escape `\xB0C`.
+
+  Verified end to end by re-running a real dataset: 0 of 5432 rows mismatched, the smoke
+  run's CSV is 50 rows rather than 5432, and the degree sign survives. 9 tests added.
+
+  **Note for maintainers:** regenerating a dataset now changes its row order and
+  therefore its bytes. Nothing in this package consumes graphs by positional index
+  against the CSV, but a downstream consumer holding an index-based split against a
+  previously downloaded file would be affected.
+
 ### Added
 
 - **Target values are now measured, and units are checked against them.** Units are the

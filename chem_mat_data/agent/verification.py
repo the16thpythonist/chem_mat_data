@@ -263,6 +263,89 @@ def stream_target_statistics(mpack_path: str | Path) -> List[TargetStatistics]:
     return statistics
 
 
+#: How many rows to compare between the two artifacts. The failure this catches is a
+#: whole-file permutation, not a subtle one, so a prefix settles it - and reading the
+#: entire CSV of a multi-gigabyte dataset to prove it would be its own problem.
+ARTIFACT_SAMPLE: int = 64
+
+
+def check_artifacts_agree(
+    report: VerificationReport,
+    mpack_path: Path,
+    csv_path: Path,
+) -> None:
+    """
+    Check that the message pack and the CSV of one run describe the same rows.
+
+    They are produced from the same dataset by different code paths, and used to
+    disagree: graphs came off a multiprocessing queue in completion order while the CSV
+    was written in source order, so the two were a full permutation of each other -
+    5432 of 5432 rows mismatched on a real run, with identical contents. Nothing
+    detected it, because both files existed and both had the right length. Anyone
+    joining them by row index got a different compound in every row.
+
+    Compares the row count and the first :data:`ARTIFACT_SAMPLE` SMILES. On results
+    produced before the ordering fix this reports an error, correctly: those two files
+    really do disagree.
+
+    :param report: The report to add issues to.
+    :param mpack_path: The message pack dataset file.
+    :param csv_path: The raw CSV export of the same run.
+
+    :returns: Nothing; issues are added to ``report``.
+    """
+    try:
+        import csv as csv_module
+
+        with open(csv_path, newline='') as file:
+            reader = csv_module.reader(file)
+            header = next(reader, None)
+            if not header or 'smiles' not in header:
+                return
+            column = header.index('smiles')
+            csv_smiles = [row[column] for row in reader if len(row) > column]
+    except (OSError, ValueError, StopIteration):
+        return
+
+    mpack_smiles: List[str] = []
+    total = 0
+    try:
+        with open(mpack_path, 'rb') as file:
+            unpacker = msgpack.Unpacker(file, ext_hook=_ext_hook, raw=False)
+            total = unpacker.read_array_header()
+            for position in range(total):
+                graph = unpacker.unpack()
+                if position < ARTIFACT_SAMPLE and isinstance(graph, dict):
+                    mpack_smiles.append(str(graph.get('graph_repr', '')))
+    except (OSError, ValueError, msgpack.exceptions.UnpackException):
+        return
+
+    if total != len(csv_smiles):
+        report.add(
+            ERROR,
+            f'{mpack_path.name} holds {total} graphs but {csv_path.name} has '
+            f'{len(csv_smiles)} rows - the two artifacts of this run disagree about '
+            'how large the dataset is',
+        )
+        return
+
+    mismatches = [
+        position
+        for position, (left, right) in enumerate(zip(mpack_smiles, csv_smiles))
+        if left and left != right
+    ]
+    if mismatches:
+        position = mismatches[0]
+        report.add(
+            ERROR,
+            f'{mpack_path.name} and {csv_path.name} are not in the same order - '
+            f'{len(mismatches)} of the first {len(mpack_smiles)} rows differ, first at '
+            f'row {position} ({mpack_smiles[position]!r} against '
+            f'{csv_smiles[position]!r}). Joining them by row index pairs the wrong '
+            'compound with the wrong values.',
+        )
+
+
 def verify_results(results_dir: str | Path) -> VerificationReport:
     """
     Verify that a dataset processing run produced complete, usable output.
@@ -333,11 +416,14 @@ def verify_results(results_dir: str | Path) -> VerificationReport:
                 f'no compressed {mpack_path.stem}.mpack.gz - is COMPRESS set to False?',
             )
 
-        if not (results_path / f'{mpack_path.stem}.csv').exists():
+        csv_path = results_path / f'{mpack_path.stem}.csv'
+        if not csv_path.exists():
             report.add(
                 WARNING,
                 f'no raw {mpack_path.stem}.csv export found',
             )
+        else:
+            check_artifacts_agree(report, mpack_path, csv_path)
 
     ## -- metadata --
     metadata_path = results_path / 'metadata.yml'
