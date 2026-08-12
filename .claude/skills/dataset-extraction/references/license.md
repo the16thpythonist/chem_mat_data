@@ -195,4 +195,6 @@ A CC-BY dataset requires credit. Make sure the attribution actually lands in the
 dataset metadata rather than only in the manifest — the `sources` list in
 `metadata_draft` is what a downstream user sees. If the license stage turns up an
 attribution requirement the metadata stage did not capture, re-run the metadata stage
-with it included. That marks the later stages stale, which is correct.
+with it included. That marks the later stages stale, which is correct — and cheap:
+clearing the staleness means re-running each later *gate*, not redoing its work. The
+results on disk are untouched and every gate re-passes in well under a second.

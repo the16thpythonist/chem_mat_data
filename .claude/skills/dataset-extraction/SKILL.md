@@ -10,6 +10,18 @@ Turn a publication into a committed, verified `create_graph_datasets__<name>.py`
 The input is a **publication URL or a concrete paper title** — deciding whether a
 paper is worth extracting happens before this skill runs.
 
+**One run produces one dataset.** The manifest is single-valued throughout: one
+`record_url`, one `metadata_draft`, one `script_path`. A paper releasing several
+datasets therefore needs several runs, one slug each.
+
+Papers that do this are common and do not announce it — the article text often cites
+only the first record, or a database landing page, while the individual datasets sit in
+separate repository records. So before `init`, **enumerate what the paper actually
+releases**: read the data availability section, follow the repository link, and list the
+records you find. Then tell the user what you found and which one you are extracting,
+rather than picking silently. If they wanted a different one, that is a sentence to fix
+now and six stages to redo later.
+
 ```
 prepare       locate + download the raw data        → .dataset_work/<slug>/downloads/
 metadata      assemble the descriptive fields       → manifest.metadata_draft
@@ -49,7 +61,14 @@ cmmanage agent status <slug>
 That prints each stage as `pending`, `passed`, `blocked` or `stale`, plus any recorded
 blocker, plus the next stage to run. Start from there rather than beginning again. A
 `stale` stage passed once but an earlier stage has since been re-run, so its result no
-longer reflects what was approved — re-run it.
+longer reflects what was approved.
+
+**Re-run its *gate* first, not its work.** The results on disk are untouched, and a gate
+reads files rather than producing them — all six re-pass in well under a second on a
+finished run, `execute` included, despite that stage's own warning that processing can
+take hours. Only redo the stage's actual work if the gate then fails. This matters
+because staleness cascades are routine: recording a licence attribution requirement
+sends every CC-BY dataset back through the metadata stage by design.
 
 **To inspect a gate without consequences, use `--no-record`:**
 
@@ -275,13 +294,25 @@ special headers or SSL settings; approximate size.
 
 ```bash
 cmmanage agent set <slug> record_url '<repository record landing page>'
-cmmanage agent set <slug> input_rows <n>      # rows in the raw source, for the drop check
+cmmanage agent set <slug> input_rows <n>
 cmmanage agent gate prepare <slug>
 ```
 
 `record_url` is the record's landing page — `https://zenodo.org/records/14392754`, not
 the `?download=1` link and not the article. Stage 3 compares the license evidence
 against it.
+
+**`input_rows` is the denominator of the only check that catches silent data loss**, so
+specify it exactly rather than approximately:
+
+- Count the **candidate rows in the file the script will download** — not the paper's
+  stated dataset size, not the row count after any filtering you plan to do.
+- Exclude the header. `len(pd.read_csv(path))` is right; `wc -l` is one too many.
+- For an archive, count the member the script actually parses.
+- For multiple files that concatenate into one dataset, sum them.
+- If the file you counted is not the file the script downloads — a truncated scratch
+  copy, a sample, one split of several — the number is wrong and the execute gate will
+  now say so rather than quietly comparing against nothing.
 
 Checks: data files exist and are non-empty; none is a saved HTML page; the recipe
 exists and records a URL. Warns when no README was captured.
@@ -484,14 +515,16 @@ Non-negotiables, all gate-enforced:
   | Draft field | Goes into |
   |---|---|
   | `verbose`, `tags`, `sources`, `target_descriptions` | the `METADATA` dict |
-  | `description` | the **`DESCRIPTION`** parameter — the template writes it into `metadata.yml` from there, *not* from `METADATA` |
+  | `description` | the **`DESCRIPTION`** parameter — the conventional home, though see below |
   | `dataset_name` | the `DATASET_NAME` parameter |
   | `dataset_type` | the `DATASET_TYPE` parameter |
   | `target_count` | nothing — it is derived from the data at save time |
 
-  The verification gate compares `verbose`, `description`, `tags` and `sources` in the
-  written `metadata.yml` against the draft. Putting `description` only in `METADATA`
-  and not in `DESCRIPTION` is the way to fail that gate at the very last stage.
+  The template writes `DESCRIPTION` into `metadata.yml` and then merges `METADATA` over
+  the result, so `METADATA['description']` wins where both are set. Either works; what
+  the verification gate checks is that whichever one ends up in `metadata.yml` matches
+  the approved draft **verbatim**. Set one, not both, and copy the approved wording
+  exactly rather than paraphrasing it.
 - Filtering: skip only rows with missing/unparseable SMILES, or with no usable target
   value. No dropping multi-component SMILES, no atom-count thresholds, no
   de-duplication.
@@ -606,7 +639,9 @@ warning here is either a divergence from what was approved or a licence caveat, 
 deserve a decision rather than a glance.
 
 Act on what the subagent reports. If it finds a real problem, fix it and re-run the
-affected stage — which will mark the later stages stale, as it should.
+affected stage — which will mark the later stages stale, as it should. Clearing that is
+re-running each later gate, not redoing its work; on a finished run they all re-pass in
+under a second.
 
 ### Finishing
 
