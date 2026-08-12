@@ -1754,8 +1754,8 @@ class CLI(click.RichGroup):
             )
             sys.exit(1)
 
-        if strict and report.warnings:
-            count = len(report.warnings)
+        if strict and report.unacknowledged_warnings:
+            count = len(report.unacknowledged_warnings)
             console.print(
                 f'[bold red]FAILED[/bold red] - {count} warning(s) with --strict.'
             )
@@ -2117,7 +2117,12 @@ class CLI(click.RichGroup):
         self._render_gate_report(console, report)
         console.print()
 
-        failed = (not report.ok) or (strict and report.warnings)
+        # `--strict` acts on warnings nobody has ruled on. A waived licence finding is
+        # deliberately kept visible after a human approved it, and treating that as a
+        # failure would make every overridden run permanently unpassable under --strict
+        # while re-asking a question that was already answered.
+        strict_warnings = report.unacknowledged_warnings if strict else []
+        failed = (not report.ok) or bool(strict_warnings)
 
         if record:
             # The full text is recorded, not a count. A stage that warned once and a
@@ -2130,7 +2135,8 @@ class CLI(click.RichGroup):
                 blocker = (
                     report.errors[0].message
                     if report.errors
-                    else 'warnings treated as failures under --strict'
+                    else f'{len(strict_warnings)} warning(s) treated as failures '
+                    f'under --strict: {strict_warnings[0].message}'
                 )
                 manifest.mark(
                     stage, BLOCKED, blocker=blocker, warnings=warnings, errors=errors
@@ -2140,10 +2146,15 @@ class CLI(click.RichGroup):
             manifest.save()
 
         if failed:
-            count = len(report.errors)
+            if report.errors:
+                cause = f'{len(report.errors)} error(s)'
+            else:
+                cause = (
+                    f'{len(strict_warnings)} warning(s), treated as failures '
+                    'under --strict'
+                )
             console.print(
-                f'[bold red]BLOCKED[/bold red] at stage [bold]{stage}[/bold] '
-                f'- {count} error(s).'
+                f'[bold red]BLOCKED[/bold red] at stage [bold]{stage}[/bold] - {cause}.'
             )
             console.print(
                 '[dim]This needs a human decision. Explain the problem plainly, '

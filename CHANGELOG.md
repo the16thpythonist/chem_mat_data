@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **`--strict` could never pass a run whose licence a human had approved.** Two correct
+  changes combined into a defect: an approved override downgrades waived errors to
+  warnings so what was waived stays visible, the final gate re-runs the licence gate and
+  propagates its warnings, and stage 6 is told to run `--strict`. The result was that
+  every overridden run reported the incoherent `BLOCKED at stage verification - 0
+  error(s)` — asking the human forever about a decision they had already made. Found by
+  the third validation run.
+
+  Issues now carry an `acknowledged` flag, set when a human has ruled on them. They stay
+  visible, which was the point of downgrading rather than deleting, but `--strict` acts
+  only on warnings nobody has reviewed. A genuine unreviewed warning still blocks. The
+  failure message also no longer claims zero errors while blocking: it says how many
+  warnings were treated as failures, and quotes the first. 3 tests added.
+
 - **"Re-run the stale stage" read as "reprocess the dataset".** The `execute` stage warns
   that processing can take hours, so telling a reader to re-run it after a staleness
   cascade sounded enormous — and `license.md` sends every CC-BY dataset with an

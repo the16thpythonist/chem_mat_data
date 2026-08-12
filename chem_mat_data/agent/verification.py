@@ -41,10 +41,16 @@ class VerificationIssue:
 
     :param level: Either :data:`ERROR` or :data:`WARNING`.
     :param message: Human-readable description of the problem.
+    :param acknowledged: Whether a human has already decided about this. Such an issue
+        stays visible - that is the whole point of downgrading a waived error rather
+        than deleting it - but ``--strict`` must not treat it as a failure, or a
+        recorded decision becomes a permanent block and the human is asked the same
+        question forever.
     """
 
     level: str
     message: str
+    acknowledged: bool = False
 
 
 @dataclass
@@ -87,14 +93,24 @@ class VerificationReport:
         """``True`` when no error-level issues were found."""
         return not self.errors
 
-    def add(self, level: str, message: str) -> None:
+    @property
+    def unacknowledged_warnings(self) -> List[VerificationIssue]:
+        """Warnings that no human has already ruled on - what ``--strict`` acts on."""
+        return [issue for issue in self.warnings if not issue.acknowledged]
+
+    def add(self, level: str, message: str, acknowledged: bool = False) -> None:
         """
         Append an issue to the report.
 
         :param level: Either :data:`ERROR` or :data:`WARNING`.
         :param message: Description of the problem.
+        :param acknowledged: Set when a human has already decided about this.
         """
-        self.issues.append(VerificationIssue(level=level, message=message))
+        self.issues.append(
+            VerificationIssue(
+                level=level, message=message, acknowledged=acknowledged
+            )
+        )
 
 
 def normalize_target_description_keys(

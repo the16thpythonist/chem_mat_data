@@ -783,6 +783,9 @@ def _apply_override(
         return
 
     ## -- approved: downgrade, do not delete --
+    # Marked acknowledged as well as downgraded. They stay visible, which is the point,
+    # but `--strict` must not treat them as failures: a human has already ruled on
+    # exactly these, and re-blocking on them asks the same question forever.
     waived = 0
     for index, issue in enumerate(report.issues):
         if issue.level == ERROR:
@@ -790,6 +793,7 @@ def _apply_override(
             report.issues[index] = VerificationIssue(
                 level=WARNING,
                 message=f'waived by human override: {issue.message}',
+                acknowledged=True,
             )
 
     summary = (
@@ -798,7 +802,9 @@ def _apply_override(
     )
     if waived:
         summary += f' [{waived} check(s) waived - listed below]'
-    report.issues.insert(0, VerificationIssue(level=WARNING, message=summary))
+    report.issues.insert(
+        0, VerificationIssue(level=WARNING, message=summary, acknowledged=True)
+    )
 
 
 def gate_license(manifest: Manifest) -> VerificationReport:
@@ -1368,7 +1374,9 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
     for issue in license_report.errors:
         report.add(ERROR, f'license: {issue.message}')
     for issue in license_report.warnings:
-        report.add(WARNING, f'license: {issue.message}')
+        # Carry the acknowledged flag across, or every run whose licence a human
+        # approved becomes permanently unable to pass `--strict`.
+        report.add(WARNING, f'license: {issue.message}', acknowledged=issue.acknowledged)
 
     return report
 
