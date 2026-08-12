@@ -317,8 +317,10 @@ class RichAgentGroupHelp(RichMixin):
         )
 
         yield render_help(
-            'Two helpers remain here because they should not depend on a model\'s '
-            'judgement. `cmmanage agent venv` builds a clean virtual environment with the '
+            'Three helpers remain here because they should not depend on a model\'s '
+            'judgement. `cmmanage agent tools` reports whether the external page readers '
+            'the prepare stage needs are installed, and installs them with `--install`. '
+            '`cmmanage agent venv` builds a clean virtual environment with the '
             'project installed, so that generated scripts run in isolation from the '
             'development environment. `cmmanage agent verify` checks a finished results '
             'folder against the hard post-conditions: that a message pack dataset and a '
@@ -352,6 +354,34 @@ class RichAgentVenvHelp(RichMixin):
             'scratch on every invocation, so a broken environment is always one command '
             'away from being fixed. The path of the resulting Python interpreter is printed '
             'on the last line of output so that it can be captured by a calling script.\n'
+        )
+
+
+class RichAgentToolsHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent tools`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Report whether the external page-reading tools the prepare stage depends on '
+            'are installed, and install the missing ones with `--install`. Checking is the '
+            'default because both installs are slow and reach the network.\n'
+        )
+
+        yield render_help(
+            'Two tools are involved and they are not interchangeable. `defuddle` fetches '
+            'over plain HTTP and is the right default for an ordinary page. `crwl` drives '
+            'a real Chromium and is the only one that gets past a publisher bot check - '
+            'ChemRxiv returns 403 to `defuddle` while serving `crwl` the full article. '
+            'Both are needed to cover both kinds of page.\n'
+        )
+
+        yield render_help(
+            'A `crwl` without a downloaded Chromium fails on every page with an error that '
+            'does not name the fix, so the browser is checked separately and reported as '
+            'the missing piece it is.\n'
         )
 
 
@@ -787,6 +817,7 @@ class CLI(click.RichGroup):
         # agent command group
         self.add_command(self.agent_group)
         self.agent_group.add_command(self.agent_venv_command)
+        self.agent_group.add_command(self.agent_tools_command)
         self.agent_group.add_command(self.agent_verify_command)
         self.agent_group.add_command(self.agent_init_command)
         self.agent_group.add_command(self.agent_status_command)
@@ -1529,6 +1560,75 @@ class CLI(click.RichGroup):
         console.print('[green]✓ virtual environment ready[/green]')
         # Printed bare on the last line so a calling script can capture it.
         click.echo(str(python_path))
+
+    @click.command(
+        'tools',
+        cls=RichHelpCommand,
+        rich_help=RichAgentToolsHelp(),
+        short_help='Check (or install) the external page-reading tools.',
+    )
+    @click.option(
+        '--install',
+        is_flag=True,
+        default=False,
+        help='Install the tools that are missing instead of only reporting them.',
+    )
+    @click.pass_obj
+    def agent_tools_command(
+        self,
+        install: bool,
+    ) -> None:
+        from rich.console import Console
+
+        from chem_mat_data.agent.environment import EnvironmentSetupError
+        from chem_mat_data.agent.tools import check_page_readers, install_missing
+
+        console = Console()
+        statuses = check_page_readers()
+
+        if install and any(not status.available for status in statuses):
+            console.print('[cyan]Installing missing tools (this may take a while)...[/cyan]')
+            console.print()
+            try:
+                statuses = install_missing(statuses)
+            except EnvironmentSetupError as exc:
+                click.secho(f'❌ {exc}', fg='red')
+                sys.exit(1)
+            console.print()
+
+        console.print()
+        console.print('[bold]Page-reading tools[/bold]')
+        console.print()
+
+        for status in statuses:
+            name = status.spec.name
+            if status.available:
+                version = f' [dim]{status.version}[/dim]' if status.version else ''
+                console.print(f'  [bold green]✓[/bold green] {name}{version}')
+                console.print(f'      [dim]{status.spec.purpose}[/dim]')
+            else:
+                console.print(f'  [bold red]✗[/bold red] {name}')
+                for problem in status.problems:
+                    console.print(f'      [red]{problem}[/red]')
+                console.print(
+                    f'      [dim]install: {" ".join(status.spec.install_cmd)}[/dim]'
+                )
+            console.print()
+
+        missing = [status for status in statuses if not status.available]
+        if missing:
+            if not install:
+                console.print(
+                    f'[bold red]{len(missing)} missing[/bold red] - re-run with '
+                    '`--install` to install them.'
+                )
+            else:
+                console.print(
+                    f'[bold red]{len(missing)} still missing[/bold red] after installing.'
+                )
+            sys.exit(1)
+
+        console.print('[bold green]✓[/bold green] all page-reading tools available')
 
     @click.command(
         'verify',

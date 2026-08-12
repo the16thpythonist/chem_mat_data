@@ -32,6 +32,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`cmmanage agent tools` checks and installs the external page readers.** The prepare
+  stage depends on `defuddle` and `crwl`, neither of which is a Python dependency, so
+  nothing about installing this project brings them along. The command reports both by
+  default and installs the missing ones with `--install`. It reports a `crwl` whose
+  Chromium was never downloaded as a *missing browser* rather than as a missing `crwl`,
+  because that is by far the more common failure and its own error message
+  (`Executable doesn't exist at .../chromium-*`) does not name the command that fixes
+  it.
+
+- **The page-reader guidance is corrected: `defuddle` and `crwl` are not
+  interchangeable.** The skill previously presented `crwl` as a fallback for a broken
+  `defuddle`, and `WebFetch` as a third chance after both. Measured against a ChemRxiv
+  article page, `defuddle` returns 403 and so does `WebFetch` — they are the same class
+  of plain-HTTP client and fail on the same hosts — while `crwl`, which drives a real
+  Chromium, returns the full article. So `crwl` is the tool for a *different class of
+  page*, not a backup, and on a bot-checking host it is the only one of the three that
+  works. `references/data-sources.md` no longer suggests `defuddle` for ChemRxiv, and
+  `references/troubleshooting.md` gains the "403 from defuddle but the page loads in a
+  browser" case.
+
+  The install instructions are corrected with it: the browser step is `crawl4ai-setup`,
+  which targets the same Playwright installation crawl4ai itself uses, rather than a
+  bare `playwright install chromium` from an unrelated environment. The note that
+  `npm install -g` binds `defuddle` to the currently active nvm Node version — so it
+  disappears after an `nvm use` — is recorded where it will be read.
+
+  The ACS-versus-Europe-PMC contrast is now stated as measured numbers rather than as
+  an assertion: the publisher SI URL returns 403 with 5.6 kB of HTML, the Europe PMC
+  `supplementaryFiles` endpoint returns 200 with a 2.1 MB ZIP, for the same open-access
+  paper.
+
+- 22 tests covering the tool checks, the browser detection across platforms, and the
+  install paths — including that a present-but-browserless `crwl` triggers a browser
+  download rather than a redundant crawl4ai reinstall, and that the browser is never
+  downloaded twice in one run.
+
 - **The license gate now checks provenance, not just an identifier.** A permissive
   license on a publication says nothing about a database the publication merely
   aggregated, and that is where the binding restriction usually lives. The license

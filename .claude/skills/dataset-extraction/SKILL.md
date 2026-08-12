@@ -134,26 +134,48 @@ paywalled, look for a preprint — you only need the Data Availability section.
 
 ### Tools
 
-| Need | Use | Fallback |
+| Need | Use | When that fails |
 |---|---|---|
-| Read a page | `defuddle parse '<url>' -m` | `crwl '<url>' -o markdown-fit`, then `WebFetch` |
+| Read an ordinary page | `defuddle parse '<url>' -m` | `crwl '<url>' -o markdown-fit` |
+| Read a bot-blocked publisher page | `crwl '<url>' -o markdown-fit` | an open-access mirror — see `references/data-sources.md` |
 | Search | `WebSearch` | — |
 | Download | `curl -L -o '<abs path>' '<url>'` | `mcp__file-download__download_file` |
 
-Check a tool exists before relying on it — all three page readers have failed
-simultaneously in testing:
+Check the readers exist before relying on them. One command does it:
 
-- `defuddle` needs `npm install -g defuddle`. Preferred: fast, no browser needed.
-- `crwl` needs `uv tool install crawl4ai` **and** `playwright install chromium`. The
-  browser is a separate step, and the failure without it (`Executable doesn't exist at
-  .../chromium-*`) does not say so.
-- `WebFetch` is built in but is 403'd by several publishers, ChemRxiv among them.
+```bash
+cmmanage agent tools              # report
+cmmanage agent tools --install    # install what is missing
+```
 
-For downloads that 403, retry with `curl -L -A 'Mozilla/5.0'`. **Publisher sites are
-often unreachable by any scripted client.** Before concluding a file cannot be had, try
-the Europe PMC supplementary route in `references/data-sources.md` — it serves the same
-publisher-deposited files without a bot check, and is usually faster than fighting the
-block.
+**`defuddle` and `crwl` are not interchangeable, and `crwl` is not a fallback for a
+broken `defuddle`.** They fail on different things:
+
+- `defuddle` (`npm install -g defuddle`) fetches over plain HTTP with no browser. Fast,
+  and the right default for a Zenodo record, a GitHub README or an undefended journal
+  page. **It returns 403 on any host that bot-checks**, ChemRxiv among them.
+- `crwl` (`uv tool install crawl4ai`, then `crawl4ai-setup` for the browser) drives a
+  real Chromium. Seconds slower to start, and the only reader here that gets through a
+  bot check. Without the browser it fails on *every* page with `Executable doesn't
+  exist at .../chromium-*`, which does not name the fix — `cmmanage agent tools`
+  reports this case as the missing browser rather than as a missing `crwl`.
+- `WebFetch` is built in, but it is the same class of client as `defuddle` and is 403'd
+  in the same places. It is not a third chance.
+
+Measured against a ChemRxiv article page: `defuddle` 403, `WebFetch` 403, `crwl`
+returns the full article including the abstract and version history. Reach for `crwl`
+the moment a publisher host refuses you, rather than working down the list.
+
+> `npm install -g` places its launcher inside the *currently active* nvm Node version,
+> so `defuddle` vanishes after an `nvm use`. If it disappears, that is why — reinstall,
+> or shim it to an absolute path.
+
+For downloads that 403, retry once with `curl -L -A 'Mozilla/5.0'`. **Publisher sites
+are often unreachable by any scripted client** — a publisher SI URL returns 403 to
+`curl` with any headers even when the article is fully open access. Before concluding a
+file cannot be had, try the Europe PMC supplementary route in
+`references/data-sources.md`; it serves the same publisher-deposited files as a plain
+ZIP with no bot check, and is faster than fighting the block.
 
 Save into `.dataset_work/<slug>/downloads/`, descriptive filenames, no subdirectories.
 Sanity-check each download — `file <path>` must not say "HTML document".

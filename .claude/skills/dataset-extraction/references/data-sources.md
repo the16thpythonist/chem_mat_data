@@ -109,6 +109,13 @@ URL reachable from the article page:
 particular returns 403 to `curl` and to every scripted client regardless of headers. Do
 not spend attempts fighting it — go to Europe PMC instead.
 
+The contrast, measured on the same paper (`10.1021/acs.estlett.3c00526`, open access):
+
+| URL | Result |
+|---|---|
+| `pubs.acs.org/doi/suppl/.../ez3c00526_si_001.xlsx` | **403**, 5.6 kB of HTML |
+| `ebi.ac.uk/.../PMC10569042/supplementaryFiles` | **200**, 2.1 MB `application/zip` |
+
 ### Europe PMC — the way around a bot-blocked SI
 
 For anything with a PMC ID, Europe PMC serves the publisher-deposited supplementary
@@ -145,9 +152,15 @@ https://chemrxiv.org/engage/chemrxiv/doi/full/<doi>
 https://chemrxiv.org/engage/chemrxiv/doi/suppl/<doi>/suppl_file/<filename>
 ```
 
-Get the DOI by rendering the article page (`defuddle` or `crwl` — `WebFetch` is 403'd
-here). Crossref, DataCite and Europe PMC search all fail to resolve the opaque article
-id; an **OpenAlex** search filtered to the ChemRxiv source does work.
+Get the DOI by rendering the article page with **`crwl`**. It is the only reader that
+works here: ChemRxiv 403s every non-browser client, `defuddle` and `WebFetch` included,
+so the `defuddle`-first default does not apply on this host. Crossref, DataCite and
+Europe PMC search all fail to resolve the opaque article id; an **OpenAlex** search
+filtered to the ChemRxiv source does work — the source id is `S4393918830`:
+
+```bash
+curl -s "https://api.openalex.org/works?filter=primary_location.source.id:S4393918830&search=<title>"
+```
 
 **Check for a published version before using the preprint.** A preprint and its journal
 article routinely carry *different* licenses — CC-BY-NC-ND on ChemRxiv against CC-BY on
