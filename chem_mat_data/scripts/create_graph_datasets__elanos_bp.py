@@ -31,7 +31,11 @@ DATASET_TYPE: str = 'regression'
 # :param DESCRIPTION:
 #       This is a string description of the dataset that will be stored in the experiment
 #       metadata.
-DESCRIPTION: str = 'A dataset consisting of roughly 5000 molecules associated with their boiling points.'
+DESCRIPTION: str = (
+    'A dataset consisting of roughly 5000 molecules associated with their experimentally '
+    'measured boiling points in degrees Celsius. Values are untransformed and range from '
+    'about -89 to 548 °C, so the target takes negative values.'
+)
 # :param METADATA:
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
@@ -42,7 +46,7 @@ METADATA: dict = {
         'https://link.springer.com/article/10.1007/s11030-025-11196-5',
     ],
     'target_descriptions': {
-        '0': 'Boiling Point (BP) in Kelvin',
+        '0': 'BP - Experimental boiling point in degrees Celsius (°C)',
     },
 }
 
