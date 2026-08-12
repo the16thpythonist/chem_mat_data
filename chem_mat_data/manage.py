@@ -1,8 +1,10 @@
 import os
+import re
 import sys
 import json
 import yaml
 import time
+import shutil
 import difflib
 from collections import defaultdict
 from pathlib import Path
@@ -389,6 +391,26 @@ class RichAgentToolsHelp(RichMixin):
             'A `crwl` without a downloaded Chromium fails on every page with an error that '
             'does not name the fix, so the browser is checked separately and reported as '
             'the missing piece it is.\n'
+        )
+
+
+class RichAgentListHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``agent list`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'List every extraction run under `.dataset_work/` with where it stands. '
+            'Runs waiting on a human come first, then blocked ones, then the rest, '
+            'because the usual reason to run this is "what was I in the middle of".\n'
+        )
+
+        yield render_help(
+            'A run that was blocked weeks ago is only resumable if its slug can be '
+            'found again, and the slug is exactly what gets forgotten. A manifest that '
+            'cannot be read is listed as damaged rather than skipped.\n'
         )
 
 
@@ -865,6 +887,7 @@ class CLI(click.RichGroup):
         self.agent_group.add_command(self.agent_gate_command)
         self.agent_group.add_command(self.agent_set_command)
         self.agent_group.add_command(self.agent_block_command)
+        self.agent_group.add_command(self.agent_list_command)
 
         # discovery command group (CLI verb is `discover`, keeping the
         # user-visible panel title as "Discovery" via display_title override).
@@ -1899,14 +1922,47 @@ class CLI(click.RichGroup):
 
         console = Console()
 
-        if Manifest.exists(slug) and not force:
-            click.secho(
-                f'❌ a manifest for "{slug}" already exists. '
-                f'Use --force to start over, or `cmmanage agent status {slug}` '
-                'to see where it stands.',
-                fg='red',
-            )
-            sys.exit(1)
+        archived = None
+        if Manifest.exists(slug):
+            if not force:
+                click.secho(
+                    f'❌ a manifest for "{slug}" already exists. '
+                    f'Use --force to start over, or `cmmanage agent status {slug}` '
+                    'to see where it stands.',
+                    fg='red',
+                )
+                sys.exit(1)
+
+            # --force used to build a fresh manifest straight over the old one. That
+            # deletes a recorded human_override - a person's verbatim decision, often
+            # the product of an email exchange - while leaving the downloads that made
+            # the run cheap to resume. Losing it silently is not a reasonable cost for
+            # a flag whose stated purpose is "start over".
+            try:
+                existing = Manifest.load(slug)
+            except Exception:
+                existing = None
+
+            override = ((existing.license if existing else {}) or {}).get(
+                'human_override'
+            ) or {}
+            if override:
+                click.secho(
+                    f'❌ "{slug}" carries a recorded human licence decision:\n'
+                    f'     {override.get("decision", "?")}: '
+                    f'{override.get("reason", "no reason recorded")}\n'
+                    '   --force would discard it. Move .dataset_work/'
+                    f'{slug}/manifest.yml aside by hand if you really mean to start '
+                    'over, so the decision is preserved deliberately rather than '
+                    'incidentally.',
+                    fg='red',
+                )
+                sys.exit(1)
+
+            stamp = (existing.created_at if existing else None) or 'previous'
+            stamp = re.sub(r'[^0-9A-Za-z]+', '-', str(stamp)).strip('-')
+            archived = Manifest.path_for(slug).with_name(f'manifest.{stamp}.yml')
+            shutil.move(str(Manifest.path_for(slug)), str(archived))
 
         manifest = Manifest.create(slug, source_url=url)
         manifest_path = manifest.save()
@@ -1916,6 +1972,8 @@ class CLI(click.RichGroup):
 
         console.print()
         console.print(f'[green]✓[/green] initialised extraction run [bold]{slug}[/bold]')
+        if archived:
+            console.print(f'  previous   [dim]kept at {archived.name}[/dim]')
         console.print(f'  manifest   [dim]{manifest_path}[/dim]')
         console.print(f'  downloads  [dim]{work / "downloads"}[/dim]')
         console.print()
@@ -2104,6 +2162,99 @@ class CLI(click.RichGroup):
         console.print()
 
     @click.command(
+        'list',
+        cls=RichHelpCommand,
+        rich_help=RichAgentListHelp(),
+        short_help='List every extraction run and where it stands.',
+    )
+    @click.pass_obj
+    def agent_list_command(self) -> None:
+        from rich.console import Console
+
+        from chem_mat_data.agent.manifest import (
+            BLOCKED,
+            Manifest,
+            ManifestDamagedError,
+            WORK_DIR,
+        )
+
+        console = Console()
+
+        if not WORK_DIR.exists():
+            console.print()
+            console.print('[dim]no extraction runs yet[/dim]')
+            console.print()
+            return
+
+        rows = []
+        for directory in sorted(WORK_DIR.iterdir()):
+            if not directory.is_dir() or directory.name.startswith('.'):
+                continue
+            try:
+                manifest = Manifest.load(directory.name)
+            except ManifestDamagedError as exc:
+                rows.append((0, directory.name, None, str(exc)))
+                continue
+            except (FileNotFoundError, Exception):
+                continue
+
+            blocked = [
+                stage for stage in STAGES
+                if manifest.state(stage).status == BLOCKED
+            ]
+            needs_human = any(
+                manifest.state(stage).needs_human for stage in STAGES
+            )
+            # Blocked-and-waiting first, then blocked, then everything else: the
+            # reason to run this command is usually "what was I in the middle of".
+            rank = 0 if needs_human else (1 if blocked else 2)
+            rows.append((rank, directory.name, manifest, None))
+
+        if not rows:
+            console.print()
+            console.print('[dim]no extraction runs yet[/dim]')
+            console.print()
+            return
+
+        console.print()
+        for rank, slug, manifest, damage in sorted(rows, key=lambda row: (row[0], row[1])):
+            if damage:
+                console.print(f'  [bold red]✗[/bold red] {slug:<22} [red]damaged[/red]')
+                console.print(f'      [dim]{damage[:100]}[/dim]')
+                continue
+
+            escalated = next(
+                (
+                    manifest.state(stage)
+                    for stage in STAGES
+                    if manifest.state(stage).needs_human
+                ),
+                None,
+            )
+            if escalated is not None:
+                marker = '[bold red]✗[/bold red]'
+                summary = f'[bold red]needs a human[/bold red] - {escalated.escalation}'
+            elif manifest.complete:
+                marker = '[bold green]✓[/bold green]'
+                summary = '[green]all stages passed[/green]'
+            else:
+                marker = '[yellow]·[/yellow]'
+                next_stage = manifest.next_stage()
+                state = manifest.state(next_stage) if next_stage else None
+                summary = f'next: {next_stage}'
+                if state is not None and state.status == BLOCKED:
+                    summary = f'[red]blocked at {next_stage}[/red]'
+
+            name = manifest.dataset_name or ''
+            console.print(f'  {marker} {slug:<22} {summary}')
+            if name and name != slug:
+                console.print(f'      [dim]dataset {name}[/dim]')
+            if manifest.updated_at:
+                console.print(f'      [dim]updated {manifest.updated_at}[/dim]')
+
+        console.print()
+
+    @click.command(
         'block',
         cls=RichHelpCommand,
         rich_help=RichAgentBlockHelp(),
@@ -2219,6 +2370,23 @@ class CLI(click.RichGroup):
             'input_rows': int,
             'max_drop_rate': float,
         }
+        # The earliest stage each key belongs to. Changing a value invalidates that
+        # stage and everything after it, exactly as re-running a gate does. Without
+        # this, `set` was a way to make any gate agree with reality by editing the
+        # manifest instead of fixing the run - which would quietly defeat every check
+        # that compares the two.
+        owning_stage = {
+            'record_url': 'prepare',
+            'input_rows': 'prepare',
+            'metadata_draft': 'metadata',
+            'dataset_name': 'metadata',
+            'license': 'license',
+            'script_path': 'script',
+            'smoke_results_dir': 'script',
+            'results_dir': 'execute',
+            'max_drop_rate': 'execute',
+            'drop_rate_reason': 'execute',
+        }
 
         if key in readonly:
             click.secho(f'❌ {readonly[key]}', fg='red')
@@ -2250,8 +2418,19 @@ class CLI(click.RichGroup):
             click.secho(f'❌ unknown key {key!r}. Valid keys: {valid}', fg='red')
             sys.exit(1)
 
+        invalidated = []
+        if key in owning_stage:
+            invalidated = manifest.invalidate_from(
+                owning_stage[key], reason=f'invalidated by a change to {key}'
+            )
+
         manifest.save()
         console.print(f'[green]✓[/green] {slug}: set [bold]{key}[/bold]')
+        if invalidated:
+            console.print(
+                f'  [yellow]![/yellow] marked stale: {", ".join(invalidated)}'
+                ' [dim]- re-run those gates[/dim]'
+            )
 
     ## == DISCOVERY COMMAND GROUP ==
     # This command group implements the lightweight first stage of the dataset

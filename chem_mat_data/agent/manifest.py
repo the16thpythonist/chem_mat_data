@@ -20,6 +20,9 @@ approved, so it has to be re-gated. :meth:`Manifest.mark` handles that automatic
 from __future__ import annotations
 
 import datetime
+import os
+import shutil
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -66,6 +69,38 @@ def work_dir_for(slug: str) -> Path:
     :returns: Path to ``.dataset_work/<slug>/``.
     """
     return WORK_DIR / slug
+
+
+class ManifestDamagedError(Exception):
+    """
+    Raised when a manifest file exists but is not a whole manifest.
+
+    Distinct from a missing file, which is a normal state, and deliberately not
+    silently recoverable: the previous behaviour filled the gaps with defaults, so a
+    truncated file read as a run where nothing had been done.
+    """
+
+    pass
+
+
+def _recovery_hint(path: Path) -> str:
+    """
+    Return advice for recovering a damaged manifest.
+
+    :param path: The manifest that could not be read.
+
+    :returns: A sentence naming the backup, when one exists.
+    """
+    backup = path.with_suffix('.yml.bak')
+    if backup.exists():
+        return (
+            f'A backup of the previous save is at {backup.name} - inspect it and copy '
+            'it over the damaged file if it looks right.'
+        )
+    return (
+        'Repair it by hand, or delete the run directory to start over - but check '
+        'downloads/ first, since re-downloading may not be necessary.'
+    )
 
 
 def _string_list(value: Any) -> List[str]:
@@ -279,13 +314,18 @@ class Manifest:
         """
         Load an existing manifest from disk.
 
-        Stages absent from the file are filled in as pending, so a manifest written by
-        an older version stays loadable.
+        Individual stages absent from the file are filled in as pending, so a manifest
+        written by an older version stays loadable. A file missing its *structure* is a
+        different matter and raises: a truncated manifest used to load silently as a
+        run where nothing had been done, which is the most expensive possible way to
+        fail. A resuming agent would re-download, re-license and re-script a finished
+        run, and the human's recorded license decision would be gone.
 
         :param slug: The dataset slug.
 
         :returns: The loaded manifest.
         :raises FileNotFoundError: If no manifest exists for the slug.
+        :raises ManifestDamagedError: If the file exists but is not a whole manifest.
         """
         path = cls.path_for(slug)
         if not path.exists():
@@ -294,8 +334,37 @@ class Manifest:
                 f'Run `cmmanage agent init {slug} --url <url>` first.'
             )
 
-        with path.open() as file:
-            data = yaml.safe_load(file) or {}
+        try:
+            with path.open() as file:
+                data = yaml.safe_load(file) or {}
+        except yaml.YAMLError as exc:
+            raise ManifestDamagedError(
+                f'{path} is not readable as YAML: {exc}. '
+                f'{_recovery_hint(path)}'
+            ) from exc
+
+        if not isinstance(data, dict):
+            raise ManifestDamagedError(
+                f'{path} does not contain a manifest. {_recovery_hint(path)}'
+            )
+
+        # A whole manifest always has these, because create() writes them. Their absence
+        # means the file was truncated or partially written, and defaulting to "nothing
+        # has been done" would throw away a completed run without saying so.
+        missing = [
+            key for key in ('slug', 'created_at', 'stages') if key not in data
+        ]
+        if missing:
+            raise ManifestDamagedError(
+                f'{path} is missing {", ".join(missing)} - it looks truncated or '
+                f'partially written rather than empty. {_recovery_hint(path)}'
+            )
+
+        if not isinstance(data.get('stages'), dict):
+            raise ManifestDamagedError(
+                f'{path} has a "stages" entry that is not a mapping. '
+                f'{_recovery_hint(path)}'
+            )
 
         stages = {
             stage: StageState.from_dict((data.get('stages') or {}).get(stage))
@@ -361,8 +430,33 @@ class Manifest:
             if value not in (None, {}, []):
                 data[key] = value
 
-        with path.open('w') as file:
-            yaml.dump(data, file, default_flow_style=False, sort_keys=False)
+        # Written to a temporary file and moved into place, rather than truncating the
+        # real one. This runs on every `agent set` and every `agent gate`, so an
+        # interruption mid-write was a live risk, and a half-written manifest used to
+        # load as a run where nothing had been done. os.replace is atomic within a
+        # filesystem, so a reader sees either the old file or the new one.
+        if path.exists():
+            try:
+                shutil.copy2(path, path.with_suffix('.yml.bak'))
+            except OSError:
+                # A backup is a courtesy; failing to make one must not stop the save.
+                pass
+
+        handle, temporary = tempfile.mkstemp(
+            dir=str(path.parent), prefix='.manifest-', suffix='.yml'
+        )
+        try:
+            with os.fdopen(handle, 'w') as file:
+                yaml.dump(
+                    data, file, default_flow_style=False, sort_keys=False,
+                    allow_unicode=True,
+                )
+                file.flush()
+                os.fsync(file.fileno())
+            os.replace(temporary, path)
+        except BaseException:
+            Path(temporary).unlink(missing_ok=True)
+            raise
 
         return path
 
@@ -442,6 +536,34 @@ class Manifest:
                         at=_timestamp(),
                         notes=f'invalidated by a re-run of the {stage} stage',
                     )
+
+    def invalidate_from(self, stage: str, reason: str) -> List[str]:
+        """
+        Mark a stage and everything after it stale, if they had passed.
+
+        The staleness model guarded ``gate``, but ``set`` is where state actually
+        changes, and it changed nothing about stage status. Replacing the approved
+        ``metadata_draft`` on a fully passed run left all six stages ``passed`` - which
+        meant any gate comparing the manifest against reality could be satisfied by
+        editing the manifest to agree with whatever the script happened to do.
+
+        :param stage: The earliest stage the change affects.
+        :param reason: Human-readable cause, recorded in the stage notes.
+
+        :returns: The stages that were invalidated.
+        """
+        _check_stage(stage)
+
+        invalidated: List[str] = []
+        for later in STAGES[STAGES.index(stage):]:
+            if self.stages.get(later, StageState()).status == PASSED:
+                self.stages[later] = StageState(
+                    status=STALE,
+                    at=_timestamp(),
+                    notes=reason,
+                )
+                invalidated.append(later)
+        return invalidated
 
     def escalate(
         self,
