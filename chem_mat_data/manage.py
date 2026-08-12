@@ -371,11 +371,18 @@ class RichAgentToolsHelp(RichMixin):
         )
 
         yield render_help(
-            'Two tools are involved and they are not interchangeable. `defuddle` fetches '
-            'over plain HTTP and is the right default for an ordinary page. `crwl` drives '
-            'a real Chromium and is the only one that gets past a publisher bot check - '
-            'ChemRxiv returns 403 to `defuddle` while serving `crwl` the full article. '
-            'Both are needed to cover both kinds of page.\n'
+            '`crwl` is the default reader. It drives a real Chromium, which makes it the '
+            'only one that gets past a publisher bot check - ChemRxiv returns 403 to '
+            '`defuddle` and to `WebFetch` while serving `crwl` the full article. '
+            '`defuddle` is the fallback: about three seconds quicker per page because it '
+            'starts no browser, but it fails outright on any host that bot-checks.\n'
+        )
+
+        yield render_help(
+            'The ordering is about asymmetric cost, not about which tool is better. '
+            'Reaching for `crwl` where `defuddle` would have done wastes a few seconds; '
+            'reaching for `defuddle` on a defended host costs a 403, a diagnosis and a '
+            'retry. A default that always works beats one that is usually faster.\n'
         )
 
         yield render_help(

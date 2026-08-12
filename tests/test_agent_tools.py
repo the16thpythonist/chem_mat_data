@@ -224,7 +224,7 @@ def test_check_page_readers_all_available(monkeypatch, tmp_path):
 
     statuses = check_page_readers()
 
-    assert [s.spec.name for s in statuses] == ['defuddle', 'crwl']
+    assert [s.spec.name for s in statuses] == ['crwl', 'defuddle']
     assert all(s.available for s in statuses)
 
 
@@ -250,9 +250,22 @@ def test_check_page_readers_blames_the_browser_not_crwl(monkeypatch, tmp_path):
     assert any('Chromium' in problem for problem in crwl_status.problems)
 
 
-def test_page_readers_order_puts_defuddle_first():
-    """The documented default is defuddle; crwl is for bot-checked hosts."""
-    assert [spec.name for spec in PAGE_READERS] == ['defuddle', 'crwl']
+def test_page_readers_order_puts_crwl_first():
+    """
+    crwl is the documented default because it is the only reader that works everywhere.
+
+    The order is what the skill's tool table is written against, so a change here is a
+    change to the guidance and should have to be deliberate.
+    """
+    assert [spec.name for spec in PAGE_READERS] == ['crwl', 'defuddle']
+
+
+def test_crwl_is_described_as_the_default_and_defuddle_as_the_fallback():
+    """The status report is where a reader learns which to reach for first."""
+    purposes = {spec.name: spec.purpose for spec in PAGE_READERS}
+
+    assert 'default' in purposes['crwl']
+    assert 'fallback' in purposes['defuddle']
 
 
 # -- install_tool --

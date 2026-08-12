@@ -9,22 +9,25 @@ in a normal ``pip install`` brings them along. They are missing on a fresh machi
 and the way they fail when missing is unhelpful enough that the skill previously
 documented a fallback chain that did not survive contact with reality.
 
-The two are complementary rather than redundant, which is the point worth
-internalising:
-
-``defuddle``
-    Fetches over plain HTTP and extracts the article body. Fast, no browser, and the
-    right default for an ordinary page - a Zenodo record, a GitHub README, a journal
-    landing page that is not defended.
-
 ``crwl``
-    Drives a real Chromium through Playwright. Much slower to start, but it is the
-    only one of the two that gets past a publisher bot check. ChemRxiv returns 403 to
+    Drives a real Chromium through Playwright, and is the default. It reads every page
+    the other readers can, plus the ones they cannot: ChemRxiv returns 403 to
     ``defuddle`` and to ``WebFetch`` while serving ``crwl`` the full article.
 
-So ``crwl`` is not a fallback for when ``defuddle`` is broken; it is the tool for a
-different class of page. Both need to be present for the prepare stage to be able to
-handle both classes, which is why this module checks for them together.
+``defuddle``
+    Fetches over plain HTTP and extracts the article body. Roughly three seconds
+    quicker per page because it starts no browser, and a reasonable fallback when
+    ``crwl`` is unavailable or a page renders badly through it - but it fails outright
+    on any host that bot-checks.
+
+``crwl`` leads because the costs are asymmetric. Choosing it when ``defuddle`` would
+have done wastes about three seconds; choosing ``defuddle`` on a defended host costs a
+403, a diagnosis and a retry, which in an agentic pipeline is orders of magnitude more
+expensive than the seconds saved. A default that always works beats a default that is
+usually faster.
+
+Both are still checked together, because the fallback has to actually be there on the
+day ``crwl`` breaks.
 
 Exposed through ``cmmanage agent tools``, which reports by default and only installs
 when asked with ``--install``.
@@ -84,23 +87,23 @@ class ToolStatus:
     problems: List[str] = field(default_factory=list)
 
 
-#: The page readers the prepare stage depends on. Order is the order they should be
-#: reached for: `defuddle` first because it is far quicker, `crwl` when the host
-#: refuses a non-browser client.
+#: The page readers the prepare stage depends on, in the order they should be reached
+#: for: `crwl` first because it works everywhere, `defuddle` as the quicker fallback
+#: for when it is unavailable.
 PAGE_READERS: List[ToolSpec] = [
     ToolSpec(
-        name='defuddle',
-        purpose='fast HTTP article extraction - the default for an undefended page',
-        install_cmd=['npm', 'install', '-g', 'defuddle'],
-        requires='npm',
-        version_args=['--version'],
-    ),
-    ToolSpec(
         name='crwl',
-        purpose='Chromium-backed crawling - the only reader that gets past a bot check',
+        purpose='the default - real Chromium, so it reads bot-checked hosts too',
         install_cmd=['uv', 'tool', 'install', 'crawl4ai'],
         requires='uv',
         version_args=None,
+    ),
+    ToolSpec(
+        name='defuddle',
+        purpose='fallback - ~3s quicker, but 403s on any host that bot-checks',
+        install_cmd=['npm', 'install', '-g', 'defuddle'],
+        requires='npm',
+        version_args=['--version'],
     ),
 ]
 

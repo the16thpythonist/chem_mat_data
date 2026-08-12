@@ -136,15 +136,19 @@ active Node version changed: `npm install -g` installs into the *current* nvm No
 **`defuddle` returns 403 but the page loads in a browser**
 
 Expected on a bot-checking host — ChemRxiv and most publishers. `defuddle` and
-`WebFetch` are both plain HTTP clients and fail together. Use `crwl`, which drives a
-real Chromium and gets through:
+`WebFetch` are both plain HTTP clients and fail together. This is a property of the
+host, not a broken install; do not retry `defuddle` with different flags.
+
+It also means you started from the wrong reader. `crwl` is the default precisely
+because it does not have this failure mode:
 
 ```bash
 crwl '<url>' -o markdown-fit
 ```
 
-This is a property of the host, not a broken install. Do not retry `defuddle` with
-different flags.
+`defuddle` is worth reaching for only when `crwl` is unavailable, or when a page came
+back badly rendered and a cheap second opinion helps. On a publisher host, go straight
+to `crwl`.
 
 **Excel file parses into nonsense**
 

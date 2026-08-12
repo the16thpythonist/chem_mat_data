@@ -136,8 +136,7 @@ paywalled, look for a preprint — you only need the Data Availability section.
 
 | Need | Use | When that fails |
 |---|---|---|
-| Read an ordinary page | `defuddle parse '<url>' -m` | `crwl '<url>' -o markdown-fit` |
-| Read a bot-blocked publisher page | `crwl '<url>' -o markdown-fit` | an open-access mirror — see `references/data-sources.md` |
+| **Read a page** | **`crwl '<url>' -o markdown-fit`** | `defuddle parse '<url>' -m`, then `WebFetch` |
 | Search | `WebSearch` | — |
 | Download | `curl -L -o '<abs path>' '<url>'` | `mcp__file-download__download_file` |
 
@@ -148,23 +147,25 @@ cmmanage agent tools              # report
 cmmanage agent tools --install    # install what is missing
 ```
 
-**`defuddle` and `crwl` are not interchangeable, and `crwl` is not a fallback for a
-broken `defuddle`.** They fail on different things:
+**`crwl` is the default for every page.** Do not start with `defuddle` and fall back to
+`crwl` when a host refuses you — that ordering pays a 403, a diagnosis and a retry on
+exactly the publisher pages that matter most.
 
-- `defuddle` (`npm install -g defuddle`) fetches over plain HTTP with no browser. Fast,
-  and the right default for a Zenodo record, a GitHub README or an undefended journal
-  page. **It returns 403 on any host that bot-checks**, ChemRxiv among them.
 - `crwl` (`uv tool install crawl4ai`, then `crawl4ai-setup` for the browser) drives a
-  real Chromium. Seconds slower to start, and the only reader here that gets through a
-  bot check. Without the browser it fails on *every* page with `Executable doesn't
-  exist at .../chromium-*`, which does not name the fix — `cmmanage agent tools`
-  reports this case as the missing browser rather than as a missing `crwl`.
+  real Chromium. It reads everything the others read, plus the defended hosts they
+  cannot. Without the browser it fails on *every* page with `Executable doesn't exist at
+  .../chromium-*`, which does not name the fix — `cmmanage agent tools` reports this
+  case as the missing browser rather than as a missing `crwl`.
+- `defuddle` (`npm install -g defuddle`) fetches over plain HTTP with no browser. Use it
+  when `crwl` is unavailable, or when a page comes back badly rendered and a second
+  opinion is cheap. **It returns 403 on any host that bot-checks**, ChemRxiv among them.
 - `WebFetch` is built in, but it is the same class of client as `defuddle` and is 403'd
   in the same places. It is not a third chance.
 
-Measured against a ChemRxiv article page: `defuddle` 403, `WebFetch` 403, `crwl`
-returns the full article including the abstract and version history. Reach for `crwl`
-the moment a publisher host refuses you, rather than working down the list.
+Measured: on a ChemRxiv article page `defuddle` and `WebFetch` both 403 while `crwl`
+returns the full article. On an ordinary Zenodo record all three work, and `crwl` costs
+about three seconds more than `defuddle` (≈4s against ≈1s). Three seconds is the entire
+price of never having to diagnose a 403 — pay it by default.
 
 > `npm install -g` places its launcher inside the *currently active* nvm Node version,
 > so `defuddle` vanishes after an `nvm use`. If it disappears, that is why — reinstall,
