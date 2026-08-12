@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Gate findings are recorded verbatim instead of counted, and `agent status` shows
+  them.** A stage recorded `notes: 1 warning(s)` and threw the text away, and a blocked
+  stage kept `errors[0]` and dropped the rest. Those are the two moments the text is
+  worth most: a licence warning reading `1 warning(s)` is indistinguishable whether it
+  says "a human waived this for a stated reason" or "the upstream forbids derivative
+  works", and a blocked stage is the one most likely to be resumed cold in a later
+  session. `StageState` gains `warnings` and `errors` lists — alongside `notes`, which
+  still carries the staleness message — and `agent status` prints them under each stage.
+
+  `agent status` also now summarises the recorded licence: identifier, evidence,
+  upstream database and, when present, the override decision and its reason, so a waived
+  licence stops reading like a clean one. Deliberately truncated to stay scannable; the
+  verbatim record is in `.dataset_work/<slug>/manifest.yml`, which is where the skill
+  sends an agent that needs to merge into it.
+
+  Loading is defensive about hand-edited manifests — a scalar where a list belongs is
+  coerced rather than crashing a resume — since a human repairing the file by hand is
+  the situation the manifest exists to support. 12 tests added.
+
 ### Fixed
 
 - **The stage-3 license example could not pass its own gate.** SKILL.md showed

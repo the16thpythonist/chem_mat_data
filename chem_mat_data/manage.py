@@ -1717,6 +1717,77 @@ class CLI(click.RichGroup):
     # gates that decide whether a stage may be considered done.
 
     @staticmethod
+    def _render_status_license(console, manifest) -> None:
+        """
+        Print a scannable summary of the recorded license conclusion.
+
+        The status output previously showed only that the license stage had passed,
+        which reads identically whether the license is clean or was waived over an
+        upstream that forbids redistribution. Those are the two cases a human most
+        needs told apart, so the override decision and the upstream are surfaced here.
+
+        Deliberately a summary, not a dump: the free-text fields run to whole
+        paragraphs, and a status display that has to be scrolled is one nobody reads.
+        The verbatim record lives in ``.dataset_work/<slug>/manifest.yml``, which is
+        where the skill sends an agent that needs to merge into it.
+
+        :param console: A Rich Console.
+        :param manifest: The Manifest whose license should be rendered.
+        """
+        license_info = manifest.license or {}
+        if not license_info:
+            return
+
+        def short(value: Any, limit: int = 96) -> str:
+            """Collapse a possibly-paragraph-length field to one scannable line."""
+            text = ' '.join(str(value).split())
+            return text if len(text) <= limit else text[: limit - 1] + '…'
+
+        console.print()
+        console.print('  [bold]license[/bold]')
+
+        identifier = license_info.get('identifier') or '[dim]none recorded[/dim]'
+        console.print(f'      identifier   {identifier}')
+
+        for key, label in (
+            ('evidence_url', 'evidence'),
+            ('redistribution', 'redistrib'),
+            ('attribution', 'attribution'),
+        ):
+            value = license_info.get(key)
+            if value:
+                console.print(f'      {label:<12} [dim]{short(value)}[/dim]')
+
+        upstream = license_info.get('upstream_database')
+        if upstream in (None, '', 'none', 'null'):
+            console.print(
+                '      upstream     [dim]none - the publication is the source[/dim]'
+            )
+        else:
+            console.print(f'      upstream     [bold]{short(upstream)}[/bold]')
+            for key, label in (
+                ('upstream_terms_url', 'terms'),
+                ('upstream_license', 'its license'),
+            ):
+                value = license_info.get(key)
+                if value:
+                    console.print(f'      {label:<12} [dim]{short(value)}[/dim]')
+
+        override = license_info.get('human_override') or {}
+        if override:
+            decision = str(override.get('decision', '')).lower()
+            colour = 'green' if decision == 'approved' else 'red'
+            console.print(
+                f'      override     [bold {colour}]{decision or "unspecified"}'
+                f'[/bold {colour}] - [dim]'
+                f'{short(override.get("reason") or "no reason recorded")}[/dim]'
+            )
+            console.print(
+                '      [dim]full record: .dataset_work/'
+                f'{manifest.slug}/manifest.yml[/dim]'
+            )
+
+    @staticmethod
     def _render_gate_report(console, report) -> None:
         """
         Print a gate report to the console.
@@ -1843,10 +1914,22 @@ class CLI(click.RichGroup):
             state = manifest.state(stage)
             symbol = symbols.get(state.status, '[dim]·[/dim]')
             console.print(f'  {symbol} {stage:<13} [dim]{state.status}[/dim]')
-            if state.blocker:
-                console.print(f'      [red]{state.blocker}[/red]')
-            elif state.notes:
+
+            # notes, errors and warnings are not alternatives - a blocked stage has a
+            # blocker and may also have warnings worth reading before deciding what to
+            # do about it, and rendering only one of them is how the useful one gets
+            # hidden.
+            if state.notes:
                 console.print(f'      [dim]{state.notes}[/dim]')
+            if state.errors:
+                for message in state.errors:
+                    console.print(f'      [bold red]✗[/bold red] {message}')
+            elif state.blocker:
+                console.print(f'      [bold red]✗[/bold red] {state.blocker}')
+            for message in state.warnings:
+                console.print(f'      [yellow]![/yellow] {message}')
+
+        self._render_status_license(console, manifest)
 
         console.print()
 
@@ -1907,18 +1990,23 @@ class CLI(click.RichGroup):
         failed = (not report.ok) or (strict and report.warnings)
 
         if record:
+            # The full text is recorded, not a count. A stage that warned once and a
+            # stage that warned once about the upstream forbidding derivative works
+            # are the same line otherwise, and the second one has to survive into the
+            # session that resumes this run.
+            warnings = [issue.message for issue in report.warnings]
+            errors = [issue.message for issue in report.errors]
             if failed:
                 blocker = (
                     report.errors[0].message
                     if report.errors
                     else 'warnings treated as failures under --strict'
                 )
-                manifest.mark(stage, BLOCKED, blocker=blocker)
-            else:
-                note = (
-                    f'{len(report.warnings)} warning(s)' if report.warnings else None
+                manifest.mark(
+                    stage, BLOCKED, blocker=blocker, warnings=warnings, errors=errors
                 )
-                manifest.mark(stage, PASSED, notes=note)
+            else:
+                manifest.mark(stage, PASSED, warnings=warnings)
             manifest.save()
 
         if failed:
