@@ -59,21 +59,32 @@ Each stage hands its conclusions to the next through the manifest:
 cmmanage agent set <slug> <key> <value>
 ```
 
-Scalar keys: `source_url`, `dataset_name`, `script_path`, `smoke_results_dir`,
-`results_dir`, `input_rows`, `max_drop_rate`, `drop_rate_reason`.
+Scalar keys: `dataset_name`, `script_path`, `smoke_results_dir`, `results_dir`,
+`input_rows`, `max_drop_rate`, `drop_rate_reason`.
 JSON-object keys: `metadata_draft`, `license`.
 
 The gates read the manifest. A stage that does not record its findings will fail its
 own gate.
+
+**`source_url` is set once by `init` and should not be overwritten.** It records where
+the run *started* — the publication — and the license gate compares its host against
+the host the license was established on, to catch a preprint and its published version
+carrying different licenses. Overwriting it with the direct download URL you discover
+in stage 1 makes both hosts the same and silently disables that check. The download URL
+belongs in `download_recipe.md` and in the script, not here.
 
 ---
 
 ## Escalation
 
 When a stage hits something you cannot resolve — a paywall, an ambiguous license, a
-dataset that turns out not to exist, a format you cannot parse — **stop and ask the
-user with AskUserQuestion**, in the same session, rather than failing silently or
-inventing a workaround.
+dataset that turns out not to exist, a format you cannot parse — **stop and put it to
+the human**, rather than failing silently or inventing a workaround.
+
+Use whatever channel this run actually has: `AskUserQuestion` in an interactive
+session, or a message back to whoever invoked you when running unattended as a
+subagent. If you have no channel at all, record the blocker and stop — do not decide on
+their behalf because asking was inconvenient.
 
 Make the question concrete and give real options. State plainly:
 
@@ -260,34 +271,80 @@ identifier, a URL that a human can check, whether redistribution is permitted, a
 what attribution is required — and to report "none found" rather than inferring a
 license from context.
 
+**Also brief it to establish provenance**, because that is the half the gate will not
+let you skip: whether the publication is the original source of the values, or is
+republishing them from some upstream database. A permissive license on a paper says
+nothing about the database it aggregated, and the binding restriction usually lives
+upstream. The subagent must come back with `upstream_database` either named or
+explicitly `null`.
+
 The policy is in `references/license.md`. In short: public domain, CC-BY, MIT/BSD/
 Apache pass. **NonCommercial, ShareAlike, copyleft, and anything not clearly
 identified escalate to the human** — including no license at all, which is the most
 common case and is not the same as permission.
+
+When the publication *is* the original source, `upstream_database` is `null` and that
+is the whole of it:
 
 ```bash
 cmmanage agent set <slug> license '{
   "identifier": "CC-BY-4.0",
   "evidence_url": "https://zenodo.org/records/...",
   "redistribution": "allowed",
-  "attribution": "Cite Lopez et al., Sci. Data 3, 160086 (2016)."
+  "attribution": "Cite Lopez et al., Sci. Data 3, 160086 (2016).",
+  "upstream_database": null
 }'
 cmmanage agent gate license <slug>
 ```
 
-If the gate escalates, **ask the user** — present the license found, the evidence URL,
-what it permits and what it forbids, and let them decide. Record their decision:
+When it is republishing someone else's data, naming the upstream additionally requires
+its terms URL and its license — the gate rejects a named upstream without them. Note
+that this example **escalates rather than passes**, and correctly so: the upstream terms
+are not permissive, which is exactly the situation only a human may resolve. A named
+upstream whose own license is permissive passes without ceremony.
 
 ```bash
 cmmanage agent set <slug> license '{
-  "identifier": "CC-BY-NC-4.0",
-  "evidence_url": "https://...",
+  "identifier": "CC-BY-4.0",
+  "evidence_url": "https://zenodo.org/records/...",
+  "redistribution": "allowed",
+  "attribution": "Cite ... ; credit the upstream database.",
+  "upstream_database": "US EPA EPI Suite (values from the SRC PHYSPROP database)",
+  "upstream_terms_url": "https://www.epa.gov/...",
+  "upstream_license": "No open license; EPA grants personal/business use only and forbids preparing derivative works."
+}'
+```
+
+`upstream_database` is **not optional** — omitting the key fails the gate even when the
+publication is the original source. Say `null` deliberately rather than leaving it out.
+
+If the gate escalates, **stop and put the decision to the human** — present the license
+found, the evidence URL, what it permits and what it forbids, and let them decide. Use
+whatever channel this run has for reaching them: `AskUserQuestion` in an interactive
+session, or a message back to whoever invoked you when running unattended. If you have
+no channel at all, stop with the blocker recorded rather than deciding yourself.
+
+Record their decision by **adding** `human_override` to what you already established:
+
+```bash
+cmmanage agent set <slug> license '{
+  ...every field from above, unchanged...,
   "human_override": {"decision": "approved", "reason": "<their reason, verbatim>"}
 }'
 ```
 
+`agent set` **replaces the whole license object**, so you must re-send every field. An
+override that arrives alone silently deletes `upstream_database`, `upstream_terms_url`,
+`upstream_license` and `attribution` — the exact evidence that justified escalating.
+Read the current value back and merge rather than retyping from memory:
+
+```bash
+cmmanage agent status <slug>            # shows the recorded license
+```
+
 An override without a reason fails the gate. Never write one on your own judgement —
-it exists to record a human decision, not to unblock yourself.
+it exists to record a human decision, not to unblock yourself. Record the human's words
+verbatim; do not paraphrase them into your own analysis.
 
 If the attribution requirement is non-trivial, fold it into the metadata `sources` and
 re-run the metadata stage.
@@ -328,9 +385,20 @@ Non-negotiables, all gate-enforced:
   The verification gate compares `verbose`, `description`, `tags` and `sources` in the
   written `metadata.yml` against the draft. Putting `description` only in `METADATA`
   and not in `DESCRIPTION` is the way to fail that gate at the very last stage.
-- Filtering: skip only rows with missing/unparseable SMILES or missing targets,
-  preferring the `-1` sentinel. No dropping multi-component SMILES, no atom-count
-  thresholds, no de-duplication.
+- Filtering: skip only rows with missing/unparseable SMILES, or with no usable target
+  value. No dropping multi-component SMILES, no atom-count thresholds, no
+  de-duplication.
+- **The `-1` sentinel is for multi-target datasets only**, where a row has some targets
+  and not others and the row is still worth keeping. On a single-target dataset there
+  is nothing left once the target is missing — skip the row instead.
+
+  **Never use the sentinel on a target whose real values can reach `-1`.** Check the
+  range before deciding: a boiling point in °C, a formation energy, a log-transformed
+  value or anything centred near zero will contain genuine `-1`s, and encoding missing
+  data the same way makes a real measurement indistinguishable from an absent one. This
+  is not hypothetical — a real dataset in this collection has a compound whose boiling
+  point is exactly `-1.0` °C. When the range collides, skip the row and say so in the
+  description.
 
 ### Smoke run
 

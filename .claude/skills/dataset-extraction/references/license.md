@@ -147,6 +147,11 @@ to. Then record their decision verbatim:
 {
   "identifier": "CC-BY-NC-4.0",
   "evidence_url": "https://...",
+  "redistribution": "allowed",
+  "attribution": "Cite ...",
+  "upstream_database": "enviPath",
+  "upstream_terms_url": "https://envipath.org/terms",
+  "upstream_license": "Academic and non-commercial use only; systematic redistribution forbidden.",
   "human_override": {
     "decision": "approved",
     "reason": "Non-commercial use only; ChemMatData is an academic project and the authors confirmed by email on 2026-08-01."
@@ -154,9 +159,17 @@ to. Then record their decision verbatim:
 }
 ```
 
+**Send every field you already established, not just the override.** `cmmanage agent
+set` replaces the whole `license` object, so an override submitted on its own deletes
+`upstream_database`, `upstream_terms_url`, `upstream_license` and `attribution` — the
+very evidence that justified escalating in the first place, leaving a record that says
+a human approved something without saying what. Read the current value back with
+`cmmanage agent status <slug>` and merge into it.
+
 `decision` is `approved` or `rejected`, and an approval **must** carry a reason — the
-gate rejects one without. The override records a human's decision; it is not a way to
-unblock yourself. Never write one on your own judgement.
+gate rejects one without. Record the human's words verbatim rather than paraphrasing
+them into your own analysis. The override records a human's decision; it is not a way
+to unblock yourself. Never write one on your own judgement.
 
 A rejected license ends the run. Say so plainly and stop; do not look for a workaround.
 

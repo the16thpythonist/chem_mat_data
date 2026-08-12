@@ -9,6 +9,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **The stage-3 license example could not pass its own gate.** SKILL.md showed
+  `identifier`/`evidence_url`/`redistribution`/`attribution`, but the gate also requires
+  `upstream_database`, documented only in `references/license.md`. An agent copying the
+  visible example was blocked on a field it had never seen. The example now carries
+  `"upstream_database": null` for the case where the publication is the original source,
+  with a second example for a named upstream — labelled as one that *escalates* rather
+  than passes, since a non-permissive upstream is exactly what only a human may resolve.
+  Verified against the gate: the old example fails, both new ones behave as documented.
+
+- **The `-1` sentinel rule could silently corrupt a single-target dataset.** "Skip rows
+  with missing targets, preferring the `-1` sentinel" asks for two incompatible things
+  when there is only one target, and is unsafe whenever `-1` is a value the target can
+  really take. This is not hypothetical: `elanos_bp` contains a compound whose boiling
+  point is exactly `-1.0` °C, so following the old advice would have made a real
+  measurement indistinguishable from a missing one. The sentinel is now documented as
+  multi-target only, and forbidden on any target whose range reaches `-1`. Corrected in
+  SKILL.md, `metadata.md` and `script-anatomy.md` together, since all three repeated it.
+
+- **The override example in `license.md` destroyed the evidence it was recording.**
+  `cmmanage agent set` replaces the whole `license` object, so submitting the documented
+  override JSON deleted `upstream_database`, `upstream_terms_url`, `upstream_license`
+  and `attribution` — leaving a record that a human approved something, without saying
+  what. Both override examples now show every field being re-sent, and say to read the
+  current value back and merge.
+
+- **`metadata.md` contradicted the metadata gate.** It said `target_descriptions` was
+  "required whenever there is more than one target"; the gate requires a description for
+  every index from `0` to `target_count - 1`, single-target included — which is the case
+  where units matter most, there being no sibling column to infer them from.
+
+- **`script-anatomy.md` called `TARGET_COLUMNS` documentation.** It said the parameter is
+  only read by the default `load_dataset`, so overriding that hook makes it inert. The
+  base template's `save_csv` hook reads it to name the exported CSV's target columns, so
+  a stale value ships a raw CSV with `target_0` headers. It is load-bearing.
+
+- **`source_url` was being overwritten, disabling the preprint/published check.** SKILL.md
+  listed it among the freely settable scalar keys, and a run that helpfully replaced it
+  with the direct download URL discovered in stage 1 made the source and evidence hosts
+  identical — silently neutering the host-divergence warning added alongside the
+  provenance check. It is now documented as set once by `init` and not to be overwritten,
+  with the download URL belonging in `download_recipe.md` and the script instead.
+
+- **Escalation was hardcoded to `AskUserQuestion`**, which does not exist for a run
+  operating as a subagent or in any non-interactive context — the skill's own stage 3 and
+  stage 6 both mandate subagents. Phrased tool-agnostically, with the rule that no
+  channel means recording the blocker and stopping, never deciding on the human's behalf.
+
+  All six were found by running the skill end to end against `elanos_bp`, a dataset
+  already in the collection, from a scrubbed sandbox with the ground truth and git
+  history removed. It reproduced the dataset exactly — 5432 compounds against the
+  published 5431, the single difference being one multi-component SMILES that the
+  published script drops and the skill forbids dropping — and independently established
+  that the target is in degrees Celsius, which is how the shipped script's "Kelvin"
+  target description was found to be wrong.
+
 - **`half_life` re-sourced onto a license we can actually redistribute under.** The
   script downloaded the ChemRxiv preprint's supplementary workbook, which is
   **CC-BY-NC-ND-4.0** — NoDerivatives makes redistributing a processed graph dataset
