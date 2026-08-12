@@ -50,7 +50,7 @@ then any mirror. Use `https://doi.org/...` form for the paper when you have a DO
 
 See the vocabulary below.
 
-### `target_descriptions` — required whenever there is more than one target
+### `target_descriptions` — required for every target, including a single one
 
 Maps target index → description. **Use string keys** — `'0'`, `'1'`, … Both string
 and int keys occur in the existing data (24 string vs 2 int), and string is the
@@ -66,8 +66,11 @@ Format each value as `<column_name> - <what it is, with units>`:
 }
 ```
 
-The keys must cover every index from `0` to `len(targets) - 1`, in the same order as
-the list your `load_dataset` builds. `cmmanage agent verify` checks exactly this.
+The keys must cover every index from `0` to `target_count - 1`, in the same order as
+the list your `load_dataset` builds. The metadata gate checks exactly this and does not
+exempt single-target datasets: a regression dataset with one target still needs `'0'`,
+and that is the case where the units matter most, because there is no sibling column to
+infer them from.
 
 Do not do what `tmqm` does — `{'0': 'Electronic_E', '1': 'Dispersion_E', ...}` is a
 column name with no explanation and no units, which tells a downstream user nothing.
@@ -84,6 +87,12 @@ Note the `-1` sentinel wherever you used it:
 ```python
 '4': 'PCE - Power conversion efficiency (%); -1 where not measured'
 ```
+
+Only write that when `-1` really is impossible as a measurement for this target. A
+power conversion efficiency cannot be negative, so the sentinel is unambiguous there.
+A boiling point in °C, a formation energy or anything centred near zero can genuinely
+be `-1`, and using the sentinel on such a target quietly corrupts the data — skip those
+rows instead and say so here.
 
 ### Optional fields
 

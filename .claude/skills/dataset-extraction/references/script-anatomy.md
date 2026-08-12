@@ -54,8 +54,8 @@ template defaults.
 | `DESCRIPTION` | `str` | 2–5 sentences. See `metadata.md`. |
 | `METADATA` | `dict` | Merged over the auto-generated metadata. See `metadata.md`. |
 | `DATASET_TYPE` | `str` | `'regression'` or `'classification'`. |
-| `TARGET_COLUMNS` | `List[str]` | Column names. Only used by the *default* `load_dataset`; when you override that hook, this is documentation — but keep it accurate and ordered to match your `targets` list. |
-| `SMILES_COLUMN` | `str` | Same: only read by the default `load_dataset`. |
+| `TARGET_COLUMNS` | `List[str]` | Column names, ordered to match your `targets` list. **Load-bearing even when you override `load_dataset`** — the default `save_csv` hook reads it to name the target columns of the exported CSV, so a stale or placeholder value ships a raw CSV with headers like `target_0`. Keep it correct. |
+| `SMILES_COLUMN` | `str` | Read by the default `load_dataset` only; once you override that hook it is documentation. |
 | `SOURCE_PATH` | `str` | Local input path. Irrelevant once `load_dataset` downloads its own data. |
 | `USE_COORDINATES` | `bool` | Have RDKit generate 3D coordinates into `node_coordinates`. Slow, and fails on some molecules. Leave `False` unless the task needs geometry. |
 | `COMPRESS` | `bool` | Leave `True`. |
@@ -80,7 +80,9 @@ value is a dict containing at least:
 - `smiles: str` — a SMILES string RDKit can parse. (Alternatively `mol: Chem.Mol`;
   the worker accepts either, which is how the xyz path works.)
 - `targets: List[float]` — flat, ordered, one entry per target. Single-target datasets
-  use `[value]`. Missing entries in a multi-target dataset use `-1.0` as sentinel.
+  use `[value]`. Missing entries in a *multi-target* dataset use `-1.0` as sentinel —
+  but only where `-1.0` cannot be a real measurement for that target; otherwise skip
+  the row. See the filtering rules in SKILL.md stage 4.
 
 Any other keys pass through untouched and are visible to `add_graph_metadata`.
 
