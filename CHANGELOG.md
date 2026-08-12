@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.10.1] - Unreleased
 
 ### Fixed
 
@@ -708,7 +708,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `_run()` now accepts and forwards `env`, and `CONDA_PREFIX` is cleared so an active
   conda environment cannot capture the install.
 
-## [1.10.1] - Unreleased
 
 ### Changed
 
