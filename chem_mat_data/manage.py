@@ -476,11 +476,18 @@ class RichAgentSetHelp(RichMixin):
         )
 
         yield render_help(
-            'Scalar keys take a plain value: `source_url`, `dataset_name`, '
+            'Scalar keys take a plain value: `record_url`, `dataset_name`, '
             '`script_path`, `smoke_results_dir`, `results_dir`, `input_rows`, '
             '`max_drop_rate`, `drop_rate_reason`. The structured keys `metadata_draft` '
             'and `license` take a JSON object, so a whole finding can be written in one '
             'call.\n'
+        )
+
+        yield render_help(
+            '`source_url` is not settable. It is written once by `agent init --url` and '
+            'records where the run began, which is what lets the license gate ask '
+            'whether the file you downloaded is covered by the license you read. Record '
+            'the data repository landing page as `record_url` instead.\n'
         )
 
 
@@ -1907,7 +1914,9 @@ class CLI(click.RichGroup):
         console.print()
         console.print(f'[bold]{manifest.slug}[/bold]')
         if manifest.source_url:
-            console.print(f'[dim]{manifest.source_url}[/dim]')
+            console.print(f'[dim]source  {manifest.source_url}[/dim]')
+        if manifest.record_url:
+            console.print(f'[dim]record  {manifest.record_url}[/dim]')
         console.print()
 
         for stage in STAGES:
@@ -2062,8 +2071,21 @@ class CLI(click.RichGroup):
         # Scalar fields are set directly; the structured sections take a JSON blob so
         # that the whole metadata draft or license finding can be written in one go.
         structured = {'metadata_draft', 'license'}
+        # `source_url` is deliberately absent. It records where the run began and is
+        # the fixed point the license gate compares its evidence against; overwriting
+        # it with the download URL discovered in stage 1 silently disables that check,
+        # which is exactly what happened before `record_url` existed to receive it.
+        readonly = {
+            'source_url': (
+                'source_url is set once by `cmmanage agent init <slug> --url ...` and '
+                'records where the run began. Overwriting it with a URL found later '
+                'disables the license gate\'s preprint/published check, which compares '
+                'against it. Record the data repository landing page as `record_url`, '
+                'and the direct download URL in downloads/download_recipe.md.'
+            ),
+        }
         scalars = {
-            'source_url': str,
+            'record_url': str,
             'dataset_name': str,
             'script_path': str,
             'smoke_results_dir': str,
@@ -2072,6 +2094,10 @@ class CLI(click.RichGroup):
             'input_rows': int,
             'max_drop_rate': float,
         }
+
+        if key in readonly:
+            click.secho(f'❌ {readonly[key]}', fg='red')
+            sys.exit(1)
 
         if key in structured:
             try:

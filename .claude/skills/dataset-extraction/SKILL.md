@@ -71,19 +71,26 @@ Each stage hands its conclusions to the next through the manifest:
 cmmanage agent set <slug> <key> <value>
 ```
 
-Scalar keys: `dataset_name`, `script_path`, `smoke_results_dir`, `results_dir`,
-`input_rows`, `max_drop_rate`, `drop_rate_reason`.
+Scalar keys: `record_url`, `dataset_name`, `script_path`, `smoke_results_dir`,
+`results_dir`, `input_rows`, `max_drop_rate`, `drop_rate_reason`.
 JSON-object keys: `metadata_draft`, `license`.
 
 The gates read the manifest. A stage that does not record its findings will fail its
 own gate.
 
-**`source_url` is set once by `init` and should not be overwritten.** It records where
-the run *started* — the publication — and the license gate compares its host against
-the host the license was established on, to catch a preprint and its published version
-carrying different licenses. Overwriting it with the direct download URL you discover
-in stage 1 makes both hosts the same and silently disables that check. The download URL
-belongs in `download_recipe.md` and in the script, not here.
+**Three URLs, three homes.** They are not interchangeable, and putting one where
+another belongs breaks a check silently:
+
+| URL | Where it goes |
+|---|---|
+| The publication you started from | `source_url` — written by `init --url`, **not settable**, `agent set` refuses it |
+| The data repository landing page (the Zenodo/Figshare record) | `record_url` — record it in stage 1 |
+| The direct download link for each file | `downloads/download_recipe.md`, and the script's `load_dataset` |
+
+`source_url` is the fixed point the run is judged against, which is why nothing may
+overwrite it. `record_url` is what the license gate compares its evidence against:
+establishing a license on one host while downloading files from another is the mistake
+worth catching, and a paper on a publisher with its data on Zenodo is not that mistake.
 
 ---
 
@@ -252,9 +259,14 @@ special headers or SSL settings; approximate size.
 ### Gate
 
 ```bash
+cmmanage agent set <slug> record_url '<repository record landing page>'
 cmmanage agent set <slug> input_rows <n>      # rows in the raw source, for the drop check
 cmmanage agent gate prepare <slug>
 ```
+
+`record_url` is the record's landing page — `https://zenodo.org/records/14392754`, not
+the `?download=1` link and not the article. Stage 3 compares the license evidence
+against it.
 
 Checks: data files exist and are non-empty; none is a saved HTML page; the recipe
 exists and records a URL. Warns when no README was captured.
