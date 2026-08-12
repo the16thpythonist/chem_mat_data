@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - **`cmmanage agent tools` checks and installs the external page readers.** The prepare
-  stage depends on `defuddle` and `crwl`, neither of which is a Python dependency, so
+  stage depends on `crwl` and `defuddle`, neither of which is a Python dependency, so
   nothing about installing this project brings them along. The command reports both by
   default and installs the missing ones with `--install`. It reports a `crwl` whose
   Chromium was never downloaded as a *missing browser* rather than as a missing `crwl`,
@@ -41,16 +41,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`Executable doesn't exist at .../chromium-*`) does not name the command that fixes
   it.
 
-- **The page-reader guidance is corrected: `defuddle` and `crwl` are not
-  interchangeable.** The skill previously presented `crwl` as a fallback for a broken
-  `defuddle`, and `WebFetch` as a third chance after both. Measured against a ChemRxiv
-  article page, `defuddle` returns 403 and so does `WebFetch` — they are the same class
-  of plain-HTTP client and fail on the same hosts — while `crwl`, which drives a real
-  Chromium, returns the full article. So `crwl` is the tool for a *different class of
-  page*, not a backup, and on a bot-checking host it is the only one of the three that
-  works. `references/data-sources.md` no longer suggests `defuddle` for ChemRxiv, and
-  `references/troubleshooting.md` gains the "403 from defuddle but the page loads in a
-  browser" case.
+- **`crwl` is now the default page reader, with `defuddle` and `WebFetch` as
+  fallbacks.** The skill previously led with `defuddle` and reached for `crwl` only
+  after a failure. Measured against a ChemRxiv article page, `defuddle` returns 403 and
+  so does `WebFetch` — they are the same class of plain-HTTP client and fail on the same
+  hosts — while `crwl`, which drives a real Chromium, returns the full article. On an
+  ordinary Zenodo record all three work.
+
+  So the old ordering was wrong in the only place it mattered: it spent a 403, a
+  diagnosis and a retry on exactly the publisher pages the prepare stage most needs to
+  read. `crwl` costs about three seconds more per page (≈4s against ≈1s) and reads
+  everything, which is the cheaper trade in a pipeline where a failed fetch costs a
+  whole retry cycle. `references/data-sources.md` now sends ChemRxiv straight to `crwl`,
+  and `references/troubleshooting.md` gains the "403 from defuddle but the page loads in
+  a browser" case, which is now a sign of having started from the fallback.
 
   The install instructions are corrected with it: the browser step is `crawl4ai-setup`,
   which targets the same Playwright installation crawl4ai itself uses, rather than a
@@ -63,10 +67,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `supplementaryFiles` endpoint returns 200 with a 2.1 MB ZIP, for the same open-access
   paper.
 
-- 22 tests covering the tool checks, the browser detection across platforms, and the
+- 23 tests covering the tool checks, the browser detection across platforms, and the
   install paths — including that a present-but-browserless `crwl` triggers a browser
-  download rather than a redundant crawl4ai reinstall, and that the browser is never
-  downloaded twice in one run.
+  download rather than a redundant crawl4ai reinstall, that the browser is never
+  downloaded twice in one run, and that the reader order stays crwl-first so a change to
+  the documented default has to be deliberate.
 
 - **The license gate now checks provenance, not just an identifier.** A permissive
   license on a publication says nothing about a database the publication merely

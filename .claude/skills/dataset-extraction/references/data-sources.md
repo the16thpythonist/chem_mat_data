@@ -152,11 +152,11 @@ https://chemrxiv.org/engage/chemrxiv/doi/full/<doi>
 https://chemrxiv.org/engage/chemrxiv/doi/suppl/<doi>/suppl_file/<filename>
 ```
 
-Get the DOI by rendering the article page with **`crwl`**. It is the only reader that
-works here: ChemRxiv 403s every non-browser client, `defuddle` and `WebFetch` included,
-so the `defuddle`-first default does not apply on this host. Crossref, DataCite and
-Europe PMC search all fail to resolve the opaque article id; an **OpenAlex** search
-filtered to the ChemRxiv source does work — the source id is `S4393918830`:
+Get the DOI by rendering the article page with `crwl`, the default reader. Do not fall
+back to `defuddle` or `WebFetch` here — ChemRxiv 403s every non-browser client, so this
+is the host that the crwl-first default exists for. Crossref, DataCite and Europe PMC
+search all fail to resolve the opaque article id; an **OpenAlex** search filtered to the
+ChemRxiv source does work — the source id is `S4393918830`:
 
 ```bash
 curl -s "https://api.openalex.org/works?filter=primary_location.source.id:S4393918830&search=<title>"
