@@ -118,15 +118,33 @@ scripted browser is not a route the script can use.
 **All three page readers failing at once**
 
 `defuddle: command not found`, `crwl` dying with `Executable doesn't exist at
-.../chromium-*`, and `WebFetch` returning 403 is a real combination, not bad luck:
+.../chromium-*`, and `WebFetch` returning 403 is a real combination, not bad luck. One
+command diagnoses and fixes it:
 
 ```bash
-npm install -g defuddle          # defuddle
-uv tool install crawl4ai         # crwl
-playwright install chromium      # crwl's browser - a separate step
+cmmanage agent tools --install
 ```
 
-Check `command -v` before assuming a tool is there.
+It reports each reader separately and distinguishes a missing `crwl` from a `crwl`
+whose browser was never downloaded — the second is by far the more common and its own
+error message does not say which command fixes it.
+
+If `defuddle` was working yesterday and is `command not found` today, check whether the
+active Node version changed: `npm install -g` installs into the *current* nvm Node, so
+`nvm use` of another version hides it. Reinstall, or point a shim at an absolute path.
+
+**`defuddle` returns 403 but the page loads in a browser**
+
+Expected on a bot-checking host — ChemRxiv and most publishers. `defuddle` and
+`WebFetch` are both plain HTTP clients and fail together. Use `crwl`, which drives a
+real Chromium and gets through:
+
+```bash
+crwl '<url>' -o markdown-fit
+```
+
+This is a property of the host, not a broken install. Do not retry `defuddle` with
+different flags.
 
 **Excel file parses into nonsense**
 
