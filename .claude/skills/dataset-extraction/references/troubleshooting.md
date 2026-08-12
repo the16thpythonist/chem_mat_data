@@ -150,6 +150,35 @@ crwl '<url>' -o markdown-fit
 back badly rendered and a cheap second opinion helps. On a publisher host, go straight
 to `crwl`.
 
+**The article seems to have no Data Availability section**
+
+Suspect your reader before you believe the paper. A partial capture — the browser
+snapshotting before the page finished rendering — exits cleanly, returns a plausible
+document, and marks nothing where the missing part should be. Observed once: 83.6 KB of
+a Springer article ending mid-document at "Case studies".
+
+Check by structure, not by length. An article that never reaches References or the back
+matter did not finish loading:
+
+```bash
+tail -c 400 page.md
+grep -ciE 'references|bibliography' page.md
+```
+
+If it is truncated, re-read waiting for the network to settle:
+
+```bash
+crwl '<url>' -o markdown -c "wait_until=networkidle,page_timeout=90000,delay_before_return_html=2"
+```
+
+This is *not* caused by `markdown-fit` filtering content out — three consecutive runs of
+the article above returned byte-identical output containing every section, so keep
+`markdown-fit` as the default and use the above as recovery.
+
+Only after a complete capture still shows nothing should you treat the absence as real,
+and then look in the Methods, the Supporting Information list, and the acknowledgements
+before concluding the paper releases no data.
+
 **Excel file parses into nonsense**
 
 SI spreadsheets often carry title rows and notes above the table, and multiple sheets.

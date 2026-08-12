@@ -194,6 +194,43 @@ price of never having to diagnose a 403 — pay it by default.
 > so `defuddle` vanishes after an `nvm use`. If it disappears, that is why — reinstall,
 > or shim it to an absolute path.
 
+### Check the page you got is the whole page
+
+A reader can return a partial capture and tell you nothing about it — the browser
+snapshots the page before it has finished rendering, and you get a clean exit, a
+plausible document, and no marker where the rest should be. This has happened once in
+testing: a Springer article came back at 83.6 KB ending mid-document at "Case studies",
+with no Data Availability section. The run only survived because a grep came back empty
+and prompted a second look.
+
+**The danger is not that you notice nothing is there. It is that you conclude the paper
+does not say it.** "This article has no data availability statement" and "my reader
+stopped early" produce the same evidence.
+
+So before drawing any conclusion from an absence, confirm the document is complete —
+**by structure, not by size**. 83.6 KB is not obviously short. What is obvious is a
+journal article whose text ends without ever reaching its back matter:
+
+```bash
+crwl '<url>' -o markdown-fit > page.md
+tail -c 400 page.md                       # does it end at the end, or mid-sentence?
+grep -ciE 'references|bibliography' page.md
+grep -ciE 'data availab|availability of data|supplementary' page.md
+```
+
+An article with no References section did not finish loading. Re-read it before
+believing anything about what it omits:
+
+```bash
+crwl '<url>' -o markdown -c "wait_until=networkidle,page_timeout=90000,delay_before_return_html=2"
+```
+
+That waits for the network to settle rather than snapshotting early, and returns raw
+markdown rather than the filtered view. Use it as the recovery, not as the default:
+`markdown-fit` is complete and about 30% smaller on a normal page, and its filtering was
+*not* the cause of the truncation above — three consecutive runs of that same article
+returned byte-identical output containing every section.
+
 For downloads that 403, retry once with `curl -L -A 'Mozilla/5.0'`. **Publisher sites
 are often unreachable by any scripted client** — a publisher SI URL returns 403 to
 `curl` with any headers even when the article is fully open access. Before concluding a
