@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **The `.mpack` and the `.csv` of a run were a full permutation of each other.** Graphs
+  are collected off the multiprocessing output queue in *completion* order, which is
+  arbitrary across workers, while `save_csv` writes the dataset in *source* order — and
+  the worker carried no index with which to reconcile them. Measured on a real dataset:
+  5,432 graphs, 5,432 CSV rows, **5,432 of 5,432 rows mismatched positionally**, with
+  identical contents. Anyone joining the two artifacts by row index got a different
+  compound in every row, and nothing detected it because both files existed and both had
+  the right length. The worker now carries the source index and the graphs are sorted back
+  into dataset order before saving.
+
+  A second bug in the same region: `save_csv` ran *before* the `__TESTING__` truncation,
+  so every smoke run wrote a full-length CSV beside a 50-graph message pack — two
+  artifacts of one run disagreeing about the size of the dataset, which also defeats any
+  check that compares them. The CSV is now written after the truncation.
+
+  Also sets `allow_unicode=True` on the metadata dump, so a target description carrying a
+  degree sign is written as `°C` rather than the escape `\xB0C`.
+
+  Regenerating a dataset now changes its row order and therefore its bytes. Nothing in
+  this package consumes graphs by positional index against the CSV, but a downstream
+  consumer holding an index-based split against a previously downloaded file would be
+  affected.
+
 - **`node_atoms` recorded the encoder's view of an element rather than the element.** The
   field exists so that a graph says what it is made of — the comment above it puts it as
   letting "a human reconstruct the molecule from the graph structure". It was built as

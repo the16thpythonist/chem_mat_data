@@ -164,7 +164,12 @@ class ProcessingWorker(multiprocessing.Process):
         the process will put a "None" value into the output queue instead of the graph object.
         The important thing is that for every input element there will be exactly one output.
         """
-        for data in iter(self.input_queue.get, None):
+        # Each item carries the index of the element in the source dataset alongside the
+        # data itself. The index is not used for processing - it exists so the main
+        # process can put the results back into source order, since graphs come off the
+        # output queue in completion order and would otherwise be an arbitrary
+        # permutation of the CSV written from the same dataset.
+        for index, data in iter(self.input_queue.get, None):
             try:
                 # 10.12.24 - If we want to support the processing of xyz file based datasets as well we need
                 # to not only support the conversion based on a smiles string representation but also the
@@ -193,7 +198,7 @@ class ProcessingWorker(multiprocessing.Process):
                 graph = None
 
             graph_encoded = msgpack.packb(graph, default=default)
-            self.output_queue.put(graph_encoded)
+            self.output_queue.put((index, graph_encoded))
 
 
 @experiment.hook('add_graph_metadata', default=True, replace=False)
@@ -320,12 +325,6 @@ def experiment(e: Experiment):
         num_elements = len(dataset)
         e.log(f'loaded dataset with {num_elements} elements')
 
-        # This following hook will save the dataset as a csv file to the experiment folder.
-        e.apply_hook(
-            'save_csv',
-            dataset=dataset,
-        )
-
         # when starting the experiment in testing mode we want to limit the number of elements in
         # the dataset to only a few examples so that the experiment overall finishes really quickly
         # and so that all the code in the experiment (from start to finish) can be tested quickly
@@ -336,6 +335,15 @@ def experiment(e: Experiment):
             e.log(' * limiting to only 50 elements')
             num_elements = min(num_elements, 50)
             dataset = dict(list(dataset.items())[:num_elements])
+
+        # The CSV is written *after* the testing truncation, not before it. Written
+        # before, a smoke run produced a full-length CSV next to a 50-graph message
+        # pack - two artifacts of the same run disagreeing about how large the dataset
+        # is, which also defeats any check that compares them.
+        e.apply_hook(
+            'save_csv',
+            dataset=dataset,
+        )
 
         e.log('processing dataset...')
         indices = list(dataset.keys())
@@ -357,15 +365,15 @@ def experiment(e: Experiment):
             while not input_queue.full() and len(indices) != 0:
                 index = indices.pop()
                 data = dataset[index]
-                input_queue.put(data)
+                input_queue.put((index, data))
 
             # Then we also want to clear all the contents of output queue and transfer them to the
             # local graph list
             while not output_queue.empty():
-                graph_encoded = output_queue.get()
+                index, graph_encoded = output_queue.get()
                 graph = msgpack.unpackb(graph_encoded, ext_hook=ext_hook)
                 if graph:
-                    graphs.append(graph)
+                    graphs.append((index, graph))
 
                 count += 1
 
@@ -388,6 +396,15 @@ def experiment(e: Experiment):
         end_time = time.time()
         duration = end_time - start_time
         e.log(f'finished processing dataset after {duration / 3600:.2f}h')
+
+        # Graphs arrive in completion order, which is arbitrary across worker
+        # processes. Sorting them back into the order of the source dataset is what
+        # makes row i of the CSV and graph i of the message pack the same compound -
+        # without it the two artifacts of the same run are a full permutation of each
+        # other, and anything that joins them by position silently mismatches
+        # everything.
+        graphs.sort(key=lambda pair: pair[0])
+        graphs = [graph for _, graph in graphs]
 
     finally:
         # We need to stop the subprocesses here because if we don't do that then the main process won't be
@@ -455,7 +472,10 @@ def experiment(e: Experiment):
     # Finally we save the metadata in yml format to the experiment archive folder.
     metadata_path = os.path.join(e.path, 'metadata.yml')
     with open(metadata_path, 'w') as metadata_file:
-        yaml.dump(metadata, metadata_file)
+        # allow_unicode, or a target description carrying a degree sign is written as
+        # the escape "\xB0C". It round-trips correctly, but this file is meant to be
+        # read by people.
+        yaml.dump(metadata, metadata_file, allow_unicode=True)
 
     e.log(f'saved metadata @ {metadata_path}')
 
