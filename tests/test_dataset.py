@@ -815,29 +815,38 @@ class TestShuffleDataset:
                 assert props.tolist() == original_map[smiles]
 
     def test_no_seed_gives_random_order(self):
-        """Test that without seed, multiple iterations give different orders."""
+        """
+        Without a seed, shuffling must not always produce the same order.
+
+        Two shuffles of a small dataset genuinely coincide sometimes, so comparing one
+        pair and asserting they differ fails on correct code - measured at roughly one
+        run in five here. The property being tested is that the order is *not fixed*,
+        which needs more than one sample: several shuffles are taken and the test asks
+        whether they are all identical. For that to fail spuriously, every attempt would
+        have to collide, which is vanishingly unlikely while a genuinely deterministic
+        shuffle still fails every time.
+        """
+        attempts = 8
+
         with tempfile.TemporaryDirectory() as temp_path:
             base_dataset = SmilesDataset(
                 dataset='_test', folder_path=temp_path, use_cache=True
             )
 
-            # First shuffle without seed
-            shuffled1 = ShuffleDataset(dataset=base_dataset, buffer_size=10)
-            order1 = [smiles for smiles, _ in shuffled1]
+            orders = [
+                [smiles for smiles, _ in ShuffleDataset(dataset=base_dataset, buffer_size=10)]
+                for _ in range(attempts)
+            ]
 
-            # Second shuffle without seed
-            shuffled2 = ShuffleDataset(dataset=base_dataset, buffer_size=10)
-            order2 = [smiles for smiles, _ in shuffled2]
+            # A single-element (or empty) dataset has only one possible order, so there
+            # is nothing to assert about randomness.
+            if len(orders[0]) < 2:
+                pytest.skip('dataset too small for order to vary')
 
-            # With different random states, likely to be different
-            # (though not guaranteed for very small datasets)
-            if len(order1) > 3:
-                # At least some differences expected
-                differences = sum(
-                    1 for i in range(len(order1)) if order1[i] != order2[i]
-                )
-                # Very unlikely to be identical for 4+ items without seed
-                assert differences > 0 or len(order1) <= 3
+            assert any(order != orders[0] for order in orders[1:]), (
+                f'all {attempts} shuffles produced an identical order - the shuffle '
+                'appears to be deterministic without a seed'
+            )
 
 
 class TestEdgeCases:

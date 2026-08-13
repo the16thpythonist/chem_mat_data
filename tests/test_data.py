@@ -52,11 +52,16 @@ def test_save_and_load_graphs_basically_works():
 
 def test_process_test_dataset():
     """
-    This is less of a unittest and more of a utility function.
+    Process every SMILES in the clintox asset and round-trip the graphs through msgpack.
 
-    This function will load the _test.csv file from the assets folder and process all the
-    SMILES strings contained in it into graph representations. It will then save these graphs
-    as a message pack file into the same folder.
+    This doubles as the generator for the ``clintox.mpack`` fixture, but it writes into
+    ``tests/artifacts/`` rather than over the committed asset. Writing to ``assets/``
+    meant that merely running the test suite rewrote a tracked 20 MB binary, so every
+    contributor ended up with a dirty working tree and a `git add -A` away from
+    committing it - which is exactly how a regenerated fixture gets into a commit that
+    has nothing to do with it.
+
+    To refresh the committed fixture deliberately, copy the artifact over it.
     """
     name = 'clintox'
     source_path = os.path.join(ASSETS_PATH, f'{name}.csv')
@@ -73,7 +78,8 @@ def test_process_test_dataset():
         except Exception as exc:
             print(exc)
 
-    dst_path = os.path.join(ASSETS_PATH, f'{name}.mpack')
+    os.makedirs(ARTIFACTS_PATH, exist_ok=True)
+    dst_path = os.path.join(ARTIFACTS_PATH, f'{name}.mpack')
     save_graphs(graphs, dst_path)
     assert os.path.exists(dst_path)
 

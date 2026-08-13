@@ -48,5 +48,11 @@ adrs/*
 *.data
 *.backup
 
+# Test fixtures are committed deliberately and must survive the blanket data-file
+# ignores above. Without this, an asset added by someone who already had it locally
+# is invisible to git, the suite passes on their machine, and fails on every clean
+# clone - which is what happened to tests/assets/hopv15_example.data.
+!tests/assets/**
+
 **/results/*
 **/lightning_logs/*
