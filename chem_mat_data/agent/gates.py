@@ -709,6 +709,28 @@ def check_experiment_record(
                 f'script is {expected!r} - this folder belongs to a different run',
             )
 
+        ## -- and was it this version of it? --
+        # `experiment_code.py` is a byte-exact copy of the script as it was when the run
+        # started, written by the framework. Comparing it against the file on disk is the
+        # only way to notice that the script was edited afterwards - in which case the
+        # results describe code that no longer exists, and every other check in this
+        # module is validating a claim about the wrong thing.
+        archived = Path(results_dir) / 'experiment_code.py'
+        current = Path(PROJECT_PATH) / script_path
+        if archived.is_file() and current.is_file():
+            try:
+                same = archived.read_bytes() == current.read_bytes()
+            except OSError:
+                same = True
+            if not same:
+                report.add(
+                    ERROR,
+                    f'{prefix}{script_path} has changed since these results were '
+                    'produced - experiment_code.py in the results folder is a copy of '
+                    'the script that actually ran, and it no longer matches. Re-run the '
+                    'script, or you are describing output that this code did not create.',
+                )
+
 
 def _classify_override(override: dict) -> dict:
     """

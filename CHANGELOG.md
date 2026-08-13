@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.10.1] - Unreleased
 
+### Added
+
+- **The skill's documentation is now tested.** It is instructions an agent follows
+  literally, so prose describing behaviour that does not exist is a defect with the
+  authority of code and none of the verification — six such defects shipped during
+  development, two of them introduced on the same day the others were being fixed. A new
+  `tests/test_skill_documentation.py` harvests the documented JSON payloads and feeds
+  each to the gate it is meant for, resolves every documented `cmmanage agent` invocation
+  and flag against the real Click command tree, and pins the specific claims that have
+  been wrong before. It guards against passing vacuously: if the harvester stops matching
+  the documentation, that is itself a failure. Verified by reintroducing the original
+  defect and confirming the suite goes red. It found one real gap on its first run —
+  `agent list` existed and appeared nowhere in the skill.
+
+- **`references/reviewing.md`, the stage-6 checklist.** Across four validation runs every
+  scientific error was caught by a fresh reviewing agent and none by a gate, because a
+  gate compares things the agent wrote against other things the same agent wrote — an
+  agent that is confidently wrong is perfectly self-consistent. Stage 6 previously said
+  "independently sanity-check the output", which is a disposition rather than a
+  procedure. The checklist is eight concrete items, each one something that actually went
+  wrong: bonds that do not fit their geometry, a unit that cannot hold its own values,
+  structures disagreeing with the published ones, artifacts in different row orders, a
+  fabricated paper title. It also records the design rule for anyone proposing a new
+  gate — that a check is only worth building if it compares against something the agent
+  did not write.
+
+- **The verification gate reads `experiment_code.py`.** The framework archives a
+  byte-exact copy of the script as it was when the run started, and nothing read it.
+  Comparing it against the file on disk catches a script edited after its results were
+  produced, in which case every other check is validating a claim about code that no
+  longer exists. Absent copies are tolerated, so older results still pass. 3 tests added.
+
 ### Changed
 
 - **The licence stage runs first, before anything is downloaded.** It used to run third,

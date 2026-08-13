@@ -63,7 +63,15 @@ cmmanage agent init <slug> --url "<publication url or title>"
 `<slug>` is a short identifier, normally the eventual dataset name. This creates
 `.dataset_work/<slug>/` with a `manifest.yml` and an empty `downloads/`.
 
-**Resuming.** State survives between sessions. If a slug already exists:
+**Resuming.** State survives between sessions. To find a run again when you do not
+remember its slug — which is the usual situation days later:
+
+```bash
+cmmanage agent list
+```
+
+That lists every run under `.dataset_work/`, with runs waiting on a human first, then
+blocked ones, then the rest. Then, for one run:
 
 ```bash
 cmmanage agent status <slug>
@@ -667,12 +675,19 @@ loss, do not raise it — escalate.
 **Run this as a fresh subagent too**, for the same reason as the license stage: the
 agent that wrote the script is the worst-placed judge of whether it worked.
 
-Brief the subagent with the slug, the results directory and the manifest, and have it
-run `cmmanage agent gate verification <slug>` and independently sanity-check the
-output — that the compound count is plausible against the paper's stated dataset size,
-that the target values are in the range the paper reports, that the units in
-`metadata.yml` match the source, and that a few SMILES from the raw file actually
-appear in the processed CSV. Have it report findings, not reassurance.
+**Give it `references/reviewing.md`.** That file is the checklist, and it is not generic
+advice: every item on it is something that actually went wrong in a real run and would
+have shipped if nobody had looked — bonds that do not fit their geometry, a unit that
+cannot hold its own values, structures that disagree with the published ones, two
+artifacts in different row orders, a fabricated paper title.
+
+Brief the subagent with the slug, the results directory, the manifest and that file. Tell
+it to work the checklist, to read the run's `findings.md` first — the agent's own account
+of what it was unsure about is the best map of where to look — and to report findings
+rather than reassurance.
+
+Do not paraphrase the checklist into the briefing. Point at the file, so that when a new
+failure mode is found it is added in one place and every future run gets it.
 
 The gate itself checks: every earlier stage passed; the results verify; **what landed
 in `metadata.yml` matches what the metadata stage approved** — `verbose`, `description`,
@@ -719,3 +734,5 @@ Read on demand, not up front:
 - `references/license.md` — the redistribution policy and how to research a license.
 - `references/data-sources.md` — direct-download URL patterns per host.
 - `references/troubleshooting.md` — common failures and fixes.
+- `references/reviewing.md` — the stage-6 checklist, and why the gates cannot replace it.
+  Hand this to the verification subagent rather than summarising it.

@@ -187,3 +187,68 @@ def test_the_label_prefixes_messages(tmp_path):
     report = run(write_meta(tmp_path / 'debug', status='failed'), label='smoke run')
 
     assert all(i.message.startswith('smoke run: ') for i in report.errors)
+
+
+# -- the script identity check: an independent witness the agent cannot forge --
+
+def write_script(directory, body: str = 'print("hello")\n'):
+    """Write a script and the framework's archived copy of it."""
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / 'experiment_code.py').write_text(body)
+    return body
+
+
+def test_an_edited_script_is_caught(tmp_path, monkeypatch):
+    """
+    `experiment_code.py` is written by the framework, so it can contradict the agent.
+
+    If the script is edited after the run, the results describe code that no longer
+    exists - and every other check becomes a claim about the wrong thing.
+    """
+    import chem_mat_data.agent.gates as gates_module
+
+    results = tmp_path / 'debug'
+    write_meta(results, name='create_graph_datasets__demo')
+    write_script(results, 'print("what actually ran")\n')
+
+    scripts = tmp_path / 'chem_mat_data' / 'scripts'
+    scripts.mkdir(parents=True)
+    (scripts / 'create_graph_datasets__demo.py').write_text('print("edited afterwards")\n')
+    monkeypatch.setattr(gates_module, 'PROJECT_PATH', str(tmp_path))
+
+    report = run(results, script_path='chem_mat_data/scripts/create_graph_datasets__demo.py')
+
+    assert not report.ok
+    assert any('has changed since these results' in i.message for i in report.errors)
+
+
+def test_an_unchanged_script_passes(tmp_path, monkeypatch):
+    import chem_mat_data.agent.gates as gates_module
+
+    results = tmp_path / 'debug'
+    write_meta(results, name='create_graph_datasets__demo')
+    body = write_script(results, 'print("the real script")\n')
+
+    scripts = tmp_path / 'chem_mat_data' / 'scripts'
+    scripts.mkdir(parents=True)
+    (scripts / 'create_graph_datasets__demo.py').write_text(body)
+    monkeypatch.setattr(gates_module, 'PROJECT_PATH', str(tmp_path))
+
+    report = run(results, script_path='chem_mat_data/scripts/create_graph_datasets__demo.py')
+
+    assert report.ok, [i.message for i in report.errors]
+
+
+def test_a_missing_archived_copy_is_not_an_error(tmp_path, monkeypatch):
+    """Results predating the archived copy are legitimate; absence must not block."""
+    import chem_mat_data.agent.gates as gates_module
+
+    results = tmp_path / 'debug'
+    write_meta(results, name='create_graph_datasets__demo')
+
+    scripts = tmp_path / 'chem_mat_data' / 'scripts'
+    scripts.mkdir(parents=True)
+    (scripts / 'create_graph_datasets__demo.py').write_text('print("x")\n')
+    monkeypatch.setattr(gates_module, 'PROJECT_PATH', str(tmp_path))
+
+    assert run(results, script_path='chem_mat_data/scripts/create_graph_datasets__demo.py').ok
