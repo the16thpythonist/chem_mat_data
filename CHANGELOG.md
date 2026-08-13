@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.10.1] - Unreleased
 
+### Fixed
+
+- **`node_atoms` recorded the encoder's view of an element rather than the element.** The
+  field exists so that a graph says what it is made of — the comment above it puts it as
+  letting "a human reconstruct the molecule from the graph structure". It was built as
+  `symbol_encoder.encode_string(atom.GetSymbol())`, passing the true symbol through the
+  one-hot encoder and storing what came back, which is the literal string `unknown` for
+  anything outside its 19-element vocabulary (C, O, N, S, P, F, Cl, Br, I, Si, B, Na, Mg,
+  Ca, Fe, Al, Cu, Zn, K). The real symbol was available on the same line and discarded.
+
+  Everything else became one token: hydrogen, which is not in the list at all, and so
+  selenium, germanium, tin, tellurium, arsenic, antimony, lead, lithium, caesium and the
+  transition metals. A phosphorus-31 NMR dataset built recently came out with 49% of its
+  atoms labelled `unknown` — every explicit hydrogen, and every selenium in it, despite
+  phosphine selenides being a standard compound class for that measurement. A selenium and
+  a hydrogen were the same value.
+
+  `node_atoms` now stores `atom.GetSymbol()`. The one-hot block in `node_attributes` is
+  untouched, so models see exactly what they saw before and the encoder's bucketing is
+  still recoverable from there; this field is simply the ground truth beside it. This also
+  makes the two processing paths agree — `tmc_processing` has always written the real
+  symbol, and its tests assert `node_atoms[0] == 'Ru'`, an element the encoder does not
+  know.
+
+  Existing published datasets keep the old values until they are regenerated. 3 tests added.
+
 ### Changed
 
 - **`release.sh` reduced to build & publish.** The release script no longer bumps the version,

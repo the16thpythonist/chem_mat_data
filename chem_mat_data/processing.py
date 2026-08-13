@@ -1028,12 +1028,20 @@ class MoleculeProcessing:
 
             node_attributes.append(attributes)
 
-            # "symbol_encoder" is an Encoder specifically designed to encode the atom symbols into a
-            # one-hot encoded vector. It has the additional method "encode_string" which encodes the
-            # symbol into a human readable string.
-            if self.symbol_encoder:
-                atom_symbol = self.symbol_encoder.encode_string(atom.GetSymbol())
-                node_atoms.append(atom_symbol)
+            # The true element symbol, not the encoder's view of it. These two are not the
+            # same thing: the symbol encoder one-hots a fixed list of elements and answers
+            # "unknown" for everything else, which is correct for a fixed-width feature
+            # vector but useless as a record of what the molecule is made of. Writing that
+            # answer here used to erase every element outside the list - hydrogen included,
+            # so a dataset carrying explicit hydrogens lost the identity of half its atoms,
+            # and selenium, tin, arsenic and the transition metals were indistinguishable
+            # from each other and from H. The encoder's bucketing remains available in the
+            # one-hot block of `node_attributes`; this field is the ground truth beside it.
+            #
+            # `tmc_processing` has always written the real symbol here - its tests assert
+            # `node_atoms[0] == 'Ru'`, an element the encoder does not know - so this also
+            # makes the two processing paths agree.
+            node_atoms.append(atom.GetSymbol())
 
         bonds = mol.GetBonds()
         # Next up is the same with the bonds

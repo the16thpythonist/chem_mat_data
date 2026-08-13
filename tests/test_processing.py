@@ -53,6 +53,51 @@ class TestMoleculeProcessing:
         assert len(graph['node_indices']) == len(graph['node_atoms'])
         assert isinstance(graph['node_atoms'][0], str)
 
+    def test_node_atoms_records_elements_the_encoder_does_not_know(self):
+        """
+        ``node_atoms`` must carry the true element symbol, not the encoder's view of it.
+
+        It used to be written as ``symbol_encoder.encode_string(atom.GetSymbol())``, which
+        answers ``'unknown'`` for anything outside the one-hot vocabulary. That silently
+        erased the identity of every hydrogen, selenium, tin, arsenic and transition metal
+        in the collection - a dataset with explicit hydrogens lost half its atoms to a
+        single token, and a phosphine selenide became indistinguishable from a phosphine.
+        """
+        processing = MoleculeProcessing()
+
+        # Triphenylphosphine selenide: Se is not in the symbol encoder's element list, and
+        # phosphine selenides are a standard 31P NMR compound class.
+        graph: tc.GraphDict = processing.process('[Se]=P(c1ccccc1)(c1ccccc1)c1ccccc1')
+        symbols = [str(s) for s in graph['node_atoms']]
+
+        assert 'Se' in symbols, f'selenium was not recorded: {sorted(set(symbols))}'
+        assert 'unknown' not in symbols
+        assert symbols.count('P') == 1
+
+    def test_node_atoms_records_explicit_hydrogens_as_hydrogen(self):
+        """
+        Hydrogen is absent from the encoder vocabulary, so explicit H used to become
+        ``'unknown'`` - which is how a 3D dataset ended up with 49% of its atoms unlabelled.
+        """
+        from rdkit import Chem
+
+        processing = MoleculeProcessing()
+        mol = Chem.AddHs(Chem.MolFromSmiles('CO'))
+
+        graph: tc.GraphDict = processing.process(mol)
+        symbols = [str(s) for s in graph['node_atoms']]
+
+        assert symbols.count('H') == 4, symbols
+        assert 'unknown' not in symbols
+
+    def test_node_atoms_length_still_matches_the_nodes(self):
+        """The field is only useful if it is aligned with the node indices."""
+        processing = MoleculeProcessing()
+
+        for smiles in ('CCO', '[Se]=P(c1ccccc1)(c1ccccc1)c1ccccc1', 'O=[Zn]'):
+            graph: tc.GraphDict = processing.process(smiles)
+            assert len(graph['node_atoms']) == len(graph['node_indices']), smiles
+
     def test_process_includes_edge_bond_types(self):
         """
         When processing a smiles string the resulting graph dict should also contain the "edge_bonds" entry which
