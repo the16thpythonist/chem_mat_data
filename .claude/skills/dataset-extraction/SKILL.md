@@ -1,6 +1,6 @@
 ---
 name: dataset-extraction
-description: Turn a scientific publication into a working ChemMatData processing script, through six gated stages — prepare (locate and download the data), metadata (assemble the descriptive fields), license (check redistribution is permitted), script (write and smoke-test), execute (full run), verification (final independent pass). Each stage ends at a code-enforced gate and blocks to the human when it cannot proceed. Use when asked to add a dataset to ChemMatData, process a paper into a dataset, extract a dataset from a publication, or write a create_graph_datasets script. Input is a publication URL or a concrete paper title.
+description: Turn a scientific publication into a working ChemMatData processing script, through six gated stages — license (locate the data record and establish that redistribution is permitted, before anything is downloaded), prepare (download the raw data), metadata (assemble the descriptive fields), script (write and smoke-test), execute (full run), verification (final independent pass). Each stage ends at a code-enforced gate and blocks to the human when it cannot proceed. Use when asked to add a dataset to ChemMatData, process a paper into a dataset, extract a dataset from a publication, or write a create_graph_datasets script. Input is a publication URL or a concrete paper title.
 ---
 
 # Dataset Extraction
@@ -23,13 +23,24 @@ rather than picking silently. If they wanted a different one, that is a sentence
 now and six stages to redo later.
 
 ```
-prepare       locate + download the raw data        → .dataset_work/<slug>/downloads/
+license       may this be redistributed at all?     → manifest.license   [subagent]
+prepare       download the raw data                 → .dataset_work/<slug>/downloads/
 metadata      assemble the descriptive fields       → manifest.metadata_draft
-license       is redistribution permitted?          → manifest.license   [subagent]
 script        write + smoke-test on 50 elements     → chem_mat_data/scripts/
 execute       full run + drop-rate analysis         → results/<script>/debug/
 verification  final independent pass                → verdict            [subagent]
 ```
+
+**Licence comes first, before anything is downloaded.** It used to run third, so a run
+fetched the data, wrote its metadata and only then discovered the data might not be
+redistributable — once after a 155 MB download of a dataset whose values had been
+digitised out of two commercially sold reference works. The question needs the
+publication and the repository record, not the bytes: locating the record is part of the
+licence stage's own job, and in every run where this mattered the research went to the
+paper, the record, Crossref and the publisher's terms, never to the downloaded file.
+
+It is also the cheapest stage and the one most likely to end the run. That is the
+definition of a step that belongs at the front.
 
 Two rules govern the whole run:
 
@@ -96,6 +107,28 @@ JSON-object keys: `metadata_draft`, `license`.
 
 The gates read the manifest. A stage that does not record its findings will fail its
 own gate.
+
+## Write things down as you learn them
+
+Keep a running record at `.dataset_work/<slug>/findings.md`, and **append to it at the
+end of every stage** — not at the end of the run.
+
+Write down what you tried and what it cost, what you decided and why, what surprised you,
+what the source got wrong, and what you are still unsure of. Anything you would put in a
+final report belongs here when you discover it, while it is still fresh and specific.
+
+This is not bookkeeping. A report that exists only as a message dies with the session:
+across four validation runs of this skill, **three final reports never arrived** — the
+agent stopped, or the message was lost — and had to be reconstructed afterwards by
+reading the generated code. Everything those runs learned about *why* decisions were made
+was gone. The file is the half of the deliverable that survives.
+
+Be concrete. "Downloaded the data" is worthless; "the `.csv` is space-separated
+`write.table` output with an unnamed index column, and one line has a backslash-escaped
+quote from an OCR artefact that breaks the default parser" saves the next person an hour.
+
+The verification gate warns when this file is missing or nearly empty, and stage 6 is run
+with `--strict`, so an empty record blocks the run.
 
 **Three URLs, three homes.** They are not interchangeable, and putting one where
 another belongs breaks a check silently:
@@ -167,11 +200,144 @@ requires a decision or an access right that is theirs.
 
 ---
 
-## Stage 1 — prepare
+## Stage 1 — license
 
-Locate and download the raw data, and write the recipe the script stage will need.
+**This runs before anything is downloaded.** Nothing has been fetched yet, and that is
+deliberate: this is the cheapest stage and the one most likely to end the run, so it goes
+first. Read the publication's data availability section far enough to find *where* the
+data lives — you need the record, not the bytes.
 
-Read the publication and look in "Data Availability", "Data Records", "Data and Code
+Record it, because the gate compares its licence evidence against this host:
+
+```bash
+cmmanage agent set <slug> record_url '<repository record landing page>'
+```
+
+That is the record's landing page — `https://zenodo.org/records/14392754`, not the
+`?download=1` link and not the article.
+
+**Run the licence determination itself as a fresh subagent.** Spawn a general-purpose
+agent whose only job is to determine the licence, giving it the publication URL and the
+repository record. Do not do it yourself.
+
+The reason is bias, not capacity. Even this early you have decided this dataset is worth
+having, which is exactly the state of mind in which an ambiguous licence gets read
+charitably. An agent with no stake reads it as it is. Running it first also means the
+sunk cost is a few minutes of reading rather than a completed download and a written
+metadata draft — in one run this stage ended a 155 MB fetch that had already happened.
+
+Brief the subagent to find: the license on the data repository record (not the
+article's own license — they frequently differ), any LICENSE file *listed* on the record
+or in its source repository (readable without downloading the data), the journal's data
+policy, and any explicit terms-of-use. Tell it to report the license
+identifier, a URL that a human can check, whether redistribution is permitted, and
+what attribution is required — and to report "none found" rather than inferring a
+license from context.
+
+**Also brief it to establish provenance**, because that is the half the gate will not
+let you skip: whether the publication is the original source of the values, or is
+republishing them from some upstream database. A permissive license on a paper says
+nothing about the database it aggregated, and the binding restriction usually lives
+upstream. The subagent must come back with `upstream_database` either named or
+explicitly `null`.
+
+The policy is in `references/license.md`. In short: public domain, CC-BY, MIT/BSD/
+Apache pass. **NonCommercial, ShareAlike, copyleft, and anything not clearly
+identified escalate to the human** — including no license at all, which is the most
+common case and is not the same as permission.
+
+When the publication *is* the original source, `upstream_database` is `null` and that
+is the whole of it:
+
+```bash
+cmmanage agent set <slug> license '{
+  "identifier": "CC-BY-4.0",
+  "evidence_url": "https://zenodo.org/records/...",
+  "redistribution": "allowed",
+  "attribution": "Cite Lopez et al., Sci. Data 3, 160086 (2016).",
+  "upstream_database": null
+}'
+cmmanage agent gate license <slug>
+```
+
+When it is republishing someone else's data, naming the upstream additionally requires
+its terms URL and its license — the gate rejects a named upstream without them. Note
+that this example **escalates rather than passes**, and correctly so: the upstream terms
+are not permissive, which is exactly the situation only a human may resolve. A named
+upstream whose own license is permissive passes without ceremony.
+
+```bash
+cmmanage agent set <slug> license '{
+  "identifier": "CC-BY-4.0",
+  "evidence_url": "https://zenodo.org/records/...",
+  "redistribution": "allowed",
+  "attribution": "Cite ... ; credit the upstream database.",
+  "upstream_database": "US EPA EPI Suite (values from the SRC PHYSPROP database)",
+  "upstream_terms_url": "https://www.epa.gov/...",
+  "upstream_license": "proprietary"
+}'
+```
+
+**`redistribution` and `upstream_license` are matched against fixed vocabularies, not
+read.** Write a verdict, not a sentence — the gate rejects prose in either field,
+because a paragraph explaining that the upstream is CC0 is indistinguishable to it from
+one explaining that the upstream forbids redistribution.
+
+| Field | Allowed values |
+|---|---|
+| `redistribution` | `allowed` / `permitted` / `yes`, or `forbidden` / `no` / `restricted` / `unclear` |
+| `upstream_license` | a license identifier (`CC-BY-4.0`, `MIT`, `CC0-1.0`), or `proprietary`, or `none` |
+
+The reasoning belongs in `attribution`, or in the override reason if it escalates.
+
+`upstream_database` is **not optional** — omitting the key fails the gate even when the
+publication is the original source. Say `null` deliberately rather than leaving it out.
+
+If the gate escalates, **stop and put the decision to the human** — present the license
+found, the evidence URL, what it permits and what it forbids, and let them decide. Use
+whatever channel this run has for reaching them: `AskUserQuestion` in an interactive
+session, or a message back to whoever invoked you when running unattended. If you have
+no channel at all, stop with the blocker recorded rather than deciding yourself.
+
+Record their decision by **adding** `human_override` to what you already established:
+
+```bash
+cmmanage agent set <slug> license '{
+  ...every field from above, unchanged...,
+  "human_override": {"decision": "approved", "reason": "<their reason, verbatim>"}
+}'
+```
+
+`agent set` **replaces the whole license object**, so you must re-send every field. An
+override that arrives alone silently deletes `upstream_database`, `upstream_terms_url`,
+`upstream_license` and `attribution` — the exact evidence that justified escalating.
+Read the current value back and merge rather than retyping from memory. `agent status`
+does **not** print it — read the manifest directly:
+
+```bash
+cat .dataset_work/<slug>/manifest.yml    # the `license:` block holds every recorded field
+```
+
+An override without a reason fails the gate. Never write one on your own judgement —
+it exists to record a human decision, not to unblock yourself. Record the human's words
+verbatim; do not paraphrase them into your own analysis.
+
+If the attribution requirement is non-trivial, fold it into the metadata `sources` and
+re-run the metadata stage.
+
+---
+
+## Stage 2 — prepare
+
+Download the raw data from the record the licence stage cleared, and write the recipe the
+script stage will need.
+
+The record is already in `record_url` and its terms are already settled — that is the
+point of doing licence first. What remains is turning a landing page into actual files.
+If the licence stage recorded only the article and not the data record, go back and fix
+that there rather than rediscovering it here.
+
+Look in "Data Availability", "Data Records", "Data and Code
 Availability", "Supporting Information", "Associated Content", and author notes.
 Follow repository links to their landing pages. `references/data-sources.md` has the
 direct-download URL pattern for each major host — **the landing-page URL is almost
@@ -191,7 +357,9 @@ paywalled, look for a preprint — you only need the Data Availability section.
   sets), not alternate encodings of the same table.
 - **One README** if it documents the schema. The later stages depend on this more than
   on anything else.
-- **A LICENSE file if one exists** — stage 3 needs it.
+- **A LICENSE file if one exists.** The licence stage has already run, but a LICENSE
+  shipped inside the data can contradict the record's stated terms - if it does, that
+  is a reason to re-run stage 1, not to quietly prefer whichever is friendlier.
 - **Skip** standalone PDB/CIF/coordinate-only files unless they are the only format.
 - **Size guard**: over ~2 GB, or hundreds of small files, take the primary data plus
   the README.
@@ -319,7 +487,7 @@ exists and records a URL. Warns when no README was captured.
 
 ---
 
-## Stage 2 — metadata
+## Stage 3 — metadata
 
 One deliberate pass assembling the descriptive metadata, before any code is written.
 Doing this first means the script is written against fields that have already been
@@ -376,116 +544,6 @@ classification; `verbose`, `description`, `tags`, `sources` present;
 `target_descriptions` covers every index from 0 to `target_count - 1` with non-empty
 values. Warns on a short description and on descriptions missing the
 `<column> - <meaning>` form.
-
----
-
-## Stage 3 — license
-
-**Run this as a fresh subagent.** Spawn a general-purpose agent whose only job is to
-determine the license, giving it the publication URL, the repository URL and the
-downloads folder. Do not do it yourself.
-
-The reason is bias, not capacity. By this point you have invested real work in making
-this dataset happen, which is exactly the state of mind in which an ambiguous license
-gets read charitably. An agent with no stake reads it as it is.
-
-Brief the subagent to find: the license on the data repository record (not the
-article's own license — they frequently differ), any LICENSE file in the download, the
-journal's data policy, and any explicit terms-of-use. Tell it to report the license
-identifier, a URL that a human can check, whether redistribution is permitted, and
-what attribution is required — and to report "none found" rather than inferring a
-license from context.
-
-**Also brief it to establish provenance**, because that is the half the gate will not
-let you skip: whether the publication is the original source of the values, or is
-republishing them from some upstream database. A permissive license on a paper says
-nothing about the database it aggregated, and the binding restriction usually lives
-upstream. The subagent must come back with `upstream_database` either named or
-explicitly `null`.
-
-The policy is in `references/license.md`. In short: public domain, CC-BY, MIT/BSD/
-Apache pass. **NonCommercial, ShareAlike, copyleft, and anything not clearly
-identified escalate to the human** — including no license at all, which is the most
-common case and is not the same as permission.
-
-When the publication *is* the original source, `upstream_database` is `null` and that
-is the whole of it:
-
-```bash
-cmmanage agent set <slug> license '{
-  "identifier": "CC-BY-4.0",
-  "evidence_url": "https://zenodo.org/records/...",
-  "redistribution": "allowed",
-  "attribution": "Cite Lopez et al., Sci. Data 3, 160086 (2016).",
-  "upstream_database": null
-}'
-cmmanage agent gate license <slug>
-```
-
-When it is republishing someone else's data, naming the upstream additionally requires
-its terms URL and its license — the gate rejects a named upstream without them. Note
-that this example **escalates rather than passes**, and correctly so: the upstream terms
-are not permissive, which is exactly the situation only a human may resolve. A named
-upstream whose own license is permissive passes without ceremony.
-
-```bash
-cmmanage agent set <slug> license '{
-  "identifier": "CC-BY-4.0",
-  "evidence_url": "https://zenodo.org/records/...",
-  "redistribution": "allowed",
-  "attribution": "Cite ... ; credit the upstream database.",
-  "upstream_database": "US EPA EPI Suite (values from the SRC PHYSPROP database)",
-  "upstream_terms_url": "https://www.epa.gov/...",
-  "upstream_license": "proprietary"
-}'
-```
-
-**`redistribution` and `upstream_license` are matched against fixed vocabularies, not
-read.** Write a verdict, not a sentence — the gate rejects prose in either field,
-because a paragraph explaining that the upstream is CC0 is indistinguishable to it from
-one explaining that the upstream forbids redistribution.
-
-| Field | Allowed values |
-|---|---|
-| `redistribution` | `allowed` / `permitted` / `yes`, or `forbidden` / `no` / `restricted` / `unclear` |
-| `upstream_license` | a license identifier (`CC-BY-4.0`, `MIT`, `CC0-1.0`), or `proprietary`, or `none` |
-
-The reasoning belongs in `attribution`, or in the override reason if it escalates.
-
-`upstream_database` is **not optional** — omitting the key fails the gate even when the
-publication is the original source. Say `null` deliberately rather than leaving it out.
-
-If the gate escalates, **stop and put the decision to the human** — present the license
-found, the evidence URL, what it permits and what it forbids, and let them decide. Use
-whatever channel this run has for reaching them: `AskUserQuestion` in an interactive
-session, or a message back to whoever invoked you when running unattended. If you have
-no channel at all, stop with the blocker recorded rather than deciding yourself.
-
-Record their decision by **adding** `human_override` to what you already established:
-
-```bash
-cmmanage agent set <slug> license '{
-  ...every field from above, unchanged...,
-  "human_override": {"decision": "approved", "reason": "<their reason, verbatim>"}
-}'
-```
-
-`agent set` **replaces the whole license object**, so you must re-send every field. An
-override that arrives alone silently deletes `upstream_database`, `upstream_terms_url`,
-`upstream_license` and `attribution` — the exact evidence that justified escalating.
-Read the current value back and merge rather than retyping from memory. `agent status`
-does **not** print it — read the manifest directly:
-
-```bash
-cat .dataset_work/<slug>/manifest.yml    # the `license:` block holds every recorded field
-```
-
-An override without a reason fails the gate. Never write one on your own judgement —
-it exists to record a human decision, not to unblock yourself. Record the human's words
-verbatim; do not paraphrase them into your own analysis.
-
-If the attribution requirement is non-trivial, fold it into the metadata `sources` and
-re-run the metadata stage.
 
 ---
 

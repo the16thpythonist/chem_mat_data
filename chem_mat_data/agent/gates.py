@@ -1364,6 +1364,27 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
                 'a user passes to load_smiles_dataset',
             )
 
+    ## -- the run has to leave a record of itself --
+    # A final report that exists only as a chat message does not survive a dropped
+    # notification, a crashed session or an agent that simply stops. Three of four
+    # validation runs ended that way and had to be reconstructed from the code. The
+    # findings file is the durable half of the deliverable, so its absence is a finding
+    # in its own right rather than a formatting preference.
+    findings = manifest.findings_path
+    if not findings.is_file():
+        report.add(
+            WARNING,
+            f'no findings.md in {findings.parent} - the run leaves no written record of '
+            'what was learned, so anything not repeated in a final message is lost when '
+            'the session ends',
+        )
+    elif len(findings.read_text(errors='replace').split()) < 50:
+        report.add(
+            WARNING,
+            'findings.md is nearly empty - it should carry what was tried, what was '
+            'decided and what is still uncertain, written as the run went along',
+        )
+
     ## -- the license conclusion must still hold --
     # Re-run the real gate rather than re-implementing a weaker version of it. The
     # previous check asked only whether the top-level identifier was permissive *or*

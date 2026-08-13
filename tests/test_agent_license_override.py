@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from chem_mat_data.agent import manifest as manifest_module
-from chem_mat_data.agent.manifest import PASSED, Manifest
+from chem_mat_data.agent.manifest import STAGES, PASSED, Manifest
 from chem_mat_data.agent.gates import gate_license, gate_verification
 
 
@@ -130,7 +130,7 @@ def build(work_root, license_info, complete=False, tmp_path=None) -> Manifest:
 
     if complete:
         manifest.metadata_draft = valid_draft()
-        for stage in ('prepare', 'metadata', 'license', 'script', 'execute'):
+        for stage in STAGES[: STAGES.index('verification')]:
             manifest.mark(stage, PASSED)
         results = tmp_path / 'results' / 'debug'
         write_results(results)

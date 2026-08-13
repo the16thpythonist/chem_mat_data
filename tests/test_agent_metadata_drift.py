@@ -16,7 +16,7 @@ import yaml
 import pytest
 
 from chem_mat_data.agent import manifest as manifest_module
-from chem_mat_data.agent.manifest import PASSED, Manifest
+from chem_mat_data.agent.manifest import STAGES, PASSED, Manifest
 from chem_mat_data.agent.gates import gate_verification
 
 
@@ -80,7 +80,7 @@ def build(tmp_path, name='demo_ds', draft_overrides=None, **metadata_overrides):
         'attribution': 'cite',
         'upstream_database': None,
     }
-    for stage in ('prepare', 'metadata', 'license', 'script', 'execute'):
+    for stage in STAGES[: STAGES.index('verification')]:
         manifest.mark(stage, PASSED)
     results = tmp_path / 'results' / 'debug'
     write_results(results, name=name, **metadata_overrides)
@@ -170,3 +170,39 @@ def test_no_mpack_does_not_raise(work_root, tmp_path):
 
     assert not report.ok
     assert not any('load_smiles_dataset' in i.message for i in report.errors)
+
+
+# -- the run must leave a written record of itself --
+
+def test_a_missing_findings_file_warns(work_root, tmp_path):
+    """
+    A report that lives only in a chat message dies with the session.
+
+    Three of four validation runs of this skill ended with no report arriving at all,
+    and had to be reconstructed from the generated code afterwards.
+    """
+    report = gate_verification(build(tmp_path))
+
+    assert report.ok
+    assert any('findings.md' in i.message for i in report.warnings)
+
+
+def test_a_substantial_findings_file_satisfies_the_check(work_root, tmp_path):
+    manifest = build(tmp_path)
+    manifest.findings_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest.findings_path.write_text(' '.join(f'word{i}' for i in range(80)))
+
+    report = gate_verification(manifest)
+
+    assert not any('findings.md' in i.message for i in report.warnings)
+
+
+def test_a_nearly_empty_findings_file_still_warns(work_root, tmp_path):
+    """Creating the file to silence the check is not the same as writing it."""
+    manifest = build(tmp_path)
+    manifest.findings_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest.findings_path.write_text('# Findings\n\nnothing yet\n')
+
+    report = gate_verification(manifest)
+
+    assert any('nearly empty' in i.message for i in report.warnings)

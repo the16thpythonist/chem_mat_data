@@ -2387,7 +2387,10 @@ class CLI(click.RichGroup):
         # manifest instead of fixing the run - which would quietly defeat every check
         # that compares the two.
         owning_stage = {
-            'record_url': 'prepare',
+            # The licence stage locates the repository record and rules on it, so a
+            # change of record invalidates the licence conclusion about it, not just
+            # the download that followed.
+            'record_url': 'license',
             'input_rows': 'prepare',
             'metadata_draft': 'metadata',
             'dataset_name': 'metadata',

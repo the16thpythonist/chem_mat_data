@@ -5,6 +5,7 @@ import pytest
 
 from chem_mat_data.agent import manifest as manifest_module
 from chem_mat_data.agent.manifest import (
+    STAGES,
     BLOCKED,
     PASSED,
     PENDING,
@@ -66,7 +67,7 @@ class TestManifest:
     def test_create_starts_every_stage_pending(self, work_root):
         manifest = Manifest.create('demo', source_url='https://example.org')
         assert all(manifest.state(stage).status == PENDING for stage in STAGES)
-        assert manifest.next_stage() == 'prepare'
+        assert manifest.next_stage() == STAGES[0]
         assert not manifest.complete
 
     def test_round_trip_through_disk(self, work_root):
@@ -82,7 +83,9 @@ class TestManifest:
         assert loaded.input_rows == 5000
         assert loaded.metadata_draft == valid_draft()
         assert loaded.state('prepare').status == PASSED
-        assert loaded.next_stage() == 'metadata'
+        # Only `prepare` was marked, so the next stage is the first one still pending -
+        # which is the licence stage, since that now runs before anything is downloaded.
+        assert loaded.next_stage() == STAGES[0]
 
     def test_load_missing_manifest_raises(self, work_root):
         with pytest.raises(FileNotFoundError):
@@ -107,9 +110,10 @@ class TestManifest:
 
         manifest.mark('metadata', PASSED)
 
-        assert manifest.state('prepare').status == PASSED
+        for earlier in STAGES[: STAGES.index('metadata')]:
+            assert manifest.state(earlier).status == PASSED
         assert manifest.state('metadata').status == PASSED
-        for stage in ('license', 'script', 'execute', 'verification'):
+        for stage in STAGES[STAGES.index('metadata') + 1 :]:
             assert manifest.state(stage).status == STALE
             assert 'metadata' in manifest.state(stage).notes
 
@@ -122,17 +126,17 @@ class TestManifest:
         assert manifest.blockers() == {'prepare': 'paywall'}
 
     def test_unmet_prerequisites(self, work_root):
-        manifest = Manifest.create('demo')
-        assert manifest.unmet_prerequisites('prepare') == []
-        assert manifest.unmet_prerequisites('script') == [
-            'prepare',
-            'metadata',
-            'license',
-        ]
+        """Every earlier stage is a prerequisite, whatever the order happens to be."""
+        earlier = list(STAGES[: STAGES.index('script')])
 
-        manifest.mark('prepare', PASSED)
-        manifest.mark('metadata', PASSED)
-        assert manifest.unmet_prerequisites('script') == ['license']
+        manifest = Manifest.create('demo')
+        assert manifest.unmet_prerequisites(STAGES[0]) == []
+        assert manifest.unmet_prerequisites('script') == earlier
+
+        # Satisfy all but the last of them, in order, and only that one remains.
+        for stage in earlier[:-1]:
+            manifest.mark(stage, PASSED)
+        assert manifest.unmet_prerequisites('script') == [earlier[-1]]
 
     def test_unknown_stage_rejected(self, work_root):
         manifest = Manifest.create('demo')
@@ -683,7 +687,7 @@ class TestScriptGate:
     ) -> Manifest:
         manifest = Manifest.create('demo')
         manifest.metadata_draft = valid_draft()
-        for stage in ('prepare', 'metadata', 'license'):
+        for stage in STAGES[: STAGES.index('script')]:
             manifest.mark(stage, PASSED)
 
         script = scripts_dir / 'create_graph_datasets__demo_ds.py'
@@ -772,7 +776,7 @@ class TestExecuteGate:
     ) -> Manifest:
         manifest = Manifest.create('demo')
         manifest.metadata_draft = valid_draft()
-        for stage in ('prepare', 'metadata', 'license', 'script'):
+        for stage in STAGES[: STAGES.index('execute')]:
             manifest.mark(stage, PASSED)
 
         script = scripts_dir / 'create_graph_datasets__demo_ds.py'
@@ -911,7 +915,7 @@ class TestVerificationGate:
             'attribution': 'cite',
             'upstream_database': None,
         }
-        for stage in ('prepare', 'metadata', 'license', 'script', 'execute'):
+        for stage in STAGES[: STAGES.index('verification')]:
             manifest.mark(stage, PASSED)
 
         results = tmp_path / 'results' / 'debug'

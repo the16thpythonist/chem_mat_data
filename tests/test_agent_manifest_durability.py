@@ -145,10 +145,11 @@ def test_no_temporary_files_are_left_behind(work_root):
 @pytest.mark.parametrize(
     'stage,expected',
     [
-        ('prepare', STAGES),
-        ('metadata', STAGES[1:]),
-        ('license', STAGES[2:]),
-        ('execute', STAGES[4:]),
+        (STAGES[0], STAGES),
+        ('prepare', STAGES[STAGES.index('prepare'):]),
+        ('license', STAGES[STAGES.index('license'):]),
+        ('metadata', STAGES[STAGES.index('metadata'):]),
+        ('execute', STAGES[STAGES.index('execute'):]),
     ],
 )
 def test_invalidate_from_marks_the_stage_and_everything_after(

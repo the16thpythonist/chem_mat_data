@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.10.1] - Unreleased
 
+### Changed
+
+- **The licence stage runs first, before anything is downloaded.** It used to run third,
+  so a run fetched the data, wrote its metadata draft and only then discovered the data
+  might not be redistributable — in one validation run that happened after a 155 MB
+  download of a dataset whose values had been digitised out of two commercially sold
+  reference works. The question needs the publication and the repository record, not the
+  bytes: in every run where it mattered the research went to the paper, the record,
+  Crossref and the publisher's terms, and never to the downloaded file. It is also the
+  cheapest stage and the one most likely to end the run.
+
+  Locating the data record moves into that stage with it, so `record_url` is now set
+  there and a change to it invalidates the licence conclusion about that record rather
+  than only the download that followed. Nothing else about the pipeline changes — the
+  stage list is order-driven throughout, so the gates, prerequisites and staleness
+  cascade all followed automatically.
+
+### Added
+
+- **A written record that survives the session.** Runs now keep
+  `.dataset_work/<slug>/findings.md`, appended to at the end of every stage rather than
+  written at the end. Across four validation runs of this skill, three final reports
+  never arrived — the agent stopped, or the message was lost — and what those runs had
+  learned about *why* decisions were made had to be reconstructed by reading the
+  generated code. The verification gate warns when the file is missing or nearly empty,
+  and stage 6 is run with `--strict`, so an unwritten record blocks the run rather than
+  being noticed later. 3 tests added.
+
 ### Fixed
 
 - **`--strict` could never pass a run whose licence a human had approved.** Two correct

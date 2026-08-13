@@ -34,10 +34,20 @@ from chem_mat_data.utils import PROJECT_PATH
 
 #: The pipeline stages, in execution order. A stage may only run once every stage
 #: before it has passed.
+#: The stages in the order they must be completed.
+#:
+#: `license` runs first, before anything is downloaded. It used to run third, which meant
+#: a run fetched the data, wrote its metadata and only then discovered it might not be
+#: redistributable - in one case after a 155 MB download of a dataset whose values had
+#: been digitised out of two commercially sold reference works. The licence question needs
+#: the publication and the repository record, not the bytes: in every run where it
+#: mattered the research went to the paper, the record, Crossref and the publisher's
+#: terms, and never once to the downloaded file. It is also the cheapest stage and the one
+#: most likely to end the run, which is the definition of a step that belongs early.
 STAGES: List[str] = [
+    'license',
     'prepare',
     'metadata',
-    'license',
     'script',
     'execute',
     'verification',
@@ -658,6 +668,19 @@ class Manifest:
     def downloads_dir(self) -> Path:
         """The folder holding the files downloaded by the prepare stage."""
         return work_dir_for(self.slug) / 'downloads'
+
+    @property
+    def findings_path(self) -> Path:
+        """
+        The running record of what the agent learned, written as it goes.
+
+        Exists because a report that lives only in a chat message is one dropped
+        notification away from being lost: across four validation runs, three final
+        reports never arrived and had to be reconstructed from the code afterwards.
+        Anything worth telling a human at the end is worth appending here when it is
+        discovered, while it is still cheap to write down.
+        """
+        return work_dir_for(self.slug) / 'findings.md'
 
     @property
     def complete(self) -> bool:
