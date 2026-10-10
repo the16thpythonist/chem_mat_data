@@ -62,6 +62,7 @@ dependencies = [
     "appdirs>=1.4.4,<2.0",
     "tomlkit>=0.13.2,<1.0",
     "openpyxl>=3.0.10,<4.0",
+    "h5py>=3.0.0,<4.0",
     "prettytable>=3.6.0,<4.0",
     "pydantic>=1.10.0,<3.0",
     "parsimonious>=0.10.0,<1.0",
