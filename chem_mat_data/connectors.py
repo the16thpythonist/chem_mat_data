@@ -273,11 +273,11 @@ class FigshareSource(AbsractOnlineSource):
         if self.temp_dir is None:
             self.prepare()
 
+        # Figshare's bot protection answers requests that claim to be a web browser (but cannot run its
+        # JavaScript challenge) with HTTP 202 indefinitely, while an honest tool user agent is served the
+        # file directly. We therefore identify as chem_mat_data instead of imitating a browser.
         headers = {
-            'User-Agent': (
-                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                '(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            )
+            'User-Agent': 'chem_mat_data (+https://github.com/the16thpythonist/chem_mat_data)',
         }
 
         # -- download with 202 retry logic --
