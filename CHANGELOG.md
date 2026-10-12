@@ -9,6 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`/dataset-search`, a skill for the front half of the pipeline.** The discovery
+  classifier could already flag papers that look like dataset releases, but deciding
+  which flagged papers are real was a step that only ever existed as a removed Python
+  command (`agent identify`) and four scratch scripts at the repository root. The skill
+  is the sweep, the screen, the per-paper verification and the shortlist, written down:
+  `cmmanage discover stream` walks OpenAlex and scores abstracts, `discover check` drops
+  the papers three ledgers have already answered, one unnamed subagent per survivor
+  reads the paper and its data record, and the confirmed candidates are promoted into
+  `MISSING_DATASETS.md` for `/dataset-extraction` to consume. Defaults to 300 records
+  per sweep rather than the CLI's 1000, because at the flag rate this sweep actually
+  produces — 115 of 1000, measured — that is the difference between 35 subagents and
+  115.
+
+  **It rules on whether data exists, never on whether it may be shipped.** Licensing
+  stays the sole business of `/dataset-extraction`'s licence stage, which is gated,
+  escalates to a human on anything unclear, and treats no-licence-at-all as escalation
+  rather than permission. A search run that quietly dropped CC-BY-NC records would be
+  making that call twice, in two places, with only the second one gated — and hiding
+  the papers from the person allowed to decide.
+
+- **`discover check` carries titles, and reports papers already on the leads list.**
+  Screening dropped the title at ingestion, so `/dataset-search`'s stage 3 — "give each
+  subagent the paper's title" — named an input no upstream stage handed over. `--json`
+  and the table now carry it through; `--new-only` deliberately still emits bare URLs so
+  it stays pipeable.
+
+  A fifth status, `listed`, reports a paper already in `MISSING_DATASETS.md` — the one
+  file the skill writes that nothing screened. It is deliberately **not** a skip: those
+  77 rows were confirmed by an LLM from the title alone, and 26% of that population was
+  later measured as mislabelled (`POSITIVES_VALIDATION.md`, 37 of 142). Skipping them
+  would entrench a title-only guess and deny it the record URL and entry counts only a
+  verification subagent produces. The paper is verified anyway and its existing row
+  enriched, rather than a duplicate appended. 6 tests added.
+
+- **`cmmanage discover check` and `cmmanage discover verdict`.** `check` screens papers
+  against the shipped catalog, `docs/rejected_datasets.md` and the new verdict ledger,
+  matching on the bare DOI so the same paper matches whether it appears as a publisher
+  link or a `doi.org` one. A local string match costs milliseconds and a verification
+  subagent is a full agent, so the whole search workflow is arranged around this ratio.
+  `verdict` appends one judged paper to `docs/search_verdicts.md`, over a fixed
+  `confirmed`/`rejected`/`unclear` vocabulary — prose cannot be matched against by a
+  later run.
+
+  The ledger is committed, and deliberately: the `.ids` sidecar stops a paper being
+  *fetched* twice but says nothing about whether it was ever *judged*, so without this
+  a sweep at a different threshold re-verifies papers an earlier sweep already settled.
+  `check` also reports its own blind spot — 13 of the 46 catalog datasets declare no
+  `sources` URL and cannot be matched, so `new` means "no URL matched" rather than
+  "definitely absent". 34 tests added.
+
 - **Datasets that must not be added are written down, and the skill checks them first.**
   `docs/rejected_datasets.md` lists every investigated and refused dataset with the
   reason, the evidence and who decided, plus upstream questions already approved. Stage 1
@@ -63,6 +113,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   longer exists. Absent copies are tolerated, so older results still pass. 3 tests added.
 
 ### Fixed
+
+- **`--new-only` silently swallowed `--json`.** `discover check --new-only --json`
+  returned bare URLs and ignored the format flag in either order — a trap for the one
+  caller that wants the work list *with* its titles. The flags now compose: `--new-only`
+  selects rows, `--json` selects the format. `--new-only` alone still emits bare URLs so
+  it stays pipeable.
+
+- **`discover check` now carries `openalex_id`.** The verification brief tells each
+  subagent to write `reviews/<openalex_id>.md`, but no output carried the id — and a DOI
+  cannot be a filename, since the slash scatters reports into invented subdirectories.
+
+- **External text was rendered as terminal markup.** A paper title or rejection heading
+  containing `[/x]` raised `MarkupError` and exited 1; anything matching a style name was
+  silently swallowed. Titles come from a CSV and headings from a markdown file, so every
+  externally-sourced cell is now wrapped rather than interpreted.
+
+- **A correction to a verdict was written to disk and never read back.** The verdict
+  ledger is append-only, so `discover verdict --force` records a correction as a second
+  row — but the lookup index used `setdefault`, so the *first* row kept the key forever.
+  Recording a paper `unclear` and later correcting it to `confirmed` printed a green
+  "OK recorded confirmed" and changed nothing, and the CLI's own refusal message is what
+  points you at `--force`. The newest verdict now wins. Found by a multi-agent review of
+  the skill and reproduced before fixing. 2 tests added.
+
+- **`discover stream --include-title` would have made the shared ledger unreadable.**
+  Resuming appends rows without rewriting the header, so adding the flag to a ledger
+  written without it put six-field rows under a five-field header — `pandas.read_csv`
+  then raises `ParserError` and a spreadsheet mis-aligns every later column. ADR 008
+  states the CSV is meant to be opened in a spreadsheet, the ledger is cumulative, so
+  the damage was permanent and silent, and `/dataset-search`'s own stage 1 documented
+  exactly the command that would cause it. `stream` now compares its column set against
+  the existing header and refuses, naming the flag responsible, before the classifier is
+  loaded rather than after. 6 tests added.
+
+- **Two CLI help strings pointed at a command that no longer exists.** The `discover`
+  group and `discover score` both told the user the flagged list was "worth feeding to
+  `cmmanage agent identify`", which was removed when the extraction agent became a
+  skill. They now name `/dataset-search`.
 
 - **The sweep advanced its cursor past records it never classified.** `fetch_works`
   requests full 200-record pages regardless of the caller's remaining limit, breaks out

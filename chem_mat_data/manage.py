@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import csv
 import json
 import yaml
 import time
@@ -18,6 +19,7 @@ from rich.pretty import pprint
 from rich.console import Console, ConsoleOptions
 from rich.panel import Panel
 from rich.syntax import Syntax
+from rich.markup import escape as rich_escape
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import dynamic_import
 
@@ -592,7 +594,7 @@ class RichDiscoveryGroupHelp(RichMixin):
             'resumed or extended later). Second, `cmmanage discover score` loads the '
             'classifier adapter from the user config directory and writes both an '
             '`_all` and an `_flagged` JSONL — the flagged file is the short list '
-            'worth feeding to `cmmanage agent identify` for final LLM verification.\n'
+            'worth verifying paper by paper with the `/dataset-search` skill.\n'
         )
 
         yield render_help(
@@ -663,6 +665,83 @@ class RichDiscoveryModelDownloadHelp(RichMixin):
         )
 
 
+class RichDiscoveryCheckHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover check`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Screen candidate papers against everything this repository already '
+            'knows, so that the expensive per-paper verification step is only spent '
+            'on papers nobody has judged yet.\n'
+        )
+
+        yield render_help(
+            'Three sources are checked, in order of authority. '
+            '`docs/rejected_datasets.md` holds datasets investigated and refused by '
+            'a person — a hit there is final and only a person may overturn it. '
+            '`chem_mat_data/metadata.yml` is the shipped catalog — a hit means the '
+            'data is already distributed. `docs/search_verdicts.md` is the ledger '
+            'written by `discover verdict` — a hit means an earlier sweep already '
+            'decided this paper.\n'
+        )
+
+        yield render_help(
+            'Matching is on the bare DOI where one is present, falling back to the '
+            'normalised URL, so the same paper still matches when it appears as a '
+            'publisher link in one file and a `doi.org` link in another.\n'
+        )
+
+        yield render_help(
+            'Pass URLs as arguments, or `--from-csv` to read the `url` column of a '
+            '`discover stream` output (only flagged rows unless `--all`). Use '
+            '`--json` for machine-readable output, and `--new-only` to print just '
+            'the URLs still worth verifying, one per line, ready to pipe.\n'
+        )
+
+        yield render_help(
+            'Note the blind spot the command reports for itself: catalog entries '
+            'that declare no `sources` URLs cannot be matched this way, so "new" '
+            'means "no URL match", not "definitely absent".\n'
+        )
+
+
+class RichDiscoveryVerdictHelp(RichMixin):
+    """
+    Rich display element that renders the help text for the ``discover verdict`` command.
+    """
+
+    def __rich_console__(self, console: Console, options: ConsoleOptions) -> Any:
+
+        yield render_help(
+            'Append one judged paper to `docs/search_verdicts.md`, the committed '
+            'ledger that stops a later sweep re-verifying a paper an earlier sweep '
+            'already decided.\n'
+        )
+
+        yield render_help(
+            'The resumable `.ids` sidecar next to a stream output prevents a paper '
+            'from being *fetched* twice; it says nothing about whether the paper was '
+            'ever *judged*. This ledger is that memory, which is why it is committed '
+            'rather than kept in a run directory.\n'
+        )
+
+        yield render_help(
+            '`--decision` is a fixed vocabulary — `confirmed`, `rejected` or '
+            '`unclear` — for the same reason the license gate fixes its own: a free '
+            'text verdict cannot be matched against by a later run.\n'
+        )
+
+        yield render_help(
+            '**These verdicts are about whether a dataset exists, not about whether '
+            'it may be redistributed.** Licensing is decided by the '
+            '`/dataset-extraction` skill\'s license stage, and rejections made by a '
+            'person belong in `docs/rejected_datasets.md`, not here.\n'
+        )
+
+
 class RichDiscoveryFetchHelp(RichMixin):
     """
     Rich display element that renders the help text for the ``discover fetch`` command.
@@ -709,8 +788,8 @@ class RichDiscoveryScoreHelp(RichMixin):
         )
 
         yield render_help(
-            'The flagged file is the short list worth feeding to '
-            '`cmmanage agent identify` for final LLM verification. The default '
+            'The flagged file is the short list worth verifying paper by paper, '
+            'which the `/dataset-search` skill does. The default '
             'threshold of 0.05 matched the best test-set performance in the upstream '
             'Dataset-Discovery-Pipeline and tends to over-include rather than miss '
             'genuine hits — this is intentional, as the downstream agent step is the '
@@ -835,6 +914,69 @@ def is_experiment_archive(folder_path: str) -> bool:
     return True
 
 
+def _check_stream_columns(
+    out_path: Path,
+    include_title: bool,
+    resume: bool,
+) -> None:
+    """
+    Refuse to append rows to a CSV whose header has a different column set.
+
+    ``discover stream`` resumes into an existing file by appending without
+    rewriting the header. If the run's column set differs from what is already
+    there — which is exactly what ``--include-title`` does to a file written
+    without it — the result is a ragged CSV: ``pandas.read_csv`` raises
+    ``ParserError`` and a spreadsheet mis-aligns every column after the ragged
+    one. Because the stream ledger is shared and cumulative, that damage is both
+    permanent and silent, so this exits rather than warning.
+
+    Called before the classifier is loaded, since refusing after a 1.1B model
+    load wastes the load for nothing.
+
+    :param out_path: The CSV that would be appended to.
+    :param include_title: Whether this run would write a trailing title column.
+    :param resume: False means the file is started over, so nothing can clash.
+
+    :raises SystemExit: With status 1 when the column sets differ.
+    """
+    if not resume or not out_path.exists() or out_path.stat().st_size == 0:
+        return
+
+    columns = list(DISCOVERY_STREAM_CSV_BASE_COLUMNS)
+    if include_title:
+        columns.append('title')
+
+    try:
+        with out_path.open('r', encoding='utf-8', newline='') as file:
+            existing = list(csv.DictReader(file).fieldnames or [])
+    except OSError:
+        # Unreadable file: leave it to the existing corrupt-CSV fallback rather
+        # than blocking the run on a check that is only an optimisation.
+        return
+
+    if not existing or existing == columns:
+        return
+
+    click.secho(
+        f'❌ {out_path} already has the columns {",".join(existing)}, but this '
+        f'run would write {",".join(columns)}.',
+        fg='red',
+    )
+    missing = [column for column in columns if column not in existing]
+    extra = [column for column in existing if column not in columns]
+    if missing == ['title']:
+        hint = 'Re-run without --include-title, or use a new --out for a titled sweep.'
+    elif extra == ['title']:
+        hint = 'Add --include-title to match the existing file, or use a new --out.'
+    else:
+        hint = (
+            'Use a new --out, or --no-resume to start this file over (which also '
+            'discards its de-duplication state).'
+        )
+    click.secho(f'   {hint}', fg='yellow')
+    sys.exit(1)
+
+
 class CLI(click.RichGroup):
     # This list contains the string identifiers for the possible strategies that can be used for
     # the metadata collect method, which will collect the individual metadata files from the
@@ -898,6 +1040,8 @@ class CLI(click.RichGroup):
         self.discovery_group.add_command(self.discovery_fetch_command)
         self.discovery_group.add_command(self.discovery_score_command)
         self.discovery_group.add_command(self.discovery_stream_command)
+        self.discovery_group.add_command(self.discovery_check_command)
+        self.discovery_group.add_command(self.discovery_verdict_command)
 
     # The maximum width (in characters) for the help text paragraphs. This ensures
     # that the text wraps at a reasonable width even on very wide terminals.
@@ -2824,6 +2968,14 @@ class CLI(click.RichGroup):
             )
             sys.exit(1)
 
+        # Refuse a column set that does not match the file we would append to,
+        # before anything expensive happens. Appending a differently shaped row
+        # under an existing header makes the CSV ragged: `pd.read_csv` then
+        # raises ParserError and a spreadsheet mis-aligns every later column,
+        # which defeats the point of a file meant for manual review. The shared
+        # ledger is cumulative, so that damage is permanent and silent.
+        _check_stream_columns(Path(out), include_title=include_title, resume=resume)
+
         # Ensure the classifier is downloaded before we touch OpenAlex, so a
         # misconfigured URL fails fast instead of half-way through a fetch.
         resolved_url = model_url or self.config.get_discovery_classifier_url()
@@ -2958,6 +3110,7 @@ class CLI(click.RichGroup):
                 # Corrupt or partial CSV — fall back to cursor/ids sidecars.
                 pass
 
+
         state = DiscoveryFetchState(out_path)
 
         # Surface the resume state so the user understands whether they are
@@ -3045,10 +3198,13 @@ class CLI(click.RichGroup):
                             title_display = title_display[:71] + '…'
                         # Toast printed *above* the pinned progress bar.
                         # Rich's Progress auto-rewrites the bar after the print.
+                        # The title is upstream text: escape it, or a paper whose
+                        # title contains `[/x]` raises MarkupError and kills the
+                        # sweep mid-run, and one containing a style name loses it.
                         progress.console.print(
                             f'  [yellow]{float(score):.3f}[/yellow]  '
                             f'[dim]{row["openalex_id"]:<14}[/dim]  '
-                            f'{title_display}',
+                            f'{rich_escape(title_display)}',
                             highlight=False,
                         )
 
@@ -3195,6 +3351,280 @@ class CLI(click.RichGroup):
                 expand=True,
                 padding=(1, 2),
             )
+        )
+
+    @click.command(
+        'check',
+        cls=RichHelpCommand,
+        rich_help=RichDiscoveryCheckHelp(),
+        short_help='Screen candidate papers against the catalog, rejections and prior verdicts.',
+    )
+    @click.argument('urls', nargs=-1)
+    @click.option(
+        '--from-csv',
+        type=click.Path(exists=True, dir_okay=False, path_type=str),
+        default=None,
+        help='Read the `url` column of a `discover stream` CSV instead of taking arguments.',
+    )
+    @click.option(
+        '--flagged-only/--all',
+        default=True,
+        show_default=True,
+        help='With --from-csv, screen only rows the classifier flagged.',
+    )
+    @click.option(
+        '--json',
+        'as_json',
+        is_flag=True,
+        default=False,
+        help='Emit the results as a JSON array instead of a table.',
+    )
+    @click.option(
+        '--new-only',
+        is_flag=True,
+        default=False,
+        help='Print only the URLs still worth verifying, one per line.',
+    )
+    @click.pass_obj
+    def discovery_check_command(
+        self,
+        urls: tuple,
+        from_csv: Optional[str],
+        flagged_only: bool,
+        as_json: bool,
+        new_only: bool,
+    ) -> None:
+        import csv
+
+        from rich.console import Console
+        from rich.table import Table
+        from rich.text import Text
+
+        from chem_mat_data.discovery.ledger import (
+            STATUS_IN_CATALOG,
+            STATUS_LISTED,
+            STATUS_NEW,
+            STATUS_REJECTED,
+            STATUS_VERIFIED,
+            VerdictLedger,
+            load_catalog,
+            load_leads,
+            load_rejected,
+            screen_many,
+        )
+
+        console = Console()
+
+        targets: List[str] = list(urls)
+        # Titles are carried alongside, not looked up: `discover stream
+        # --include-title` is the only thing that knows them, and a brief that
+        # names the paper beats one that names a bare DOI.
+        titles: Dict[str, str] = {}
+        ids: Dict[str, str] = {}
+        if from_csv:
+            with open(from_csv, newline='', encoding='utf-8') as file:
+                for row in csv.DictReader(file):
+                    if flagged_only and str(row.get('flagged', '')).strip() not in ('1', 'True', 'true'):
+                        continue
+                    url = (row.get('url') or '').strip()
+                    if url:
+                        targets.append(url)
+                        title = (row.get('title') or '').strip()
+                        if title:
+                            titles[url] = title
+                        oid = (row.get('openalex_id') or '').strip()
+                        if oid:
+                            ids[url] = oid
+
+        if not targets:
+            click.secho(
+                '❌ nothing to check - pass URLs as arguments or use --from-csv',
+                fg='red',
+            )
+            sys.exit(1)
+
+        # Load each ledger once for the whole batch rather than per URL: screening
+        # a full sweep means hundreds of lookups against the same three files.
+        catalog = load_catalog()
+        rejected = load_rejected()
+        ledger = VerdictLedger.load()
+        leads = load_leads()
+        results = screen_many(
+            targets, catalog=catalog, rejected=rejected, ledger=ledger, leads=leads,
+        )
+        for result in results:
+            result.title = titles.get(result.url, '')
+            result.openalex_id = ids.get(result.url, '')
+
+        # `--new-only` selects rows, `--json` selects a format: they compose. The
+        # earlier arrangement returned bare URLs for `--new-only --json` and
+        # ignored `--json` silently, which is a trap for the one caller that
+        # wants the work list *with* its titles.
+        if new_only:
+            results = [result for result in results if not result.skip]
+
+        if as_json:
+            click.echo(json.dumps([result.to_dict() for result in results], indent=2))
+            return
+
+        if new_only:
+            for result in results:
+                click.echo(result.url)
+            return
+
+        styles = {
+            STATUS_NEW: 'green',
+            STATUS_IN_CATALOG: 'cyan',
+            STATUS_REJECTED: 'red',
+            STATUS_VERIFIED: 'yellow',
+            STATUS_LISTED: 'magenta',
+        }
+
+        show_titles = any(result.title for result in results)
+        table = Table(box=None, padding=(0, 2, 0, 0), expand=True)
+        table.add_column('status', no_wrap=True)
+        table.add_column('url', overflow='fold', ratio=2)
+        if show_titles:
+            table.add_column('title', overflow='ellipsis', ratio=2)
+        table.add_column('matched', overflow='ellipsis', ratio=1, style='dim')
+        for result in results:
+            # Wrap every externally-sourced cell in `Text`: a title or a
+            # rejection heading is data from a CSV or a markdown file, and
+            # rendering it as Rich markup lets `[/x]` raise MarkupError and
+            # swallows anything that happens to be a valid style name.
+            row = [
+                Text(result.status, style=styles.get(result.status, '')),
+                Text(result.url),
+            ]
+            if show_titles:
+                row.append(Text(result.title))
+            row.append(Text(result.detail))
+            table.add_row(*row)
+        console.print(table)
+
+        counts: Dict[str, int] = {}
+        for result in results:
+            counts[result.status] = counts.get(result.status, 0) + 1
+        summary = ', '.join(f'{count} {status}' for status, count in sorted(counts.items()))
+        remaining = sum(1 for result in results if not result.skip)
+        console.print(
+            f'\n[bold]{len(results)}[/bold] checked - {summary}'
+            f' [dim]->[/dim] [bold green]{remaining}[/bold green] worth verifying'
+        )
+
+        # `listed` counts toward the work, which is easy to misread in the tally
+        # above, so say what it means rather than leaving it to the status name.
+        listed = [result for result in results if result.status == STATUS_LISTED]
+        if listed:
+            console.print(
+                f'[dim]note: {len(listed)} of those are already leads in '
+                f'MISSING_DATASETS.md - still verify them, but enrich the existing '
+                f'row rather than appending a new one[/dim]'
+            )
+
+        # A catalog entry with no `sources` cannot be matched by URL. Saying so
+        # keeps `new` honest: it means "no URL matched", not "definitely absent".
+        if catalog.unindexed:
+            console.print(
+                f'[dim]note: {len(catalog.unindexed)} of {catalog.total} catalog datasets '
+                f'declare no `sources` URL and cannot be matched here '
+                f'({", ".join(catalog.unindexed[:5])}'
+                f'{", ..." if len(catalog.unindexed) > 5 else ""})[/dim]'
+            )
+
+    @click.command(
+        'verdict',
+        cls=RichHelpCommand,
+        rich_help=RichDiscoveryVerdictHelp(),
+        short_help='Record a judged paper in the committed verdict ledger.',
+    )
+    @click.argument('url')
+    @click.option(
+        '--decision',
+        type=click.Choice(['confirmed', 'rejected', 'unclear']),
+        required=True,
+        help='Whether the paper releases a dataset. Not a licensing judgement.',
+    )
+    @click.option(
+        '--why',
+        type=str,
+        default='',
+        help='One line of evidence for the decision. This is what a later reader gets.',
+    )
+    @click.option(
+        '--name',
+        type=str,
+        default='',
+        help='Proposed dataset name, when confirmed.',
+    )
+    @click.option(
+        '--record-url',
+        type=str,
+        default='',
+        help='Landing page of the data record, when one was found.',
+    )
+    @click.option(
+        '--date',
+        type=str,
+        default=None,
+        help='Date of the verdict. Defaults to today.',
+    )
+    @click.option(
+        '--force',
+        is_flag=True,
+        default=False,
+        help='Append even though this paper already has a verdict.',
+    )
+    @click.pass_obj
+    def discovery_verdict_command(
+        self,
+        url: str,
+        decision: str,
+        why: str,
+        name: str,
+        record_url: str,
+        date: Optional[str],
+        force: bool,
+    ) -> None:
+        from datetime import date as _date
+
+        from rich.console import Console
+
+        from chem_mat_data.discovery.ledger import Verdict, VerdictLedger
+
+        console = Console()
+        ledger = VerdictLedger.load()
+
+        existing = ledger.lookup(url)
+        if existing and not force:
+            click.secho(
+                f'❌ already recorded as {existing.decision}: {existing.why or "(no reason given)"}',
+                fg='red',
+            )
+            click.secho(
+                '   pass --force to append a second verdict for the same paper',
+                fg='yellow',
+            )
+            sys.exit(1)
+
+        try:
+            ledger.append(
+                Verdict(
+                    url=url,
+                    decision=decision,
+                    name=name,
+                    record_url=record_url,
+                    why=why,
+                    date=date or _date.today().isoformat(),
+                )
+            )
+        except ValueError as exc:
+            click.secho(f'❌ {exc}', fg='red')
+            sys.exit(1)
+
+        console.print(
+            f'[green]OK[/green] recorded [bold]{decision}[/bold]: {url}'
+            f'\n  [dim]{ledger.path}[/dim]'
         )
 
     ## == DOCS COMMAND GROUP ==
@@ -3368,6 +3798,7 @@ class CLI(click.RichGroup):
                         'raw': dataset_info.get('raw', []),
                         'min_version': dataset_info.get('min_version', None),
                         'notes': dataset_info.get('notes', []),
+                        'license': dataset_info.get('license', None),
                     }
                 )
 

@@ -370,3 +370,92 @@ def test_stream_resume_skips_already_seen_ids(tmp_path):
     rows = _read_csv(out)
     assert len(rows) == 1
     assert rows[0]['openalex_id'] == 'W1002'
+
+
+# == the column guard ==
+#
+# `discover stream` resumes by appending without rewriting the header. Appending
+# a differently shaped row makes the CSV ragged, which `pandas.read_csv` rejects
+# outright - and because the stream ledger is shared and cumulative, that damage
+# is permanent and silent. These pin the refusal.
+
+def _write_csv(path, header, rows=('W1,https://doi.org/10.1/a,0.9,1,2026',)):
+    path.write_text(header + '\n' + '\n'.join(rows) + '\n', encoding='utf-8')
+    return path
+
+
+BASE_HEADER = 'openalex_id,url,score,flagged,publication_year'
+
+
+def test_appending_a_title_column_to_an_untitled_file_is_refused(tmp_path):
+    from chem_mat_data.manage import _check_stream_columns
+
+    path = _write_csv(tmp_path / 'stream.csv', BASE_HEADER)
+    with pytest.raises(SystemExit) as exc:
+        _check_stream_columns(path, include_title=True, resume=True)
+    assert exc.value.code == 1
+
+
+def test_dropping_the_title_column_from_a_titled_file_is_refused(tmp_path):
+    from chem_mat_data.manage import _check_stream_columns
+
+    path = _write_csv(
+        tmp_path / 'stream.csv',
+        BASE_HEADER + ',title',
+        rows=('W1,https://doi.org/10.1/a,0.9,1,2026,Some title',),
+    )
+    with pytest.raises(SystemExit):
+        _check_stream_columns(path, include_title=False, resume=True)
+
+
+def test_matching_column_sets_are_allowed(tmp_path):
+    from chem_mat_data.manage import _check_stream_columns
+
+    untitled = _write_csv(tmp_path / 'a.csv', BASE_HEADER)
+    _check_stream_columns(untitled, include_title=False, resume=True)
+
+    titled = _write_csv(
+        tmp_path / 'b.csv', BASE_HEADER + ',title',
+        rows=('W1,https://doi.org/10.1/a,0.9,1,2026,T',),
+    )
+    _check_stream_columns(titled, include_title=True, resume=True)
+
+
+def test_a_fresh_or_restarted_file_cannot_clash(tmp_path):
+    from chem_mat_data.manage import _check_stream_columns
+
+    # Nothing on disk yet.
+    _check_stream_columns(tmp_path / 'absent.csv', include_title=True, resume=True)
+    # Empty file.
+    empty = tmp_path / 'empty.csv'
+    empty.write_text('', encoding='utf-8')
+    _check_stream_columns(empty, include_title=True, resume=True)
+    # --no-resume rewrites the header, so a mismatch is not a mismatch.
+    path = _write_csv(tmp_path / 'stream.csv', BASE_HEADER)
+    _check_stream_columns(path, include_title=True, resume=False)
+
+
+def test_the_refusal_names_the_flag_that_caused_it(tmp_path, capsys):
+    from chem_mat_data.manage import _check_stream_columns
+
+    path = _write_csv(tmp_path / 'stream.csv', BASE_HEADER)
+    with pytest.raises(SystemExit):
+        _check_stream_columns(path, include_title=True, resume=True)
+    out = capsys.readouterr().out
+    assert '--include-title' in out, 'the message must name the fix, not just the fault'
+    assert 'stream.csv' in out
+
+
+def test_the_guard_runs_before_the_classifier_is_loaded():
+    """
+    Refusing after a 1.1B model load wastes the load. The check needs nothing but
+    the arguments, so it must sit above the loader in the command body.
+    """
+    import inspect
+
+    from chem_mat_data.manage import CLI
+
+    source = inspect.getsource(CLI().commands['discover'].commands['stream'].callback)
+    guard = source.index('_check_stream_columns')
+    loader = source.index('discovery_ensure_classifier_model')
+    assert guard < loader

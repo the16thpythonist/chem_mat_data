@@ -6,6 +6,12 @@ tests/artifacts/
 benchmark_results/
 chem_mat_data/agent/artifacts/
 .dataset_work/
+.dataset_search/
+
+# Resumable state sidecars of the discovery sweep ledger. The .csv itself is
+# already covered by *.csv; these two are not, and must not be committed.
+*.csv.cursor
+*.csv.ids
 
 # Byte-compiled / optimized / DLL files
 */__pycache__/*
