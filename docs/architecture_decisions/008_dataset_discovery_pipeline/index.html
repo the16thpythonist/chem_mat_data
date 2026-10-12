@@ -1,0 +1,1204 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the16thpythonist.github.io/chem_mat_data/docs/architecture_decisions/008_dataset_discovery_pipeline/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Dataset Discovery Pipeline - ChemMatData</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dataset-discovery-pipeline" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ChemMatData" class="md-header__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChemMatData
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Dataset Discovery Pipeline
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ChemMatData" class="md-nav__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    ChemMatData
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../first_steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First steps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Command Line Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List Available Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_info/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Show Dataset Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download Dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Configuration File
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cli_cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local File Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Programming Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Programming Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loading Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api_streaming_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../graph_representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Representation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../processing_graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processing New Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom_pre_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Pre-Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#two-stage-filter-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two-Stage Filter Architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cli-surface-three-command-shapes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Surface: Three Command Shapes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flat-sidecar-files-for-resumable-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Flat Sidecar Files for Resumable State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#model-distribution-via-nextcloud" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Distribution via Nextcloud
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tinyllama-11b-as-the-classifier-backbone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TinyLlama-1.1B as the Classifier Backbone
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpu-first-with-optional-quantization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CPU-First with Optional Quantization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ml-dependencies-in-dev-extras" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ML Dependencies in Dev Extras
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#noise-suppression" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Noise Suppression
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Consequences">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#advantages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advantages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disadvantages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disadvantages
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="dataset-discovery-pipeline">Dataset Discovery Pipeline</h1>
+<h2 id="status">Status</h2>
+<p>implemented</p>
+<h2 id="context">Context</h2>
+<p>The ChemMatData package provides a growing catalog of chemistry and materials-science datasets for
+graph neural network research. Two bottlenecks limit the expansion of this catalog (see also ADR 005):</p>
+<ol>
+<li><strong>Finding</strong> new datasets in the scientific literature.</li>
+<li><strong>Processing</strong> each dataset's raw files into the unified graph format.</li>
+</ol>
+<p>ADR 005 addresses the second bottleneck with the <code>cmmanage agent</code> workflow: given a publication URL,
+an LLM agent reads the paper, downloads the data, and generates a processing script. That workflow is
+effective but expensive — each invocation browses a paper, visits repository links, and runs multiple
+LLM reasoning steps. At the scale of the full OpenAlex index (hundreds of millions of works, tens of
+thousands new per week in chemistry and materials science alone), running the agent on every paper is
+neither practical nor economical.</p>
+<p>What is needed is a cheap upstream filter that can scan the literature at scale and produce a short
+list of papers <em>likely</em> to publish a reusable dataset. Only those flagged papers are then worth feeding
+to the expensive agent pipeline for final verification.</p>
+<p>The upstream <a href="https://github.com/aimat-lab/Dataset-Discovery-Pipeline">Dataset-Discovery-Pipeline</a>
+repository provides exactly this filter: it walks the OpenAlex API for chemistry and materials-science
+papers and applies a fine-tuned TinyLlama-1.1B sequence classifier to the title and abstract of each
+work, flagging those whose language suggests a dataset release. The classifier is a QLoRA adapter
+(~13 MB) over the TinyLlama/TinyLlama-1.1B-Chat-v1.0 base model and was trained on a manually labeled
+corpus of ~2,000 papers.</p>
+<p>The question is how to integrate this filter into ChemMatData as a composable, offline-capable CLI
+tool that fits the existing <code>cmmanage</code> architecture.</p>
+<h2 id="decision">Decision</h2>
+<h3 id="two-stage-filter-architecture">Two-Stage Filter Architecture</h3>
+<p>The discovery pipeline is positioned as a <strong>cheap upstream filter</strong> that feeds into the <strong>expensive
+downstream agent</strong> (ADR 005). The pipeline intentionally over-includes (default threshold 0.05,
+tuned for recall over precision on the upstream test set) because missing a genuine dataset release
+is more costly than sending a few false positives to the agent step, which can reject them quickly.</p>
+<p>The boundary between the two stages is a simple file: the discovery pipeline outputs a list of
+flagged OpenAlex IDs and DOI URLs, and the agent's <code>identify</code> command takes a URL as input.
+No shared state, no API coupling — just a file hand-off.</p>
+<h3 id="cli-surface-three-command-shapes">CLI Surface: Three Command Shapes</h3>
+<p>The pipeline is exposed under <code>cmmanage discover</code> with five commands organized around two
+usage patterns:</p>
+<p><strong>Two-step pattern</strong> (<code>fetch</code> → <code>score</code>): Separates data acquisition from classification.
+<code>fetch</code> writes a JSONL file of raw records; <code>score</code> reads that JSONL file, loads the classifier,
+and writes both an <code>_all</code> and a <code>_flagged</code> output. This is useful when the user wants to inspect
+the fetched data before scoring, re-score with a different threshold without re-fetching, or run the
+two steps on different machines (e.g., fetch on a server with network access, score on a GPU node).</p>
+<p><strong>Single-pass pattern</strong> (<code>stream</code>): Interleaves fetching and classification in one command, writing
+scored results to a CSV as they come in with live terminal progress. This is the convenient default for
+most users who just want to run the pipeline end-to-end. The CSV columns (<code>openalex_id</code>, <code>url</code>,
+<code>score</code>, <code>flagged</code>, <code>publication_year</code>) are designed to be directly openable in a spreadsheet
+for manual review.</p>
+<p><strong>Utility commands</strong> (<code>model-info</code>, <code>model-download</code>): Diagnostic and setup helpers. <code>model-info</code>
+is read-only — it shows the cache location and dependency status without touching the filesystem.
+<code>model-download</code> pre-fetches the adapter archive, useful for offline environments or CI warmup.</p>
+<p>All three fetch-capable commands (<code>fetch</code>, <code>score</code>, <code>stream</code>) share the same classifier options
+(<code>--device</code>, <code>--no-quantize</code>, <code>--max-length</code>, <code>--model-url</code>) so users can switch between the
+two-step and single-pass workflows without learning different flags.</p>
+<h3 id="flat-sidecar-files-for-resumable-state">Flat Sidecar Files for Resumable State</h3>
+<p>Pagination and de-duplication state is stored in two plain-text sidecar files next to the output:</p>
+<ul>
+<li><code>&lt;output&gt;.cursor</code> — a single-line file containing the OpenAlex <code>next_cursor</code> token.</li>
+<li><code>&lt;output&gt;.ids</code> — a newline-delimited set of OpenAlex IDs already written to the output.</li>
+</ul>
+<p>This design was chosen over SQLite, JSON, or an in-memory-only approach for several reasons:</p>
+<ul>
+<li><strong>Inspectable.</strong> A user can <code>cat</code> or <code>wc -l</code> the files to understand exactly where a run
+  stopped and how many records were processed. When a run goes wrong, the state can be edited
+  by hand (e.g., deleting the cursor file to restart pagination while keeping the seen-ID set).</li>
+<li><strong>Atomic.</strong> The cursor file is rewritten after every batch; the IDs file is append-only with
+  an immediate <code>flush()</code> after each entry. If the process is killed mid-batch, the worst case
+  is re-fetching a single page — no corruption, no write-ahead log, no recovery procedure.</li>
+<li><strong>No dependencies.</strong> No SQLite driver, no schema migrations, no connection management. The
+  files are just strings.</li>
+</ul>
+<p>The <code>FetchState</code> class encapsulates this logic and supports both one-shot usage (<code>load</code> +
+<code>update_cursor</code>) and streaming usage as a context manager with <code>mark_seen</code> flushing to disk
+immediately.</p>
+<h3 id="model-distribution-via-nextcloud">Model Distribution via Nextcloud</h3>
+<p>The classifier adapter is distributed as a <code>tar.gz</code> archive hosted on the same Nextcloud instance
+that serves the dataset files. The URL is configured under <code>[discovery] classifier_url</code> in the
+config file, following the same pattern as the dataset file share URL.</p>
+<p>This was chosen over HuggingFace Hub hosting because:</p>
+<ul>
+<li>The existing Nextcloud infrastructure is already in place and trusted by the team.</li>
+<li>The adapter is a single static artifact (~13 MB) that changes rarely — it does not benefit
+  from Hub features like model cards, versioning, or community contributions.</li>
+<li>Downloading from Nextcloud requires no authentication and no HuggingFace account.</li>
+</ul>
+<p>The base model (TinyLlama-1.1B-Chat) is still fetched from HuggingFace Hub on first load, since
+it is a public model maintained by the TinyLlama team and benefits from Hub caching. The
+<code>ensure_classifier_model</code> function downloads the archive to a <code>.tar.gz.part</code> temporary file
+and renames it atomically on success, so a failed download never leaves a corrupt cache.</p>
+<h3 id="tinyllama-11b-as-the-classifier-backbone">TinyLlama-1.1B as the Classifier Backbone</h3>
+<p>The upstream pipeline chose TinyLlama-1.1B-Chat-v1.0 as the classifier backbone for a specific
+set of trade-offs:</p>
+<ul>
+<li><strong>Small enough for CPU inference.</strong> At 1.1B parameters the model runs on a laptop CPU in
+  ~1-2 seconds per paper, which is acceptable for batch sizes of hundreds to low thousands.
+  This makes the pipeline accessible without a GPU.</li>
+<li><strong>Large enough for language understanding.</strong> The classifier needs to distinguish dataset-release
+  language ("we release a benchmark of 50,000 molecules") from dataset-usage language ("we evaluate
+  on the QM9 benchmark"). A bag-of-words or TF-IDF classifier struggles with this distinction;
+  a language model handles it well.</li>
+<li><strong>QLoRA adapter.</strong> The fine-tuned weights are a ~13 MB LoRA adapter, not a full model copy.
+  This keeps the download small and the memory overhead low. On CUDA with bitsandbytes, 4-bit
+  quantization further reduces memory to ~1 GB.</li>
+</ul>
+<p>The threshold of 0.05 (positive-class probability) is deliberately low. At this threshold the
+upstream test set achieved the best F1 score, trading many false positives for very few false
+negatives. This is the right trade-off for a filter whose output feeds into a more expensive
+verification step.</p>
+<h3 id="cpu-first-with-optional-quantization">CPU-First with Optional Quantization</h3>
+<p>The classifier loading logic follows a capability-detection pattern:</p>
+<ol>
+<li>If CUDA is available and bitsandbytes is installed, load with 4-bit NF4 quantization.</li>
+<li>If CUDA is available but bitsandbytes is not, load in float16.</li>
+<li>Otherwise, load on CPU in float32.</li>
+</ol>
+<p>The user can force a specific device with <code>--device</code> or disable quantization with
+<code>--no-quantize</code>. This layered approach ensures the pipeline works everywhere — from a CI
+runner with no GPU to a workstation with an A100 — without requiring the user to understand
+quantization configuration.</p>
+<h3 id="ml-dependencies-in-dev-extras">ML Dependencies in Dev Extras</h3>
+<p>The ML stack (<code>torch</code>, <code>transformers</code>, <code>peft</code>, <code>safetensors</code>, <code>accelerate</code>, and
+optionally <code>bitsandbytes</code>) is placed in the <code>[dev]</code> extras group rather than the core
+dependencies. This keeps the base <code>pip install chem_mat_database</code> lightweight for users who
+only need the dataset loading and graph processing functionality.</p>
+<p>A runtime check (<code>is_ml_stack_available()</code>) gates the classifier commands: if the ML
+dependencies are missing, the commands print a clear error message pointing to
+<code>pip install chem_mat_database[dev]</code> rather than crashing with an obscure import error. The
+<code>model-info</code> command always works regardless of ML availability, since its purpose is
+precisely to diagnose what is and isn't installed.</p>
+<h3 id="noise-suppression">Noise Suppression</h3>
+<p>Loading a HuggingFace model for the first time produces a substantial amount of terminal noise:
+download progress bars, <code>LOAD REPORT</code> diagnostics from the model class, deprecation warnings
+from transformers internals, and unauthenticated-request warnings from the <code>hf_xet</code> Rust
+extension. In a CLI tool this noise obscures the actual pipeline output.</p>
+<p>The suppression strategy is layered:</p>
+<ol>
+<li><strong>Environment variables.</strong> <code>HF_HUB_DISABLE_PROGRESS_BARS=1</code> and
+   <code>TRANSFORMERS_VERBOSITY=error</code> before any HuggingFace imports.</li>
+<li><strong>Python logging.</strong> <code>huggingface_hub</code>, <code>transformers</code>, <code>accelerate</code>, and <code>peft</code>
+   loggers set to <code>ERROR</code>.</li>
+<li><strong>Warnings filter.</strong> <code>warnings.filterwarnings('ignore')</code> for known deprecation categories.</li>
+<li><strong>stdout/stderr redirection.</strong> <code>contextlib.redirect_stdout/stderr</code> into a <code>StringIO</code>
+   buffer during model loading, surfaced only if loading fails.</li>
+<li><strong>Offline mode.</strong> When the base model is already in the HuggingFace cache,
+   <code>HF_HUB_OFFLINE=1</code> and <code>TRANSFORMERS_OFFLINE=1</code> are set before loading. This avoids
+   the <code>hf_xet</code> Rust extension's unauthenticated-request warning, which writes directly to
+   file descriptor 2 and bypasses all Python-level redirection.</li>
+</ol>
+<p>All suppression is disabled when the user passes <code>--verbose</code>.</p>
+<h2 id="consequences">Consequences</h2>
+<h3 id="advantages">Advantages</h3>
+<p><strong>Scalable filtering.</strong> The pipeline can process thousands of papers per hour on a laptop CPU,
+narrowing the full OpenAlex chemistry index down to a short list of plausible dataset releases.
+This makes the expensive agent workflow (ADR 005) practical at scale — instead of running the
+agent on every paper, it only runs on the few hundred flagged by the classifier.</p>
+<p><strong>Composable workflow.</strong> The two-step and single-pass patterns serve different use cases without
+code duplication. The shared <code>FetchState</code>, <code>build_csv_row</code>, and classifier infrastructure
+is reused across commands. The file-based hand-off to the agent pipeline requires no coupling
+between the two systems.</p>
+<p><strong>Offline-capable.</strong> After the initial model download (<code>model-download</code>), the entire pipeline
+runs without network access to HuggingFace. Only the OpenAlex API requires connectivity, and
+even that is resumable across network interruptions.</p>
+<p><strong>Accessible.</strong> CPU-first design with no mandatory GPU dependency means the pipeline runs on
+any developer machine, CI runner, or cloud instance. Optional quantization provides a performance
+boost when hardware is available without making it a requirement.</p>
+<p><strong>Inspectable state.</strong> Plain-text sidecar files make it trivial to audit, debug, and manually
+repair pipeline state. No database tooling, no binary formats, no recovery procedures.</p>
+<h3 id="disadvantages">Disadvantages</h3>
+<p><strong>Base model download.</strong> The TinyLlama-1.1B base model (~2 GB) is downloaded from HuggingFace
+Hub on first use. This is a one-time cost cached by the Hub, but it can be surprising for users
+who expected only the ~13 MB adapter download. The <code>model-info</code> command helps diagnose this,
+and the offline mode detection avoids repeated download checks.</p>
+<p><strong>Noise suppression fragility.</strong> The layered suppression strategy works today but is coupled to
+implementation details of HuggingFace libraries (logger names, warning categories, the <code>hf_xet</code>
+Rust extension's behavior). Library upgrades may introduce new noise sources that require
+additional suppression layers. The <code>--verbose</code> flag provides an escape hatch when suppression
+hides a genuine error.</p>
+<p><strong>Threshold sensitivity.</strong> The default threshold of 0.05 was tuned on the upstream training
+corpus. On a different distribution of papers (e.g., a subfield with unusual terminology for
+dataset releases) the recall/precision trade-off may shift. Users can adjust via <code>--threshold</code>
+but have no built-in way to evaluate the classifier on their own labeled data.</p>
+<p><strong>Two command patterns.</strong> Having both <code>fetch</code>+<code>score</code> and <code>stream</code> for the same underlying
+operation adds surface area to the CLI. Users must understand when to use which. The help text
+and group-level documentation mitigate this, but it is still more to learn than a single command.</p>
+<p><strong>Dev extras scope.</strong> Placing ML dependencies in <code>[dev]</code> alongside development tools (pytest,
+ruff, etc.) means a user who only wants to run the discovery pipeline also installs testing
+infrastructure. A dedicated <code>[discovery]</code> extras group would be more precise but would add
+yet another extras key to maintain.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.expand"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

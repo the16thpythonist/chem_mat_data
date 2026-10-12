@@ -1,0 +1,1613 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the16thpythonist.github.io/chem_mat_data/docs/dataset_extraction_improvements/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>dataset-extraction: what to fix next, ranked - ChemMatData</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dataset-extraction-what-to-fix-next-ranked" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ChemMatData" class="md-header__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChemMatData
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              dataset-extraction: what to fix next, ranked
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ChemMatData" class="md-nav__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    ChemMatData
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first_steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First steps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Command Line Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List Available Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_info/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Show Dataset Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download Dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Configuration File
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local File Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Programming Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Programming Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loading Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_streaming_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph_representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Representation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing_graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processing New Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_pre_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Pre-Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-structural-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The structural conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ranked" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ranked
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Ranked">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-agent-status-is-blind-and-the-newest-commit-tells-the-agent-to-depend-on-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. agent status is blind, and the newest commit tells the agent to depend on it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-an-approved-license-override-waives-every-check-including-the-one-added-because-of-run-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. An approved license override waives every check, including the one added because of run 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-licensemd-instructs-prose-in-the-two-fields-the-gate-matches-against-fixed-vocabularies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. license.md instructs prose in the two fields the gate matches against fixed vocabularies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-crwl-o-markdown-fit-is-a-content-pruning-mode-and-there-is-no-implausible-output-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. crwl -o markdown-fit is a content-pruning mode, and there is no implausible-output check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-no-gate-reads-the-runs-own-record-a-crashed-run-passes-all-six" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. No gate reads the run's own record — a crashed run passes all six
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-source_url-is-still-settable-in-code-and-fixing-that-re-arms-a-warning-that-will-now-fire-on-every-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. source_url is still settable in code, and fixing that re-arms a warning that will now fire on every run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-the-final-gate-never-compares-target_descriptions-or-dataset_name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. The final gate never compares target_descriptions or dataset_name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-the-mpack-and-the-csv-of-the-same-run-are-a-full-permutation-of-each-other" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. The .mpack and the .csv of the same run are a full permutation of each other
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-units-have-no-check-at-all-record-the-source-stated-range-and-check-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Units have no check at all; record the source-stated range and check it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#10-gate_prepare-accepts-anything-non-empty-that-does-not-start-with-html" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. gate_prepare accepts anything non-empty that does not start with &lt;html
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#11-a-blocked-run-cannot-record-why" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. A blocked run cannot record why
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-manifest-durability-and-no-way-to-find-a-run-again" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Manifest durability, and no way to find a run again
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-two-smaller-instruction-defects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Two smaller instruction defects
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-resolve-citations-against-the-doi-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Resolve citations against the DOI registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#considered-and-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Considered and rejected
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="dataset-extraction-what-to-fix-next-ranked">dataset-extraction: what to fix next, ranked</h1>
+<p>Scope: the skill at <code>.claude/skills/dataset-extraction/</code>, its machinery in
+<code>chem_mat_data/agent/</code>, and the <code>agent</code> command group in <code>chem_mat_data/manage.py</code>.
+All line numbers are against <code>e39f0c4</code> on branch <code>dataset-extraction-skill</code>
+(worktree <code>/tmp/claude-1000/-media-ssd2-Programming-chem-mat-data/202e8fa6-6fde-4211-8f71-ae295073d8a0/scratchpad/wt4</code>).
+Run artifacts are <code>/tmp/claude-1000/-media-ssd2-Programming-chem-mat-data/202e8fa6-6fde-4211-8f71-ae295073d8a0/scratchpad/sandbox-elanos/.dataset_work/enalos_bp/</code>.
+Nothing below is fixed by <code>e39f0c4</code>, which changed documentation only.</p>
+<hr />
+<h2 id="the-structural-conclusion">The structural conclusion</h2>
+<p><strong>Every real defect either validation run found was found by a fresh subagent, and no
+gate found any of them.</strong> The verification subagent found four (a hook docstring that
+described behaviour the code did not have, an <code>int(data.get('CID', -1))</code> that can never
+reach its default, undocumented CID-0 passthrough, and the <code>.mpack</code>/<code>.csv</code> row-order
+mismatch). The license subagent found a fabricated paper title with the wrong first
+author — outside its brief, the most valuable catch of run 2. The gates passed every
+version, including the one whose docstring lied.</p>
+<p>That is not a gap the gates can close by getting stricter about the same things. It is a
+division of labour, and the code half of it is currently mis-specified. The gates check
+that <em>declared</em> facts are internally consistent with each other; almost every field they
+compare is one the agent wrote against another field the same agent wrote. Where a gate
+does have access to an independently-produced record, it does not read it: pycomex writes
+<code>experiment_meta.json</code> and a byte-exact <code>experiment_code.py</code> into every results directory,
+and <code>grep -rn 'experiment_meta|experiment_code|has_error|st_mtime' chem_mat_data/agent/</code>
+returns nothing.</p>
+<p>Two consequences drive the ranking:</p>
+<ol>
+<li><strong>The cheapest wins are making the gates read records the agent did not author</strong>
+   (<code>experiment_meta.json</code>), and making the subagents' findings survive
+   (<code>agent status</code> and the manifest currently throw them away).</li>
+<li><strong>The second structural conclusion is smaller but more urgent: the skill now contains
+   instructions that the code does not implement, and two of them were added yesterday.</strong>
+   <code>e39f0c4</code> added <code>cmmanage agent status &lt;slug&gt;  # shows the recorded license</code> at
+   SKILL.md:342 and at license.md:167. <code>agent_status_command</code> (manage.py:1808-1857) prints
+   the slug, the source URL, and the six stage lines. It does not print the license. That
+   instruction exists to stop an override from deleting the evidence that justified
+   escalating, and it cannot be followed. Documentation fixes that outrun the code are how
+   this skill accumulates its worst defects, because an agent trusts them.</li>
+</ol>
+<hr />
+<h2 id="ranked">Ranked</h2>
+<p>Ranked by severity of the underlying problem divided by cost. Confidence is marked per
+item: <strong>verified</strong> = I reproduced it against the code in this session; <strong>likely</strong> = the
+mechanism is verified but the harm is projected; <strong>speculative</strong> = design not yet probed.</p>
+<hr />
+<h3 id="1-agent-status-is-blind-and-the-newest-commit-tells-the-agent-to-depend-on-it">1. <code>agent status</code> is blind, and the newest commit tells the agent to depend on it</h3>
+<p><strong>Confidence: verified. Cost: small (~30 lines + 4 doc lines).</strong></p>
+<p>Three defects in one code path.</p>
+<ul>
+<li><code>agent status</code> renders only stage symbols, blocker and notes. SKILL.md:342 and
+  license.md:167 — both added by <code>e39f0c4</code> — instruct the agent to read the recorded
+  license back with it before merging a <code>human_override</code>. It shows no license at all.
+  The documented safeguard against an override deleting <code>upstream_database</code>,
+  <code>upstream_terms_url</code>, <code>upstream_license</code> and <code>attribution</code> is unperformable, leaving
+  "retype from memory" as the only option.</li>
+<li><code>manage.py:1918-1921</code> writes <code>notes = f'{len(report.warnings)} warning(s)'</code> and discards
+  the text. The real manifest records <code>notes: 1 warning(s)</code> for <code>prepare</code> and for
+  <code>license</code>. The license line is the one place in the whole run where the difference
+  between "benign human override" and "the upstream forbids derivative works" matters, and
+  the manifest does not record which it was.</li>
+<li><code>manage.py:1911-1916</code> records <code>report.errors[0].message</code> and drops errors 2..n. Blocked
+  runs are exactly the ones resumed cold in a new session.</li>
+</ul>
+<p><strong>Change.</strong>
+(a) Print the license record in <code>agent status</code> — identifier, evidence URL,
+<code>upstream_database</code>/<code>upstream_license</code> when named, override decision and reason — plus the
+recorded warning and blocker text under each stage line. This makes SKILL.md:342 true.
+(b) Add <code>warnings: List[str]</code> and <code>blockers: List[str]</code> to <code>StageState</code> <em>alongside</em>
+<code>notes</code> (not replacing it — <code>mark()</code> writes <code>notes='invalidated by a re-run of the …'</code> at
+manifest.py:357, and tests/test_agent_pipeline.py:114 asserts on it), populate from
+<code>report.warnings</code> / <code>report.errors</code>.
+(c) Set <code>allow_unicode=True</code> on <code>yaml.dump</code> at manifest.py:298 in the same commit, or the
+first warning quoting a <code>°C</code> target description writes <code>\xB0C</code> into the manifest.
+(d) Add three lines to SKILL.md: <code>--no-record</code> and <code>--strict</code> exist
+(manage.py:1867-1877), neither appears anywhere under <code>.claude/skills/</code>.</p>
+<p><strong>Risk.</strong> <code>agent status</code> currently renders blocker <em>or</em> notes as an either/or
+(manage.py:1846-1849); a third field needs that branch restructured or a stale stage will
+swallow its warnings.</p>
+<p><strong>Note.</strong> This closes known-outstanding item 3 outright, and the briefing's framing of
+that item is wrong: <code>--no-record</code> already gives a read-only gate re-run. I confirmed all
+six gates re-run in-process against the real manifest with the file md5 unchanged. It is
+undocumented, not absent.</p>
+<hr />
+<h3 id="2-an-approved-license-override-waives-every-check-including-the-one-added-because-of-run-1">2. An approved license override waives every check, including the one added because of run 1</h3>
+<p><strong>Confidence: verified. Cost: small (one function restructure + 3 lines).</strong></p>
+<p><code>gates.py:388-409</code> returns from <code>gate_license</code> inside the override branch, before the
+identifier, redistribution, attribution, upstream-database and host-divergence checks at
+411-495. Probed against the real module:</p>
+<ul>
+<li><code>{'evidence_url': ..., 'human_override': {'decision':'approved','reason':'looks fine to me'}}</code>
+  → <code>ok=True</code>, one warning reading <code>license None approved by human override</code>.</li>
+<li>The real <code>enalos_bp</code> manifest with the override removed produces <strong>two ERRORs</strong>:
+  <code>redistribution is 'allowed by the data record itself …; the upstream … forbids
+  distributing or preparing derivative works'</code> and <code>upstream database "US EPA EPI Suite
+  …" is under "No open license…" which is not permissive</code>. With the override, all of that
+  collapses to the single green line <code>license 'CC-BY-4.0' approved by human override</code>.
+  The gate report actively misrepresents the situation rather than merely under-describing
+  it.</li>
+</ul>
+<p>Separately, <code>gates.py:768</code> guards the final re-check on the override's <em>presence</em>:
+<code>if not override and not is_permissive(...)</code>. Loading the real manifest and mutating it:
+flipping the decision to <code>rejected</code> → <code>gate_verification ok=True</code>, zero issues; setting
+<code>decision: maybe</code> → ok=True; deleting <code>evidence_url</code> → ok=True; changing the identifier to
+<code>CC-BY-NC-4.0</code> → ok=True. The recheck cannot detect any change to the license record while
+an override key is present. SKILL.md stage 6 tells the reader this gate confirms "the
+license conclusion still holds".</p>
+<p>Also: SKILL.md:318-319's bolded "<code>upstream_database</code> is <strong>not optional</strong> — omitting the key
+fails the gate" is false whenever an override exists.</p>
+<p><strong>Change.</strong>
+(a) Restructure <code>gate_license</code> to collect all issues first, then, when an approved override
+is present, downgrade each ERROR to a WARNING prefixed verbatim
+(<code>waived by human override: upstream database "US EPA EPI Suite" is under …</code>), followed by
+the reason. Keep the verdict <code>ok=True</code> — the override is the designed escape hatch and
+<code>test_human_override_still_wins_over_upstream</code> names that intent. Both existing override
+tests assert only <code>.ok</code> and survive. Fix the <code>license None</code> rendering to
+<code>no license identified</code> in the same edit.
+(b) Replace <code>gates.py:765-772</code> with <code>for issue in gate_license(manifest).issues:
+report.add(issue.level, issue.message)</code>. Three lines, and it subsumes rejected /
+garbage-decision / deleted-evidence / changed-identifier / newly-restrictive-upstream at
+once.</p>
+<p><strong>Risk.</strong> Waived warnings multiply the license stage's warning count (the real run goes 1
+→ 3), so <code>agent gate license --strict</code> would then fail every overridden license. Decide
+deliberately whether waived warnings are exempt from <code>--strict</code>. Re-running <code>gate_license</code>
+inside <code>gate_verification</code> means any license ERROR now blocks the final gate — correct, but
+it will block runs whose license record was edited after stage 3 passed.</p>
+<p><strong>Do not</strong> require an identifier before an override can be approved (license.md:20 makes
+"no license stated at all" the documented escalate-to-human case, so identifier-absent +
+override is the intended path, and the defect is the <code>None</code> rendering), and do not add a
+<code>human_override.waives</code> list of issue identifiers (see rejected).</p>
+<hr />
+<h3 id="3-licensemd-instructs-prose-in-the-two-fields-the-gate-matches-against-fixed-vocabularies">3. license.md instructs prose in the two fields the gate matches against fixed vocabularies</h3>
+<p><strong>Confidence: verified. Cost: small (doc + optional schema split).</strong></p>
+<p><code>license.md:127</code> says <code>redistribution</code> — "<code>allowed</code>, or a description of the restriction".
+<code>license.md:133-134</code> says "Quote the restriction in your own words in <code>upstream_license</code>
+if it has no SPDX name". <code>gates.py:427-432</code> errors on any <code>redistribution</code> not in
+<code>('allowed','yes','permitted')</code>; <code>gates.py:477-483</code> runs <code>is_permissive()</code> — a set
+membership test against 15 SPDX-ish tokens — on <code>upstream_license</code>.</p>
+<p>So the documented way to fill these fields guarantees a false escalation. <code>redistribution:
+'allowed with attribution'</code> — the natural CC-BY phrasing — ERRORs. <code>upstream_license:
+'Public domain; PubChem places no restrictions on use or redistribution.'</code> ERRORs, directly
+contradicting SKILL.md:300-304's claim that "a named upstream whose own license is
+permissive passes without ceremony".</p>
+<p><strong>Change.</strong> Split each field: <code>redistribution</code> becomes an enum
+(<code>allowed</code> | <code>restricted</code> | <code>unknown</code>) with free-text <code>redistribution_note</code>;
+<code>upstream_license</code> becomes <code>upstream_license_id</code> (SPDX or <code>none</code>) plus free-text
+<code>upstream_license_note</code>, with <code>is_permissive</code> applied only to the id. Update license.md's
+"What to report" block and both SKILL.md examples. Fix SKILL.md:318-319 to say what is
+true after item 2 lands.</p>
+<p><strong>Risk.</strong> A schema change to a persisted manifest section; old manifests carry the old
+keys. Accept both for one release, or migrate on load.</p>
+<hr />
+<h3 id="4-crwl-o-markdown-fit-is-a-content-pruning-mode-and-there-is-no-implausible-output-check">4. <code>crwl -o markdown-fit</code> is a content-pruning mode, and there is no implausible-output check</h3>
+<p><strong>Confidence: verified. Cost: tiny (two string edits + one paragraph).</strong></p>
+<p>SKILL.md:150 makes <code>crwl '&lt;url&gt;' -o markdown-fit</code> the reader for every page, and
+troubleshooting.md:146 repeats it. <code>markdown-fit</code> is crawl4ai's pruning mode. Measured on
+the elanos_bp source article: <code>-o markdown</code> = 234,604 bytes, <code>-o markdown-fit</code> = 160,678
+bytes (31.5% pruned); <code>grep -c 'Full size table'</code> = 10 vs <strong>0</strong>. Those anchors are the only
+route to <code>https://link.springer.com/article/10.1007/s11030-025-11196-5/tables/2</code>, which
+reads <code>BP | − 88.60 | 548.00 | 188.98 ± 85.07</code> — degrees Celsius, i.e. the evidence that
+disproves the shipped script's "in Kelvin". SKILL.md:475 tells the stage-6 subagent to
+check "that the target values are in the range the paper reports"; the mandated reader mode
+deletes the route to that range. <code>grep -rn -i table</code> across SKILL.md and all five
+references returns no mention of publisher table pages at all.</p>
+<p>Separately, <code>crwl 'https://db.chempharos.eu/datasets/Datasets.zul' -o markdown</code> returns
+<strong>1 byte, exit 0</strong>, while <code>curl -sL -A 'Mozilla/5.0'</code> on the same URL returns 11,194 bytes
+containing the upstream provenance the license gate requires. The skill's fallback ladder
+(SKILL.md:148-163) is keyed on <em>failure</em>; a 1-byte exit-0 read is not a failure.</p>
+<p><strong>Change.</strong>
+(a) Change both occurrences to <code>-o markdown</code>. Add one sentence: <code>markdown-fit</code> prunes
+low-density blocks by design — it drops boilerplate but also drops tables, figure captions
+and short link-only sections. Never for the first read of an article.
+(b) Add an implausible-output rule to the tools section: after every page read, check the
+byte count and check the output contains a token you expect from that page class (an
+article: <code>availability</code> or <code>supporting</code>; a repository record: a filename or <code>download</code>).
+Under ~2 KB, or missing the token, is a <strong>failed</strong> read — go to the next reader. Add
+<code>curl -A 'Mozilla/5.0'</code> to the ladder as the reader that wins on Ajax/ZK apps where content
+sits in hidden divs.
+(c) Add a "publisher tables and figures live at their own URLs" note to data-sources.md with
+the Springer <code>/article/&lt;doi&gt;/tables/&lt;n&gt;</code> form.</p>
+<p>This is the whole of known-outstanding item 1, and it is the cheapest item on this list.</p>
+<hr />
+<h3 id="5-no-gate-reads-the-runs-own-record-a-crashed-run-passes-all-six">5. No gate reads the run's own record — a crashed run passes all six</h3>
+<p><strong>Confidence: verified. Cost: small-medium (~40 lines + test fixture update).</strong></p>
+<p>pycomex writes <code>experiment_meta.json</code> (<code>name</code>, <code>status</code>, <code>has_error</code>, <code>start_time</code>, and
+every parameter's actual value including <code>__TESTING__</code>) and <code>experiment_code.py</code> (a byte
+copy of the executing module — sha256 of the real run's copy equals the on-disk script) into
+every results directory. No gate opens either. <code>gate_execute</code> instead decides whether
+testing mode was on by regexing the <em>current source text</em> (<code>gates.py:635</code>), which describes
+the file now, not the run.</p>
+<p>Reproduced consequences:</p>
+<ul>
+<li>A results directory with <code>status='failed'</code> / <code>has_error=True</code> and everything else intact
+  passes <code>gate_script</code>, <code>gate_execute</code> and <code>gate_verification</code> with zero issues. The base
+  template writes <code>.mpack</code>, <code>.mpack.gz</code> and <code>metadata.yml</code> before the final <code>after_save</code>
+  hook — the hook the extraction agent routinely writes itself — so a run that crashes in
+  the agent's own code ships.</li>
+<li>A script edited an hour after the run, whose <code>experiment_code.py</code> literally reads
+  <code>OLD VERSION OF THE SCRIPT</code>, passes all three gates.</li>
+<li><code>smoke_results_dir</code> and <code>results_dir</code> are the identical string in the real manifest
+  (<code>…/create_graph_datasets__enalos_bp/debug</code>), because SKILL.md:419 and SKILL.md:437
+  prescribe the same path — and <code>__DEBUG__</code> <code>shutil.rmtree</code>s that folder at the start of the
+  next run, so by the time <code>gate_script</code> runs, the smoke output physically does not exist.
+  <code>gate_script</code> on the real manifest returns <code>ok=True</code> with zero issues while inspecting a
+  5432-compound <code>__TESTING__=False</code> full run and reporting it as the smoke run.</li>
+<li>Nothing ties a results directory to the script. Pointing <code>smoke_results_dir</code> at any other
+  single-target dataset's debug folder passes.</li>
+</ul>
+<p><strong>Change</strong>, in this order of value per line:</p>
+<ol>
+<li><code>_check_run_provenance(results_dir, script_path)</code> used by <code>gate_execute</code> and
+   <code>gate_verification</code>: ERROR when <code>has_error</code> is true or <code>status != 'done'</code>; ERROR when
+   <code>meta['name'] != Path(script_path).stem</code>. Three checks, no false-positive surface, closes
+   the crashed-run and wrong-directory holes outright. <strong>Do this even if you do nothing
+   else in this item.</strong></li>
+<li>Missing/unparseable <code>experiment_meta.json</code> → WARNING, not ERROR. Fatal-with-no-override
+   is a dead end for archived or relocated folders, and gates <code>sys.exit(1)</code> with no <code>--force</code>.</li>
+<li>In <code>gate_execute</code>, replace the <code>__TESTING__</code> source regex with
+   <code>meta['parameters']['__TESTING__']['value']</code>. The regex has a live false positive today:
+   <code>__TESTING__ = False  # (was True during the smoke run)</code> hard-blocks the run.</li>
+<li>Run the structural block (<code>gates.py:542-573</code>) against
+   <code>&lt;results_dir&gt;/experiment_code.py</code> in <code>gate_execute</code>, extracted as
+   <code>check_script_structure(source) -&gt; list[VerificationIssue]</code>. Today those five checks run
+   exactly once, on a file the workflow <em>guarantees</em> will be edited before the run
+   (SKILL.md:407 mandates <code>__TESTING__ = True</code>, SKILL.md:428 mandates <code>False</code>). Of the five,
+   <code>.dataset_work</code> is the one a stage-5 debugging edit plausibly introduces.</li>
+<li>In <code>gate_verification</code> only, compare <code>experiment_code.py</code> against the working script and
+   <strong>warn</strong> (not error) when they differ, printing both short hashes. Skip when
+   <code>experiment_config.yml</code> is present — <code>save_code</code> writes a stub, not a copy, for
+   config-based experiments.</li>
+<li>Two SKILL.md lines: run the smoke as
+   <code>python chem_mat_data/scripts/create_graph_datasets__&lt;name&gt;.py --__TESTING__ True --__DEBUG__ False</code>
+   and record the unique timestamped folder pycomex prints. The script file is then never
+   edited between smoke and full run, both runs' evidence survives, and
+   <code>smoke_results_dir != results_dir</code> by construction. <em>(This step is </em><em>likely</em><em>, not
+   verified: it depends on <code>ExperimentArgumentParser.parse</code> eval'ing CLI values, which one
+   investigator confirmed but I did not re-run.)</em></li>
+</ol>
+<p><strong>Risk.</strong> <code>write_results</code> (tests/test_agent_pipeline.py:565) emits neither file, so 15 tests
+in <code>TestScriptGate</code>/<code>TestExecuteGate</code> break until the fixture emits an <code>experiment_code.py</code>
+matching the script it wrote and a meta whose <code>name</code> equals the script stem. That is a
+fixture-coupling refactor, and <code>test_testing_flag_left_on_is_an_error</code> changes meaning.
+Do <strong>not</strong> hash the script against <code>smoke_results_dir/experiment_code.py</code> in <code>gate_script</code>
+— the mandated <code>__TESTING__</code> flip makes that mismatch by design, and gates have no override.
+Do <strong>not</strong> make the hash an ERROR anywhere: two of run 2's four verification fixes were
+comment-only, and a full run "can take hours".</p>
+<p>This closes known-outstanding item 2. Note that step 1 and step 6 are independent; step 6 is
+what actually makes the smoke check non-vacuous, and it costs two documentation lines.</p>
+<hr />
+<h3 id="6-source_url-is-still-settable-in-code-and-fixing-that-re-arms-a-warning-that-will-now-fire-on-every-run">6. <code>source_url</code> is still settable in code, and fixing that re-arms a warning that will now fire on every run</h3>
+<p><strong>Confidence: verified. Cost: small.</strong></p>
+<p><code>e39f0c4</code> documented <code>source_url</code> as "set once by <code>init</code>" in SKILL.md:68-74. <code>agent set</code>
+still accepts it (manage.py:1978), and manage.py:481-485's own help text still lists it
+first among the freely settable scalars. The prose and the tool disagree, which is exactly
+how the original defect happened: the real manifest records
+<code>source_url: https://zenodo.org/records/14392754/files/BP.csv?download=1</code>.</p>
+<p>The compound problem: with the download URL in <code>source_url</code>, the host-divergence warning
+(<code>gates.py:486-495</code>) compares <code>zenodo.org</code> against <code>zenodo.org</code> and stays silent — I
+confirmed it did <strong>not</strong> fire in run 2. Restore the correct Springer URL and it fires
+immediately. So <code>e39f0c4</code>'s doc fix converts known-outstanding item 4 from a hypothetical
+into a certainty: every ordinary paper-on-publisher / data-on-repository run will now warn.</p>
+<p>The root cause is that the manifest has no field for the direct download URL, so an agent
+that has just spent stage 1 establishing it has literally nowhere to record it.</p>
+<p><strong>Change.</strong> Remove <code>source_url</code> from the <code>scalars</code> dict and reject it with an error naming
+<code>init --url</code>. Add <code>record_url</code> (the repository landing page) and <code>data_url</code> (the direct
+download) as settable scalars. Have <code>gate_license</code> compare the evidence host against
+<code>record_url</code> when present and <code>source_url</code> otherwise — which is the correct comparison
+anyway, since the question the warning exists for is "is the file we downloaded covered by
+the license we read", not "did the paper and the data live on the same host". Fix
+manage.py:483.</p>
+<p><strong>Risk.</strong> Removing a settable key breaks any in-flight run that expects it; the error
+message must name the replacement.</p>
+<hr />
+<h3 id="7-the-final-gate-never-compares-target_descriptions-or-dataset_name">7. The final gate never compares <code>target_descriptions</code> or <code>dataset_name</code></h3>
+<p><strong>Confidence: verified. Cost: small.</strong></p>
+<p><code>gate_verification</code> compares <code>('verbose','description')</code> at gates.py:741 and
+<code>('tags','sources')</code> at gates.py:754. Nothing else. Probed on the real manifest: replacing
+the draft's <code>target_descriptions</code> with <code>'BP - boiling point in KELVIN, log-transformed'</code>,
+<code>dataset_type</code> with <code>'classification'</code> and <code>dataset_name</code> with <code>'something_else'</code> →
+<code>ok=True</code>, <strong>zero issues</strong>. <code>target_descriptions</code> is the only per-target place units live,
+and <code>dataset_name</code> is the identifier a downstream user types into <code>load_smiles_dataset</code>.
+<code>gates.py:709-710</code>'s docstring claims the gate "confirms that what ended up in
+<code>metadata.yml</code> actually matches what the metadata stage approved". (SKILL.md:383-385 already
+states the truth correctly, so the docstring is the only place that overclaims.)</p>
+<p><strong>Change.</strong> Compare <code>target_descriptions</code> index-by-index after
+<code>normalize_target_description_keys</code> at <strong>WARNING</strong> on divergence (matching how
+<code>verbose</code>/<code>description</code> are already treated) and <strong>ERROR</strong> when an index approved in the
+draft is missing or empty. <strong>ERROR</strong> when <code>draft['dataset_type']</code> is not in
+<code>written['target_type']</code> — categorical, so a mismatch is unambiguous, and across all 45
+catalog entries <code>target_type</code> is uniformly <code>['regression']</code> or <code>['classification']</code>.
+<strong>ERROR</strong> when the <code>.mpack</code> stem does not equal <code>draft['dataset_name']</code>. Fix the docstring.
+Document <code>--strict</code> at stage 6, which makes every warning blocking at the final gate for
+zero code change.</p>
+<p><strong>Be honest about what this buys.</strong> It catches transcription drift between the approved
+draft and the <code>METADATA</code> literal. It would <strong>not</strong> have caught the "in Kelvin" defect: that
+script has no manifest and never went through the skill, and an agent confidently wrong
+about units writes the same wrong string into both sides. See item 9 for the check that
+would.</p>
+<p><strong>Do not</strong> promote the missing-<code>' - '</code>-separator warning to ERROR, and do not add a
+<code>description[i].split(' - ')[0] == TARGET_COLUMNS[i]</code> check (both in rejected).</p>
+<hr />
+<h3 id="8-the-mpack-and-the-csv-of-the-same-run-are-a-full-permutation-of-each-other">8. The <code>.mpack</code> and the <code>.csv</code> of the same run are a full permutation of each other</h3>
+<p><strong>Confidence: verified. Cost: medium.</strong></p>
+<p>Measured on the real run: 5432 graphs, 5432 CSV rows, <strong>5432/5432 positional mismatches</strong>,
+identical sorted multisets. <code>mpack[:3] = ['CC(C)CCC(CC)CC', 'CC(CC)(CC)C(O)=O',
+'C[C@@H](N)C(C)(C)C']</code> against <code>csv[:3] = ['C=O', 'OC(=O)c1cc(Cl)ccc1Cl',
+'CN(C)CN(C)C']</code>. Content is intact; only row order diverges. Anyone joining the two
+artifacts by row index silently mismatches every compound.</p>
+<p>Cause: <code>create_graph_datasets.py:357</code> feeds workers with <code>indices.pop()</code> (from the tail)
+and appends graphs in <em>completion</em> order, while <code>save_csv</code> (lines 256-284) iterates the
+dataset in insertion order. Second, independent bug: <code>save_csv</code> is applied at lines 324-326,
+<strong>before</strong> the <code>__TESTING__</code> truncation at 333-337, so every smoke run writes a
+full-length CSV next to a 50-graph mpack.</p>
+<p>This is in the shared base template, so it affects every dataset in the repository, not just
+skill-produced ones. <code>verify_results</code> (verification.py:186-190) checks only that both files
+exist.</p>
+<p><strong>Change.</strong> Carry the source index through the worker and sort <code>graphs</code> back into dataset
+order before saving; move the <code>save_csv</code> call after the <code>__TESTING__</code> truncation; set
+<code>allow_unicode=True</code> on <code>yaml.dump</code> at create_graph_datasets.py:458 (this is where the
+<code>\xB0C</code> escape in the known-outstanding list comes from — it is cosmetic, since
+<code>yaml.safe_load</code> round-trips it correctly, but the file is meant to be human-readable).
+Add a cross-artifact check to <code>verify_results</code>: CSV row count must equal <code>compounds</code>, and
+the first N mpack SMILES must equal the corresponding CSV rows.</p>
+<p><strong>Risk.</strong> Changing row order changes the bytes of every dataset the next time it is
+regenerated; if any downstream consumer has pinned an index-based split, it breaks. Worth
+checking before shipping. The <code>verify_results</code> cross-check will fail on every existing
+results directory until the template fix lands — sequence them.</p>
+<hr />
+<h3 id="9-units-have-no-check-at-all-record-the-source-stated-range-and-check-it">9. Units have no check at all; record the source-stated range and check it</h3>
+<p><strong>Confidence: likely (the streaming implementation was measured; the manifest field is new design). Cost: medium.</strong></p>
+<p>Units are the highest-consequence claim the pipeline makes and the only one with no
+verification anywhere. Nothing in the manifest records what the paper says the values
+should look like, so stage 6's instruction to check "that the target values are in the
+range the paper reports" (SKILL.md:475) has no reference point recorded anywhere and no
+mechanical backstop.</p>
+<p><strong>Change.</strong> Add <code>target_ranges</code> to <code>metadata_draft</code>: per target index, the min/max/mean the
+source states, plus the URL it was read from (<code>null</code> with an explicit reason when the source
+states none). <code>gate_metadata</code> requires the key present for regression datasets. In
+<code>gate_execute</code>, stream the labels out of the <code>.mpack</code> with
+<code>msgpack.Unpacker(f, ext_hook=…)</code> + <code>read_array_header()</code> — one graph at a time,
+accumulating min/max/mean/n_unique per target index — and ERROR when the observed range
+falls outside the declared range beyond tolerance, WARN when it is a suspiciously narrow
+subset. Print the per-target summary statistics unconditionally, so the stage-6 subagent has
+numbers to hold against the paper instead of having to compute them itself.</p>
+<p>Measured: streaming is 0.08 s / 3 MB RSS on the real 29 MB mpack, versus 0.09 s / 69 MB for
+<code>load_graphs</code>, and it scales to the 19.4 GB mpacks in this repo that <code>load_graphs</code> cannot
+touch. <strong>Never call <code>load_graphs</code> in a gate.</strong></p>
+<p>This is the only proposal on the list that could have caught "in Kelvin" (declared −88.6 to
+548.0 against a Kelvin claim), and it is the only one that catches a wrong <code>TARGET_COLUMNS</code>
+(<code>D001</code>'s range is 0..1). It depends on item 4(c) to make publisher table pages reachable.</p>
+<p><strong>Risk.</strong> A new required field in <code>metadata_draft</code> blocks existing in-flight runs. Papers
+that state no ranges need the explicit-<code>null</code>-with-reason path or the requirement becomes
+an invitation to fabricate numbers, which is worse than no check.</p>
+<hr />
+<h3 id="10-gate_prepare-accepts-anything-non-empty-that-does-not-start-with-html">10. <code>gate_prepare</code> accepts anything non-empty that does not start with <code>&lt;html</code></h3>
+<p><strong>Confidence: verified. Cost: small in the reduced form (~30 lines).</strong></p>
+<p><code>gates.py:211-218</code> checks <code>st_size &gt; 0</code> and an HTML byte prefix, and nothing else. All of
+the following pass with <code>ok=True</code>: <code>BP.csv</code> containing <code>Not Found</code>; a Zenodo JSON record
+dump saved as <code>BP.csv</code>; <code>smiles,BP\n</code> and nothing else; <code>&lt;?xml version="1.0"?&gt;&lt;error&gt;access
+denied&lt;/error&gt;</code>. <code>gates.py:231</code> requires only that the substring <code>http</code> appears somewhere in
+the recipe, so <code>see the paper at http://doi.org/10.1000/xyz</code> passes while recording nothing
+the script stage can build a download from. Conversely, a legitimate two-row
+<code>license_compounds.csv</code> is <strong>rejected</strong> — <code>NON_DATA_NAMES</code> (gates.py:70) is matched as a
+bare substring of the filename.</p>
+<p>Severity is capped: the script must be self-contained, so a garbage scratch download surfaces
+at the smoke run (<code>no .mpack dataset file found</code>, <code>smoke run produced 0 compounds</code>). The cost
+is two wasted stages, not a shipped-wrong dataset. The one genuinely silent case is a
+truncated-but-parseable download: the agent types <code>input_rows</code> from the partial copy, the
+script downloads the full file, and <code>gate_execute</code> only <em>warns</em> when <code>compounds &gt;
+input_rows</code> — so an unnoticed truncation converts the execute gate's one quantitative
+safeguard into a no-op.</p>
+<p><strong>Change.</strong>
+(a) Directory-level, not per-file: ERROR unless <strong>at least one</strong> file in the downloads dir
+parses as a table with ≥1 data row (<code>sep=None, engine='python'</code>; no ≥2-columns requirement —
+a single-column SMILES list is legitimate). This catches every demonstrated case while
+leaving ancillary JSON and prose files alone.
+(b) Match <code>NON_DATA_NAMES</code> against the filename stem with word boundaries, and list the
+excluded files in the "no data files" error so it is diagnosable.
+(c) Promote <code>compounds &gt; input_rows</code> from WARNING to ERROR (gates.py:653-658), with the same
+<code>max_drop_rate</code>-style escape hatch the drop check has. This is the actual fix for the silent
+case.
+(d) Recipe check: require at least one URL whose host is not <code>doi.org</code>/<code>dx.doi.org</code>.
+(e) Reword the "no README captured — units will have to be inferred" warning to "no schema
+documentation captured", and fire it only when neither a README nor a schema section in the
+recipe is present. In the real run the agent's own <code>download_recipe.md</code> documented the 798
+columns, the units and the value range better than any README would, and the gate warned
+anyway. (Known-outstanding item 5.)</p>
+<p><strong>Do not</strong> add a per-suffix parse dispatch, a JSON "repository record" heuristic, or a rule
+matching URL final segments against downloaded filenames — all three block legitimate runs
+(see rejected).</p>
+<hr />
+<h3 id="11-a-blocked-run-cannot-record-why">11. A blocked run cannot record why</h3>
+<p><strong>Confidence: verified mechanism, projected harm. Cost: small.</strong></p>
+<p>SKILL.md:78-113 teaches the agent to compose a good escalation — what is blocking, what was
+tried with specific URLs and tools, what is needed — and then SKILL.md:105 tells it to persist
+that by running <code>cmmanage agent gate &lt;stage&gt; &lt;slug&gt;</code>, which records the gate's mechanical
+first error instead. On a paywalled paper the manifest ends up saying <code>no data files in the
+downloads directory (only README/recipe files were found)</code>. <code>agent set</code> rejects <code>blocker</code>
+and <code>notes</code> outright (manage.py:1985-1996), so the information has nowhere to go.</p>
+<p>The sharper defect, which matters more than the missing prose: <strong><code>BLOCKED</code> is not a
+human-escalation marker.</strong> <code>--record</code> defaults on, so <em>any</em> failed gate marks BLOCKED,
+including ones the agent fixes thirty seconds later. A resuming reader cannot distinguish
+"needs a human with an ACS subscription" from "the agent hadn't written the draft yet".</p>
+<p><strong>Change.</strong> With item 1(b) done (all errors recorded, not just the first), add one command:
+<code>cmmanage agent block &lt;stage&gt; &lt;slug&gt; --why &lt;one line&gt; --tried &lt;text&gt; --need &lt;text&gt;</code>, which
+sets <code>needs_human: true</code> on the stage state so <code>agent status</code> can render
+<code>✗ blocked — needs a human: &lt;why&gt;</code> versus <code>✗ blocked — gate failure, resumable</code>. Run it
+<em>after</em> the gate, and say so at SKILL.md:102-105: the gate records the symptom, <code>agent block</code>
+records the diagnosis.</p>
+<p>Also fix <code>Manifest.mark</code> (manifest.py:343) to preserve <code>blocker</code> and <code>notes</code> unless new ones
+are passed, instead of constructing a fresh <code>StageState</code>. Today <code>agent block</code> followed by
+<code>agent gate</code> — the ordering the original proposal prescribed — silently erases everything the
+block command wrote. A status change is not a reason to forget why.</p>
+<p><strong>Risk.</strong> <code>needs_human</code> on <code>StageState</code> touches <code>to_dict</code>/<code>from_dict</code>; old manifests must load
+with it absent (manifest.py:109-116 already tolerates missing keys). Do not add <code>agent note</code>
+— no demonstrated demand.</p>
+<hr />
+<h3 id="12-manifest-durability-and-no-way-to-find-a-run-again">12. Manifest durability, and no way to find a run again</h3>
+<p><strong>Confidence: verified. Cost: small.</strong></p>
+<p>Three separate small things in the state layer, cheap enough to do in one session:</p>
+<ul>
+<li><code>manifest.py:297-298</code> rewrites the file in place with a plain truncating <code>open</code>, no temp
+  file, no backup — on every <code>agent set</code> and every <code>agent gate</code>. <code>load()</code> then does the worst
+  possible thing with damage: <code>StageState.from_dict</code> returns a pending state for any non-dict
+  (manifest.py:109-110) and absent stages are filled in as pending (manifest.py:235-238), so a
+  manifest truncated to <code>slug: g\nsource_url: https://x</code> loads <strong>without error</strong> reporting
+  that nothing has been done. A resuming agent re-downloads, re-licenses and re-scripts a
+  completed run, losing the human's override. Fix: temp + <code>os.replace</code>, a <code>.bak</code> copy, and
+  raise on a missing <code>slug</code>/<code>created_at</code>/<code>stages</code> mapping rather than defaulting to pending.</li>
+<li>The agent group registers only <code>venv, tools, verify, init, status, gate, set</code>
+  (manage.py:825-832). There is no way to enumerate <code>.dataset_work/</code>, so a human returning to
+  a blocked run must already know its slug. Add <code>agent list</code>: slug, dataset name, next stage,
+  status, blocker first line, age, sorted blocked-first.</li>
+<li><code>init --force</code> (manage.py:1782-1789) constructs a fresh manifest over the old one, deleting a
+  recorded <code>license.human_override</code> — a human's verbatim words, often the product of an email
+  exchange — while leaving the downloads that made the run cheap to resume. Rename the existing
+  file to <code>manifest.&lt;created_at&gt;.yml</code> instead, and refuse outright when <code>human_override</code> is
+  present unless a separate explicit flag is given, quoting the recorded decision in the error.</li>
+</ul>
+<p>Also worth noting and not fixing here: <code>agent set</code> writes the entire manifest payload with
+<strong>zero</strong> staleness invalidation (manage.py:1956-2020 never calls <code>mark()</code>). Replacing
+<code>metadata_draft</code>, <code>results_dir</code> and <code>script_path</code> on a fully-passed run leaves all six stages
+<code>passed</code>. The staleness model guards <code>gate</code>, but <code>set</code> is where state actually changes. This
+is the mechanism by which an ERROR added anywhere is trivially cleared by rewriting the draft
+to match whatever the script says — worth knowing before relying on any new ERROR.</p>
+<hr />
+<h3 id="13-two-smaller-instruction-defects">13. Two smaller instruction defects</h3>
+<p><strong>Confidence: verified. Cost: tiny.</strong></p>
+<ul>
+<li><strong>SKILL.md:52 and SKILL.md:485 say "re-run" a stale stage.</strong> For <code>execute</code> — whose own text
+  warns "This can take hours" — that reads as an instruction to reprocess the dataset. Gates
+  execute nothing; they read files. Measured on the real completed run: <code>script</code> 2.5 ms,
+  <code>execute</code> 2.0 ms, <code>verification</code> 3.6 ms, all <code>ok=True</code>. And license.md:181 routes every
+  CC-BY dataset with an attribution requirement — the most common passing license — straight
+  into that cascade by design. Replace with: "Re-run its <em>gate</em> first — the results on disk are
+  untouched and it normally re-passes in well under a second. Only redo the stage's work if the
+  gate then fails."</li>
+<li><strong>SKILL.md:385-387 documents a failure mode that does not exist.</strong> It says putting
+  <code>description</code> only in <code>METADATA</code> and not in <code>DESCRIPTION</code> "is the way to fail that gate at the
+  very last stage". <code>create_graph_datasets.py:453</code> does <code>metadata.update(e.METADATA)</code>, so
+  <code>METADATA['description']</code> lands in <code>metadata.yml</code> and matches the draft — it passes. The
+  instruction trains the reader to guard against the wrong thing. Replace with the true
+  statement: the template merges <code>METADATA</code> over the derived fields, so whichever of
+  <code>DESCRIPTION</code> / <code>METADATA['description']</code> you set must match the approved draft verbatim.</li>
+<li><strong><code>examples/xyz_3d.py</code> contradicts the stage-4 non-negotiable it illustrates.</strong> SKILL.md:371-373
+  says <code>load_dataset</code> must download from the original URL and must not read <code>.dataset_work/</code>.
+  The example sets <code>SOURCE_PATH = ~/Downloads/qm9.xyz_bundle</code>, contains no download code at all
+  (<code>grep 'requests|urlretrieve|FileDownloadSource'</code> → nothing), and passes <code>gate_script</code>'s
+  self-containment check only because <code>re.search(r'https?://', source)</code> (gates.py:569) is
+  satisfied by the two DOIs sitting in <code>METADATA['sources']</code>. Either give the example real
+  download logic or label it as the one archetype where the data is fetched by the intermediate
+  base.</li>
+</ul>
+<p>Also worth two lines in SKILL.md while editing: the skill has <strong>zero</strong> coverage of a paper that
+publishes several datasets (<code>grep -rn -i 'multiple dataset|several dataset|each dataset'</code> across
+all nine skill files returns nothing), while the elanos_bp source paper publishes nine across
+nine repository records, and the manifest is single-valued throughout. State the rule: one slug
+per shippable dataset; enumerate them first and say so to the user. And specify <code>input_rows</code>
+properly — SKILL.md:206's trailing comment "rows in the raw source, for the drop check" is its
+entire specification, for the number that drives the pipeline's only defence against silent data
+loss.</p>
+<hr />
+<h3 id="14-resolve-citations-against-the-doi-registry">14. Resolve citations against the DOI registry</h3>
+<p><strong>Confidence: verified that the mechanism works; the gate integration is design. Cost: medium.</strong></p>
+<p>The pipeline's output is a citable scientific artifact whose provenance is entirely
+agent-authored prose, and no gate reads any of it. In run 2 the agent invented a paper title
+with the wrong first author in its own download recipe, and the license subagent caught it
+<em>outside its brief</em> — by luck. <code>gate_metadata</code> requires <code>sources</code> to be a non-empty list
+(gates.py:301-303) and nothing more, so a hallucinated DOI ships.</p>
+<p>One endpoint covers both registries:
+<code>curl -sL -H 'Accept: application/vnd.citationstyles.csl+json' https://doi.org/&lt;doi&gt;</code> returns
+CSL-JSON via Crossref for the Springer DOI (title, first author <code>Koutroumpa, Nikoletta-Maria</code>),
+via DataCite for the Zenodo DOI, and HTML for a fabricated one. ~1 s per DOI.</p>
+<p><strong>Change.</strong> <code>cmmanage agent cite &lt;slug&gt; &lt;doi&gt;</code> fetches and stores the registry record verbatim
+under <code>citations[&lt;doi&gt;]</code>. <code>gate_metadata</code> then requires every DOI-shaped entry in <code>sources</code> to
+have a resolved record; <code>gate_license</code> requires <code>evidence_url</code>'s DOI, when it has one, to be
+among them; the skill instructs the agent to compose citation prose <em>from</em> the stored records
+rather than from memory. Add <code>--offline</code> degrading to a warning.</p>
+<p>Cheaper alternative if that is too much machinery: widen the stage-3 subagent's brief from
+"license" to "provenance and license" and make citation verification an explicit deliverable.
+That converts run 2's luckiest catch into a process, for the cost of one paragraph — and given
+the structural conclusion at the top of this document, it may be the better trade.</p>
+<hr />
+<h2 id="considered-and-rejected">Considered and rejected</h2>
+<p><strong>Reconcile the produced dataset against the raw source instead of counting rows.</strong> Provably
+cannot detect what it exists to detect: it reads <code>SMILES_COLUMN</code>/<code>TARGET_COLUMNS</code> out of the
+run's own <code>experiment_meta.json</code> and then reads those same columns from <code>raw_data.csv</code>, so the
+sets match by construction. Demonstrated by building three genuine datasets from the real
+<code>raw_data.csv</code> (correct columns; <code>TARGET_COLUMNS=['D001']</code>; <code>SMILES_COLUMN='Canonical SMILES'</code>)
+— absent-fraction 0.00% for all three. It also hard-fails every classification dataset built
+with the repo's one-hot pattern (15 of 71 scripts) and every log/unit-transformed target (6
+scripts), <code>raw_data.csv</code> is present in 0 of 51 real results dirs, and <code>load_graphs</code> would need
+~65 GB peak on the largest mpack. Replaced by item 9, which sources the expectation from the
+paper rather than from the run.</p>
+<p><strong>Split the manifest into source-scoped and dataset-scoped state with a <code>DEPENDS_ON</code> graph.</strong>
+The motivating scenario is structurally unreachable — <code>run_gate</code> refuses to gate <code>script</code> while
+<code>license</code> has not passed, so the "human approves an override days later and invalidates the
+multi-hour run" event cannot happen. When re-gating is reachable it costs 2-4 ms, not hours
+(measured). And the proposed dependency map omits <code>prepare → license</code>, although <code>gate_license</code>
+reads <code>manifest.source_url</code> — so a prepare re-run landing on a different record would leave a
+license established against the old record marked <code>passed</code>, reintroducing the run-1 failure
+class. Positional invalidation over-invalidates cheaply and never under-invalidates a
+safety-relevant edge; keep it. Fix the wording instead (item 13).</p>
+<p><strong>Cache the license finding across a paper's sibling datasets.</strong> license.md:6-9 runs the license
+stage as a fresh subagent <em>deliberately</em>: "an agent with no stake in the outcome reads the terms
+as they are." Both runs' best catches came from that independence. Nine independent
+investigations are nine replications of the only safety check, not nine chances to disagree; the
+disagreement is the signal. Also the license is not source-scoped in the motivating example —
+the paper's nine datasets live in nine separate Zenodo records with per-record license fields.
+If the rediscovery cost matters, <code>agent init &lt;slug&gt; --from &lt;sibling&gt;</code> handing the sibling's
+conclusion to the fresh subagent as <strong>prior art it must agree or disagree with</strong> gets the saving
+without losing the independence.</p>
+<p><strong>Pin <code>script_sha256</code> in the manifest.</strong> By the proposer's own reasoning the digest always
+differs at the execute gate (the mandated <code>__TESTING__</code> flip), so the conditional carries no
+information. It also requires gates to mutate the manifest, which today happens exclusively in
+<code>agent_gate_command</code>. <code>experiment_code.py</code> is already a byte-exact record written by the runner
+rather than by the agent being policed — use it (item 5).</p>
+<p><strong>Require an identifier before an override can be approved, and a <code>human_override.waives</code> list
+of issue identifiers.</strong> license.md:124 says to omit <code>identifier</code> entirely rather than guess, and
+license.md:20 makes "no license stated at all" the documented escalate-to-human case — so
+identifier-absent + override is the intended path, and the defect is the <code>None</code> rendering.
+<code>VerificationIssue</code> is <code>level</code> + free-text <code>message</code> with 69 <code>report.add()</code> sites; adding a code
+taxonomy makes persisted manifest schema that can never be reworded, and the extraction agent
+would author both the license blob and the <code>waives</code> list, so it buys no oversight.</p>
+<p><strong>Promote the missing-<code>' - '</code>-separator warning to ERROR.</strong> 43 of 484 shipped descriptions lack
+the separator, whole datasets at a time (tmqmg 20/20, tmqm 8/8, kulik_spin 7/7). It is style, and
+<code>test_description_without_separator_is_a_warning</code> asserts the current behaviour by name.
+<code>--strict</code> already covers anyone who wants it blocking.</p>
+<p><strong>Have <code>gate_execute</code> assert <code>description[i].split(' - ')[0] == TARGET_COLUMNS[i]</code>.</strong> Breaks six
+shipped scripts, including <code>half_life</code> — the script the skill itself produced in validation run 1
+— and both binary-classification scripts, whose one-hot pattern produces more descriptions than
+<code>TARGET_COLUMNS</code> entries. It also contradicts metadata.md:82, which teaches a semantic label as
+the head for classification targets.</p>
+<p><strong>Derive <code>input_rows</code> from the downloaded scratch file.</strong> The denominator would come from a copy
+that may itself be truncated, arriving labelled "derived, not typed" and trusted accordingly.
+Promote <code>compounds &gt; input_rows</code> to ERROR instead (item 10c) — that compares the typed denominator
+against the <em>script's</em> own acquisition of the source.</p>
+<p><strong>Demote the preprint/published host-divergence warning.</strong> It reverses part of <code>e39f0c4</code>, and a
+"both hosts are publication venues" test needs a hardcoded venue allowlist that would suppress the
+paper-on-Springer / SI-elsewhere case. Compare against <code>record_url</code> instead (item 6) — that is the
+comparison the warning should have been making from the start.</p>
+<p><strong>Per-format parse dispatch in <code>gate_prepare</code>, a JSON "repository record" heuristic, and matching
+URL final segments against downloaded filenames.</strong> The JSON rule would have blocked the only
+end-to-end run the skill has ever passed — that run's downloads directory legitimately contains
+<code>zenodo_record_14392754.json</code> as provenance. The URL rule is wrong by construction for figshare
+(<code>ndownloader/files/&lt;id&gt;</code>), OSF and Dryad, three of the eight hosts documented in
+data-sources.md. <code>pd.read_csv(nrows=5)</code> with a ≥2-column requirement hard-errors on
+semicolon-separated CSV, single-column SMILES lists and prose <code>.txt</code> documentation. A false ERROR
+here is more expensive than a false pass, because the pass is caught at the smoke run while the
+ERROR stops a correct run dead.</p>
+<p><strong><code>agent note</code> (an append-only timestamped log in the manifest).</strong> No demonstrated demand from
+either validation run. With all gate errors and warnings persisted (item 1), nothing remains for
+it to carry.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.expand"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

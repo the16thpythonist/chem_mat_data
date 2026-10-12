@@ -1,0 +1,1858 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the16thpythonist.github.io/chem_mat_data/docs/dataset_redistribution_analysis/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Redistributing Ilm-NMR-P31: upstream licensing and the "link, don't host" proposal - ChemMatData</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#redistributing-ilm-nmr-p31-upstream-licensing-and-the-link-dont-host-proposal" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ChemMatData" class="md-header__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChemMatData
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Redistributing Ilm-NMR-P31: upstream licensing and the "link, don't host" proposal
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ChemMatData" class="md-nav__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    ChemMatData
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first_steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First steps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Command Line Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List Available Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_info/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Show Dataset Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download Dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Configuration File
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local File Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Programming Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Programming Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loading Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_streaming_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph_representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Representation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing_graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processing New Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_pre_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Pre-Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-two-answers-up-front" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The two answers, up front
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The two answers, up front">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#q1-the-authors-already-published-it-so-its-more-or-less-public-can-we-take-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q1 — "The authors already published it, so it's more or less public. Can we take it?"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-what-if-we-fetch-from-zenodo-instead-of-hosting-it-ourselves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Q2 — "What if we fetch from Zenodo instead of hosting it ourselves?"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-analysis-what-is-actually-protected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The analysis: what is actually protected
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. The analysis: what is actually protected">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-the-individual-shift-values-not-protected-clearly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 The individual shift values — not protected, clearly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-do-the-books-count-as-databases-at-all-yes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Do the books count as "databases" at all? — Yes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-is-there-substantial-investment-yes-and-this-cuts-against-you" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Is there "substantial investment"? — Yes, and this cuts against you
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#14-term-and-this-is-where-the-case-actually-turns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4 Term — and this is where the case actually turns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#15-copyright-in-the-compilation-a-separate-weaker-claim" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5 Copyright in the compilation — a separate, weaker claim
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#16-the-tdm-exceptions-do-not-cover-you-this-is-clear" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6 The TDM exceptions do not cover you — this is clear
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#17-good-faith-reliance-helps-with-damages-not-with-an-injunction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.7 Good-faith reliance — helps with damages, not with an injunction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#18-the-us-contrast-the-same-act-is-lawful-there" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.8 The US contrast — the same act is lawful there
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-question-2a-does-linking-change-the-legal-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Question 2(a): does linking change the legal position?
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Question 2(a): does linking change the legal position?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-genuinely-open-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The genuinely open question
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-question-2b-engineering-viability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Question 2(b): engineering viability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Question 2(b): engineering viability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-the-load-path-has-exactly-one-source-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 The load path has exactly one source model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-zenodosource-exists-but-only-at-build-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 ZenodoSource exists — but only at build time
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-the-cache-cannot-express-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 The cache cannot express versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-reproducibility-this-record-is-a-moving-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 Reproducibility: this record is a moving target
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-it-discards-the-entire-point-of-the-mpack-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 It discards the entire point of the .mpack model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-offline-use-rate-limits-failure-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 Offline use, rate limits, failure modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-the-option-nobody-has-proposed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. The option nobody has proposed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-a-general-rule-for-the-collection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. A general rule for the collection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. A general rule for the collection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-the-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 The rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-the-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 The classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-three-new-manifest-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Three new manifest fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-two-rules-of-thumb-worth-stating-flatly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 Two rules of thumb worth stating flatly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-one-structural-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 One structural gap
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-what-to-ask-the-legal-office" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. What to ask the legal office
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-what-i-could-not-establish" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. What I could not establish
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="redistributing-ilm-nmr-p31-upstream-licensing-and-the-link-dont-host-proposal">Redistributing Ilm-NMR-P31: upstream licensing and the "link, don't host" proposal</h1>
+<p><strong>This is not legal advice, and I am not a lawyer.</strong> It is a research memo describing how
+the relevant law is generally understood, written so that the maintainer can put sharp
+questions to KIT's legal office instead of vague ones. Every legal source cited below was
+fetched and read; where I could not verify something I say so inline, marked
+<code>[UNVERIFIED]</code>. Do not act on this without the legal office signing off on the two or
+three points flagged as decisive.</p>
+<hr />
+<h2 id="the-two-answers-up-front">The two answers, up front</h2>
+<h3 id="q1-the-authors-already-published-it-so-its-more-or-less-public-can-we-take-it">Q1 — "The authors already published it, so it's more or less public. Can we take it?"</h3>
+<p><strong>No, that reasoning is wrong — but the conclusion is closer to "yes, mostly" than you'd
+expect, for entirely different reasons.</strong></p>
+<p>Publishing something under CC-BY-4.0 cannot grant rights the publisher never held. The
+licence says so itself: the grant is limited to rights "<strong>that the Licensor has authority
+to license</strong>" (<a href="https://creativecommons.org/licenses/by/4.0/legalcode.en">CC BY 4.0 §1(7)</a>),
+and §5(a) expressly disclaims any warranty of title or non-infringement. So the CC-BY tag
+on the Zenodo record is not a shield. That is the <code>nemo dat</code> point and it is correct.</p>
+<p>But "is it protected at all?" is the question that actually decides this, and the answer
+splits the dataset cleanly in two:</p>
+<table>
+<thead>
+<tr>
+<th>Source block</th>
+<th style="text-align: right;">3D structures</th>
+<th>EU database right</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HBP</strong> — Tebby, CRC Press, <strong>1991</strong></td>
+<td style="text-align: right;"><strong>6,608</strong></td>
+<td>Term expired <strong>31 Dec 2012</strong> (§137g(2) UrhG); maker is US, likely outside Art. 11</td>
+<td><strong>Very likely clean</strong></td>
+</tr>
+<tr>
+<td><strong>Lan1/2/3</strong> — Landolt-Börnstein III/40H, Springer, <strong>2013/14</strong></td>
+<td style="text-align: right;"><strong>5,114</strong></td>
+<td>Term runs to <strong>~2029</strong>; German maker; investment is in <em>obtaining</em>, not creating</td>
+<td><strong>This is the exposure</strong></td>
+</tr>
+<tr>
+<td>NMRexp (journal-scraped)</td>
+<td style="text-align: right;">0</td>
+<td>—</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+<p>The individual chemical-shift values are <strong>not protected as such</strong> anywhere — not in
+Germany, not in the US. What is potentially protected is the <em>compilation</em>. And the
+compilation right on the larger of the two blocks (56% of your 3D structures) ran out
+thirteen years ago.</p>
+<p>So the honest position is: <strong>the Landolt-Börnstein-derived 5,114 structures are the
+problem, and they are separable.</strong> Your <code>source</code> column already distinguishes them. See
+<a href="#the-option-nobody-has-proposed">the middle path</a> below.</p>
+<h3 id="q2-what-if-we-fetch-from-zenodo-instead-of-hosting-it-ourselves">Q2 — "What if we fetch from Zenodo instead of hosting it ourselves?"</h3>
+<p><strong>Legally it does not help you, and it is the wrong counterparty. Engineering-wise it is a
+structural change, not a small one, and it destroys the main thing the project is for.</strong></p>
+<p>Not hosting avoids "extraction". It does not avoid "<strong>re-utilisation</strong>", which is defined
+as "any form of making available to the public ... by ... on-line <strong>or other forms of
+transmission</strong>" (Art. 7(2)(b), Directive 96/9/EC). The CJEU in <em>Innoweb</em> held that an
+operator who merely publishes a retrieval mechanism re-utilises the database — the
+mechanism "comes close to the manufacture of a parasitical competing product ... <strong>albeit
+without copying the information stored in the database concerned</strong>"
+(<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62012CJ0202">C‑202/12, para 48</a>).
+<em>CV-Online</em> puts it even more bluntly: hyperlinks are "merely <strong>external manifestations, of
+secondary importance</strong>, of that extraction and that re-utilisation"
+(<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62019CJ0762">C‑762/19, para 37</a>).</p>
+<p>And the deeper problem: <strong>the party you'd be linking to is not the party with the
+complaint.</strong> The Ilm-NMR authors already consented — their CC-BY grant over their own layer
+is valid. Springer never consented to anything and is not on the other end of that link.
+Routing through Zenodo changes nothing about Springer's position.</p>
+<p>On the engineering side: <code>connectors.py</code> already contains a <code>ZenodoSource</code>, but it is
+imported <strong>only</strong> by the build-time <code>create_graph_datasets__*.py</code> scripts. Nothing in the
+load path touches it. Wiring it into <code>main.py:ensure_dataset()</code> means a new source
+abstraction, a version-aware cache (the current one is keyed on <code>{name}.{typ}</code> with no
+version and no checksum), a pinned client-side processing pipeline, a 155 MB download per
+user instead of a gzipped <code>.mpack</code>, and the loss of offline use. <strong>Details below.</strong></p>
+<hr />
+<h2 id="1-the-analysis-what-is-actually-protected">1. The analysis: what is actually protected</h2>
+<h3 id="11-the-individual-shift-values-not-protected-clearly">1.1 The individual shift values — not protected, clearly</h3>
+<p>Three independent confirmations, and this one is not close:</p>
+<ul>
+<li><strong>Recital 45</strong>, Directive 96/9/EC: "the right to prevent unauthorized extraction and/or
+  re-utilization <strong>does not in any way constitute an extension of copyright protection to
+  mere facts or data</strong>."</li>
+<li><strong>Recital 46</strong>: the right "should <strong>not give rise to the creation of a new right in the
+  works, data or materials themselves</strong>."</li>
+<li><strong>Art. 3(2)</strong>: "The copyright protection of databases ... <strong>shall not extend to their
+  contents</strong>."</li>
+</ul>
+<p>German law is the same: §2(2) UrhG protects only a <em>persönliche geistige Schöpfung</em>, which
+a measured ppm value is not. In the US, <em>Feist</em> reaches the identical result by a different
+route: "<strong>No one may claim originality as to facts</strong> ... The distinction is one between
+creation and discovery: The first person to find and report a particular fact has not
+created the fact"
+(<a href="https://www.law.cornell.edu/supremecourt/text/499/340">499 U.S. 340</a>).</p>
+<p>So nobody can stop you from using a ³¹P shift value. The fight, if there is one, is over
+taking <em>the collection</em>.</p>
+<h3 id="12-do-the-books-count-as-databases-at-all-yes">1.2 Do the books count as "databases" at all? — Yes</h3>
+<p>This was the right question to ask, and the answer is yes, printed reference works qualify.
+Art. 1(2) defines a database as a collection "individually accessible by electronic <strong>or
+other means</strong>" — the "or other means" is doing exactly this work. The CJEU confirmed the
+breadth in <em>Fixtures Marketing v OPAP</em>: the term "refers to <strong>any collection</strong> of works,
+data or other materials, separable from one another without the value of their contents
+being affected, including a method or system of some sort for the retrieval of each of its
+constituent materials"
+(<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62002CJ0444">C‑444/02, summary point 1</a>).</p>
+<p>A ³¹P NMR reference table indexed by compound is squarely inside that. Germany transposes
+it identically in §87a(1) UrhG ("<em>einzeln mit Hilfe elektronischer Mittel </em><em>oder auf andere
+Weise</em><em> zugänglich</em>").</p>
+<h3 id="13-is-there-substantial-investment-yes-and-this-cuts-against-you">1.3 Is there "substantial investment"? — Yes, and this cuts <em>against</em> you</h3>
+<p>There's a well-known escape hatch here that does <strong>not</strong> apply. In <em>BHB</em> and <em>OPAP</em> the
+CJEU held that investment in <strong>creating</strong> data doesn't count — only investment in
+<strong>obtaining</strong> it, i.e. "the resources used to <strong>seek out existing independent materials and
+collect them</strong> in the database"
+(<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62002CJ0203">C‑203/02, summary point 1</a>).
+That is why the horseracing board lost: they created the fixture data themselves.</p>
+<p>Springer and Tebby did the opposite. They did not measure a single shift; they trawled
+thousands of primary papers (the derived dataset cites 3,648 references at v1, 6,853 at
+v3) and collected the values. <strong>That is the paradigm case of "obtaining."</strong> So unlike
+<em>BHB</em>, the substantial-investment limb is likely satisfied for both books. No help here.</p>
+<h3 id="14-term-and-this-is-where-the-case-actually-turns">1.4 Term — and this is where the case actually turns</h3>
+<p><strong>Sui generis protection lasts 15 years</strong>, not 70. §87d UrhG: "<em>Die Rechte des
+Datenbankherstellers erlöschen </em><em>fünfzehn Jahre</em><em> nach der Veröffentlichung der
+Datenbank</em>." Art. 10(1)–(2) is the same.</p>
+<p><strong>Tebby, <em>Handbook of Phosphorus-31 NMR Data</em>, CRC Press, 1991</strong> — the source of <strong>6,608 of
+your 11,722</strong> 3D structures:</p>
+<ul>
+<li>§137g(2) UrhG: for databases made between <strong>1 Jan 1983 and 31 Dec 1997</strong>, "<em>Die
+  Schutzfrist beginnt in diesen Fällen am 1. Januar 1998</em>." Fifteen years from 1 Jan 1998
+  → <strong>expired 31 December 2012.</strong> (Art. 14(3)/(5) of the Directive is to the same effect.)</li>
+<li>Independently, <strong>Art. 11</strong> limits the right to makers who are EU nationals/residents or
+  EU-formed companies. CRC Press is Boca Raton, Florida. Art. 11(3) allows the Council to
+  extend protection to third countries by agreement, and Recital 56 conditions it on
+  reciprocity. <code>[UNVERIFIED: I could not retrieve a Council decision under Art. 11(3)
+  covering the US. My searching surfaced only a reference to an Isle of Man arrangement,
+  which I did not retrieve or confirm. Treat the "no US extension" point as probable but
+  unconfirmed — the term point above is the solid one and does not depend on it.]</code></li>
+</ul>
+<p><strong>Landolt-Börnstein III/40H, Springer, 2013/2014</strong> — the source of <strong>5,114</strong> structures.
+The Ilm-NMR paper itself dates it: it digitised the Landolt-Börnstein "<strong>from 2014</strong>"
+(<a href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-023-00792-y">J. Cheminform. 2023</a>,
+Methods; the cited reference is Gupta, Lechner, Kumar et al., vol. 40, Springer, 2013).
+Springer-Verlag is German, so Art. 11 is satisfied. <strong>Term runs to roughly the end of 2028
+or 2029.</strong> This one is live, and 5,114 structures out of a 2,713 + 1,596 + 805 breakdown is
+plainly a substantial part both quantitatively (it is the bulk of those subvolumes' 3D-
+representable content) and qualitatively — <em>BHB</em> defines the qualitative test as "the scale
+of the investment in the obtaining, verification or presentation of the contents ...
+<strong>regardless of whether that subject represents a quantitatively substantial part</strong>"
+(<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62002CJ0203">C‑203/02, summary point 3</a>).</p>
+<p>One more trap worth knowing: §87a(1) sentence 2 — a database "<em>wesentlich geänderte</em>"
+counts as a <strong>new</strong> database with a fresh 15-year term, if the change required substantial
+investment (Art. 10(3) likewise). So a revised Landolt-Börnstein subvolume would restart
+the clock. Worth checking whether III/40H has been revised since 2014.</p>
+<h3 id="15-copyright-in-the-compilation-a-separate-weaker-claim">1.5 Copyright in the compilation — a separate, weaker claim</h3>
+<p>Distinct from the database right, §4 UrhG protects a <em>Sammelwerk</em> where "<em>die Auswahl oder
+Anordnung der Elemente eine persönliche geistige Schöpfung</em>" is — for 70 years post mortem
+auctoris. But it protects only the <strong>selection or arrangement</strong>, expressly "<em>unbeschadet
+eines an den einzelnen Elementen gegebenenfalls bestehenden Urheberrechts</em>".</p>
+<p>The Ilm-NMR authors have a decent answer to this: per the paper's Methods, they re-drew
+<strong>every structure by hand</strong> in ACD/ChemSketch, generated their own SMILES, their own IDs
+and their own schema. They took the values, not the presentation. Whether taking <em>the
+entire selection</em> is itself an infringement of the selection is the arguable residue, and
+it is genuinely arguable — but it is a weaker claim than the database right and I would not
+expect it to be the thing that bites.</p>
+<h3 id="16-the-tdm-exceptions-do-not-cover-you-this-is-clear">1.6 The TDM exceptions do not cover you — this is clear</h3>
+<p>This is the argument people reach for and it does not work.</p>
+<p><strong>§44b UrhG</strong> (implementing DSM Art. 4) permits "<em>Vervielfältigungen von rechtmäßig
+zugänglichen Werken für das Text und Data Mining</em>" — <strong>reproductions only</strong>. It says nothing
+about distribution or making available. It also requires deletion once no longer needed
+("<em>Die Vervielfältigungen sind zu löschen, wenn sie für das Text und Data Mining nicht mehr
+erforderlich sind</em>") and is subject to machine-readable opt-out (§44b(3)). §87c(1) Nr. 4
+extends it to substantial parts of databases — again, reproduction only.</p>
+<p><strong>§60d UrhG</strong> (DSM Art. 3) is broader for research organisations and <em>does</em> permit making
+copies available — but only "<em>einem bestimmt abgegrenzten Kreis von Personen für deren
+gemeinsame wissenschaftliche Forschung</em>" and to individual third parties for quality
+verification, and it must <strong>stop</strong> when the research concludes (§60d(4)).</p>
+<p>Neither of these authorises publishing a corpus on PyPI and a public Nextcloud to an
+unbounded worldwide audience. <strong>The TDM exceptions let you train a model on the data. They
+do not let you ship the data.</strong> ChemMatData's entire product is shipping the data.</p>
+<p>(Also note DSM Art. 7(1): contractual terms overriding the Art. 3 research exception are
+unenforceable — helpful for <em>your own</em> mining, irrelevant to redistribution.)</p>
+<h3 id="17-good-faith-reliance-helps-with-damages-not-with-an-injunction">1.7 Good-faith reliance — helps with damages, not with an injunction</h3>
+<p>Under the database right, infringement does not require knowledge. What good faith affects
+is <strong>remedies</strong>, and <a href="https://www.gesetze-im-internet.de/urhg/__97.html">§97 UrhG</a> splits
+them cleanly. §97(1) gives removal and injunctive relief against anyone who "<em>das
+Urheberrecht oder ein anderes nach diesem Gesetz geschütztes Recht </em><em>widerrechtlich</em><em>
+verletzt</em>" — unlawfulness only, <strong>no fault required</strong>, and it extends to a first
+threatened infringement. §97(2) gives damages only against someone who acts "<em>vorsätzlich
+oder fahrlässig</em>". So:</p>
+<ul>
+<li><strong>Takedown / injunction:</strong> available against you even if you acted in perfect good faith.</li>
+<li><strong>Damages:</strong> require fault. Reliance on a facially valid CC-BY grant from a peer-reviewed
+  J. Cheminformatics paper is decent evidence against negligence.</li>
+<li><strong>But:</strong> this memo destroys that. Once you have read an analysis saying the shifts came
+  out of a 2014 Springer reference work with no documented permission, you have actual
+  knowledge, and the good-faith argument for <em>future</em> distribution is gone. That is an
+  unwelcome consequence of asking the question, and I'd rather say it than not.</li>
+</ul>
+<p><em>GS Media</em> (<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62015CJ0160">C‑160/15</a>)
+does make knowledge and profit-motive decisive — but it is a <strong>copyright</strong> case about
+communication to the public under Art. 3(1) of Directive 2001/29, not a database-right
+case. Do not assume its knowledge test transfers to §87b.</p>
+<h3 id="18-the-us-contrast-the-same-act-is-lawful-there">1.8 The US contrast — the same act is lawful there</h3>
+<p><em>Feist</em> killed "sweat of the brow" outright: the doctrine's "most glaring" flaw was that
+"it extended copyright protection in a compilation <strong>beyond selection and arrangement</strong> —
+the compiler's original contributions — <strong>to the facts themselves</strong>," which "eschewed the
+most fundamental axiom of copyright law"
+(<a href="https://www.law.cornell.edu/supremecourt/text/499/340">499 U.S. 340</a>). US compilations
+get only thin protection in original selection/arrangement, per 17 U.S.C. §103(b), and
+<strong>there is no US sui generis database right</strong> — Congress considered database bills in the
+late 1990s/2000s and none passed. <code>[UNVERIFIED: I did not retrieve legislative history for
+the failed database bills; the absence of a federal database right is however evident from
+the Feist framework and from the Directive's own Recital 56 reciprocity condition, which
+would be pointless if the US had an equivalent.]</code></p>
+<p><strong>Concretely:</strong> a US-based maintainer redistributing the Ilm-NMR shift values, including
+the Landolt-Börnstein-derived ones, is doing something lawful. You, in Germany, hosting on
+a German Nextcloud, are not in the same position for the Landolt-Börnstein subset.
+Liability follows <strong>where you act</strong>, not where your users are — so a worldwide user base
+does not dilute your exposure, and your US users' lawful downloads do not launder your
+distribution.</p>
+<hr />
+<h2 id="2-question-2a-does-linking-change-the-legal-position">2. Question 2(a): does linking change the legal position?</h2>
+<p><strong>Extraction:</strong> yes, avoided. Art. 7(2)(a) requires "the permanent or temporary <strong>transfer</strong>
+of all or a substantial part of the contents ... <strong>to another medium</strong>". If no bytes touch
+your server, you don't transfer. (Note <em>Directmedia</em>, <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62007CJ0304">C‑304/07</a>,
+holds that even manual on-screen consultation followed by re-keying is capable of being
+extraction — so this is narrower than it sounds, but the no-hosting version does escape
+it.)</p>
+<p><strong>Re-utilisation:</strong> no, not avoided. This is where the proposal fails.</p>
+<p><em>Innoweb</em> is the case on point, and it is close to fatal. The Court held that the operator
+of a dedicated meta search engine re-utilises the database, reasoning that:</p>
+<blockquote>
+<p>"the relevant aspect of the activity of the operator ... — that is to say, <strong>making that
+search engine available on the Internet</strong> — comes close to the manufacture of a
+parasitical competing product ..., <strong>albeit without copying the information stored in the
+database concerned</strong>. In view of the search options offered, such a dedicated meta search
+engine <strong>resembles a database, but without having any data itself</strong>." (para 48)</p>
+</blockquote>
+<p>And on timing — which kills the "but the <em>user</em> does the downloading" defence:</p>
+<blockquote>
+<p>"actions actually carried out by the operator ... occur <strong>prior to</strong> activities carried
+out by end users and before a search is made in response to a given query. Such actions
+consist in making a dedicated meta search engine available on the Internet..." (para 29)</p>
+</blockquote>
+<p>The operator's act is complete when the mechanism ships. That is <code>pip install
+chem_mat_database</code>.</p>
+<p><em>CV-Online</em> (<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62019CJ0762">C‑762/19</a>)
+then dismissed the "but it's just a link" framing directly: hyperlinks and meta tags "are
+merely <strong>external manifestations, of secondary importance</strong>, of that extraction and that
+re-utilisation" (para 37).</p>
+<p><strong>Why <em>Svensson</em> doesn't rescue this.</strong> <em>Svensson</em> holds that "the provision on a website of
+clickable links to works freely available on another website does not constitute an 'act of
+communication to the public'"
+(<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62012CJ0466">C‑466/12, operative part</a>).
+That is a <strong>copyright</strong> holding under Art. 3(1) of Directive 2001/29. It is not a holding
+about Art. 7 of Directive 96/9, and <em>Innoweb</em> — decided two months <em>earlier</em> — reaches the
+opposite result on the database right for functionally similar conduct. The two coexist
+because they concern different rights. Anyone telling you "linking is always fine, see
+<em>Svensson</em>" is conflating them.</p>
+<p><strong>The one authority that genuinely helps you</strong> is <em>Renckhoff</em>, and it is worth understanding
+why. The Court distinguished linking from re-hosting precisely on control:</p>
+<blockquote>
+<p>"As regards the act of communication constituted by the posting on a website of a
+hyperlink ..., the preventive nature of the rights of the holder <strong>are preserved, since it
+is open to the author, if he no longer wishes to communicate his work on the website
+concerned, to remove it</strong> ..., rendering obsolete any hyperlink leading to it. However
+... the posting on another website of a work gives rise to a <strong>new communication,
+independent</strong> of the communication initially authorised."
+(<a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62017CJ0161">C‑161/17, para 44</a>)</p>
+</blockquote>
+<p>That is a real difference and it is in your favour on the copyright layer: if Springer ever
+forced a takedown at Zenodo, a link-based loader would go dark automatically, whereas your
+Nextcloud copy would not. It does not, however, answer the database-right point.</p>
+<p><strong>Caching on the user's machine</strong> does not change the operator's position. The user may have
+their own §44b defence for their own copy; you don't inherit it, and per <em>Innoweb</em> para 29
+your act completed before theirs began.</p>
+<p><strong>Shipping the processing recipe alongside makes it worse, not better.</strong> <em>Innoweb</em>'s first
+limb is whether the tool "provides the end user with a search form which essentially offers
+the same range of functionality as ... the database site". A loader that fetches the raw
+Zenodo archive <em>and</em> applies your curation, filtering and featurisation offers materially
+<em>more</em> functionality than the source. You would be arguing that you're less of a
+re-utiliser than Innoweb while shipping a strictly more capable product.</p>
+<h3 id="the-genuinely-open-question">The genuinely open question</h3>
+<p><em>CV-Online</em> did not stop at "this is re-utilisation." It made harm a <strong>condition</strong>:</p>
+<blockquote>
+<p>re-utilisation "<strong>may be prohibited</strong> by the maker of such a database <strong>where those acts
+adversely affect its investment</strong> ..., namely that they constitute a risk to the
+possibility of redeeming that investment through the normal operation of the database in
+question" (operative part)</p>
+</blockquote>
+<p>and the Court framed the exercise as striking "a <strong>fair balance</strong>" between makers redeeming
+investment and "that of users and competitors ... in having access to the information ...
+and the possibility of <strong>creating innovative products</strong> based on that information" (para
+140).</p>
+<p>Both <em>Innoweb</em> and <em>CV-Online</em> involved commercial products that diverted advertising
+revenue from a competitor. A non-commercial academic loader that sends users to Zenodo —
+where Springer earns nothing either way — is a long way from that fact pattern. <strong>Nobody has
+litigated whether the harm condition is met when the "maker" whose investment is at risk is
+two hops upstream of the resource being linked, and when the linker is non-commercial.</strong></p>
+<p>That is the untested question, and it is the one worth putting to the legal office. My
+reading is that ChemMatData has a real argument on the harm limb and a poor one on the
+"is it re-utilisation at all" limb — which means the linking scheme buys you a <em>defence</em>,
+not <em>safety</em>, at a large engineering cost.</p>
+<hr />
+<h2 id="3-question-2b-engineering-viability">3. Question 2(b): engineering viability</h2>
+<p>I read <code>main.py</code>, <code>cache.py</code>, <code>dataset.py</code>, <code>web.py</code>, <code>config.py</code>, <code>connectors.py</code> and
+<code>cli.py</code> in the worktree. <strong>This is a structural change, not a small one.</strong> Six specific
+reasons.</p>
+<h3 id="31-the-load-path-has-exactly-one-source-model">3.1 The load path has exactly one source model</h3>
+<p><code>load_graph_dataset</code> / <code>load_smiles_dataset</code> / <code>load_xyz_dataset</code> all funnel into
+<code>chem_mat_data/main.py:77</code> <code>ensure_dataset()</code>, which does: local file → <code>config.cache</code> →
+<code>web.py:NextcloudFileShare</code>. <code>web.py:269</code> <code>construct_download_url()</code> hard-codes a Nextcloud
+WebDAV path (<code>{base_url}/public.php/dav/files/{share_token}/{file_name}</code>), and
+<code>ensure_dataset</code> assumes one file per dataset per extension with a <code>.gz</code>/<code>.zip</code> fallback
+ladder. There is a <code>FILE_SHARE_CLASS_MAP</code> in <code>main.py:26</code> but it has exactly one entry
+(<code>'nextcloud'</code>), and <code>metadata.yml</code> is fetched from the same share to decide what exists at
+all (<code>main.py:145</code>). A per-dataset source override is new plumbing through all of it.</p>
+<h3 id="32-zenodosource-exists-but-only-at-build-time">3.2 <code>ZenodoSource</code> exists — but only at build time</h3>
+<p><code>connectors.py</code> has <code>ZenodoSource</code>, <code>FigshareSource</code> and <code>FileDownloadSource</code>. Grepping for
+importers: <strong>every one is a <code>chem_mat_data/scripts/create_graph_datasets__*.py</code></strong> plus
+<code>tests/test_connectors.py</code>. Nothing in the user-facing load path imports <code>connectors</code> at
+all. That separation is currently doing real work — it's the line between "maintainer's
+machine, once" and "user's machine, every time." The proposal erases it.</p>
+<p><code>ZenodoSource</code> also isn't built for this. <code>prepare()</code> does <code>tempfile.mkdtemp()</code>, <code>fetch()</code>
+downloads the whole archive and extracts it, and <code>cleanup()</code> runs from <code>__del__</code>. It is
+<strong>deliberately ephemeral and has no <code>Cache</code> integration whatsoever</strong>. On the code as it
+stands, every single load re-downloads the whole archive.</p>
+<h3 id="33-the-cache-cannot-express-versions">3.3 The cache cannot express versions</h3>
+<p><code>cache.py:171</code> <code>construct_base_name()</code> returns <code>f'{name}.{typ}'</code>. That is the entire cache
+key. No version, no checksum, no source URL. Two different Zenodo versions of Ilm-NMR-P31
+would occupy the same slot with nothing to distinguish them, and <code>contains_dataset()</code>
+(<code>cache.py:21</code>) checks only whether the <code>.yml</code> exists — so a stale v2.0 cache entry would
+satisfy a v3.0 request silently. Adding version-awareness means changing the key format,
+which invalidates every existing user's cache.</p>
+<h3 id="34-reproducibility-this-record-is-a-moving-target">3.4 Reproducibility: this record is a moving target</h3>
+<p>I queried the Zenodo API. The concept record is <code>8260782</code>; there are <strong>five versions in
+under three years</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Record</th>
+<th>DOI</th>
+<th>Version</th>
+<th>Published</th>
+<th style="text-align: right;">Files</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8260783</td>
+<td><code>10.5281/zenodo.8260783</code></td>
+<td>1.0</td>
+<td>2023-08-18</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td>15658468</td>
+<td><code>10.5281/zenodo.15658468</code></td>
+<td>2.0</td>
+<td>2025-06-13</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td>17649620</td>
+<td><code>10.5281/zenodo.17649620</code></td>
+<td>2.1</td>
+<td>2025-11-19</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td>17952686</td>
+<td><code>10.5281/zenodo.17952686</code></td>
+<td>2.2</td>
+<td>2025-12-17</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td><strong>20762603</strong></td>
+<td><code>10.5281/zenodo.20762603</code></td>
+<td><strong>3.0</strong></td>
+<td><strong>2026-06-19</strong></td>
+<td style="text-align: right;">5</td>
+</tr>
+</tbody>
+</table>
+<p>The content is not stable in any sense that matters:</p>
+<ul>
+<li>Entry count went <strong>14,250 → 43,317</strong>; molecules <strong>13,730 → 39,107</strong>; references
+  <strong>3,648 → 6,853</strong>.</li>
+<li><strong><code>xyz_nmr_data.zip</code> did not exist before v2.0.</strong> The 3D geometries you want appeared in
+  June 2025, then grew 136.4 MB → 155.1 MB by v3.0.</li>
+<li>v3.0 <strong>removed the <code>origin</code> column</strong> and changed the SDF <code>NMREDATA_*</code> tags.</li>
+</ul>
+<p>So: a <strong>concept-DOI</strong> pin (<code>10.5281/zenodo.8260782</code>) always resolves to the newest version
+and would have silently swapped a 14k-molecule dataset for a 43k one under your users'
+feet, and would have broken any script reading <code>origin</code>. A <strong>versioned-DOI</strong> pin
+(<code>20762603</code>) is stable — but then you hand-re-pin on every upstream release, which is a
+maintenance burden you don't have today, and Zenodo depositors can restrict or withdraw old
+versions. Neither option is as reproducible as a frozen <code>.mpack</code> on your own share.</p>
+<p>Note also that the paper cites <code>10.5281/zenodo.8260783</code> — the <strong>versioned</strong> DOI of v1.0.
+The v1.0 the paper describes doesn't even contain 3D coordinates.</p>
+<h3 id="35-it-discards-the-entire-point-of-the-mpack-model">3.5 It discards the entire point of the <code>.mpack</code> model</h3>
+<p>The value proposition of ChemMatData is that expensive processing happens <strong>once,
+centrally</strong>. <code>load_graph_dataset</code> is <code>ensure_dataset(...)</code> then <code>load_graphs(file_path)</code> —
+a msgpack deserialise into arrays. Fetch-at-load-time means every user instead:</p>
+<ul>
+<li>downloads <strong>155 MB</strong> (<code>xyz_nmr_data.zip</code> at v3.0) rather than a gzipped <code>.mpack</code>;</li>
+<li>extracts it;</li>
+<li>re-runs the RDKit parsing and featurisation in <code>processing.py</code> (56 KB) and the
+  <code>XyzDataset</code> / <code>GraphDataset</code> path in <code>dataset.py</code> (53 KB);</li>
+<li>and gets results that depend on <strong>their</strong> RDKit/OpenBabel versions.</li>
+</ul>
+<p>That last one is the serious one. Today an RDKit change is your problem, absorbed once at
+build time. Under the proposal it becomes a silent per-user data divergence — the same
+<code>load_xyz_dataset('ilm_nmr_p31')</code> call returning different featurisations on different
+machines. To avoid that you'd have to pin and ship a reproducible processing environment,
+which is a much bigger commitment than a download path.</p>
+<h3 id="36-offline-use-rate-limits-failure-modes">3.6 Offline use, rate limits, failure modes</h3>
+<p>Offline use currently works: <code>main.py:112</code> returns early if the file is on disk, and
+<code>main.py:124</code> consults the cache before any network call. A Zenodo-backed path is offline-
+capable only to the extent you build a cache for it — i.e. you re-implement the thing you
+already have, against a second backend.</p>
+<p>You also inherit a dependency you don't control: Zenodo availability, Zenodo's rate limits
+(a CI matrix or a lecture hall behind one NAT is a realistic trigger)
+<code>[UNVERIFIED: I did not fetch Zenodo's current published rate-limit figures, so treat the
+severity as unquantified — the dependency itself is certain, the thresholds are not]</code>, and
+per-file URLs that change shape between record versions. <code>ZenodoSource.fetch()</code> currently
+does a bare <code>requests.get(..., stream=True)</code> with <code>raise_for_status()</code> and no retry, no
+backoff, no resume, no checksum verification — for a 155 MB download.</p>
+<h3 id="verdict">Verdict</h3>
+<p>Small change: adding a <code>source:</code> field to <code>metadata.yml</code> and a build-time connector. <strong>You
+already have that.</strong> Structural change: making the <em>user's</em> load path fetch from arbitrary
+third-party repositories, with a version-aware cache, a pinned client-side processing
+environment, and a second failure domain. That is the one being proposed, and it buys a
+legal defence that <em>Innoweb</em> and <em>CV-Online</em> suggest is weak anyway.</p>
+<hr />
+<h2 id="4-the-option-nobody-has-proposed">4. <a name="the-option-nobody-has-proposed"></a>The option nobody has proposed</h2>
+<p>The framing so far has been all-or-nothing: ship everything, or ship nothing, or link. The
+term analysis in §1.4 opens a fourth door.</p>
+<p><strong>Ship the HBP-derived subset. Hold back the Landolt-Börnstein-derived subset until 2029.</strong></p>
+<ul>
+<li><strong>HBP (Tebby / CRC Press, 1991): 6,608 structures — 56% of your 3D data.</strong> The German
+  database right expired <strong>31 Dec 2012</strong> under §137g(2) UrhG. The values were never
+  protected as such. The compilation-copyright claim on selection/arrangement is weak given
+  that the Ilm-NMR authors re-drew every structure and built their own schema. This block is
+  on firm ground.</li>
+<li><strong>Lan1/2/3 (Landolt-Börnstein / Springer, 2013/14): 5,114 structures.</strong> Live database
+  right until ~2029. This is the block to hold, or to get permission for.</li>
+</ul>
+<p>You said the 3D subset "is 100% book-derived and cannot be filtered clean" — which is true
+as stated, but the two <em>books</em> are not in the same legal position, and the dataset
+distinguishes them. Your own count is broken out by source (<code>HBP</code> 6,608; <code>Lan1</code> 2,713;
+<code>Lan2</code> 1,596; <code>Lan3</code> 805), so the filter is a <code>source</code> column predicate, not a research
+project.</p>
+<p>A 6,608-structure ³¹P dataset with DFT geometries is still a genuinely useful public
+resource, and it ships now instead of in three years.</p>
+<p><strong>In parallel, ask Springer.</strong> A written permission request to Springer Nature for use of
+Landolt-Börnstein III/40H-derived shift values in a non-commercial academic ML dataset is
+not an outlandish ask, it costs one email, and a "yes" resolves the whole question. It is
+also worth telling the Ilm-NMR authors what you found — they may already hold a permission
+that simply isn't documented in the paper, which would collapse this entire analysis.</p>
+<hr />
+<h2 id="5-a-general-rule-for-the-collection">5. A general rule for the collection</h2>
+<p>Proposed addition to <code>.claude/skills/dataset-extraction/references/license.md</code>. It extends
+the existing "Trap 1 — the upstream database" section, which already gets the principle
+right but stops one step short.</p>
+<h3 id="51-the-rule">5.1 The rule</h3>
+<blockquote>
+<p><strong>A dataset's licence describes the last link in its provenance chain. Your right to
+redistribute is determined by the <em>most restrictive</em> link, not the last one.</strong></p>
+<p>Every compiled dataset has a chain: primary measurement → some compilation → possibly
+another compilation → the record you found. A CC-BY tag on the final record binds only
+the rights that depositor actually held. CC BY 4.0 §1(7) limits the grant to rights "that
+the Licensor has authority to license", and §5(a) disclaims any warranty of title — the
+licence itself tells you it is not a guarantee.</p>
+</blockquote>
+<h3 id="52-the-classification">5.2 The classification</h3>
+<p>Add a <strong>BLOCK</strong> tier. The current table has only PASS and ESCALATE, which forces genuinely
+unshippable cases into the same bucket as merely-awkward ones.</p>
+<table>
+<thead>
+<tr>
+<th>Verdict</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>BLOCK</strong></td>
+<td>Data digitised or scraped from a <strong>commercially sold</strong> reference work, database or journal corpus, where (a) no publisher permission is documented, <strong>and</strong> (b) the source was published <strong>within the last 15 years</strong>, <strong>and</strong> (c) the source publisher is EU/EEA-based. All three must hold.</td>
+</tr>
+<tr>
+<td><strong>ESCALATE</strong></td>
+<td>Any two of (a)/(b)/(c). Also: everything already in the existing ESCALATE row (NC, SA, copyleft, bespoke terms, no licence stated). Also: an upstream reference work <strong>more than 15 years old</strong> where the <em>selection</em> is being taken wholesale rather than the values.</td>
+</tr>
+<tr>
+<td><strong>PASS</strong></td>
+<td>Upstream is primary literature, a public database with permissive terms, the depositor's own measurements or computations, <strong>or</strong> a compilation whose sui generis term has expired <strong>and</strong> whose values are being taken rather than its arrangement.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-three-new-manifest-fields">5.3 Three new manifest fields</h3>
+<p>The existing <code>upstream_database</code> / <code>upstream_terms_url</code> / <code>upstream_license</code> fields cannot
+express any of the above. Add:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"upstream_publication_year"</span><span class="p">:</span><span class="w"> </span><span class="mi">2014</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"upstream_publisher_jurisdiction"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DE"</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"upstream_is_commercial_product"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>These are cheap to establish (they're on the book's copyright page) and they mechanise the
+BLOCK/ESCALATE decision instead of leaving it to judgement at the point where, as
+<code>license.md</code> already observes, "an ambiguous license gets read charitably."</p>
+<h3 id="54-two-rules-of-thumb-worth-stating-flatly">5.4 Two rules of thumb worth stating flatly</h3>
+<ul>
+<li><strong>"It's already public" is never an answer.</strong> Publication by a third party is not a grant.
+  Nor is "everyone else uses this dataset." The existing file says this about missing
+  licences; it should say it about <em>upstream</em> rights too, which is the harder case.</li>
+<li><strong>Linking is not a workaround.</strong> If a dataset would be BLOCKed when hosted, it is BLOCKed
+  when fetched at load time. <em>Innoweb</em> para 48 and <em>CV-Online</em> para 37 are the reason.
+  Record this so that the next person to have this idea finds the answer instead of
+  re-deriving it.</li>
+</ul>
+<h3 id="55-one-structural-gap">5.5 One structural gap</h3>
+<p><code>metadata.yml</code> has <strong>46 datasets and no licence field at all</strong>. The keys in use are:
+<code>compounds</code>, <code>description</code>, <code>raw</code>, <code>tags</code>, <code>target_type</code>, <code>targets</code>, <code>verbose</code>, <code>sources</code>,
+<code>target_descriptions</code>, <code>full</code>, <code>notes</code>, <code>category</code>, <code>min_version</code>. <code>sources</code> is free text
+and appears on 36 of 46.</p>
+<p>So the skill's licence gate produces a finding that is then <strong>discarded</strong> — it lives in
+<code>.dataset_work/&lt;slug&gt;/manifest.yml</code> and never reaches the shipped metadata or the user. A
+<code>license:</code> block in <code>metadata.yml</code>, surfaced by <code>cmdata info</code>, would mean attribution
+obligations actually travel with the data (which CC-BY §3(a) requires of <em>you</em> when you
+Share) and that any future problem is auditable across the collection rather than one
+dataset at a time. That is a small change with a large payoff, and it is worth doing
+regardless of how Ilm-NMR-P31 is resolved.</p>
+<hr />
+<h2 id="6-what-to-ask-the-legal-office">6. What to ask the legal office</h2>
+<p>Not "is this OK". These:</p>
+<ol>
+<li><strong>Term and beneficiary.</strong> Do you agree the Tebby/CRC 1991 handbook's sui generis right
+   expired 31 Dec 2012 under §137g(2) UrhG, and that as a US-made database it likely never
+   attracted the right under §87e-relevant Art. 11 in the first place? If so, is
+   redistributing the 6,608 HBP-derived structures acceptable, given that the shift values
+   themselves are unprotected facts?</li>
+<li><strong>The live block.</strong> For the 5,114 Landolt-Börnstein-derived structures (Springer,
+   2013/14): do you regard that as a substantial part of the III/40H subvolumes under §87b?
+   And has III/40H been substantially revised since 2014 in a way that would restart the
+   term under §87a(1) sentence 2?</li>
+<li><strong>Compilation copyright.</strong> Independently of the database right — the Ilm-NMR authors
+   re-drew all structures and built their own schema, taking values but not arrangement. Is
+   that sufficient to avoid §4 UrhG <em>Sammelwerk</em> copyright, which would otherwise run for
+   70 years p.m.a. and would outlast the database right by decades?</li>
+<li><strong>Downstream position.</strong> ChemMatData relies on a CC-BY-4.0 grant from a peer-reviewed
+   publication. Given CC BY §1(7) ("rights ... that the Licensor has authority to license")
+   and §5(a)'s disclaimer of title, what is KIT's exposure if the grant is partly invalid —
+   and does the analysis change now that we have actual knowledge of the provenance?</li>
+<li><strong>The linking question.</strong> Does <em>Innoweb</em> (C‑202/12, esp. para 48) combined with
+   <em>CV-Online</em> (C‑762/19, para 37) mean that shipping a client that fetches from Zenodo at
+   load time is "re-utilisation" under §87b, notwithstanding that no data sits on our
+   server? And does <em>CV-Online</em>'s harm-to-investment condition offer a real defence for a
+   non-commercial academic tool where the upstream maker is two hops removed?</li>
+<li><strong>Institutional posture.</strong> Does KIT want a standing policy for this class of case, given
+   it will recur across the collection? Specifically: is the BLOCK criterion in §5.2 above
+   (commercial + within 15 years + EU publisher, no permission) one legal is comfortable
+   endorsing as an automated gate?</li>
+<li><strong>Practical.</strong> Is there an institutional route for a permission request to Springer
+   Nature for Landolt-Börnstein-derived values in a non-commercial ML dataset, and would
+   legal prefer to send it?</li>
+</ol>
+<hr />
+<h2 id="7-what-i-could-not-establish">7. What I could not establish</h2>
+<ul>
+<li><strong>Whether any Council agreement under Art. 11(3) of Directive 96/9/EC extends the sui
+  generis right to US-made databases.</strong> Searching surfaced a reference to an Isle of Man
+  arrangement which I did not retrieve. The Tebby conclusion does not depend on this — the
+  term expiry under §137g(2) is independently decisive — but the Art. 11 argument is
+  unconfirmed.</li>
+<li><strong>Whether Landolt-Börnstein III/40H has been substantially revised since 2014.</strong> If it
+  has, §87a(1) sentence 2 restarts a fresh 15-year term and pushes the block past 2029.
+  Checkable from Springer's catalogue; I did not.</li>
+<li><strong>The actual licence terms under which the Ilm-NMR authors obtained the Landolt-Börnstein
+  and CRC PDFs.</strong> The paper says both "are available as PDF documents and could thus
+  partially be read by machines," which implies institutional subscription access. Springer
+  and CRC subscription agreements routinely contain TDM and redistribution clauses that
+  would govern independently of copyright — a <strong>contractual</strong> restriction that no statutory
+  analysis above touches. I could not see those agreements. <strong>This may matter more than
+  everything above</strong>, because contract can bind where copyright does not.</li>
+<li><strong>Whether the Ilm-NMR authors in fact hold permission.</strong> Absent from the paper, but
+  absence of documentation is not documentation of absence. Worth one email.</li>
+<li><strong>German case law on printed reference works as <code>Datenbanken</code> under §87a.</strong> I relied on
+  Art. 1(2)'s "or other means" and the CJEU's broad definition in <em>OPAP</em>; I did not retrieve
+  a German decision squarely on a printed scientific reference table.</li>
+<li><strong>Zenodo's current published rate limits.</strong> The runtime dependency is certain; the
+  thresholds are unquantified here.</li>
+<li><strong>No US case law is cited beyond <em>Feist</em>.</strong> I did not attempt to find US authority on
+  scientific-data compilations specifically, and the "no federal database right" statement
+  rests on the <em>Feist</em> framework rather than on retrieved legislative history.</li>
+</ul>
+<hr />
+<h2 id="sources">Sources</h2>
+<p>All fetched and read in preparing this memo.</p>
+<p><strong>Legislation</strong>
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:31996L0009">Directive 96/9/EC on the legal protection of databases</a> — Arts. 1, 3, 5–11, 13, 14, 16; Recitals 42, 45–47, 49, 55, 56
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32019L0790">Directive (EU) 2019/790 (DSM)</a> — Arts. 2, 3, 4, 7; Recital 18
+- UrhG: <a href="https://www.gesetze-im-internet.de/urhg/__4.html">§4</a> · <a href="https://www.gesetze-im-internet.de/urhg/__44b.html">§44b</a> · <a href="https://www.gesetze-im-internet.de/urhg/__60d.html">§60d</a> · <a href="https://www.gesetze-im-internet.de/urhg/__87a.html">§87a</a> · <a href="https://www.gesetze-im-internet.de/urhg/__87b.html">§87b</a> · <a href="https://www.gesetze-im-internet.de/urhg/__87c.html">§87c</a> · <a href="https://www.gesetze-im-internet.de/urhg/__87d.html">§87d</a> · <a href="https://www.gesetze-im-internet.de/urhg/__87e.html">§87e</a> · <a href="https://www.gesetze-im-internet.de/urhg/__97.html">§97</a> · <a href="https://www.gesetze-im-internet.de/urhg/__137g.html">§137g</a></p>
+<p><strong>A note on paragraph citations.</strong> CJEU paragraph numbers below were read off the numbered
+judgment text in the EUR-Lex HTML, not inferred. The <em>Innoweb</em> "parasitical competing
+product" passage being para 48 is independently corroborated by the Court's own
+cross-reference to it in <em>CV-Online</em> para 40 ("<em>see, to that effect, judgment of 19
+December 2013, Innoweb, C‑202/12, EU:C:2013:850, paragraph 48</em>").</p>
+<p><strong>Case law</strong>
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62002CJ0203">C‑203/02 <em>British Horseracing Board v William Hill</em></a> — obtaining vs creating; substantial part
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62002CJ0444">C‑444/02 <em>Fixtures Marketing v OPAP</em></a> — definition of "database"
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62007CJ0304">C‑304/07 <em>Directmedia Publishing</em></a> — extraction by consultation and re-keying
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62012CJ0202">C‑202/12 <em>Innoweb v Wegener</em></a> — re-utilisation without copying
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62019CJ0762">C‑762/19 <em>CV-Online Latvia v Melons</em></a> — hyperlinks as secondary manifestation; harm condition
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62012CJ0466">C‑466/12 <em>Svensson</em></a> — linking under copyright
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62015CJ0160">C‑160/15 <em>GS Media</em></a> — knowledge and financial gain
+- <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62017CJ0161">C‑161/17 <em>Renckhoff</em></a> — re-posting vs linking
+- <a href="https://www.law.cornell.edu/supremecourt/text/499/340"><em>Feist Publications v Rural Telephone</em>, 499 U.S. 340 (1991)</a> — rejection of sweat of the brow</p>
+<p><strong>Licence and dataset</strong>
+- <a href="https://creativecommons.org/licenses/by/4.0/legalcode.en">CC BY 4.0 legal code</a> — §§1(7), 1(10), 2(a), 3(a), 4, 5
+- <a href="https://jcheminf.biomedcentral.com/articles/10.1186/s13321-023-00792-y">Ilm-NMR-P31, <em>J. Cheminform.</em> 15, 122 (2023)</a> — <code>10.1186/s13321-023-00792-y</code>
+- Zenodo API, concept record <code>8260782</code> and versions <code>8260783</code>, <code>15658468</code>, <code>17649620</code>, <code>17952686</code>, <a href="https://zenodo.org/records/20762603"><code>20762603</code></a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.expand"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

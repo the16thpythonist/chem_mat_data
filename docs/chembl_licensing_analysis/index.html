@@ -1,0 +1,1346 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://the16thpythonist.github.io/chem_mat_data/docs/chembl_licensing_analysis/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>ChEMBL and ShareAlike — how ChemMatData answered it - ChemMatData</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chembl-and-sharealike-how-chemmatdata-answered-it" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ChemMatData" class="md-header__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChemMatData
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ChEMBL and ShareAlike — how ChemMatData answered it
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ChemMatData" class="md-nav__button md-logo" aria-label="ChemMatData" data-md-component="logo">
+      
+  <img src="../assets/logo.png" alt="logo">
+
+    </a>
+    ChemMatData
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../first_steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First steps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Command Line Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List Available Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_info/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Show Dataset Metadata
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_download/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Download Dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Configuration File
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_cache/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local File Cache
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Programming Interface
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Programming Interface
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loading Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api_streaming_datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph_representation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Graph Representation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../processing_graphs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Processing New Graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_pre_processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Pre-Processing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-file-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this file exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-what-chembls-licence-actually-says" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. What ChEMBL's licence actually says
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. What ChEMBL&#39;s licence actually says">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#three-things-sharealike-here-is-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three things ShareAlike here is not
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-sharealike-actually-obliges-read-from-the-licence-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. What ShareAlike actually obliges — read from the licence text
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. What ShareAlike actually obliges — read from the licence text">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-genuine-open-questions-in-the-licence-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The genuine open questions in the licence text
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-what-the-projects-exposure-actually-is-today" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. What the project's exposure actually is today
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-what-compliance-would-concretely-require" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. What compliance would concretely require
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. What compliance would concretely require">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-was-actually-done-on-2026-08-18" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What was actually done on 2026-08-18
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-decision-taken-2026-08-19-option-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. The decision — taken 2026-08-19: option A
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-not-in-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Not in question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-how-to-tell-whether-a-new-dataset-is-chembl-derived" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. How to tell whether a new dataset is ChEMBL-derived
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chembl-and-sharealike-how-chemmatdata-answered-it">ChEMBL and ShareAlike — how ChemMatData answered it</h1>
+<p><strong>Status: DECIDED, 2026-08-19, by the maintainer — option A, comply.</strong>
+The twelve ChEMBL-derived datasets are labelled <code>CC-BY-SA-3.0</code> via a new
+<code>license</code> metadata field. See <a href="../architecture_decisions/009_dataset_license_field/">ADR 009</a>.
+Attribution (§4 step 1) was completed 2026-08-18; labelling (§4 steps 2 and 4)
+on 2026-08-19. This file is kept as the evidence behind that decision.
+Written 2026-08-18. Not legal advice — this is research assembled so that a person can
+decide, with the evidence in one place instead of being re-derived every time.</p>
+<hr />
+<h2 id="why-this-file-exists">Why this file exists</h2>
+<p>The dataset-extraction run <code>esnuel_mca</code> (Ree et al., <em>Chem. Sci.</em> 2025,
+<a href="https://doi.org/10.1039/D4SC07297A">10.1039/D4SC07297A</a>) blocked at its licence gate on
+two grounds. The first is specific to that paper and is dealt with in
+<a href="../.dataset_work/esnuel_mca/reviews/license.md"><code>../.dataset_work/esnuel_mca/reviews/license.md</code></a>.</p>
+<p>The second is not specific to it at all: <strong>the molecules come from ChEMBL, and ChEMBL is
+CC BY-SA 3.0 — ShareAlike.</strong> The extraction skill's policy escalates ShareAlike to a
+human, correctly. But answering it for this one dataset would leave the same question to
+be re-answered on the next ChEMBL-derived paper, and there will be many: ChEMBL underlies
+a large share of med-chem ML data.</p>
+<p><strong>And the question is not hypothetical or forward-looking.</strong> ChemMatData already
+redistributes eight ChEMBL-derived datasets, none of which attributes ChEMBL. That was
+discovered while investigating this run, not by design.</p>
+<p>So the decision to take is a project policy, and it has a retrospective half as well as a
+prospective one.</p>
+<hr />
+<h2 id="1-what-chembls-licence-actually-says">1. What ChEMBL's licence actually says</h2>
+<p>Verified against three independent current sources — this is not inferred from context.</p>
+<p><strong>ChEMBL interface documentation, "Data Licensing"</strong>
+(<a href="https://chembl.gitbook.io/chembl-interface-documentation/about">https://chembl.gitbook.io/chembl-interface-documentation/about</a>):</p>
+<blockquote>
+<p>"Access to the web interface of ChEMBL is made under the EBI's Terms of Use. The ChEMBL
+data is made available on a Creative Commons Attribution-Share Alike 3.0 Unported
+License."</p>
+</blockquote>
+<p><strong>ChEMBL FAQ</strong> — this is the one that spells out propagation
+(<a href="https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/general-questions">https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/general-questions</a>):</p>
+<blockquote>
+<p>"The ChEMBL database is licensed under a Creative Commons Attribution-Share Alike 3.0
+Unported License. This allows use, redistribution and adaption of ChEMBL as long as
+appropriate attribution is given (e.g., cite the current ChEMBL paper) and <strong>ensure that
+any adaptations are redistributed under the same license</strong>."</p>
+</blockquote>
+<p><strong>The current release's own files</strong> —
+<a href="https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/README">https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/README</a>:</p>
+<blockquote>
+<p>"The data content in ChEMBL is licensed under a highly permissive Creative Commons
+license - specifically the "CC Attribution-ShareAlike 3.0 Unported license", see LICENSE
+file. The required attribution should contain the url of the ChEMBL resource, <strong>and also
+the release version</strong>, e.g.:</p>
+<div class="language-text highlight"><pre><span></span><code>ChEMBL data is from http://www.ebi.ac.uk/chembl - the version of ChEMBL is chembl_37.
+</code></pre></div>
+<p>This should be visible on the entry portal for a web resource in which ChEMBL is
+integrated, or <strong>contained with the documentation for any further distribution</strong>."</p>
+</blockquote>
+<p><strong>No change of terms was found.</strong> Consistent from the 2009 licensing FAQ through
+<code>chembl_37</code> today. No migration to CC-BY or CC0.</p>
+<p><strong>One near-miss, recorded so nobody trips on it.</strong> An August 2025 ChEMBL blog post
+releases a text-mined IUPAC-name file "under a CC0 license". That is <strong>SureChEMBL</strong>, a
+different resource and a single auxiliary file. It is not ChEMBL core and does not change
+anything here.</p>
+<p><strong>EMBL-EBI's umbrella terms neither add nor remove anything</strong> — they place "no additional
+restrictions … other than those provided by the original data owners", and resource-specific
+terms "prevail" (<a href="https://www.ebi.ac.uk/about/terms-of-use/">https://www.ebi.ac.uk/about/terms-of-use/</a>, rev. 2024-02-05).</p>
+<h3 id="three-things-sharealike-here-is-not">Three things ShareAlike here is <em>not</em></h3>
+<p>Worth stating plainly, because ShareAlike gets pattern-matched to NonCommercial and they
+are not the same animal:</p>
+<ul>
+<li><strong>It is not NonCommercial.</strong> ChEMBL has been explicit since 2012 that the SA condition
+  does not preclude commercial use. Nothing here stops a company training on the data.</li>
+<li><strong>It is not a prohibition on redistribution.</strong> ChEMBL's own FAQ says the licence "allows
+  use, redistribution and adaption". Redistribution is invited, on conditions.</li>
+<li><strong>It is not the CSD situation.</strong> The tmQMg-L / CSD entry in
+  <a href="../rejected_datasets/"><code>rejected_datasets.md</code></a> rests on a rightsholder whose published
+  position is that redistribution requires a signed agreement. ChEMBL's position is the
+  opposite. These two cases should not be reasoned about together.</li>
+</ul>
+<hr />
+<h2 id="2-what-sharealike-actually-obliges-read-from-the-licence-text">2. What ShareAlike actually obliges — read from the licence text</h2>
+<p>The load-bearing distinction is <strong>Adaptation vs Collection</strong>, and CC BY-SA 3.0 Unported
+defines both (<a href="https://creativecommons.org/licenses/by-sa/3.0/legalcode.en">https://creativecommons.org/licenses/by-sa/3.0/legalcode.en</a>):</p>
+<blockquote>
+<p><strong>Adaptation</strong> means a work based upon the Work … including in any form recognizably
+derived from the original, <strong>except that a work that constitutes a Collection will not be
+considered an Adaptation</strong> for the purpose of this License.</p>
+<p><strong>Collection</strong> means a collection of literary or artistic works … in which the Work is
+included <strong>in its entirety in unmodified form</strong> along with one or more other
+contributions, each constituting separate and independent works in themselves, which
+together are assembled into a collective whole.</p>
+</blockquote>
+<p>§4(b), the ShareAlike clause, ends with the sentence that bounds how far the obligation
+travels:</p>
+<blockquote>
+<p>"This Section 4(b) applies to the Adaptation as incorporated in a Collection, <strong>but this
+does not require the Collection apart from the Adaptation itself to be made subject to
+the terms of the Applicable License</strong>."</p>
+</blockquote>
+<p>§4(a) says the same thing about the unmodified Work.</p>
+<p><strong>What that means concretely for this project.</strong> ShareAlike would attach to <em>the individual
+ChEMBL-derived dataset</em>. It would <strong>not</strong> reach:</p>
+<ul>
+<li>the ChemMatData catalogue as a whole,</li>
+<li>the other 38 datasets in it,</li>
+<li>the <code>chem_mat_data</code> package source code.</li>
+</ul>
+<p>So the worst case is per-dataset licensing, not a copyleft event that swallows the project.
+That is a materially smaller problem than "ShareAlike" sounds like at first reading, and
+it is the single most useful fact in this document.</p>
+<h3 id="the-genuine-open-questions-in-the-licence-text">The genuine open questions in the licence text</h3>
+<p>Three, and they are why this is a judgement call rather than a lookup:</p>
+<ol>
+<li>
+<p><strong>Is a processed ChemMatData dataset an "Adaptation" or a "Collection"?</strong> A Collection
+   requires the Work "in its entirety in unmodified form". A ChemMatData dataset is a
+   filtered subset re-encoded as graphs — closer to an Adaptation. But the boundary is not
+   crisp for data, and CC's definitions are written for literary and artistic works.</p>
+</li>
+<li>
+<p><strong>Are the individual data points even protected?</strong> A SMILES string and a measured Ki
+   are facts. Facts are not copyrightable. What copyright can subsist in is the <em>selection
+   and arrangement</em> of the database. Whether extracting 50,000 structures takes a
+   protected "substantial part" of that selection is exactly the kind of question that has
+   no clean answer without a lawyer.</p>
+</li>
+<li>
+<p><strong>CC BY-SA 3.0 Unported does not mention database rights at all.</strong> Checked directly
+   against the legal code: <strong>zero occurrences of "database" and zero of "sui generis"</strong>.
+   The §3 grant is a copyright grant, and the "Work" definition reaches "a compilation of
+   data <strong>to the extent it is protected as a copyrightable work</strong>". The EU/UK <em>sui generis</em>
+   database right is a separate right that 3.0 Unported does not expressly license — CC
+   only addressed this properly in the ported EU 3.0 licences and in 4.0. EMBL-EBI sits in
+   that jurisdiction. This cuts both ways: the licence may not clearly <em>grant</em> database
+   rights, and equally may not clearly <em>impose</em> ShareAlike on extractions that engage them.</p>
+</li>
+</ol>
+<p>None of these is resolvable by reading harder. They are why this needs a person.</p>
+<hr />
+<h2 id="3-what-the-projects-exposure-actually-is-today">3. What the project's exposure actually is today</h2>
+<p>Ten scripts in <code>chem_mat_data/scripts/</code> are ChEMBL-derived. Eight are published in
+<code>chem_mat_data/metadata.yml</code>; two exist as scripts only.</p>
+<table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th>Published</th>
+<th>Compounds</th>
+<th>ChEMBL release recorded</th>
+<th>ChEMBL in <code>sources</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dud_e</code></td>
+<td>yes</td>
+<td>400,040</td>
+<td><strong>chembl_09</strong></td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>riniker_1</code></td>
+<td>yes</td>
+<td>168,326</td>
+<td><strong>chembl_14</strong> †</td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>riniker_1_filtered</code></td>
+<td>yes</td>
+<td>105,294</td>
+<td><strong>chembl_14</strong> †</td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>bl_chembl_reg</code></td>
+<td>yes</td>
+<td>52,484</td>
+<td><strong>chembl_25</strong></td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>riniker_2</code></td>
+<td>yes</td>
+<td>20,922</td>
+<td>not established</td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>bl_chembl_cls</code></td>
+<td>yes</td>
+<td>8,780</td>
+<td><strong>chembl_25</strong></td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>lipophilicity</code></td>
+<td>yes</td>
+<td>4,199</td>
+<td>not established</td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>dpp4</code></td>
+<td>yes</td>
+<td>3,933</td>
+<td>not established</td>
+<td><strong>added 2026-08-18</strong></td>
+</tr>
+<tr>
+<td><code>moleculeace</code></td>
+<td>script only</td>
+<td>—</td>
+<td>no</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>pparg_binding</code></td>
+<td>script only</td>
+<td>—</td>
+<td>no</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong><code>esnuel_mca</code></strong> (this run)</td>
+<td><strong>blocked</strong></td>
+<td>~47,921</td>
+<td><strong>no</strong></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>≈764,000 compounds, about 12% of the collection's 6.2 million.</strong></p>
+<p>Provenance is not in doubt for any of them — each script says so in its own docstring or
+description (<code>dud_e</code>: "extracted from ChEMBL09 database"; <code>lipophilicity</code>: "from the ChEMBL
+database"; <code>dpp4</code>: "was extract from ChEMBL with DPP-4 target"; <code>riniker_2</code>: "37 biological
+targets from ChEMBL"). <code>lipophilicity</code> even carries <code>graph_chemblid</code> per molecule.</p>
+<p><strong>As first found, none of the eight listed ChEMBL in <code>sources</code> and none carried a licence
+note.</strong> That gap was closed on 2026-08-18 — see §4 below.</p>
+<p>† <code>chembl_14</code> for the two <code>riniker_1*</code> datasets was <strong>not</strong> recorded anywhere in this
+project; it was recovered from the source publication (Riniker &amp; Landrum, <em>J. Cheminform.</em>
+<strong>5</strong>, 26 (2013), <a href="https://europepmc.org/article/PMC/PMC3686626">PMC3686626</a>), which states:
+<em>"This selection process was repeated with ChEMBL version 14 (Heikamp and Bajorath
+extracted the actives from ChEMBL version 9)."</em> <code>riniker_2</code> (Subset II) comes from a later
+paper and the benchmarking-platform README does not state a version, so it remains
+unestablished rather than assumed to be 14.</p>
+<p>Note also that <code>dud_e</code> and <code>bl_chembl_*</code> <em>do</em> record their release version — so for those,
+ChEMBL's prescribed attribution string is writable today. For <code>esnuel_mca</code> it is not: the
+paper never says which ChEMBL release Bayer's 50k subset came from, so
+<code>"the version of ChEMBL is chembl_NN"</code> cannot be completed without asking the authors.</p>
+<hr />
+<h2 id="4-what-compliance-would-concretely-require">4. What compliance would concretely require</h2>
+<p>If the decision is to comply rather than to conclude SA does not attach, the work is
+small and mostly mechanical:</p>
+<ol>
+<li><strong>Attribution — DONE 2026-08-18.</strong> Added to each affected dataset's <code>sources</code> and a
+   <code>notes</code> entry:
+   <code>ChEMBL data is from http://www.ebi.ac.uk/chembl - the version of ChEMBL is chembl_NN</code>,
+   plus the ChEMBL paper (Mendez et al., <em>Nucleic Acids Res.</em> 2019, 47, D930–D940,
+   <a href="https://doi.org/10.1093/nar/gky1075">10.1093/nar/gky1075</a>). Where the release is
+   unknown, say so explicitly rather than omitting the line.</li>
+<li><strong>A per-dataset licence field.</strong> <code>metadata.yml</code> has no licence key today. Adding one is
+   independently worth doing — it is the natural place for this, and for the CC-BY
+   attributions the extraction pipeline already collects and then drops.</li>
+<li><strong>Mark that changes were made.</strong> §3(b) requires an Adaptation to "take reasonable steps
+   to clearly label, demarcate or otherwise identify that changes were made". The
+   descriptions largely do this already by describing the processing.</li>
+<li><strong>State CC-BY-SA-3.0 on the ChEMBL-derived datasets</strong> if they are treated as Adaptations.</li>
+<li><strong>Decide what this means for <code>cmdata</code>'s users</strong> — arguably nothing more than that the
+   dataset they downloaded carries a licence they can read.</li>
+</ol>
+<p>Steps 1–3 are worth doing under <em>any</em> of the options below, including "SA does not attach":
+attribution is a scientific-credit obligation before it is a legal one, and ChEMBL asks for
+it in a specific form.</p>
+<h3 id="what-was-actually-done-on-2026-08-18">What was actually done on 2026-08-18</h3>
+<p>Step 1 only. <strong>Steps 2, 4 and 5 are untouched, because they encode a licence decision that
+has not been taken</strong> — nothing here labels any dataset CC-BY-SA-3.0.</p>
+<ul>
+<li><code>https://www.ebi.ac.uk/chembl/</code> added to <code>sources</code> for all eight datasets.</li>
+<li>A <code>notes</code> entry added to all eight, naming ChEMBL as the source of the structures,
+  stating that ChEMBL is licensed CC BY-SA 3.0, and citing Mendez et al.</li>
+</ul>
+<p><strong>The shipped credit is deliberately generic and names no release version</strong> — a
+  maintainer decision on 2026-08-18, taken for uniformity across the eight. Note that
+  this is <em>technically incomplete</em> against ChEMBL's own formula, which asks that the
+  attribution "contain the url of the ChEMBL resource, <strong>and also the release version</strong>".
+  The versions that were established are not lost: they are recorded in the exposure
+  table above, and can be folded into the shipped notes at any time if the project
+  later decides to comply to the letter.
+- The same text was written into <strong>both</strong> <code>chem_mat_data/metadata.yml</code> (so it is live now)
+  <strong>and</strong> each dataset's <code>METADATA</code> dict in <code>chem_mat_data/scripts/</code> (so that re-running
+  <code>cmmanage metadata collect</code> regenerates it rather than dropping it). The two were then
+  checked to be byte-identical.
+- <code>create_graph_datasets__dpp4.py</code> had <strong>no <code>METADATA</code> dict at all</strong> — its catalogue entry
+  is hand-curated and a regeneration would have silently lost <code>verbose</code>, <code>tags</code> and
+  <code>sources</code>. One was added mirroring the existing catalogue entry exactly.</p>
+<p><strong>Not done, and worth someone's attention separately:</strong> <code>dpp4</code> also declares no
+<code>DATASET_TYPE</code>, so it would regenerate as <code>regression</code> while the catalogue records
+<code>classification</code>. That is a pre-existing bug unrelated to licensing and was left alone.</p>
+<hr />
+<h2 id="5-the-decision-taken-2026-08-19-option-a">5. The decision — taken 2026-08-19: <strong>option A</strong></h2>
+<p>The maintainer chose to comply: label the ChEMBL-derived datasets CC-BY-SA-3.0 and
+accept that the obligation propagates to downstream users. Recorded in
+<a href="../architecture_decisions/009_dataset_license_field/">ADR 009</a>, which also documents
+the field shape and the three code paths that had to learn about it.</p>
+<p>Option C (ask EMBL-EBI) remains worth doing — it would settle whether ShareAlike
+legally attaches at all, and option A is the conservative answer taken without that
+confirmation. Doing so could only relax the position, never tighten it.</p>
+<p>The four positions as they were put, for the record:</p>
+<p><strong>A. Comply — treat ChEMBL-derived datasets as Adaptations under CC-BY-SA-3.0.</strong>
+Label them CC-BY-SA-3.0, add ChEMBL attribution with release versions where known.
+<em>Cost:</em> downstream users of those eight datasets inherit a reciprocal obligation, and the
+catalogue becomes licence-heterogeneous. <em>Benefit:</em> unambiguously correct, and matches what
+ChEMBL asks for. Under this option <code>esnuel_mca</code> can proceed, with the caveat that its
+release version is unknown.</p>
+<p><strong>B. Attribute but do not propagate</strong> — take the position that a ChemMatData dataset of
+<em>computed properties keyed to structures</em> is not an Adaptation of ChEMBL's selection, or
+that the underlying facts are unprotected. Add full attribution regardless.
+<em>Cost:</em> rests on a legal judgement the project would be making without counsel; should be
+written down as a deliberate position, not left implicit. <em>Benefit:</em> no obligation
+propagates to users; matches what the wider field does — DeepChem/MoleculeNet, TDC and OGB
+all redistribute ChEMBL-derived data under permissive licences.</p>
+<p><strong>C. Ask EMBL-EBI.</strong> They have a licensing contact and answer this kind of question.
+<em>Cost:</em> time. <em>Benefit:</em> the answer is authoritative, settles all eight existing datasets
+and every future one, and is quotable in this file forever.</p>
+<p><strong>D. Stop adding ChEMBL-derived datasets</strong> and decide separately what to do about the eight
+already published. <em>Cost:</em> excludes a large fraction of med-chem ML data. Probably only
+attractive if C comes back badly.</p>
+<p><strong>What was recommended at the time:</strong> <strong>C first, then A or B
+depending on the answer</strong> — and do steps 1–3 of §4 immediately regardless, because they are
+required under every option and cost an afternoon. C is cheap, and the difference between A
+and B is precisely the thing EMBL-EBI is placed to answer and this project is not.</p>
+<p>Whatever is decided, record it in this file with the date and who decided, and add a line to
+<a href="../rejected_datasets/"><code>rejected_datasets.md</code></a> under "Checked and approved — do not
+re-litigate" so the extraction agent stops re-researching it.</p>
+<hr />
+<h2 id="6-not-in-question">6. Not in question</h2>
+<ul>
+<li><strong>ChEMBL permits redistribution.</strong> Nobody needs to establish that; the FAQ says so.</li>
+<li><strong>Commercial use is fine.</strong> SA is not NC.</li>
+<li><strong>The <code>chem_mat_data</code> package licence is unaffected.</strong> §4(b) does not reach the
+  Collection, let alone the code.</li>
+<li><strong>The MCA/MAA <em>values</em> in <code>esnuel_mca</code> are not ChEMBL's.</strong> They are the authors' own
+  r2SCAN-3c//GFN1-xTB computations. Only the <code>smiles</code> column is ChEMBL-derived. The same
+  is true of most datasets in the table above — the structures are ChEMBL's, the
+  measurements and computations are the papers'.</li>
+</ul>
+<h2 id="7-how-to-tell-whether-a-new-dataset-is-chembl-derived">7. How to tell whether a new dataset is ChEMBL-derived</h2>
+<p>For the extraction agent, since this will keep coming up. ChEMBL provenance is usually one
+step removed and stated only in passing:</p>
+<ul>
+<li>a <code>CHEMBL\d+</code> identifier column, or target names like <code>CHEMBL1862_Ki</code>;</li>
+<li>"drug-like subset", "bioactivity data", "curated from the literature" in a methods
+  section, with ChEMBL named once in an acknowledgement rather than in the data statement
+  — which is exactly how <code>esnuel_mca</code> states it;</li>
+<li>benchmark lineage: MoleculeNet <code>lipophilicity</code>, MoleculeACE, the RDKit benchmarking
+  platform, DUD-E actives and Briem–Lessel recreations are all ChEMBL underneath.</li>
+</ul>
+<p><code>bace_cls</code> / <code>bace_reg</code> were checked and are <strong>not</strong> flagged as ChEMBL-derived by their own
+scripts; they are literature-compiled. That was verified rather than assumed, and is
+recorded here so it is not re-checked.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.expand"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
