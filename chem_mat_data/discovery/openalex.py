@@ -301,7 +301,12 @@ def fetch_works(
             return
 
         new_in_page = 0
-        for obj in items:
+        # Whether every record on this page was examined. Breaking out early on
+        # ``limit`` leaves the rest of the page unclassified, and the cursor must
+        # not move past records nobody has looked at.
+        page_exhausted = True
+        last_index = len(items) - 1
+        for index, obj in enumerate(items):
             oid = obj.get('id')
             if not oid or oid in state.seen_ids:
                 continue
@@ -321,9 +326,20 @@ def fetch_works(
             new_in_page += 1
             yield record
             if fetched >= limit:
+                # Reaching the limit on the final record still consumed the whole
+                # page, so only a genuine mid-page stop withholds the cursor.
+                page_exhausted = index == last_index
                 break
 
-        state.update_cursor(next_cursor)
+        # Advance only past a page we consumed to the end. Advancing after a
+        # mid-page break would put the unexamined remainder permanently behind
+        # the cursor: those records are never classified and never seen again,
+        # because nothing else ever revisits them. Leaving the cursor where it is
+        # costs one re-fetched page on the next run, and ``seen_ids`` skips
+        # everything already yielded from it, so the run resumes exactly at the
+        # first unexamined record.
+        if page_exhausted:
+            state.update_cursor(next_cursor)
 
         # When a page contains no new records we skip over it rather than
         # aborting — a single fully-already-seen page mid-traversal is

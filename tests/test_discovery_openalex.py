@@ -410,3 +410,125 @@ class TestFetchWorks:
         assert records[0]['openalex_id'] == 'https://openalex.org/W2'
         # The blacklisted record should still be marked as seen.
         assert 'https://openalex.org/W1' in state.seen_ids
+
+
+# == the cursor must not outrun the classifier ==
+#
+# `fetch_works` requests full pages regardless of the caller's remaining limit.
+# It used to persist `next_cursor` even when it broke out mid-page on `limit`,
+# which put the unexamined remainder of that page permanently behind the cursor:
+# never classified, and never revisited, because nothing else ever goes back.
+
+def _page(start, count, cursor):
+    """Build one fake OpenAlex response page of `count` usable records."""
+    return {
+        'results': [
+            {
+                'id': f'https://openalex.org/W{start + i}',
+                'doi': f'https://doi.org/10.1234/w{start + i}',
+                'title': f'Paper {start + i}',
+                'abstract_inverted_index': {'A': [0], 'dataset': [1]},
+                'publication_year': 2026,
+            }
+            for i in range(count)
+        ],
+        'meta': {'next_cursor': cursor},
+    }
+
+
+def _run_fetch(monkeypatch, tmp_path, pages, limit):
+    """Drive fetch_works over canned pages, returning (records, final cursor)."""
+    from chem_mat_data.discovery import openalex
+    from chem_mat_data.discovery.io import FetchState
+
+    served = []
+
+    class _Response:
+        status_code = 200
+
+        def __init__(self, payload):
+            self._payload = payload
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, params, timeout=30):
+        served.append(params.get('cursor'))
+        index = len(served) - 1
+        if index >= len(pages):
+            return _Response({'results': [], 'meta': {'next_cursor': None}})
+        return _Response(pages[index])
+
+    monkeypatch.setattr(openalex, '_session_get', fake_get)
+
+    state = FetchState(tmp_path / 'out.csv')
+    state.load()
+    with state:
+        records = list(openalex.fetch_works(state, limit=limit, page_size=10))
+    return records, state.cursor
+
+
+def test_a_mid_page_stop_does_not_advance_the_cursor(monkeypatch, tmp_path):
+    """The regression: 6 of a 10-record page consumed, 4 must not be skipped."""
+    pages = [_page(1, 10, 'cursor2'), _page(11, 10, 'cursor3')]
+    records, cursor = _run_fetch(monkeypatch, tmp_path, pages, limit=6)
+
+    assert len(records) == 6
+    assert cursor == '*', (
+        'the cursor advanced past 4 records that were never classified'
+    )
+
+
+def test_the_run_resumes_at_the_first_unexamined_record(monkeypatch, tmp_path):
+    """
+    The other half of the fix: holding the cursor must not re-yield what was
+    already seen. The second run re-fetches the page and `seen_ids` filters it.
+    """
+    from chem_mat_data.discovery import openalex
+    from chem_mat_data.discovery.io import FetchState
+
+    pages = [_page(1, 10, 'cursor2'), _page(11, 10, 'cursor3')]
+    first, _ = _run_fetch(monkeypatch, tmp_path, pages, limit=6)
+    assert [r['openalex_id'] for r in first] == [f'https://openalex.org/W{i}' for i in range(1, 7)]
+
+    # Second run over the same state: the same first page is served again.
+    served = []
+
+    class _Response:
+        status_code = 200
+
+        def __init__(self, payload):
+            self._payload = payload
+
+        def json(self):
+            return self._payload
+
+    # Serve by cursor, not by call count. The earlier version handed out pages in
+    # call order and so could not tell a held cursor from a advanced one - it was
+    # a seen_ids dedup test wearing a cursor test's name.
+    by_cursor = {'*': pages[0], 'cursor2': pages[1]}
+
+    def fake_get(url, params, timeout=30):
+        cursor = params.get('cursor')
+        served.append(cursor)
+        return _Response(by_cursor.get(cursor, {'results': [], 'meta': {'next_cursor': None}}))
+
+    monkeypatch.setattr(openalex, '_session_get', fake_get)
+    state = FetchState(tmp_path / 'out.csv')
+    state.load()
+    with state:
+        second = list(openalex.fetch_works(state, limit=4, page_size=10))
+
+    assert served[0] == '*', (
+        'the second run must re-request the page the first one stopped inside'
+    )
+    assert [r['openalex_id'] for r in second] == [
+        f'https://openalex.org/W{i}' for i in range(7, 11)
+    ], 'the resumed run must pick up exactly where the first one stopped'
+
+
+def test_consuming_a_page_exactly_still_advances(monkeypatch, tmp_path):
+    """Hitting the limit on the final record consumed the whole page."""
+    pages = [_page(1, 10, 'cursor2'), _page(11, 10, 'cursor3')]
+    _, cursor = _run_fetch(monkeypatch, tmp_path, pages, limit=10)
+    assert cursor == 'cursor2', 'a fully consumed page must not be re-fetched'

@@ -64,6 +64,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **The sweep advanced its cursor past records it never classified.** `fetch_works`
+  requests full 200-record pages regardless of the caller's remaining limit, breaks out
+  of the page loop the moment the limit is reached, and then persisted `next_cursor`
+  anyway — putting the unexamined remainder of that page permanently behind the cursor.
+  Nothing ever revisits it, so those records were never classified and never will be.
+  Visible on disk: a 1000-record run left 1070 ids, i.e. it stopped 70 records into page
+  6 and moved to page 7, losing ~130. The cursor now advances only past a page consumed
+  to the end; holding it costs one re-fetched page, and `seen_ids` filters what was
+  already yielded, so a run resumes at the first unexamined record. Predates the
+  discovery skill and affected every sweep. 3 tests added, verified by reintroducing the
+  bug and watching them go red.
+
 - **`qm9_smiles` described four targets in the wrong unit.** homo, lumo, gap and U_0
   were labelled eV but are Hartree, which understates them by a factor of 27.2114 for
   anyone who trusted the label. The values are unchanged; the descriptions are corrected,
