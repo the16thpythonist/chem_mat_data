@@ -16,6 +16,7 @@ Figshare's API does, and only that one asserts what it actually does.
 
 import io
 import json
+import os
 import zipfile
 from unittest.mock import Mock, patch
 
@@ -391,3 +392,14 @@ def test_a_real_article_resolves():
         # With a choice to make, resolving without a name must still refuse to guess.
         with pytest.raises(ValueError):
             source.resolve()
+
+
+def test_directory_decides_where_the_download_lands(tmp_path):
+    # A multi-gigabyte file must not be forced onto the system temp disk, which is
+    # often the small one.
+    source = FigshareSource(file_id=1, directory=str(tmp_path))
+    source.prepare()
+    try:
+        assert os.path.dirname(source.temp_dir) == str(tmp_path)
+    finally:
+        source.cleanup()

@@ -257,6 +257,9 @@ class FigshareSource(AbsractOnlineSource):
     :param verbose: Show a tqdm progress bar during download.
     :param max_retries: Number of retry attempts when Figshare returns HTTP 202.
     :param retry_delay: Seconds to wait between 202 retries.
+    :param directory: Directory in which the temporary download directory is created.
+        Defaults to the system temp directory, which is often a small system disk;
+        pass a directory on a larger one for multi-gigabyte files.
     """
 
     #: Public REST API. Institutional portals (``springernature.figshare.com`` and
@@ -298,6 +301,7 @@ class FigshareSource(AbsractOnlineSource):
         verbose: bool = False,
         max_retries: int = 4,
         retry_delay: float = 5.0,
+        directory: str | None = None,
     ):
         if file_id is None and url is None and article_id is None:
             raise ValueError('One of file_id, article_id or url must be provided')
@@ -317,6 +321,7 @@ class FigshareSource(AbsractOnlineSource):
         self.verbose = verbose
         self.max_retries = max_retries
         self.retry_delay = retry_delay
+        self.directory = directory
         self.temp_dir = None
 
         #: Set once an article has been resolved, so the real file name can be used on
@@ -487,7 +492,7 @@ class FigshareSource(AbsractOnlineSource):
 
     def prepare(self):
         """Create temporary directory for download and extraction."""
-        self.temp_dir = tempfile.mkdtemp(prefix='figshare_')
+        self.temp_dir = tempfile.mkdtemp(prefix='figshare_', dir=self.directory)
 
     def fetch(self) -> str:
         """

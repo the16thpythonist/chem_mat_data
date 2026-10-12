@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **QCDGE excited states, contributed by Pascal Friederich** (`create_graph_datasets__qcdge.py`,
+  #3). About 443,000 molecules from QM9, GDB-11 and PubChemQC (Zhu et al., Sci. Data 2024),
+  with 30 targets: the S1-S10 and T1-T10 excitation energies and the S1-S10 oscillator
+  strengths at TD-ωB97X-D/6-31G*. The PR fetched the four HDF5 subsets (about 50 GB) from
+  the authors' group web server, which states no terms. An independent licence review
+  found that each subset is also its own CC0 record in the figshare collection the article
+  cites, so the script now downloads from those records and checks figshare's MD5 sums.
+  `DOWNLOAD_DIR` keeps the downloads off the system disk. `h5py` becomes a dependency.
+
+  `FigshareSource` gains a `directory` parameter that sets where its temporary download
+  directory is created. A multi-gigabyte file should not be forced onto the system temp
+  disk, which is often the small one. 1 test added.
+
 - **Two experimental optics datasets, contributed by Pascal Friederich.**
   `chromophore_db` (#4) holds the chromophore database of Joung et al. (Sci. Data 2020):
   absorption and emission maxima, bandwidths, extinction coefficient, quantum yield and
