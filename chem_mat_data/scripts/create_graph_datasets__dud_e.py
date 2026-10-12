@@ -174,6 +174,16 @@ TARGETS = [
 ]
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-SA-3.0',
+        'url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'note': (
+            'The molecular structures derive from ChEMBL, which is licensed CC BY-SA '
+            '3.0. The ShareAlike condition propagates, so this dataset is distributed '
+            'under the same licence. The terms of the intermediate publication were '
+            'not separately established.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',
@@ -195,8 +205,14 @@ METADATA: dict = {
         'https://dude.docking.org/',
         'https://doi.org/10.1021/jm300687e',  # Mysinger et al. 2012
         'http://jmc.acs.org/content/55/14/6582',
+        'https://www.ebi.ac.uk/chembl/',
     ],
     'notes': [
+        (
+            "Molecular structures in this dataset derive from ChEMBL "
+            "(https://www.ebi.ac.uk/chembl/), which is licensed CC BY-SA 3.0. Cite Mendez "
+            "et al., Nucleic Acids Res. 47, D930-D940 (2019), doi:10.1093/nar/gky1075."
+        ),
         'This is a virtual screening benchmark dataset designed for evaluating molecular docking and similarity methods.',
         'Target vectors use tri-state encoding: 0 = not mentioned for that target, 1 = active against that target, 2 = decoy for that target.',
         'Decoys are specifically selected for each target (50:1 ratio) to match physicochemical properties while avoiding 2-D structural similarity to actives.',

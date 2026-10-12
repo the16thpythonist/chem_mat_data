@@ -44,6 +44,16 @@ DESCRIPTION: str = (
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-SA-3.0',
+        'url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'note': (
+            'The molecular structures derive from ChEMBL, which is licensed CC BY-SA '
+            '3.0. The ShareAlike condition propagates, so this dataset is distributed '
+            'under the same licence. The terms of the intermediate publication were '
+            'not separately established.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',
@@ -63,6 +73,14 @@ METADATA: dict = {
         'https://rdkit.blogspot.com/2019/10/a-new-lessel-and-briem-like-dataset.html',
         'https://github.com/greglandrum/rdkit_blog/tree/master/data',
         'https://doi.org/10.1021/ci000197k',  # Original Briem & Lessel paper
+        'https://www.ebi.ac.uk/chembl/',
+    ],
+    'notes': [
+        (
+            "Molecular structures in this dataset derive from ChEMBL "
+            "(https://www.ebi.ac.uk/chembl/), which is licensed CC BY-SA 3.0. Cite Mendez "
+            "et al., Nucleic Acids Res. 47, D930-D940 (2019), doi:10.1093/nar/gky1075."
+        ),
     ],
     'target_descriptions': {
         '0': 'CHEMBL1862 - Tyrosine-protein kinase ABL (Homo sapiens) - pKi value',

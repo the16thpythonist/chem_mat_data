@@ -100,6 +100,20 @@ METADATA: dict = {
         '12': 'PFAAs, cyclic - Cyclic perfluoroalkyl acids (e.g. cyclic perfluorocarboxylic acids)',
         '13': 'Fluorotelomer PFAA precursors, cyclic - Cyclic telomer-based PFAA precursors; rarest class (2 compounds)',
     },
+    'license': {
+        'identifier': 'CC0-1.0',
+        'url': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'note': (
+            'The Figshare data/software record (10.6084/m9.figshare.12584645, the '
+            'PFAS-Map archive these files are downloaded from) is dedicated under '
+            'CC0 1.0 Universal, independent of the CC-BY-4.0 license on the '
+            'companion Sci. Data article. The underlying PFAS structures trace to '
+            'the US EPA CompTox Chemicals Dashboard PFAS master list, which EPA '
+            'states is open data free of all copyright restrictions for both '
+            'non-commercial and commercial use, so no upstream obligation '
+            'restricts redistribution.'
+        ),
+    },
 }
 
 # == DOWNLOAD SOURCE ==

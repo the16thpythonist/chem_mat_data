@@ -38,6 +38,16 @@ DESCRIPTION: str = (
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-SA-3.0',
+        'url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'note': (
+            'The molecular structures derive from ChEMBL, which is licensed CC BY-SA '
+            '3.0. The ShareAlike condition propagates, so this dataset is distributed '
+            'under the same licence. The terms of the intermediate publication were '
+            'not separately established.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',
@@ -52,8 +62,15 @@ METADATA: dict = {
     'verbose': 'PPARgamma Binding Affinity (1,735 compounds)',
     'sources': [
         'https://doi.org/10.1021/acs.est.0c07040',
+        'https://www.ebi.ac.uk/chembl/',
     ],
     'notes': [
+        (
+            'Molecular structures in this dataset derive from ChEMBL '
+            '(https://www.ebi.ac.uk/chembl/), which is licensed CC BY-SA 3.0. Cite '
+            'Mendez et al., Nucleic Acids Res. 47, D930-D940 (2019), '
+            'doi:10.1093/nar/gky1075.'
+        ),
         'Regression task: predict binding affinity to PPARgamma.',
         'Target is negative-log binding affinity (pKd/pKi or pIC50); higher = stronger binding.',
         'TS-1 (419 compounds): pKd or pKi values.',

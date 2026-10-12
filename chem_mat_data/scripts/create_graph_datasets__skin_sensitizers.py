@@ -50,6 +50,35 @@ DESCRIPTION: str = (
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-4.0',
+        'url': 'https://creativecommons.org/licenses/by/4.0/',
+        'note': (
+            'CC BY 4.0 is stated on the source publication - Borba, J. V. B. et al., '
+            '"STopTox: An in-Silico Alternative to Animal Testing", Environ. Health '
+            'Perspect. 130, 027012 (2022), doi:10.1289/EHP9341. The publisher renders '
+            '"This publication is licensed under a Creative Commons Attribution 4.0 '
+            'International License" in the permissions block immediately above the '
+            'Supporting Information listing, and the version of record in PMC '
+            '(PMC8863177) carries the same statement as a NISO ALI license_ref. The '
+            "datasets are that article's supporting material, distributed via "
+            'ChemPharos (db.chempharos.eu), stoptox.mml.unc.edu and '
+            'github.com/joyvb/stoptox. Attribution required, and CC BY also requires '
+            'that modification be indicated: MODIFIED - reformatted into the graph '
+            'representation. UPSTREAM: a substantial part of the underlying study '
+            "results comes from ECHA's REACH registered-substances dissemination "
+            'portal, whose Legal Notice permits reuse only subject to conditions and '
+            'excludes material subject to third-party intellectual property rights. '
+            'The STopTox authors did not hold rights over those dossiers, so the '
+            'article licence cannot clear that layer. The maintainer decided on '
+            '2026-08-19 to treat the article licence as governing for both STopTox '
+            'datasets, recording the ECHA position here rather than holding the data '
+            'back. Note: ehp.niehs.nih.gov is no longer resolvable - EHP has migrated '
+            'onto the ACS platform, so the licence_ref deposited in the article '
+            'metadata points at a dead host; use the DOI. This is the skin '
+            'sensitization endpoint (541 of its compounds are ECHA-derived).'
+        ),
+    },
     'verbose': 'Skin Sensitization Hazard',
     'tags': [
         'Molecules',

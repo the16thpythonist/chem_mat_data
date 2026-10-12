@@ -38,6 +38,24 @@ DESCRIPTION: str = (
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-NC-4.0',
+        'url': 'https://creativecommons.org/licenses/by-nc/4.0/',
+        'note': (
+            'CC BY-NC 4.0 is stated on the ACS Figshare deposit for the Supporting '
+            'Information file (article 17207173, doi:10.1021/acs.est.1c04883.s001), '
+            'shown both by the Figshare REST API and under a Licence heading on the '
+            'record page. Verified to be the exact file used here: same filename '
+            '(es1c04883_si_001.xlsx), same size (121,938 bytes) and same MD5 '
+            '(c865c85e85e91e38d88a972d3c27ba7c) as the cached asset. NONCOMMERCIAL: '
+            'attribution required and commercial use is not permitted. UPSTREAM: the '
+            'NIST Solution Kinetics Database (NIST Standard Reference Database 40), '
+            "named in the SI's own original-sources column. The maintainer decided on "
+            '2026-08-19 that ChemMatData, as a non-commercial academic distribution, '
+            'may redistribute NonCommercial-licensed data provided the condition is '
+            'carried through to users via this field.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',

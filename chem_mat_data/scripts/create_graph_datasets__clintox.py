@@ -26,6 +26,21 @@ DATASET_NAME: str = 'clintox'
 __TESTING__ = False
 
 # This is the dataset template.
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'verbose': 'Clinical Toxicity',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+        'Physiology',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

@@ -11,6 +11,41 @@ DATASET_NAME: str = 'toxcast'
 
 __TESTING__ = False
 
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'license': {
+        'identifier': 'CC0-1.0',
+        'url': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'note': (
+            'The underlying ToxCast data is US EPA computational toxicology output, '
+            'which EPA states is open data: "free of all copyright restrictions, and '
+            'fully and freely available for both non-commercial and commercial use" '
+            '(epa.gov/comptox-tools/downloadable-computational-toxicology-data). '
+            'DISTRIBUTION CHAIN, recorded because it is not clean: this dataset is '
+            "built from MoleculeNet's processed toxcast_data.csv, mirrored via "
+            "DeepChem, which carries no licence of its own - DeepChem's MIT licence "
+            'covers its software, not its datasets directory - and a CC-BY-NC variant '
+            'appears in that compilation chain between EPA and us. The maintainer '
+            "decided on 2026-08-19 that EPA's public-domain release governs, on the "
+            'basis that reprocessing does not create rights over data EPA released '
+            'free of copyright restrictions. Cite the US EPA ToxCast programme; the '
+            'invitroDB source itself aggregates 20+ assay vendors and the NIH/NCATS '
+            'Tox21 programme.'
+        ),
+    },
+    'verbose': 'Toxicology',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+        'Physiology',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

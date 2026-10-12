@@ -527,10 +527,27 @@ cmmanage agent set <slug> metadata_draft '{
   },
   "target_ranges": {
     "0": {"min": -88.6, "max": 548.0, "source": "https://doi.org/... Table 2"}
+  },
+  "license": {
+    "identifier": "CC-BY-4.0",
+    "url": "https://creativecommons.org/licenses/by/4.0/",
+    "note": "Why these terms apply, and to what - especially any upstream obligation."
   }
 }'
 cmmanage agent gate metadata <slug>
 ```
+
+**`license` carries stage 1's conclusion into the artifact.** Set it from
+`manifest.license` — the identifier you already established, a URL a reader can follow, and
+a note saying *why* those terms apply. Without it the licence exists only in the run
+manifest, and the person who downloads the dataset never learns what they may do with it.
+The metadata gate warns when it is missing; the verification gate **errors** if you declare
+one here and it does not reach `metadata.yml`.
+
+Use the `note` to record an obligation that is inherited rather than granted. A dataset
+whose own source states no terms but whose structures come from a ShareAlike database is
+exactly the case a bare identifier describes wrongly — say so in the note rather than
+implying a grant nobody made. See ADR 009.
 
 `target_ranges` is **optional**. Record it per target index when the paper states the
 range its values span, with the URL you read it from. The execute stage then checks the

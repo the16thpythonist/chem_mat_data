@@ -112,6 +112,23 @@ DESCRIPTION: str = (
 
 # :param METADATA:
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-NC-SA-4.0',
+        'url': 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+        'note': (
+            'The values come from enviPath, which states: "The enviPath database and '
+            'prediction system is provided under a Creative Commons license. '
+            'Specifically, we offer the BBD, Soil, Sediment, and Sludge packages '
+            'under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 '
+            'International (CC BY-NC-SA 4.0) license" (community.envipath.org). This '
+            'dataset draws on the EAWAG-SOIL package. NONCOMMERCIAL and SHAREALIKE: '
+            'commercial use is not permitted, and adaptations must be redistributed '
+            'under the same licence. The maintainer decided on 2026-08-19 that '
+            'ChemMatData, as a non-commercial academic distribution, may redistribute '
+            'NonCommercial-licensed data provided the condition is carried through to '
+            'users via this field.'
+        ),
+    },
     'verbose': 'Half-Life Biotransformation',
     'tags': [
         'Molecules',

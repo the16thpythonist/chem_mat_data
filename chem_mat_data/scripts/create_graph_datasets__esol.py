@@ -11,6 +11,24 @@ DESCRIPTION: str = 'Water solubility data(log solubility in mols per litre) for 
 
 __TESTING__ = False
 
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'verbose': 'Water Solubility',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+        'Physical Chemistry',
+    ],
+    'sources': [
+        'https://pubs.acs.org/doi/10.1021/ci034243x',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

@@ -462,6 +462,24 @@ def gate_metadata(manifest: Manifest) -> VerificationReport:
     if not str(draft.get('verbose', '')).strip():
         report.add(ERROR, 'metadata_draft is missing "verbose" (display name)')
 
+    ## -- carry the license stage's conclusion into the shipped metadata --
+    # Stage 1 establishes the terms and the manifest records them, but the artifact a
+    # user downloads is a separate file. Warn rather than fail: most of the collection
+    # predates the field, and an absent license is not the same claim as a permissive
+    # one - it should be a deliberate omission, not an oversight.
+    license_draft = draft.get('license') or {}
+    if not license_draft:
+        report.add(
+            WARNING,
+            'metadata_draft has no "license" - the terms established in stage 1 will '
+            'not reach the dataset a user downloads. Set it from manifest.license.',
+        )
+    elif not str(license_draft.get('identifier', '')).strip():
+        report.add(
+            WARNING,
+            'metadata_draft "license" has no "identifier"',
+        )
+
     tags = draft.get('tags') or []
     if not tags:
         report.add(ERROR, 'metadata_draft is missing "tags"')
@@ -1325,6 +1343,30 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
                     ERROR,
                     f'{key} approved in the metadata stage but absent from '
                     f'metadata.yml: {missing}',
+                )
+
+        ## -- the license must reach the artifact, not just the manifest --
+        # The license stage establishes the terms and the manifest records them, but
+        # nothing used to carry that into the dataset a user actually downloads. A
+        # ShareAlike obligation the maintainer accepted on the project's behalf is
+        # invisible to everyone downstream unless it ships, so a draft that declares a
+        # license and an artifact that does not is an error rather than a warning.
+        approved_license = draft.get('license') or {}
+        written_license = written.get('license') or {}
+        if approved_license:
+            approved_id = str(approved_license.get('identifier', '')).strip()
+            written_id = str(written_license.get('identifier', '')).strip()
+            if not written_license:
+                report.add(
+                    ERROR,
+                    'a license was approved in the metadata stage but metadata.yml '
+                    'carries none - the terms would not reach whoever downloads this',
+                )
+            elif approved_id and written_id and approved_id != written_id:
+                report.add(
+                    ERROR,
+                    f'license in metadata.yml is "{written_id}" but the approved draft '
+                    f'says "{approved_id}"',
                 )
 
         ## -- per-target descriptions --

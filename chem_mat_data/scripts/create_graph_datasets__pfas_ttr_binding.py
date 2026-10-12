@@ -38,6 +38,25 @@ DESCRIPTION: str = (
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC0-1.0',
+        'url': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'note': (
+            'CC0 1.0 is stated on the Figshare record this data comes from (article '
+            '12584645), read directly from the Figshare API. UPSTREAM, in two parts. '
+            'The compound identities and SMILES come from the US EPA CompTox '
+            'Chemicals Dashboard PFAS Master List; EPA output is normally public '
+            'domain, though the CompTox terms page was not independently opened. The '
+            '22 TTR binding percentages are transcribed from Weiss, J. M. et al., '
+            'Toxicol. Sci. 109, 206-216 (2009), doi:10.1093/toxsci/kfp055 - an Oxford '
+            'University Press paper for which Crossref returns no licence entry, i.e. '
+            'conventional all-rights-reserved journal copyright. The maintainer '
+            "decided on 2026-08-19 to accept the depositor's CC0 as governing, "
+            'consistent with the treatment of other datasets whose measurements '
+            'originate in closed publications. Cite Weiss et al. alongside the '
+            'Figshare record.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',

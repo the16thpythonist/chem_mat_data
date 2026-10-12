@@ -94,6 +94,35 @@ A boiling point in °C, a formation energy or anything centred near zero can gen
 be `-1`, and using the sentinel on such a target quietly corrupts the data — skip those
 rows instead and say so here.
 
+### `license` — set it whenever stage 1 established one
+
+```python
+'license': {
+    'identifier': 'CC-BY-SA-3.0',
+    'url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+    'note': (
+        'The molecular structures derive from ChEMBL, which is licensed CC BY-SA 3.0. '
+        'The ShareAlike condition propagates, so this dataset is distributed under the '
+        'same licence.'
+    ),
+}
+```
+
+A mapping, not a bare string, and the `note` is the load-bearing part. `CC-BY-SA-3.0`
+alone does not tell a reader *why* it applies or what they inherit; the note does.
+
+Two things it exists to express that an identifier cannot:
+
+- **Inherited obligations.** A dataset whose own source states no terms, but whose
+  structures come from a ShareAlike database, carries the obligation without ever having
+  received a grant. Write that down rather than implying the authors licensed it.
+- **Honest absence.** Omit the field entirely when no licence was established. An absent
+  `license` means "not researched"; it is **not** a claim that the data is freely usable,
+  and nothing should read it that way.
+
+The full policy and what it commits the project to is in
+`docs/architecture_decisions/009_dataset_license_field.md`.
+
 ### Optional fields
 
 | Field | Used by | Meaning |

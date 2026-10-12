@@ -9,6 +9,43 @@ DATASET_NAME: str = 'aqsoldb'
 
 __TESTING__ = False
 
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'license': {
+        'identifier': 'CC0-1.0',
+        'url': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'note': (
+            'CC0 1.0 is the licence on the Harvard Dataverse record '
+            '(doi:10.7910/DVN/OVHAW8), established from the DOI registration metadata '
+            'Dataverse publishes to DataCite. UPSTREAM: AqSolDB is a compilation of '
+            'nine sources for which its authors state no licence. Three are not '
+            'permissive - OECD eChemPortal (6,110 records, its own site terms, the '
+            'largest single block), the Beilstein database now Reaxys/Elsevier '
+            '(~1,210 records, commercial), and AQUASOL / SRC PHYSPROP (~1,291 '
+            'records, commercial). A CC0 dedication waives the rights the depositors '
+            'held; it cannot clear rights they never held in those compilations. The '
+            "maintainer decided on 2026-08-19 to accept the compiler's licence as "
+            'governing, recording the upstream honestly rather than holding the '
+            'dataset back.'
+        ),
+    },
+    'verbose': 'Aqueous Solubility',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+        'Solubility',
+    ],
+    'sources': [
+        'https://www.nature.com/articles/s41597-019-0151-1',
+        'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/OVHAW8',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

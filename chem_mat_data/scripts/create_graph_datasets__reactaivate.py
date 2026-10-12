@@ -83,6 +83,20 @@ METADATA: dict = {
         '6': 'Other - Elementary steps not fitting the above categories',
         '7': 'Migratory insertion - Ligand migrates to an adjacent coordinated unsaturated substrate',
     },
+    'license': {
+        'identifier': 'MIT',
+        'url': 'https://github.com/alhqlearn/ReactAIvate/blob/main/LICENSE',
+        'note': (
+            'MIT terms come from the LICENSE file at the root of the authors\' GitHub '
+            'repository (github.com/alhqlearn/ReactAIvate), the sole data record named '
+            'in the paper\'s Data Availability statement, which covers the whole repo '
+            'including elementary_step_100000.csv; redistribution requires including the '
+            'copyright and permission notice. Some input reagent structures used to build '
+            'the reaction templates were drawn from PubChem, over which NCBI places no '
+            'redistribution restriction, and from primary literature; no additional '
+            'licence obligation travels with these facts.'
+        ),
+    },
 }
 
 # == DOWNLOAD SOURCE ==

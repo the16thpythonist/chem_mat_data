@@ -9,6 +9,24 @@ DATASET_NAME: str = 'hiv'
 
 __TESTING__ = False
 
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'verbose': 'HIV Inhibitors',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+        'Biophysics',
+    ],
+    'sources': [
+        'https://moleculenet.org/datasets',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

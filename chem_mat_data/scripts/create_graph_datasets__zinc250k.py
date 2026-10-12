@@ -46,6 +46,24 @@ DESCRIPTION: str = (
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'Apache-2.0',
+        'url': 'https://github.com/the-matter-lab/chemical_vae/blob/main/LICENSE.txt',
+        'note': (
+            'The 250k drug-like subset is distributed in the ChemicalVAE repository '
+            '(github.com/the-matter-lab/chemical_vae, formerly aspuru-guzik-group), '
+            'as models/zinc/250k_rndm_zinc_drugs_clean_3.csv, under a repository-root '
+            'LICENSE.txt containing the Apache License 2.0 (Copyright 2017, A. '
+            'Dorsk). The data file is inside the licensed repository and nothing '
+            'scopes the licence to code only. The structures come from ZINC '
+            '(wiki.docking.org), whose terms permit sharing "the results of a ZINC '
+            'search or a screen of molecules from ZINC" and require written '
+            'permission only for "major portions" of the database. The maintainer '
+            'determined on 2026-08-19 that this subset is not a major portion, so '
+            'ZINC is credited rather than treated as imposing terms. ZINC itself '
+            'states no SPDX licence.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',

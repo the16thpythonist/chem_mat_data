@@ -20,6 +20,23 @@ DESCRIPTION: str = (
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC0-1.0',
+        'url': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'note': (
+            'CC0 1.0 is stated on the Figshare record the script downloads from '
+            '(article 1031637, the Jean-Claude Bradley Open Melting Point Dataset), '
+            'confirmed via both the Figshare API and the DataCite SPDX mapping. '
+            'Unusually for this collection the upstream permission is documented too: '
+            'the project ran as an open notebook and both commercially sensitive '
+            'sources were released by explicit written agreement - Alfa Aesar donated '
+            'its catalogue data as Open Data, and the EPI (PhysProp) melting point '
+            'set was cleared with named approval from Bob Boethling at the US EPA and '
+            'Bill Meylan at SRC (usefulchem.blogspot.com, May 2011). That grant '
+            'covers the melting point data specifically and does not generalise to '
+            'other PHYSPROP-derived datasets.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',

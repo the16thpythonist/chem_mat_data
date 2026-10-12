@@ -19,6 +19,50 @@ DESCRIPTION = (
 
 __TESTING__ = False
 
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-4.0',
+        'url': 'https://creativecommons.org/licenses/by/4.0/',
+        'note': (
+            'CC BY 4.0 is stated on the Figshare record this table comes from, '
+            'deposited by Taylor & Francis (doi:10.6084/m9.figshare.7093541, the '
+            'supplementary table of Venko, Drgan & Novic 2018). Verified three ways - '
+            'the DataCite rightsList with SPDX rightsIdentifier cc-by-4.0, the '
+            'Figshare v2 API, and the rendered record page - and a sibling Figshare '
+            'record was checked as a negative control (it reads CC-BY-NC), confirming '
+            'this is a genuine per-record grant rather than a platform default. The '
+            'shipped data was verified row-for-row against the record preview. '
+            'Attribution required, and CC BY also requires that modification be '
+            'indicated: MODIFIED - reformatted into the graph representation. '
+            'UPSTREAM: the authors cite the Pesticide Properties DataBase (PPDB, '
+            'University of Hertfordshire), which is proprietary, but spot-checks '
+            'argue against it being the source - of four values checked only '
+            'deltamethrin matched PPDB, dimethoate read 0.16 against 0.1, '
+            'parathion-methyl 0.111 against 19.5, and dieldrin has no PPDB contact '
+            'value at all. The 254 LD50 values are a multi-source literature and '
+            "regulatory compilation published as the authors' own supplementary "
+            'table.'
+        ),
+    },
+    'verbose': 'Honey Bee Toxicity',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+        'Physiology',
+        'Toxicity',
+    ],
+    'sources': [
+        'https://weilab.math.msu.edu/DataLibrary/2D/',
+        'https://pubs.acs.org/doi/10.1021/acs.jpclett.1c03058',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

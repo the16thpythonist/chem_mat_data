@@ -11,6 +11,36 @@ DATASET_NAME: str = 'sider'
 
 __TESTING__ = False
 
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-SA-4.0',
+        'url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'note': (
+            'SIDER states on its download page (sideeffects.embl.de/download/): "The '
+            'results of this mapping are available under a Creative Commons '
+            'Attribution-Share Alike 4.0 License." ShareAlike, not NonCommercial - '
+            'commercial use is permitted, but adaptations must be redistributed under '
+            'the same licence, which is why this dataset carries it. Cite Kuhn, M. et '
+            'al., the SIDER side effect resource (EMBL). Reached via '
+            'MoleculeNet/DeepChem, which adds no licence of its own. This follows the '
+            'same ShareAlike policy the maintainer adopted for ChEMBL; see '
+            'docs/architecture_decisions/009_dataset_license_field.md.'
+        ),
+    },
+    'verbose': 'Drug Side Effects',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+        'Physiology',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

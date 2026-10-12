@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Every dataset can now say what you may do with it.** A `license` field (an
+  identifier, a URL, and a note on why those terms apply and to what) is set in the
+  `METADATA` of 41 processing scripts and reaches `metadata.yml` as each dataset's
+  metadata is collected; `cmdata info` shows it before the targets, since it decides
+  whether the dataset may be used at all. Datasets whose structures come from ChEMBL carry
+  CC-BY-SA-3.0, because the ShareAlike condition propagates
+  (`docs/chembl_licensing_analysis.md`). The field is ADR 009, and the datasets still
+  awaiting a ruling are listed in `docs/dataset_license_review.md`. In
+  `/dataset-extraction`, the metadata gate warns when a draft has no `license`, and the
+  verification gate errors when a declared one does not reach `metadata.yml`.
+
+  Eleven scripts whose catalogue entry carried fields their `METADATA` lacked now mirror
+  them, so `cmmanage metadata collect`, which replaces an entry wholesale, no longer drops
+  them the next time the script is processed.
+
 - **The skill's documentation is now tested.** It is instructions an agent follows
   literally, so prose describing behaviour that does not exist is a defect with the
   authority of code and none of the verification — six such defects shipped during

@@ -11,6 +11,26 @@ DATASET_NAME: str = 'photo_oliogomers'
 
 __TESTING__ = False
 
+METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-4.0',
+        'url': 'https://creativecommons.org/licenses/by/4.0/',
+        'note': (
+            'CC BY 4.0 is stated on the Zenodo data record (11580890); an MIT LICENSE '
+            'file is also bundled inside the archive, which is a second permissive '
+            'option rather than a conflict. Attribution required, and CC BY also '
+            'requires that modification be indicated: MODIFIED - reformatted into the '
+            'graph representation. UPSTREAM: the acceptor building blocks of the '
+            '2,200-molecule space were purchased from eMolecules, a commercial '
+            'catalogue whose terms of use could not be located (all candidate URLs '
+            '404). No eMolecules content is redistributed here - this dataset carries '
+            'SMILES and measured photostability values only. The eMolecules catalogue '
+            'fields live in MonomerFeatures.csv, an intermediate file of the source '
+            'pipeline that is not shipped.'
+        ),
+    },
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

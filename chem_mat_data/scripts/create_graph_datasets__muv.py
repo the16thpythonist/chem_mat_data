@@ -83,6 +83,26 @@ MUV_IDS = [
 ]
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-2.0',
+        'url': 'https://creativecommons.org/licenses/by/2.0/',
+        'note': (
+            'The MUV compound sets are published as Additional file 5 of Riniker, S. '
+            '& Landrum, G. A., J. Cheminform. 5, 26 (2013), which is CC BY 2.0. That '
+            "is a third party's republication rather than a grant by the MUV "
+            "originators - but the originators' own page at TU Braunschweig names it "
+            'as the way to obtain their data: "In case you want to download the MUV '
+            'data sets please contact us at muv(at)tu-bs.de OR SEE: S. Riniker, G. A. '
+            'Landrum ... (additional file 5 also contains the MUV data sets)", '
+            'wording stable since at least 2014. Note an older TU Braunschweig '
+            'download page stated "it is not allowed to re-distribute the structures '
+            'in SDF format"; the current page supersedes it by pointing at the CC BY '
+            '2.0 channel. Cite Rohrer, S. G. & Baumann, K., J. Chem. Inf. Model. 49, '
+            '169-184 (2009) and Riniker & Landrum. UPSTREAM: PubChem BioAssay, which '
+            'NLM places in the public domain with no redistribution restriction. The '
+            'maintainer accepted this basis on 2026-08-19.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',

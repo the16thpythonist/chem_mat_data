@@ -40,6 +40,23 @@ DESCRIPTION: str = (
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-4.0',
+        'url': 'https://creativecommons.org/licenses/by/4.0/',
+        'note': (
+            'CC BY 4.0 is stated on the Zenodo data record (14392754, deposited by '
+            'NovaMechanics), machine-readable and matching the companion article in '
+            'Molecular Diversity (doi:10.1007/s11030-025-11196-5). Attribution '
+            'required, and CC BY also requires that modification be indicated: '
+            'MODIFIED - reformatted into the graph representation. UPSTREAM: the '
+            'experimental boiling points trace to the US EPA EPI Suite bundled '
+            'PHYSPROP database (Syracuse Research Corporation), reached via the '
+            'curated set of Zang et al. 2017; PHYSPROP is a commercial compilation '
+            'and no grant from SRC covers this dataset. The maintainer decided on '
+            "2026-08-19 to accept the compiler's licence as governing, recording the "
+            'upstream honestly rather than holding the dataset back.'
+        ),
+    },
     'tags': ['Molecules', 'SMILES', 'Molecular Properties', 'Boiling Point'],
     'sources': [
         'https://zenodo.org/records/14392754',

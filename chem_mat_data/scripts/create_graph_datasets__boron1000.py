@@ -37,6 +37,25 @@ DESCRIPTION: str = (
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'MIT',
+        'url': 'https://github.com/ETHmodlab/lsfml/blob/master/LICENSE',
+        'note': (
+            'WARNING - THIS DATASET IS MISNAMED AND ITS DESCRIPTION AND SOURCES ARE '
+            'WRONG. The script does not download BORON1000. Real BORON1000 is '
+            'Reaxys-derived, proprietary (Elsevier) and was deliberately never '
+            'published as structures, only as Reaxys IDs. What this script actually '
+            'pulls (github.com/ruslankotl/rxn-data-proc, data/roche/classification) '
+            'is a byte-verified copy of the Nippa et al. literature borylation set '
+            'from github.com/ETHmodlab/lsfml (Nippa et al., Nat. Chem. 2024, '
+            'doi:10.1038/s41557-023-01360-5; Zenodo 10.5281/zenodo.8118845). The MIT '
+            'identifier is the root LICENSE of ETHmodlab/lsfml, the origin of the '
+            'file; the immediate GitHub host carries no licence file of its own, so '
+            'the permission is read as travelling with the copied data. The naming '
+            'and provenance error is tracked separately and must be fixed before this '
+            'dataset is published.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',

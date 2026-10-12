@@ -52,6 +52,16 @@ DESCRIPTION: str = (
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-SA-3.0',
+        'url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'note': (
+            'The molecular structures derive from ChEMBL, which is licensed CC BY-SA '
+            '3.0. The ShareAlike condition propagates, so this dataset is distributed '
+            'under the same licence. The terms of the intermediate publication were '
+            'not separately established.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',
@@ -68,8 +78,15 @@ METADATA: dict = {
         'https://doi.org/10.1186/s13321-022-00613-0',
         'https://doi.org/10.1016/j.jpha.2025.101317',
         'https://github.com/molML/MoleculeACE',
+        'https://www.ebi.ac.uk/chembl/',
     ],
     'notes': [
+        (
+            'Molecular structures in this dataset derive from ChEMBL '
+            '(https://www.ebi.ac.uk/chembl/), which is licensed CC BY-SA 3.0. Cite '
+            'Mendez et al., Nucleic Acids Res. 47, D930-D940 (2019), '
+            'doi:10.1093/nar/gky1075.'
+        ),
         'Regression task: predict binding affinity (pEC50 or pKi).',
         '30 ChEMBL protein targets combined into one dataset.',
         '~39% of compounds are activity cliff molecules.',

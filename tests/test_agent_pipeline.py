@@ -56,7 +56,39 @@ def valid_draft() -> dict:
         'sources': ['https://doi.org/10.0000/demo'],
         'target_count': 1,
         'target_descriptions': {'0': 'mpC - Experimental melting point (Celsius)'},
+        'license': {
+            'identifier': 'CC-BY-4.0',
+            'url': 'https://creativecommons.org/licenses/by/4.0/',
+            'note': 'Stated on the source record.',
+        },
     }
+
+
+class TestMetadataGateLicense:
+    """
+    The metadata stage is where stage 1's license conclusion has to be carried into the
+    draft, because the manifest is not what a user downloads.
+    """
+
+    def test_missing_license_warns_but_does_not_block(self, work_root):
+        draft = valid_draft()
+        del draft['license']
+        manifest = Manifest.create('demo')
+        manifest.metadata_draft = draft
+        report = gate_metadata(manifest)
+        # A warning, not an error: most of the collection predates the field, and an
+        # absent license is a deliberate "not established" rather than a failure.
+        assert report.ok
+        assert any('license' in issue.message for issue in report.warnings)
+
+    def test_license_without_identifier_warns(self, work_root):
+        draft = valid_draft()
+        draft['license'] = {'note': 'terms are on the record page somewhere'}
+        manifest = Manifest.create('demo')
+        manifest.metadata_draft = draft
+        report = gate_metadata(manifest)
+        assert report.ok
+        assert any('identifier' in issue.message for issue in report.warnings)
 
 
 class TestManifest:
@@ -617,6 +649,7 @@ def write_results(
         'description': valid_draft()['description'],
         'verbose': valid_draft()['verbose'],
         'raw': ['csv'],
+        'license': valid_draft()['license'],
         'tags': valid_draft()['tags'],
         'sources': valid_draft()['sources'],
         'target_descriptions': valid_draft()['target_descriptions'],
@@ -926,6 +959,28 @@ class TestVerificationGate:
     def test_complete_run_passes(self, work_root, tmp_path):
         report = gate_verification(self.build(tmp_path))
         assert report.ok, [issue.message for issue in report.errors]
+
+    def test_license_approved_but_not_shipped_is_an_error(self, work_root, tmp_path):
+        # The whole point of the field: a license the maintainer accepted on the
+        # project's behalf has to reach the artifact, not just sit in the manifest.
+        manifest = self.build(tmp_path)
+        metadata_path = Path(manifest.results_dir) / 'metadata.yml'
+        written = yaml.safe_load(metadata_path.read_text())
+        del written['license']
+        metadata_path.write_text(yaml.dump(written))
+        report = gate_verification(manifest)
+        assert not report.ok
+        assert any('license' in issue.message for issue in report.errors)
+
+    def test_license_identifier_mismatch_is_an_error(self, work_root, tmp_path):
+        manifest = self.build(tmp_path)
+        metadata_path = Path(manifest.results_dir) / 'metadata.yml'
+        written = yaml.safe_load(metadata_path.read_text())
+        written['license']['identifier'] = 'MIT'
+        metadata_path.write_text(yaml.dump(written))
+        report = gate_verification(manifest)
+        assert not report.ok
+        assert any('MIT' in issue.message for issue in report.errors)
 
     def test_incomplete_earlier_stage_is_an_error(self, work_root, tmp_path):
         manifest = self.build(tmp_path)

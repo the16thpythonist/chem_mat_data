@@ -478,6 +478,33 @@ class RichDatasetInfo(RichMixin):
                     (0, 3),
                 )
 
+        # -- License (optional) -----------------------------------------------
+        # Rendered before the targets because it governs whether the reader may use
+        # the dataset at all, which is a more urgent question than what is in it. A
+        # dataset with no "license" key simply omits the section - most predate the
+        # field, and an absent license is not the same claim as a permissive one.
+        license_info = self.info.get('license')
+        if license_info:
+            yield Padding(
+                Rule(title='License', style='dim', align='left'),
+                (1, 1),
+            )
+            identifier = str(license_info.get('identifier', '')).strip() or 'not stated'
+            yield Padding(
+                Text.from_markup(f'[bold {color}]{identifier}[/bold {color}]'),
+                (0, 3),
+            )
+            if license_info.get('url'):
+                yield Padding(
+                    Text.from_markup(f"[yellow]▸  {license_info['url']}[/yellow]"),
+                    (0, 3),
+                )
+            if license_info.get('note'):
+                yield Padding(
+                    Text(str(license_info['note']), style='white'),
+                    (0, 3),
+                )
+
         # -- Target descriptions (optional) -----------------------------------
         if self.info.get('target_descriptions'):
             yield Padding(

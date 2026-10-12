@@ -21,6 +21,28 @@ DATASET_NAME: str = 'compas_1x'
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-NC-SA',
+        'url': 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+        'note': (
+            'The COMPAS README states: "The COMPAS database is provided '
+            'free-of-charge and is intended to be a resource for the scientific '
+            'community. It is licensed under a CC-BY-NC-SA license." The same '
+            'sentence appears identically in COMPAS-1/README.md, COMPAS-2/readme.md '
+            'and COMPAS-3/README.md, i.e. beside the data files themselves. IT STATES '
+            'NO VERSION, so none is asserted here. CONTRADICTION, recorded rather '
+            'than resolved in our favour: the repository ROOT LICENSE file is the '
+            'full legal text of Creative Commons Attribution 4.0 International - '
+            'plain CC BY 4.0, verified as 396 lines with zero occurrences of '
+            '"NonCommercial" or "ShareAlike". The restrictive README sits next to the '
+            'data and says the same thing three times, so it is treated as governing; '
+            'the permissive root file is treated as stale boilerplate. Only the '
+            'Poranne group can settle it. The maintainer decided on 2026-08-19 that '
+            'ChemMatData, as a non-commercial academic distribution, may redistribute '
+            'NonCommercial-licensed data provided the condition is carried through to '
+            'users via this field.'
+        ),
+    },
     'verbose': 'Cata-Condensed Polybenzenoid Hydrocarbons (COMPAS-1x)',
     'description': (
         'The COMPAS-1x dataset is part of the COMPAS Project, a computational database of polycyclic '

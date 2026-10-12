@@ -25,6 +25,16 @@ DESCRIPTION: str = (
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-SA-3.0',
+        'url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'note': (
+            'The molecular structures derive from ChEMBL, which is licensed CC BY-SA '
+            '3.0. The ShareAlike condition propagates, so this dataset is distributed '
+            'under the same licence. The terms of the intermediate publication were '
+            'not separately established.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',
@@ -35,6 +45,14 @@ METADATA: dict = {
     'sources': [
         'https://doi.org/10.1039/C7SC02664A',
         'https://moleculenet.org/datasets-1',
+        'https://www.ebi.ac.uk/chembl/',
+    ],
+    'notes': [
+        (
+            "Molecular structures in this dataset derive from ChEMBL "
+            "(https://www.ebi.ac.uk/chembl/), which is licensed CC BY-SA 3.0. Cite Mendez "
+            "et al., Nucleic Acids Res. 47, D930-D940 (2019), doi:10.1093/nar/gky1075."
+        ),
     ],
     # TADF: Thermally Activated Delayed Fluorescence
     'target_descriptions': {

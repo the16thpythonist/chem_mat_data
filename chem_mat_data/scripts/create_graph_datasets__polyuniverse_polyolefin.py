@@ -47,6 +47,31 @@ DESCRIPTION: str = (
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-4.0',
+        'url': 'https://creativecommons.org/licenses/by/4.0/',
+        'note': (
+            'CC BY 4.0 is stated on the Zenodo data record this polyolefin set is '
+            'taken from (record 12585902, "PolyUniverse: Generation Results", '
+            'doi:10.5281/zenodo.12585902), confirmed against the DataCite SPDX '
+            'rightsIdentifier. Attribution is required, and CC BY also requires that '
+            'modification be indicated: MODIFIED - reformatted into the graph '
+            'representation, with the source columns carried through unchanged. The '
+            'property columns are machine-learning predictions, not measurements. '
+            'Note that PolyInfo_p.csv (NIMS PoLyInfo, restrictive terms) sits in the '
+            'same Zenodo record but is not read by this script and none of its '
+            'records are redistributed here. The structures derive from the Reymond '
+            "group's GDB chemical universe databases. GDB's own download page "
+            '(gdb.unibe.ch/downloads) carries a click-through notice that "GDB and '
+            'large portions thereof must not be redistributed without the express '
+            'written permission of Jean-Louis Reymond", but the Reymond group have '
+            'themselves deposited the databases - GDB-11, GDB-13 and GDB-17 - on '
+            'Zenodo under CC BY 4.0 (record 5172018, doi:10.5281/zenodo.5172018, '
+            'Fink, Blum, Ruddigkeit & van Deursen, 2021). The maintainer determined '
+            'on 2026-08-19 that the specific, current grant on the data itself '
+            'governs over the generic terms page. Cite GDB accordingly.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',

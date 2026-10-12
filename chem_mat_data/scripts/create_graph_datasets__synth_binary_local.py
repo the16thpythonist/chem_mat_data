@@ -11,6 +11,36 @@ DATASET_NAME: str = 'synth_binary_local'
 __TESTING__ = False
 __DEBUG__ = True
 
+# :param METADATA:
+#       Mirrors what this dataset already carries in the shared metadata.yml.
+#       Without it, "cmmanage metadata collect" - which replaces a dataset's
+#       catalogue entry wholesale rather than merging fields - would silently
+#       drop these the next time this script is processed.
+METADATA: dict = {
+    'license': {
+        'identifier': 'Apache-2.0',
+        'url': 'https://github.com/the-matter-lab/chemical_vae/blob/main/LICENSE.txt',
+        'note': (
+            'The 250k drug-like subset is distributed in the ChemicalVAE repository '
+            '(github.com/the-matter-lab/chemical_vae, formerly aspuru-guzik-group), '
+            'as models/zinc/250k_rndm_zinc_drugs_clean_3.csv, under a repository-root '
+            'LICENSE.txt containing the Apache License 2.0 (Copyright 2017, A. '
+            'Dorsk). The data file is inside the licensed repository and nothing '
+            'scopes the licence to code only. The structures come from ZINC '
+            '(wiki.docking.org), whose terms permit sharing "the results of a ZINC '
+            'search or a screen of molecules from ZINC" and require written '
+            'permission only for "major portions" of the database. The maintainer '
+            'determined on 2026-08-19 that this subset is not a major portion, so '
+            'ZINC is credited rather than treated as imposing terms. ZINC itself '
+            'states no SPDX licence.'
+        ),
+    },
+    'verbose': 'Synthetic Binary Classification (Local)',
+    'tags': [
+        'Molecules',
+    ],
+}
+
 experiment = Experiment.extend(
     'create_graph_datasets.py',
     base_path=folder_path(__file__),

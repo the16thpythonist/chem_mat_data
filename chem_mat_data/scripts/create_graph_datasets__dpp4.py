@@ -19,6 +19,41 @@ DESCRIPTION: str = (
     'second value is the binary label if the compound is active for pIC50 or not.'
 )
 
+# :param METADATA:
+#       Additional metadata merged over the fields the base template derives. The values
+#       here mirror what the dataset already carries in the shared metadata.yml so that
+#       re-running "cmmanage metadata collect" does not drop them.
+METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-SA-3.0',
+        'url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'note': (
+            'The molecular structures derive from ChEMBL, which is licensed CC BY-SA '
+            '3.0. The ShareAlike condition propagates, so this dataset is distributed '
+            'under the same licence. The terms of the intermediate publication were '
+            'not separately established.'
+        ),
+    },
+    'verbose': 'DPP-4 inhibitors',
+    'full': True,
+    'tags': [
+        'Smiles',
+        'Molecules',
+    ],
+    'sources': [
+        'https://weilab.math.msu.edu/DataLibrary/2D/',
+        'https://pubs.acs.org/doi/10.1021/acs.jpclett.1c03058',
+        'https://www.ebi.ac.uk/chembl/',
+    ],
+    'notes': [
+        (
+            "Molecular structures in this dataset derive from ChEMBL "
+            "(https://www.ebi.ac.uk/chembl/), which is licensed CC BY-SA 3.0. Cite Mendez "
+            "et al., Nucleic Acids Res. 47, D930-D940 (2019), doi:10.1093/nar/gky1075."
+        ),
+    ],
+}
+
 __TESTING__ = False
 
 experiment = Experiment.extend(

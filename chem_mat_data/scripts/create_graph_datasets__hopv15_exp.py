@@ -45,6 +45,19 @@ METADATA: dict = {
         '4': 'VOC - Open circuit voltage in V',
         '5': 'PCE - Power conversion efficience in percent',
     },
+    'license': {
+        'identifier': 'CC-BY-4.0',
+        'url': 'https://creativecommons.org/licenses/by/4.0/',
+        'note': (
+            'The Figshare data record (doi.org/10.6084/m9.figshare.1610063), which hosts the '
+            'HOPV_15_revised_2.data file this script downloads, states CC BY 4.0 on the record '
+            'itself; the accompanying Data Descriptor (Lopez et al., Sci. Data 3, 160086, 2016) '
+            'is independently CC BY 4.0. Redistribution of a processed derivative is permitted '
+            'provided attribution is given and changes are indicated; there is no upstream '
+            'database restriction, as HOPV15 is a hand-curated literature compilation rather '
+            'than an extract of a structured database.'
+        ),
+    },
 }
 
 experiment = Experiment.extend(
