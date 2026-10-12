@@ -120,7 +120,20 @@ a fixed list, and anything outside it — including hydrogen — used to be writ
 string `unknown`, so a selenium and a hydrogen were indistinguishable. Fixed in the
 library, but worth confirming for any dataset containing unusual elements.
 
-## What to report
+## What to report, and where
+
+**Write your report to `.dataset_work/<slug>/reviews/verification.md`**, and begin it
+with a line reading:
+
+```
+reviewer: subagent
+```
+
+Do not rely on returning it as text. In one run three subagents finished their work and
+none of it arrived, so both reviewing stages ended up being done by the agent that wrote
+the script — which is the arrangement this whole file argues against. The file is what
+the gate checks and what survives a lost message; returning the text as well is a
+convenience, not the deliverable.
 
 Findings, not reassurance. For each item: what you checked, what you found, and whether it
 blocks. If you cannot check something, say so plainly rather than omitting it — a gap you

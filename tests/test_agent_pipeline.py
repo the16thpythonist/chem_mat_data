@@ -954,6 +954,13 @@ class TestVerificationGate:
         results = tmp_path / 'results' / 'debug'
         write_results(results, extra=written_extra)
         manifest.results_dir = str(results)
+        # A finished run has been reviewed at both ends; whether the gate insists on
+        # that is covered in test_agent_review_files.py.
+        body = ' '.join(f'word{i}' for i in range(60))
+        for stage in ('license', 'verification'):
+            path = manifest.review_path(stage)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f'reviewer: subagent\n\n{body}')
         return manifest
 
     def test_complete_run_passes(self, work_root, tmp_path):

@@ -85,7 +85,23 @@ def build(tmp_path, name='demo_ds', draft_overrides=None, **metadata_overrides):
     results = tmp_path / 'results' / 'debug'
     write_results(results, name=name, **metadata_overrides)
     manifest.results_dir = str(results)
+    write_reviews(manifest)
     return manifest
+
+
+def write_reviews(manifest):
+    """
+    Give the run the two review files the final gate requires.
+
+    These tests are about metadata drift, so they model a run that was reviewed
+    normally; whether the gate demands the reviews at all is covered in
+    ``test_agent_review_files.py``.
+    """
+    body = ' '.join(f'word{i}' for i in range(60))
+    for stage in ('license', 'verification'):
+        path = manifest.review_path(stage)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f'reviewer: subagent\n\n{body}')
 
 
 def test_a_matching_run_passes(work_root, tmp_path):

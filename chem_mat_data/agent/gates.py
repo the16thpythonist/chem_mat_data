@@ -84,6 +84,81 @@ REDISTRIBUTION_DENIED: tuple = (
     'unknown',
 )
 
+#: Who a review file may declare as its author. ``subagent`` and ``human`` are the two
+#: arrangements that give the stage the independence it exists for; ``self`` is the
+#: honest label for the agent reviewing its own work, which is permitted but reported.
+REVIEWER_KINDS: tuple = ('subagent', 'human', 'self')
+
+#: The shortest review worth the name, in words. A review that fits in a sentence has
+#: not worked a checklist.
+REVIEW_MIN_WORDS: int = 50
+
+
+def check_review(manifest: Manifest, stage: str, label: str, report: VerificationReport) -> None:
+    """
+    Check that a stage's reviewing subagent left a report on disk.
+
+    Stages 1 and 6 are meant to be judged by an agent with no stake in the outcome.
+    That property was silently lost in a real run: all three subagents finished their
+    work, none of it reached the parent, and both stages were done by the agent that
+    had written the script. Nothing in the pipeline noticed - the run passed every
+    gate, and the only trace was a paragraph the agent chose to write about itself.
+
+    Requiring the report as a file removes the delivery channel from the critical
+    path, and turns "no independent review happened" from an invisible fact into a
+    gate failure. The file must also say who wrote it, because the failure mode being
+    guarded against is not an empty file but a plausible one written by the wrong
+    author.
+
+    :param manifest: The run manifest.
+    :param stage: The stage whose review is required.
+    :param label: Human-readable name of the review, used in the messages.
+    :param report: The report to add any issues to.
+    """
+    path = manifest.review_path(stage)
+
+    if not path.is_file():
+        report.add(
+            ERROR,
+            f'no {stage} review at {path} - the {label} must be written to that file by '
+            'the reviewing subagent. Spawn it without a `name`, or its report is '
+            'returned to a mailbox instead of to you and is lost when the run ends',
+        )
+        return
+
+    text = path.read_text(errors='replace')
+
+    if len(text.split()) < REVIEW_MIN_WORDS:
+        report.add(
+            ERROR,
+            f'{path.name} is nearly empty - a review states what was checked, what was '
+            'found, and whether it blocks',
+        )
+        return
+
+    # Tolerant of the markdown an agent will inevitably wrap the label in - bullets,
+    # bold, backticks. Rejecting `**reviewer:** subagent` would teach the reader that
+    # the check is about formatting when it is about authorship.
+    match = re.search(r'^[\s>*_#-]*reviewer[*_]*\s*:[\s*_`]*([A-Za-z-]+)', text, re.I | re.M)
+    reviewer = match.group(1).lower() if match else ''
+
+    if reviewer not in REVIEWER_KINDS:
+        report.add(
+            ERROR,
+            f'{path.name} does not say who wrote it - it needs a line reading '
+            f'"reviewer: <{"|".join(REVIEWER_KINDS)}>", because a review is only worth '
+            'what its author\'s independence is worth',
+        )
+    elif reviewer == 'self':
+        report.add(
+            WARNING,
+            f'the {label} was done by the agent that produced the work '
+            f'("reviewer: self" in {path.name}) - it compares what that agent wrote '
+            'against other things the same agent wrote, so it cannot catch a mistake '
+            'made consistently. Have a fresh subagent or a human redo it',
+        )
+
+
 #: Names of files in the downloads folder that are documentation rather than data.
 NON_DATA_NAMES: tuple = ('readme', 'download_recipe', 'license', 'licence', 'manifest')
 
@@ -1294,6 +1369,14 @@ def gate_verification(manifest: Manifest) -> VerificationReport:
                 f'stage "{stage}" is {state.status}, not passed'
                 + (f': {state.blocker}' if state.blocker else ''),
             )
+
+    ## -- both reviewing stages must have left a report --
+    # Before the results_dir bail-out, because this check does not depend on it and a
+    # report that collects every problem at once is the point of the class. An agent
+    # told only "no results_dir recorded" fixes that, re-runs, and is told about the
+    # missing reviews on the next pass instead of this one.
+    check_review(manifest, 'license', 'licence determination', report)
+    check_review(manifest, 'verification', 'final review', report)
 
     if not manifest.results_dir:
         report.add(ERROR, 'no results_dir recorded')

@@ -683,6 +683,32 @@ class Manifest:
         return work_dir_for(self.slug) / 'findings.md'
 
     @property
+    def reviews_dir(self) -> Path:
+        """The folder holding the reports written by the reviewing subagents."""
+        return work_dir_for(self.slug) / 'reviews'
+
+    def review_path(self, stage: str) -> Path:
+        """
+        Where the subagent for a given stage must write its report.
+
+        The licence and verification stages are both meant to be judged by an agent
+        with no stake in the outcome, and the value of that is entirely lost if the
+        report does not arrive. It has been lost: in one run all three subagents
+        finished their work and none of it reached the parent, because naming an agent
+        routes it through a mailbox and the spawn call returns a receipt rather than
+        the report. Both stages were then done by the agent that wrote the script.
+
+        Writing to a known path removes the return channel from the critical path. The
+        file either exists or it does not, and the gate can ask.
+
+        :param stage: The stage the review belongs to, ``license`` or ``verification``.
+
+        :returns: Path to that stage's review file, which may not exist yet.
+        """
+        _check_stage(stage)
+        return self.reviews_dir / f'{stage}.md'
+
+    @property
     def complete(self) -> bool:
         """``True`` when every stage has passed."""
         return self.next_stage() is None

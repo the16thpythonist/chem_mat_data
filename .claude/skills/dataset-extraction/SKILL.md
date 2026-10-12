@@ -228,6 +228,20 @@ That is the record's landing page — `https://zenodo.org/records/14392754`, not
 agent whose only job is to determine the licence, giving it the publication URL and the
 repository record. Do not do it yourself.
 
+**Spawn it without a `name`, and not in the background.** Passing a `name` routes the
+agent through a mailbox: the spawn call returns a receipt reading "the agent is now
+running", the completion arrives later as an idle notification carrying no text, and
+the report is never delivered at all. This is not hypothetical — in one run all three
+subagents finished their work, none of it reached the parent, and both this stage and
+stage 6 were then done by the agent that wanted the dataset. Spawned unnamed, the tool
+result *is* the report.
+
+**Tell it to write that report to `.dataset_work/<slug>/reviews/license.md`**, starting
+with a line reading `reviewer: subagent`. The file is what the final gate checks, and it
+is what survives a lost message. If you end up doing this stage yourself anyway, still
+write the file and label it `reviewer: self` — the gate reports that plainly rather than
+letting a self-review pass as an independent one.
+
 The reason is bias, not capacity. Even this early you have decided this dataset is worth
 having, which is exactly the state of mind in which an ambiguous licence gets read
 charitably. An agent with no stake reads it as it is. Running it first also means the
@@ -690,7 +704,14 @@ loss, do not raise it — escalate.
 ## Stage 6 — verification
 
 **Run this as a fresh subagent too**, for the same reason as the license stage: the
-agent that wrote the script is the worst-placed judge of whether it worked.
+agent that wrote the script is the worst-placed judge of whether it worked. **Spawn it
+without a `name` and not in the background**, exactly as in stage 1 — a named agent's
+report goes to a mailbox and never reaches you.
+
+**Tell it to write its report to `.dataset_work/<slug>/reviews/verification.md`**,
+starting with a line reading `reviewer: subagent`. The gate below requires that file and
+the licence one, so a review that was never delivered fails the stage instead of quietly
+becoming a self-review.
 
 **Give it `references/reviewing.md`.** That file is the checklist, and it is not generic
 advice: every item on it is something that actually went wrong in a real run and would
@@ -706,7 +727,8 @@ rather than reassurance.
 Do not paraphrase the checklist into the briefing. Point at the file, so that when a new
 failure mode is found it is added in one place and every future run gets it.
 
-The gate itself checks: every earlier stage passed; the results verify; **what landed
+The gate itself checks: every earlier stage passed; the results verify; **both review
+files exist and say who wrote them**; **what landed
 in `metadata.yml` matches what the metadata stage approved** — `verbose`, `description`,
 `tags`, `sources`, every `target_descriptions` entry, the task type, and the dataset
 name against the file actually written, since the script carries its own `METADATA`

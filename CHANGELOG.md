@@ -68,6 +68,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **The reviewing stages of `/dataset-extraction` must leave their report on disk.**
+  Stages 1 and 6 are judged by a subagent with no stake in the outcome, but in one run all
+  three subagents' reports were lost, because a named agent's report goes to a mailbox,
+  and both stages were then done by the agent that wrote the script. Nothing noticed.
+  Reviews are now written to `.dataset_work/<slug>/reviews/{license,verification}.md`,
+  starting with a `reviewer:` line (`subagent`, `human` or `self`). The final gate errors
+  when a review is missing, nearly empty or does not say who wrote it, and warns on
+  `self`. The skill now says to spawn reviewers without a name and in the foreground.
+  11 tests added.
+
 - **The licence stage runs first, before anything is downloaded.** It used to run third,
   so a run fetched the data, wrote its metadata draft and only then discovered the data
   might not be redistributable — in one validation run that happened after a 155 MB
