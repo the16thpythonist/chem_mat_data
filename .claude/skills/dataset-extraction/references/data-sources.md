@@ -42,11 +42,36 @@ https://ndownloader.figshare.com/files/<file_id>
 https://figshare.com/ndownloader/files/<file_id>     # equivalent
 ```
 
-The `<file_id>` is per-file and is *not* the article id — find it in the download
-button's href, or via the API:
+The `<file_id>` is per-file and is *not* the article id. **Do not hand the article URL
+or the DOI to a plain downloader** — the request succeeds and returns the HTML landing
+page, which then fails inside a zip reader or, worse, is used as though it were data.
+
+`FigshareSource` resolves all of this for you, so prefer it over a raw download:
+
+```python
+from chem_mat_data.connectors import FigshareSource
+
+# See what an article holds, without downloading anything
+for entry in FigshareSource(article_id=25993060).list_files():
+    print(entry['name'], entry['size'])
+
+# Fetch by whatever link the paper cites - DOI, landing page or file URL
+with FigshareSource(
+    url='https://doi.org/10.6084/m9.figshare.25993060',
+    name='*main*',                    # exact, case-insensitive, glob or substring
+    relative_path='QM40/main.csv',    # if the file is a ZIP
+) as source:
+    path = source.fetch()
+```
+
+If the article holds more than one file and you do not pass `name`, it raises and lists
+the files with their sizes rather than guessing — several articles ship files with
+identical columns, where the wrong choice is a valid dataset of the wrong thing.
+
+The equivalent by hand, if you need it:
 
 ```bash
-curl -s "https://api.figshare.com/v2/articles/<article_id>/files"
+curl -s "https://api.figshare.com/v2/articles/<article_id>"      # includes the file list
 ```
 
 **Figshare frequently has certificate-chain problems.** This is what
