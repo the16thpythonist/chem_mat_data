@@ -460,6 +460,18 @@ def pyg_from_graph(graph: GraphDict) -> 'Data':  # noqa
     Given a graph dict representation ``graph``, this function will convert it into a PyTorch Geometric "Data"
     object which can then be used to train a PyG graph neural network model directly.
 
+    The graph-level targets become ``data.y``, as usual. Datasets whose targets are
+    *per atom* or *per bond* rather than per molecule carry them in ``node_labels`` and
+    ``edge_labels``, and those become ``data.node_y`` and ``data.edge_y`` - separate
+    attributes because ``y`` is already the graph-level target and the two are not
+    interchangeable. Both batch correctly under a PyG ``DataLoader``: their first
+    dimension matches the node and edge count respectively, which is the condition PyG
+    uses to decide how to concatenate an unknown attribute.
+
+    Missing entries in a per-atom target are conventionally ``NaN`` rather than a numeric
+    sentinel, and they survive this conversion unchanged. Mask them before computing a
+    loss - ``~torch.isnan(data.node_y)``.
+
     :param graph: A graph dict representation of a dataset's molecule.
 
     :returns: A PyG Data instance.
@@ -483,6 +495,14 @@ def pyg_from_graph(graph: GraphDict) -> 'Data':  # noqa
         # dynamically attached if they are present in the graph dict.
         if 'node_coordinates' in graph:
             data.pos = torch.tensor(graph['node_coordinates'], dtype=torch.float)
+
+        # Node- and edge-level targets. These used to be dropped silently, which turned
+        # a conversion of an atom-level dataset into a valid Data object missing the only
+        # thing the dataset exists for - no error, no warning, just absent.
+        if 'node_labels' in graph:
+            data.node_y = torch.tensor(graph['node_labels'], dtype=torch.float)
+        if 'edge_labels' in graph:
+            data.edge_y = torch.tensor(graph['edge_labels'], dtype=torch.float)
 
         return data
 
@@ -528,6 +548,13 @@ def jraph_from_graph(graph: GraphDict) -> 'GraphsTuple':  # noqa
         import jax.numpy as jnp
         import jraph
 
+        # "globals" used to be hardcoded to None, which silently dropped the target of
+        # every dataset in the collection - jraph's GraphsTuple has no other field for a
+        # graph-level quantity, so a converted graph carried no label at all.
+        globals_ = None
+        if 'graph_labels' in graph:
+            globals_ = jnp.array([graph['graph_labels']])
+
         graph_tuple = jraph.GraphsTuple(
             nodes=jnp.array(graph['node_attributes']),
             edges=jnp.array(graph['edge_attributes']),
@@ -535,7 +562,7 @@ def jraph_from_graph(graph: GraphDict) -> 'GraphsTuple':  # noqa
             receivers=jnp.array(graph['edge_indices'][:, 1]),
             n_node=jnp.array([len(graph['node_indices'])]),
             n_edge=jnp.array([len(graph['edge_indices'])]),
-            globals=None,
+            globals=globals_,
         )
 
         return graph_tuple

@@ -35,7 +35,88 @@ from chem_mat_data.main import jraph_from_graph
 from chem_mat_data.main import jraph_implicit_batch_from_graphs
 
 
+def mock_graph_with_atom_targets(num_nodes: int = 12, missing: int = 4):
+    """
+    Build a mock graph whose targets are per atom rather than per molecule.
+
+    Mirrors the shape the esnuel_* datasets ship: an (n_nodes, 1) float array of
+    node_labels with NaN at the atoms that have no value, alongside the usual
+    graph-level label. NaN rather than a numeric sentinel is the convention because
+    those datasets contain genuine negative values.
+    """
+    import numpy as np
+
+    graph = create_mock_graph(num_nodes=num_nodes, num_graph_labels=1)
+    labels = np.arange(num_nodes, dtype=float).reshape(-1, 1)
+    labels[:missing] = np.nan
+    graph['node_labels'] = labels
+    graph['edge_labels'] = np.arange(
+        len(graph['edge_indices']), dtype=float
+    ).reshape(-1, 1)
+    return graph
+
+
 # == TORCH/PYTORCH GEOMETRIC ==
+
+
+class TestAtomLevelTargets:
+    """
+    Node- and edge-level targets have to survive conversion.
+
+    These used to be dropped silently: an atom-level dataset converted into a valid
+    Data object that was simply missing the values it exists for, with no error and no
+    warning. Datasets affected include esnuel_mca, esnuel_maa and qm40_xyz.
+    """
+
+    def test_node_labels_become_node_y(self):
+        graph = mock_graph_with_atom_targets(num_nodes=12, missing=4)
+        data = pyg_from_graph(graph)
+
+        assert hasattr(data, 'node_y'), 'node_labels were dropped by the conversion'
+        assert data.node_y.shape == (12, 1)
+        # y stays the graph-level target; the two are not interchangeable.
+        assert data.y.shape == (1,)
+
+    def test_edge_labels_become_edge_y(self):
+        graph = mock_graph_with_atom_targets()
+        data = pyg_from_graph(graph)
+        assert hasattr(data, 'edge_y')
+        assert data.edge_y.shape == (len(graph['edge_indices']), 1)
+
+    def test_missing_entries_stay_nan(self):
+        # A numeric sentinel would collide with real values, which reach -248 kJ/mol in
+        # esnuel_maa, so absence is encoded as NaN and must survive the round trip.
+        graph = mock_graph_with_atom_targets(num_nodes=12, missing=4)
+        data = pyg_from_graph(graph)
+        assert torch.isnan(data.node_y[:4]).all()
+        assert not torch.isnan(data.node_y[4:]).any()
+
+    def test_values_survive_within_float32(self):
+        graph = mock_graph_with_atom_targets(num_nodes=12, missing=0)
+        data = pyg_from_graph(graph)
+        expected = torch.arange(12, dtype=torch.float).reshape(-1, 1)
+        assert torch.allclose(data.node_y, expected)
+
+    def test_node_y_batches_alongside_the_nodes(self):
+        # The point of the naming: PyG concatenates an unknown attribute along dim 0
+        # when its first dimension matches the node count. If that broke, node_y would
+        # silently fall out of register with x across a batch.
+        graphs = [mock_graph_with_atom_targets(num_nodes=n, missing=1)
+                  for n in (5, 8, 11)]
+        batch = next(iter(DataLoader(
+            [pyg_from_graph(g) for g in graphs], batch_size=3, shuffle=False
+        )))
+        assert batch.node_y.shape[0] == batch.x.shape[0] == 5 + 8 + 11
+        assert batch.y.shape[0] == 3
+        # one NaN per graph, and no more
+        assert int(torch.isnan(batch.node_y).sum()) == 3
+
+    def test_graphs_without_node_labels_are_unaffected(self):
+        # Most of the collection has no node-level targets; they must not grow an
+        # empty attribute.
+        data = pyg_from_graph(create_mock_graph())
+        assert not hasattr(data, 'node_y')
+        assert not hasattr(data, 'edge_y')
 
 
 class TestPytorchGeometric:
@@ -189,6 +270,28 @@ class TestPytorchGeometric:
 
 
 class TestJraph:
+    def test_graph_labels_reach_globals(self):
+        """
+        ``globals`` used to be hardcoded to None, which dropped the target of *every*
+        dataset in the collection - a GraphsTuple has no other field for a graph-level
+        quantity, so a converted graph carried no label at all.
+        """
+        graph = create_mock_graph(num_nodes=9, num_graph_labels=3)
+        graph_tuple = jraph_from_graph(graph)
+
+        assert graph_tuple.globals is not None, 'graph_labels were dropped'
+        assert jax.numpy.asarray(graph_tuple.globals).shape == (1, 3)
+        assert jax.numpy.allclose(
+            jax.numpy.asarray(graph_tuple.globals)[0],
+            jax.numpy.asarray(graph['graph_labels']),
+        )
+
+    def test_graph_without_labels_still_converts(self):
+        graph = create_mock_graph()
+        del graph['graph_labels']
+        graph_tuple = jraph_from_graph(graph)
+        assert graph_tuple.globals is None
+
     def test_jraph_from_graph_basically_works(self):
         """
         ``jraph_from_graph`` should take a graph dict as input and turn it into a jraph.GraphsTuple object.

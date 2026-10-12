@@ -114,6 +114,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Converting a graph to PyG or Jraph lost its targets.** `pyg_from_graph` dropped
+  `node_labels` and `edge_labels`, so an atom-level dataset converted into a valid `Data`
+  object without the values it exists for; they now become `data.node_y` and
+  `data.edge_y`. `jraph_from_graph` hard-coded `globals=None`, which dropped the
+  graph-level target of every dataset; it now carries `graph_labels`. 8 tests added.
+
 - **`--new-only` silently swallowed `--json`.** `discover check --new-only --json`
   returned bare URLs and ignored the format flag in either order — a trap for the one
   caller that wants the work list *with* its titles. The flags now compose: `--new-only`
