@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.10.1] - Unreleased
 
+### Added
+
+- **QM8 with the real TDPBE0/def2-TZVP targets** (`create_graph_datasets__qm8.py`,
+  contributed by Pascal Friederich in #2). The MoleculeNet `qm8.csv` everyone trains on
+  repeats its four TDPBE0/def2-SVP columns in place of the def2-TZVP ones, byte for byte;
+  the real def2-TZVP E1 differs from the SVP one by 0.17 eV on average. The script takes
+  all 16 targets from the original data file of Ramakrishnan et al. (converted from
+  Hartree to eV) and only the SMILES from MoleculeNet, and refuses to join the two unless
+  their CC2 columns agree row by row. 21,783 molecules.
+
 ### Fixed
 
 - **The `.mpack` and the `.csv` of a run were a full permutation of each other.** Graphs

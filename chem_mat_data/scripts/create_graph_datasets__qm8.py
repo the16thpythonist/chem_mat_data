@@ -53,6 +53,21 @@ TARGET_COLUMNS: List[str] = TARGET_NAMES
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'MIT',
+        'url': 'https://github.com/raghurama123/ExcitedStatesQM8/blob/main/LICENSE',
+        'note': (
+            'MIT is the licence of the ExcitedStatesQM8 repository of Ramakrishnan et al., which '
+            'holds the excitation energies and oscillator strengths (gdb8_22k_elec_spec.txt) and '
+            'the geometries. Only the SMILES strings are taken from the MoleculeNet/DeepChem '
+            'qm8.csv; they are a notation of the same QM9 / GDB-9 molecules, joined row by row '
+            '(on 2026-10-12 all 21,786 also matched the atom composition of the repository '
+            'geometries). The structures derive from GDB-17 through QM9, so the GDB terms '
+            'discussed in the licence note of the qm9_smiles dataset apply here as well. '
+            'Cite Ramakrishnan et al., J. Chem. Phys. 143, 084111 (2015) '
+            'and Ramakrishnan et al., Sci. Data 1, 140022 (2014).'
+        ),
+    },
     'verbose': 'QM8 Electronic Spectra (corrected PBE0/def2-TZVP columns)',
     'description': (
         'QM8 contains the two lowest singlet-singlet vertical excitation energies and oscillator strengths of '
@@ -61,7 +76,9 @@ METADATA: dict = {
         'theory at B3LYP/6-31G(2df,p) geometries. Excitation energies are given in eV, oscillator strengths in the '
         'length representation. The target values are taken from the original data file of Ramakrishnan et al.; '
         'unlike the MoleculeNet CSV, the TDPBE0/def2-TZVP columns therefore contain the actual def2-TZVP values '
-        '(in the MoleculeNet file they duplicate the def2-SVP columns).'
+        '(in the MoleculeNet file they duplicate the def2-SVP columns). Methane, ammonia and water are dropped, '
+        'leaving 21,783 molecules. Ten molecules appear twice with near-identical values, a duplication inherited '
+        'from the underlying GDB-9 data.'
     ),
     'target_type': ['regression'],
     'tags': [
@@ -80,7 +97,7 @@ METADATA: dict = {
         'https://moleculenet.org/datasets-1',
     ],
     'target_descriptions': {
-        i: f'{name} - '
+        str(i): f'{name} - '
         + ('excitation energy in eV' if name.startswith('E') else 'oscillator strength (dimensionless, length form)')
         + {
             'CC2': ' at the RI-CC2/def2-TZVP level',
