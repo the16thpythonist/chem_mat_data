@@ -215,6 +215,13 @@ deliberate: this is the cheapest stage and the one most likely to end the run, s
 first. Read the publication's data availability section far enough to find *where* the
 data lives — you need the record, not the bytes.
 
+**First, check `docs/rejected_datasets.md`.** It lists datasets already investigated and
+refused, with the reason and the evidence. If the publication, the data record or the
+upstream database you are looking at appears there, **stop and tell the user, quoting the
+entry** — do not re-research it and do not decide it is fine this time. Those entries were
+decided by a person and only a person can change one. The file also records upstream
+questions already *approved*, so you do not raise them a second time.
+
 Record it, because the gate compares its licence evidence against this host:
 
 ```bash

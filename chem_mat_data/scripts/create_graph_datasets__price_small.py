@@ -1,3 +1,24 @@
+
+# == BLOCKED: DO NOT RUN ==
+# This dataset is on hold on licensing grounds and must not be processed or
+# published. The script is kept for its provenance and processing logic, and
+# because the decision may be revisited - see docs/rejected_datasets.md for the
+# evidence, who decided, and exactly what would have to change.
+LICENSE_BLOCKED: str = (
+    'This is Mcule\'s proprietary "Purchasable (In Stock)" export - vendor '
+    'compound prices, which are the product Mcule sells. No licence statement '
+    'exists anywhere (checked across a decade of Wayback captures of the terms, '
+    "download page, wiki, FAIRsharing and re3data), and Mcule's Terms of Use "
+    'affirmatively forbid the redistribution this script would perform.'
+)
+
+if __name__ == '__main__':
+    raise SystemExit(
+        f'BLOCKED: this dataset is on hold on licensing grounds and must not '
+        f'be processed. {LICENSE_BLOCKED} '
+        f'Decided 2026-08-19 by the maintainer; see docs/rejected_datasets.md.'
+    )
+
 from rdkit import Chem
 from typing import Dict
 import pandas as pd

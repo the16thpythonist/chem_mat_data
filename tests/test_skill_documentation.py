@@ -282,6 +282,69 @@ def test_the_documented_drop_rate_override_exists(work_root, tmp_path):
     assert manifest.drop_rate_reason
 
 
+def test_the_skill_says_how_to_spawn_the_reviewing_subagents():
+    """
+    "Spawn a general-purpose agent" was under-specified, and it cost two whole stages.
+
+    Naming an agent routes it through a mailbox: the spawn call returns a receipt, the
+    completion arrives as an idle notification carrying no text, and the report is
+    never delivered. An agent naming three subagents for legibility - `licence-pka`,
+    `licence-pka-2`, `verify-pka` - lost all three, and did stages 1 and 6 itself.
+
+    Both stages must therefore say how to spawn, not just to spawn, and must point at
+    the file the report has to be written to.
+    """
+    text = (SKILL_ROOT / 'SKILL.md').read_text()
+
+    for heading, review in (
+        ('## Stage 1 — license', 'reviews/license.md'),
+        ('## Stage 6 — verification', 'reviews/verification.md'),
+    ):
+        start = text.find(heading)
+        assert start != -1, f'{heading} is gone - has the stage list changed?'
+        section = text[start:]
+        end = section.find('\n## ', 1)
+        section = section[:end] if end != -1 else section
+
+        assert 'without a `name`' in section, (
+            f'{heading} no longer tells the agent to spawn the subagent unnamed, which '
+            'is what routes its report to a mailbox instead of back to the caller'
+        )
+        assert review in section, (
+            f'{heading} no longer names {review}, so the report has nowhere durable to '
+            'go and the gate requiring it cannot be satisfied'
+        )
+
+
+def test_the_licence_stage_points_at_the_rejected_list():
+    """
+    A list nobody is told to read saves nobody any time.
+
+    `docs/rejected_datasets.md` exists so that a dataset refused once is not researched
+    again from scratch. That only works if the licence stage sends the agent there
+    before it starts, and if the file is where the skill says it is.
+    """
+    text = (SKILL_ROOT / 'SKILL.md').read_text()
+    section = text[text.find('## Stage 1 — license'):]
+    section = section[: section.find('## Stage 2')]
+
+    assert 'docs/rejected_datasets.md' in section, (
+        'the licence stage no longer tells the agent to check the rejected list, so a '
+        'dataset already refused will be researched from scratch again'
+    )
+
+    listed = Path(__file__).parent.parent / 'docs' / 'rejected_datasets.md'
+    assert listed.is_file(), f'the skill points at {listed}, which does not exist'
+
+
+def test_the_reviewer_checklist_says_where_to_write():
+    """The reviewing subagent reads this file, not the stage section that spawned it."""
+    text = (SKILL_ROOT / 'references' / 'reviewing.md').read_text()
+
+    assert 'reviews/verification.md' in text
+    assert 'reviewer: subagent' in text
+
+
 # -- A2: every documented command invocation must be real --
 
 def documented_invocations():

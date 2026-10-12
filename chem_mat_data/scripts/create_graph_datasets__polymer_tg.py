@@ -17,6 +17,28 @@ References:
   DOI: 10.1021/acs.jcim.1c01031
 """
 
+# == BLOCKED: DO NOT RUN ==
+# This dataset is on hold on licensing grounds and must not be processed or
+# published. The script is kept for its provenance and processing logic, and
+# because the decision may be revisited - see docs/rejected_datasets.md for the
+# evidence, who decided, and exactly what would have to change.
+LICENSE_BLOCKED: str = (
+    'The source is the Supporting Information of an ACS article '
+    '(doi:10.1021/acs.jcim.1c01031) that carries an explicit copyright notice, '
+    'sits behind a paywall, and whose SI terms permit download "by article for '
+    'research use" only - the clause allowing other uses is conditional on a '
+    'public use licence being linked to the article, and none exists. The '
+    'upstream, PoLyInfo (NIMS MatNavi), separately prohibits bulk acquisition.'
+)
+
+if __name__ == '__main__':
+    raise SystemExit(
+        f'BLOCKED: this dataset is on hold on licensing grounds and must not '
+        f'be processed. {LICENSE_BLOCKED} '
+        f'Decided 2026-08-19 by the maintainer; see docs/rejected_datasets.md.'
+    )
+
+
 import os
 import shutil
 import subprocess

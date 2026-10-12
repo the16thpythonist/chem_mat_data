@@ -1,3 +1,37 @@
+
+# == BLOCKED: DO NOT RUN ==
+# This dataset is disabled and must not be processed or published. The script is
+# kept for its processing logic and because the decision may be revisited - see
+# docs/rejected_datasets.md for the evidence and what would revive it.
+LICENSE_BLOCKED: str = (
+    'Provenance cannot be established and no rights-holder has ever granted '
+    'redistribution of this file. NOTE: the Springer "all rights reserved" notice '
+    'on the article SI does NOT govern this data - the SI PDF contains about 300 '
+    'structures, and all 46 of its lead candidates were canonicalised and matched '
+    '46/46 against this file, which holds the full-precision values the SI prints '
+    'rounded. The SI is therefore a hand-rounded 0.01% extract OF this file, not '
+    'its source, and Springer Nature separately disclaims IP in datasets '
+    'connected to published papers. The real blockers are: (1) the 460,199-row '
+    'file exists nowhere public - an exhaustive sweep of Zenodo, Figshare, '
+    'Dataverse, OSF, GitHub, Hugging Face, Kaggle, DataCite and PubChem found no '
+    "open release; (2) the authors' own most recent public statement about this "
+    'exact dataset (Friederich, Krenn, Tamblyn & Aspuru-Guzik, Mach. Learn.: Sci. '
+    'Technol. 2, 025027 (2021) - itself CC-BY-4.0, so they plainly know how to '
+    'signal openness) is that it is "available upon reasonable request from the '
+    'authors", which is access-gated rather than open; (3) Samsung SAIT / Samsung '
+    'Research America co-authorship on the original joint screen means even a '
+    'willing academic author may lack unilateral authority to release it; and (4) '
+    'the copy reached this project by an informal, undocumented researcher-to- '
+    'researcher route with no grant of redistribution rights.'
+)
+
+if __name__ == '__main__':
+    raise SystemExit(
+        f'BLOCKED: this dataset is disabled and must not be processed. '
+        f'{LICENSE_BLOCKED} '
+        f'Decided 2026-08-19 by the maintainer; see docs/rejected_datasets.md.'
+    )
+
 import os
 from typing import List, Dict
 import pandas as pd

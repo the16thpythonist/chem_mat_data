@@ -19,6 +19,26 @@ References:
   DOI: 10.1126/sciadv.abn9545
 """
 
+# == BLOCKED: DO NOT RUN ==
+# This dataset is on hold on licensing grounds and must not be processed or
+# published. The script is kept for its provenance and processing logic, and
+# because the decision may be revisited - see docs/rejected_datasets.md for the
+# evidence, who decided, and exactly what would have to change.
+LICENSE_BLOCKED: str = (
+    'The source repository carries a root MIT LICENSE, but its own README points '
+    'to a CC-BY-NC paper, and the upstream - PoLyInfo (NIMS MatNavi) plus the '
+    'Membrane Society of Australasia database - is registration-gated and '
+    'prohibits bulk acquisition.'
+)
+
+if __name__ == '__main__':
+    raise SystemExit(
+        f'BLOCKED: this dataset is on hold on licensing grounds and must not '
+        f'be processed. {LICENSE_BLOCKED} '
+        f'Decided 2026-08-19 by the maintainer; see docs/rejected_datasets.md.'
+    )
+
+
 import os
 import shutil
 import subprocess

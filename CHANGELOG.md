@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Datasets that must not be added are written down, and the skill checks them first.**
+  `docs/rejected_datasets.md` lists every investigated and refused dataset with the
+  reason, the evidence and who decided, plus upstream questions already approved. Stage 1
+  of `/dataset-extraction` now stops and quotes a matching entry instead of researching it
+  again. The scripts of `tadf`, `polymer_tg`, `polymer_gas_permeability` and `price_small`
+  stay in the repository for their processing logic but refuse to run, with the reason in
+  `LICENSE_BLOCKED`.
+
 - **Every dataset can now say what you may do with it.** A `license` field (an
   identifier, a URL, and a note on why those terms apply and to what) is set in the
   `METADATA` of 41 processing scripts and reaches `metadata.yml` as each dataset's
