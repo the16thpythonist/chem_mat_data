@@ -13,6 +13,12 @@ import shutil
 import requests
 from tqdm import tqdm
 
+#: User-Agent sent with requests to Figshare. Figshare's bot protection answers clients
+#: that claim to be a web browser - but cannot run its JavaScript challenge - with HTTP
+#: 202 ("file is being prepared") on every attempt, so imitating a browser makes the
+#: download impossible. An honest tool identifier is served the file directly.
+USER_AGENT: str = 'chem_mat_data (+https://github.com/the16thpythonist/chem_mat_data)'
+
 
 class AbsractOnlineSource:
     """
@@ -181,6 +187,9 @@ class FigshareSource(AbsractOnlineSource):
       return HTTP 202 ("Accepted — file is being prepared") instead of the file content.
       This class normalises the URL to the canonical ``ndownloader.figshare.com`` host
       and retries on 202 responses.
+    - Figshare's bot protection holds any client that claims to be a web browser at
+      HTTP 202 indefinitely, so retrying cannot help. Requests therefore identify as
+      chem_mat_data (:data:`USER_AGENT`) rather than imitating a browser.
     - Many Figshare datasets are distributed as ZIP archives. When ``relative_path`` is
       given, the archive is automatically extracted and only the requested file path is
       returned — similar to :class:`ZenodoSource`.
@@ -273,12 +282,8 @@ class FigshareSource(AbsractOnlineSource):
         if self.temp_dir is None:
             self.prepare()
 
-        headers = {
-            'User-Agent': (
-                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
-                '(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            )
-        }
+        # Identify honestly: a browser User-Agent is held at HTTP 202 forever (see USER_AGENT).
+        headers = {'User-Agent': USER_AGENT}
 
         # -- download with 202 retry logic --
         response = None

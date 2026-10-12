@@ -56,6 +56,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
   Existing published datasets keep the old values until they are regenerated. 3 tests added.
 
+- **`FigshareSource` downloads stuck at HTTP 202.** The source sent a fake Chrome
+  `User-Agent`, and Figshare's bot protection answers a client that claims to be a browser
+  but cannot run its JavaScript challenge with HTTP 202 ("file is being prepared") on every
+  attempt, so the retry loop could only give up. Figshare file 49887156, for example,
+  returns 202 with the old header and 200 with an honest one. Requests now identify as
+  `chem_mat_data (+https://github.com/the16thpythonist/chem_mat_data)`, held in the new
+  module constant `connectors.USER_AGENT`. Reported and first fixed by Pascal Friederich
+  (PR #1).
+
 ### Changed
 
 - **`release.sh` reduced to build & publish.** The release script no longer bumps the version,
