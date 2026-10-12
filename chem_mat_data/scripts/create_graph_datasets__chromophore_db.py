@@ -52,15 +52,27 @@ TARGET_COLUMNS: List[str] = [
 #       A dictionary which will be used as the basis for the metadata that will be added
 #       as additional information to the file share server.
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC-BY-4.0',
+        'url': 'https://creativecommons.org/licenses/by/4.0/',
+        'note': (
+            'CC BY 4.0 is set on the Figshare record the CSV is downloaded from (article 12045567, '
+            '"DB for chromophore", version 3), which accompanies Joung et al., Sci. Data 7, 295 (2020). '
+            'The values were compiled by the authors from the published literature; the DOI of the '
+            'paper each row was taken from is kept as graph_reference. Cite Joung et al. (2020).'
+        ),
+    },
     'verbose': 'Experimental Optical Properties of Organic Chromophores',
     'description': (
-        'Experimental optical properties of about 7,000 organic chromophores in about 360 solvents or in the solid '
-        'state, compiled from the literature by Joung et al. (Sci. Data 2020): first absorption and emission maxima '
-        '(nm), absorption and emission bandwidths (FWHM, cm-1), molar extinction coefficients (log10 of '
-        'mol-1 dm3 cm-1), photoluminescence quantum yields and fluorescence lifetimes (ns). Each element is one '
-        'chromophore-solvent combination (about 20,000), with the solvent SMILES and the source DOI stored as graph '
-        'metadata; properties not reported for a combination are NaN. Combinations whose chromophore SMILES contains '
-        'several components (e.g. salts) are not included.'
+        'Experimental optical properties of organic chromophores compiled from the literature by Joung et al. '
+        '(Sci. Data 2020): first absorption and emission maxima (nm), absorption and emission bandwidths (FWHM, '
+        'cm-1), molar extinction coefficients (log10 of mol-1 dm3 cm-1), photoluminescence quantum yields and '
+        'fluorescence lifetimes (ns). Each element is one chromophore-solvent combination, with the solvent SMILES '
+        'and the source DOI stored as graph metadata; properties not reported for a combination are NaN. A solvent '
+        'equal to the chromophore marks a solid-state measurement (983 elements), and "gas" a gas-phase one. '
+        'The 20,835 elements hold only 6,864 distinct chromophores: 3,475 of them appear more than once, in '
+        'different solvents or reported by different papers. Split by chromophore SMILES rather than at random, or '
+        'the same molecule ends up in both training and test set.'
     ),
     'target_type': ['regression'],
     'tags': [
@@ -78,13 +90,13 @@ METADATA: dict = {
         'https://figshare.com/articles/dataset/DB_for_chromophore/12045567',
     ],
     'target_descriptions': {
-        0: 'absorption_max_nm - wavelength of the first absorption maximum in nm',
-        1: 'emission_max_nm - wavelength of the emission maximum in nm',
-        2: 'lifetime_ns - fluorescence lifetime in ns',
-        3: 'quantum_yield - photoluminescence quantum yield (0-1)',
-        4: 'log_extinction_coefficient - log10 of the molar extinction coefficient in mol-1 dm3 cm-1',
-        5: 'absorption_fwhm_cm-1 - full width at half maximum of the absorption band in cm-1',
-        6: 'emission_fwhm_cm-1 - full width at half maximum of the emission band in cm-1',
+        '0': 'absorption_max_nm - wavelength of the first absorption maximum in nm',
+        '1': 'emission_max_nm - wavelength of the emission maximum in nm',
+        '2': 'lifetime_ns - fluorescence lifetime in ns',
+        '3': 'quantum_yield - photoluminescence quantum yield (0-1)',
+        '4': 'log_extinction_coefficient - log10 of the molar extinction coefficient in mol-1 dm3 cm-1',
+        '5': 'absorption_fwhm_cm-1 - full width at half maximum of the absorption band in cm-1',
+        '6': 'emission_fwhm_cm-1 - full width at half maximum of the emission band in cm-1',
     },
 }
 

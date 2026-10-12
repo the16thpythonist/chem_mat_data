@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Two experimental optics datasets, contributed by Pascal Friederich.**
+  `chromophore_db` (#4) holds the chromophore database of Joung et al. (Sci. Data 2020):
+  absorption and emission maxima, bandwidths, extinction coefficient, quantum yield and
+  lifetime for 20,835 chromophore-solvent pairs. Those pairs hold only 6,864 distinct
+  chromophores, so the description says to split by molecule rather than at random.
+  `uvvis_cde` (#5) holds the UV/vis database of Beard et al. (Sci. Data 2019): text-mined
+  experimental absorption maxima and extinction coefficients next to sTDA and TD-DFT
+  excitations for 7,664 compounds. Its experimental values are kept as mined, and the
+  description counts the implausible ones. Both are CC BY 4.0 and download through
+  `FigshareSource`.
+
 - **`/dataset-search`, a skill for the front half of the pipeline.** The discovery
   classifier could already flag papers that look like dataset releases, but deciding
   which flagged papers are real was a step that only ever existed as a removed Python
