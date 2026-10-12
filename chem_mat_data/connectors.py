@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import re
 import time
+import fnmatch
 import tempfile
 import zipfile
 import shutil
@@ -183,6 +184,11 @@ class FigshareSource(AbsractOnlineSource):
 
     Figshare has several quirks that make a dedicated source useful:
 
+    - **A paper links to the article, not to the file.** Data availability sections cite
+      the DOI or the landing page, and neither can be downloaded: the request succeeds
+      and hands back the HTML page. Only per-file ``ndownloader`` URLs are fetchable, and
+      their ids appear nowhere in the citation. This class resolves an article or a DOI
+      through the REST API and picks the file out of it.
     - The ``ndownloader`` URLs on some subdomains (e.g. ``springernature.figshare.com``)
       return HTTP 202 ("Accepted — file is being prepared") instead of the file content.
       This class normalises the URL to the canonical ``ndownloader.figshare.com`` host
@@ -194,9 +200,32 @@ class FigshareSource(AbsractOnlineSource):
       given, the archive is automatically extracted and only the requested file path is
       returned — similar to :class:`ZenodoSource`.
 
+    An article usually holds several files, often with identical columns, so choosing
+    the wrong one produces a valid dataset of the wrong thing. This class therefore
+    refuses to guess: if ``name`` is not given and the article holds more than one file,
+    the error lists what is actually there.
+
     Example:
 
     .. code-block:: python
+
+        # The usual starting point: the DOI a paper cites, plus the file you want
+        with FigshareSource(
+            url='https://doi.org/10.6084/m9.figshare.25993060',
+            name='QM40_main.csv',
+        ) as src:
+            path = src.fetch()
+
+        # The article landing page works the same way, and `name` accepts a glob
+        with FigshareSource(
+            url='https://figshare.com/articles/dataset/QM40/25993060',
+            name='*main*',
+        ) as src:
+            path = src.fetch()
+
+        # Not sure what is in there? Ask, without downloading anything
+        for entry in FigshareSource(article_id=25993060).list_files():
+            print(entry['name'], entry['size'])
 
         # Download a single file by Figshare file ID
         with FigshareSource(file_id=1503990) as src:
@@ -216,8 +245,13 @@ class FigshareSource(AbsractOnlineSource):
         ) as src:
             csv_path = src.fetch()
 
-    :param file_id: Figshare numeric file ID (mutually exclusive with *url*).
-    :param url: Full ndownloader URL (mutually exclusive with *file_id*).
+    :param file_id: Figshare numeric file ID.
+    :param url: Any Figshare link - article page, DOI or per-file ndownloader URL.
+    :param article_id: Figshare numeric article ID, as an alternative to *url*.
+    :param version: Article version to resolve. Defaults to the latest.
+    :param name: Which file to take from a multi-file article. Matched against the
+        file names exactly, then case-insensitively, then as a glob, then as a
+        substring - the first stage that yields exactly one file wins.
     :param relative_path: If given, treat the download as a ZIP archive and extract
         this path from it. If ``None``, return the raw downloaded file.
     :param verbose: Show a tqdm progress bar during download.
@@ -225,44 +259,231 @@ class FigshareSource(AbsractOnlineSource):
     :param retry_delay: Seconds to wait between 202 retries.
     """
 
+    #: Public REST API. Institutional portals (``springernature.figshare.com`` and
+    #: friends) publish their articles through this same endpoint, so one base works
+    #: for every host we have needed so far.
+    API_BASE = 'https://api.figshare.com/v2'
+
     # Regex to extract the numeric file ID from various Figshare ndownloader URL styles.
+    # Both spellings occur and both must match: the canonical host puts the id straight
+    # after /files/ (``ndownloader.figshare.com/files/123``) while institutional portals
+    # keep it under a path segment (``springernature.figshare.com/ndownloader/files/123``).
+    # The original pattern required the path segment, so the canonical form - the one in
+    # this class's own docstring - fell through to the "accept as-is" branch instead.
     _NDOWNLOADER_RE = re.compile(
-        r'https?://(?:[\w.-]*\.)?figshare\.com/ndownloader/files/(\d+)'
+        r'https?://(?:[\w.-]*\.)?figshare\.com/(?:ndownloader/)?files/(\d+)'
+    )
+
+    #: An article landing page: ``.../articles/<type>/<slug>/<id>`` with an optional
+    #: trailing version. The type segment ("dataset", "journal_contribution", ...) and
+    #: the slug are both optional, because Figshare serves short forms of this URL too.
+    _ARTICLE_RE = re.compile(
+        r'https?://(?:[\w.-]*\.)?figshare\.com/articles/'
+        r'(?:[\w_]+/)?(?:[^/]+/)?(\d+)(?:/(\d+))?'
+    )
+
+    #: A Figshare DOI, bare or as a doi.org link. The ``.v2`` suffix is the version.
+    _DOI_RE = re.compile(
+        r'(?:https?://(?:dx\.)?doi\.org/)?10\.6084/m9\.figshare\.(\d+)(?:\.v(\d+))?'
     )
 
     def __init__(
         self,
         file_id: int | None = None,
         url: str | None = None,
+        article_id: int | None = None,
+        version: int | None = None,
+        name: str | None = None,
         relative_path: str | None = None,
         verbose: bool = False,
         max_retries: int = 4,
         retry_delay: float = 5.0,
     ):
-        if file_id is None and url is None:
-            raise ValueError('Either file_id or url must be provided')
+        if file_id is None and url is None and article_id is None:
+            raise ValueError('One of file_id, article_id or url must be provided')
         if file_id is not None and url is not None:
             raise ValueError('Provide file_id or url, not both')
+        if article_id is not None and url is not None:
+            raise ValueError('Provide article_id or url, not both')
 
         if url is not None:
-            m = self._NDOWNLOADER_RE.match(url)
-            if m:
-                file_id = int(m.group(1))
-            else:
-                # Accept the URL as-is but warn the user
-                self._raw_url = url
-                file_id = None
-
-        if file_id is not None:
-            self._raw_url = f'https://ndownloader.figshare.com/files/{file_id}'
+            file_id, article_id, version = self._parse_link(url, version)
 
         self.file_id = file_id
-        self.url = self._raw_url
+        self.article_id = article_id
+        self.version = version
+        self.name = name
         self.relative_path = relative_path
         self.verbose = verbose
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.temp_dir = None
+
+        #: Set once an article has been resolved, so the real file name can be used on
+        #: disk instead of the numeric id that the ndownloader URL ends in.
+        self.filename: str | None = None
+
+        self.url = (
+            f'https://ndownloader.figshare.com/files/{file_id}'
+            if file_id is not None
+            else None
+        )
+
+    @classmethod
+    def _parse_link(cls, url: str, version: int | None = None) -> tuple:
+        """
+        Work out what a Figshare link actually points at.
+
+        Three things get called "the figshare link" in a data availability section: the
+        article page, the DOI, and the per-file download URL. Only the last can be
+        fetched directly. The first two have to be resolved through the API, and the
+        failure mode when they are not is silent - the request succeeds and returns the
+        HTML landing page, which then either fails deep inside a zip reader or, worse,
+        is handed back as though it were the data.
+
+        :param url: Any Figshare link.
+        :param version: Explicit version, which wins over one found in the URL.
+
+        :returns: Tuple of ``(file_id, article_id, version)``, two of which are None.
+
+        :raises ValueError: If the link is not a recognised Figshare address, rather
+            than downloading whatever happens to be at the other end.
+        """
+        match = cls._NDOWNLOADER_RE.match(url)
+        if match:
+            return int(match.group(1)), None, None
+
+        match = cls._DOI_RE.match(url)
+        if match:
+            found = int(match.group(2)) if match.group(2) else None
+            return None, int(match.group(1)), version or found
+
+        match = cls._ARTICLE_RE.match(url)
+        if match:
+            found = int(match.group(2)) if match.group(2) else None
+            return None, int(match.group(1)), version or found
+
+        raise ValueError(
+            f'{url!r} is not a recognised Figshare link. Expected an article page '
+            '(https://figshare.com/articles/dataset/<slug>/<id>), a DOI '
+            '(10.6084/m9.figshare.<id>) or a file URL '
+            '(https://ndownloader.figshare.com/files/<id>). Downloading an '
+            'unrecognised URL would return the HTML landing page rather than the data; '
+            'use FileDownloadSource if that is really what you want.'
+        )
+
+    def list_files(self) -> list:
+        """
+        Ask the API which files the article holds.
+
+        :returns: List of the API's file records, each with ``id``, ``name``, ``size``
+            and ``download_url``.
+
+        :raises ValueError: If no article has been identified.
+        """
+        if self.article_id is None:
+            raise ValueError('no article to list - this source points at a single file')
+
+        endpoint = f'{self.API_BASE}/articles/{self.article_id}'
+        if self.version is not None:
+            endpoint += f'/versions/{self.version}'
+
+        headers = {'User-Agent': USER_AGENT}
+        response = requests.get(endpoint, headers=headers, timeout=(10, 60))
+        response.raise_for_status()
+        payload = response.json()
+
+        # The article endpoint embeds the file list; the versioned one does too. Fall
+        # back to the dedicated files endpoint if a future response drops it.
+        files = payload.get('files')
+        if files is None:
+            response = requests.get(f'{endpoint}/files', headers=headers, timeout=(10, 60))
+            response.raise_for_status()
+            files = response.json()
+
+        return files or []
+
+    def _select_file(self, files: list) -> dict:
+        """
+        Pick the requested file out of an article, or refuse to guess.
+
+        Choosing wrongly here is quiet and expensive: articles routinely ship several
+        files with the same columns, so the wrong one yields a perfectly valid dataset
+        of the wrong thing. When the choice is not determined, the error carries the
+        actual file listing so the caller can make it without a second round trip.
+
+        :param files: File records as returned by the API.
+
+        :returns: The single matching record.
+
+        :raises ValueError: If nothing matches, or more than one thing does.
+        """
+        if not files:
+            raise ValueError(f'article {self.article_id} lists no files')
+
+        if self.name is None:
+            if len(files) == 1:
+                return files[0]
+            raise ValueError(
+                f'article {self.article_id} holds {len(files)} files; '
+                f'pass name= to pick one\n' + self._render_listing(files)
+            )
+
+        names = [str(f.get('name', '')) for f in files]
+        wanted = self.name
+        strategies = (
+            [i for i, n in enumerate(names) if n == wanted],
+            [i for i, n in enumerate(names) if n.lower() == wanted.lower()],
+            [i for i, n in enumerate(names) if fnmatch.fnmatch(n.lower(), wanted.lower())],
+            [i for i, n in enumerate(names) if wanted.lower() in n.lower()],
+        )
+        for matched in strategies:
+            if len(matched) == 1:
+                return files[matched[0]]
+            if len(matched) > 1:
+                raise ValueError(
+                    f'name={wanted!r} matches {len(matched)} files in article '
+                    f'{self.article_id}; be more specific\n'
+                    + self._render_listing([files[i] for i in matched])
+                )
+
+        raise ValueError(
+            f'no file named {wanted!r} in article {self.article_id}\n'
+            + self._render_listing(files)
+        )
+
+    @staticmethod
+    def _render_listing(files: list) -> str:
+        """Format a file listing for an error message, names padded and sizes human."""
+        width = max((len(str(f.get('name', ''))) for f in files), default=0)
+        lines = []
+        for entry in files:
+            size = entry.get('size') or 0
+            for unit in ('B', 'KB', 'MB', 'GB'):
+                if size < 1024 or unit == 'GB':
+                    break
+                size /= 1024
+            lines.append(f'  {str(entry.get("name", "")):<{width}}  {size:.1f} {unit}')
+        return '\n'.join(lines)
+
+    def resolve(self) -> str:
+        """
+        Turn whatever was passed in into a directly downloadable file URL.
+
+        Safe to call more than once; the API is only consulted the first time.
+
+        :returns: The ndownloader URL for the selected file.
+        """
+        if self.url is not None:
+            return self.url
+
+        selected = self._select_file(self.list_files())
+        self.file_id = selected.get('id')
+        self.filename = selected.get('name') or None
+        self.url = selected.get('download_url') or (
+            f'https://ndownloader.figshare.com/files/{self.file_id}'
+        )
+        return self.url
 
     def prepare(self):
         """Create temporary directory for download and extraction."""
@@ -281,6 +502,9 @@ class FigshareSource(AbsractOnlineSource):
         """
         if self.temp_dir is None:
             self.prepare()
+
+        # An article link has to become a file link before anything can be fetched.
+        self.resolve()
 
         # Identify honestly: a browser User-Agent is held at HTTP 202 forever (see USER_AGENT).
         headers = {'User-Agent': USER_AGENT}
@@ -309,7 +533,13 @@ class FigshareSource(AbsractOnlineSource):
         response.raise_for_status()
 
         # -- write to disk --
-        filename = os.path.basename(self.url.split('?')[0]) or 'downloaded_file'
+        # An ndownloader URL ends in the numeric file id, so without the API's name the
+        # download lands on disk called something like "25993060" with no extension.
+        filename = (
+            self.filename
+            or os.path.basename(self.url.split('?')[0])
+            or 'downloaded_file'
+        )
         download_path = os.path.join(self.temp_dir, filename)
         total_size = int(response.headers.get('content-length', 0))
 
