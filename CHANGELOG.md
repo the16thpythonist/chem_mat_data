@@ -54,6 +54,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   produced, in which case every other check is validating a claim about code that no
   longer exists. Absent copies are tolerated, so older results still pass. 3 tests added.
 
+### Fixed
+
+- **`qm9_smiles` described four targets in the wrong unit.** homo, lumo, gap and U_0
+  were labelled eV but are Hartree, which understates them by a factor of 27.2114 for
+  anyone who trusted the label. The values are unchanged; the descriptions are corrected,
+  and targets 16-18, previously undescribed, are described.
+
+- **`pka_water` credited the wrong source.** It named the iBonD database; the values come
+  from DataWarrior's `pKaInWater.dwar`, the file Mansouri et al. (2019) started from,
+  which gives no primary reference for individual values. The count is corrected to
+  7,911, since one source row has an unparseable SMILES.
+
 ### Changed
 
 - **The licence stage runs first, before anything is downloaded.** It used to run third,

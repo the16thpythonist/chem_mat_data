@@ -2,9 +2,18 @@
 This experiment module creates a graph dataset from the Open-Source QSAR pKa dataset
 for regression tasks.
 
-The dataset contains 7,912 compounds with experimental aqueous pKa values compiled
-from the iBonD database, covering both acidic and basic ionisation. Each compound
-has a measured pKa value, temperature, measurement method, and acid/base classification.
+The dataset contains 7,911 compounds with experimental aqueous pKa values, covering
+both acidic and basic ionisation. Each compound has a measured pKa value, temperature,
+measurement method, and acid/base classification.
+
+The values come from the DataWarrior reference file ``pKaInWater.dwar``, which ships
+in the DataWarrior application folder and holds pKa data experimentally measured in
+water for 7,912 chemicals. Mansouri et al. (2019) took that file as the starting point
+for their open-source QSAR models; the paper notes that the data "were primarily
+collected from the literature by the DataWarrior providers but there are no references
+to support the pKa values", so individual measurements have no traceable primary
+source. One of the 7,912 source rows carries an unparseable SMILES and is skipped,
+leaving 7,911.
 
 The pKa (negative log of the acid dissociation constant) is a fundamental molecular
 property governing solubility, membrane permeability, and bioavailability. This dataset
@@ -14,6 +23,8 @@ was curated for benchmarking open-source QSAR models against commercial tools
 References:
 - Mansouri, K. et al., J. Cheminform., 11 (2019) 60
   DOI: 10.1186/s13321-019-0384-1
+- Sander, T. et al., J. Chem. Inf. Model., 55 (2015) 460  (DataWarrior)
+  DOI: 10.1021/ci500588j
 """
 
 import os
@@ -32,14 +43,30 @@ from pycomex.utils import folder_path, file_namespace
 DATASET_NAME: str = 'pka_water'
 
 DESCRIPTION: str = (
-    'Aqueous pKa dataset with 7,912 experimental acid dissociation constants from the '
-    'iBonD database. Covers both acidic and basic ionisation across diverse chemical '
-    'space. Curated by Mansouri et al. (2019) for benchmarking open-source QSAR pKa '
-    'prediction models against commercial tools (ACD/Labs, Chemaxon). The target is '
-    'the experimental pKa value (dimensionless, typically ranging from -10 to 16).'
+    'Aqueous pKa dataset with 7,911 experimental acid dissociation constants taken from '
+    'the DataWarrior reference file "pKaInWater.dwar" (Sander et al.), which the '
+    'DataWarrior providers compiled from the literature without retaining references to '
+    'the individual measurements. Covers both acidic and basic ionisation across diverse '
+    'chemical space. Used by Mansouri et al. (2019) as the source data for benchmarking '
+    'open-source QSAR pKa prediction models against commercial tools (ACD/Labs, '
+    'Chemaxon). The target is the experimental pKa value (dimensionless, typically '
+    'ranging from -10 to 16).'
 )
 
 METADATA: dict = {
+    'license': {
+        'identifier': 'CC0-1.0',
+        'url': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'note': (
+            'The BMC article applies a CC0 waiver to the data in its additional '
+            'files. The values themselves come from the DataWarrior reference file '
+            'pKaInWater.dwar, which states no licence at all and whose own upstream '
+            'cannot be established even in principle - its author records that the '
+            'literature references were lost or never collected. Redistribution on '
+            'that basis was approved by the maintainer on 2026-08-13; see '
+            'docs/rejected_datasets.md.'
+        ),
+    },
     'tags': [
         'Molecules',
         'SMILES',
@@ -50,15 +77,21 @@ METADATA: dict = {
         'Regression',
         'Benchmark',
     ],
-    'verbose': 'Aqueous pKa (iBonD, 7912 compounds)',
+    'verbose': 'Aqueous pKa (DataWarrior, 7911 compounds)',
     'sources': [
         'https://doi.org/10.1186/s13321-019-0384-1',
+        'https://doi.org/10.1021/ci500588j',
+        'https://openmolecules.org/datawarrior/',
     ],
     'notes': [
         'Regression task: predict experimental aqueous pKa.',
         'Dataset includes both acidic and basic pKa values.',
         'pKa range: approximately -10 to 16.',
-        'Source: iBonD database, curated by Mansouri et al. (2019).',
+        'Source: the DataWarrior reference file "pKaInWater.dwar", used as-is by '
+        'Mansouri et al. (2019).',
+        'The DataWarrior providers compiled the values from the literature but did not '
+        'retain references for them, so individual measurements cannot be traced to a '
+        'primary source.',
     ],
     'target_descriptions': {
         '0': 'pKa - Negative log of acid dissociation constant in water (dimensionless); lower values indicate stronger acids, higher values indicate weaker acids / stronger bases',
