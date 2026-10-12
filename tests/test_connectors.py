@@ -9,7 +9,7 @@ import pytest
 from unittest.mock import Mock, patch
 from io import BytesIO
 
-from chem_mat_data.connectors import ZenodoSource
+from chem_mat_data.connectors import FileDownloadSource, ZenodoSource
 
 
 class TestZenodoSource:
@@ -310,3 +310,40 @@ class TestZenodoSourceIntegration:
 
             except Exception as e:
                 pytest.skip(f'Real Zenodo download failed (network issue?): {e}')
+
+
+class TestFileDownloadSource:
+    """
+    Unit tests for FileDownloadSource, with ``requests.get`` mocked.
+    """
+
+    @staticmethod
+    def response(status_code: int, body: bytes = b'') -> Mock:
+        mock_response = Mock()
+        mock_response.status_code = status_code
+        mock_response.headers = {'content-length': str(len(body))}
+        mock_response.raise_for_status.return_value = None
+        mock_response.iter_content.return_value = [body] if body else []
+        return mock_response
+
+    @patch('requests.get')
+    def test_fetch_writes_the_body(self, mock_get):
+        mock_get.return_value = self.response(200, b'a,b\n1,2\n')
+
+        with FileDownloadSource('https://example.com/data.csv') as source:
+            path = source.fetch()
+            with open(path, 'rb') as file:
+                assert file.read() == b'a,b\n1,2\n'
+
+    @patch('requests.get')
+    def test_a_202_is_an_error_not_an_empty_file(self, mock_get):
+        # Figshare's figshare.com/ndownloader host answers with an endless 202 and no body.
+        # raise_for_status passes it, and the source used to save the empty body as the
+        # downloaded file, which only failed later inside whatever parsed it.
+        mock_get.return_value = self.response(202)
+
+        with FileDownloadSource('https://figshare.com/ndownloader/files/4513735') as source:
+            with pytest.raises(Exception, match='HTTP 202') as info:
+                source.fetch()
+            assert 'FigshareSource' in str(info.value)
+            assert not os.path.exists(os.path.join(source.temp_dir, '4513735'))

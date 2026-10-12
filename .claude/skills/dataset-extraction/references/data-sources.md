@@ -39,8 +39,12 @@ Direct download:
 
 ```
 https://ndownloader.figshare.com/files/<file_id>
-https://figshare.com/ndownloader/files/<file_id>     # equivalent
 ```
+
+Use only this host. `https://figshare.com/ndownloader/files/<file_id>` looks equivalent
+and is not: it answers a browser User-Agent with 403 and any other with an endless 202
+and an empty body. The canonical host, too, answers a browser User-Agent with 202
+forever, so a download that imitates a browser fails on both.
 
 The `<file_id>` is per-file and is *not* the article id. **Do not hand the article URL
 or the DOI to a plain downloader** — the request succeeds and returns the HTML landing

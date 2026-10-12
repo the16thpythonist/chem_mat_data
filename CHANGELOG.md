@@ -114,6 +114,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **HOPV15 and the open melting point dataset could not be downloaded.** Both fetched
+  `figshare.com/ndownloader/files/<id>` through `FileDownloadSource`. That host answers a
+  browser User-Agent with 403 and an honest one with an endless 202 and an empty body, so
+  the three HOPV15 tests had been failing. Both scripts and the tests now use
+  `FigshareSource`, which goes to the canonical `ndownloader.figshare.com` host. Checked
+  live: HOPV15 parses to 348 molecules, the melting point sheet to 28,645 rows.
+
+  `FileDownloadSource` also treated the 202 as success and saved the empty body as the
+  downloaded file, which only failed later inside whatever parsed it. A 202 is now an
+  error that names `FigshareSource` for Figshare URLs. The skill's figshare reference
+  called the two hosts equivalent and is corrected. 2 tests added.
+
 - **Converting a graph to PyG or Jraph lost its targets.** `pyg_from_graph` dropped
   `node_labels` and `edge_labels`, so an atom-level dataset converted into a valid `Data`
   object without the values it exists for; they now become `data.node_y` and

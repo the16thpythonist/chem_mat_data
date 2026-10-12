@@ -4,7 +4,7 @@ from typing import Dict
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
-from chem_mat_data.connectors import FileDownloadSource
+from chem_mat_data.connectors import FigshareSource
 
 DATASET_NAME: str = 'open_melting_point'
 DESCRIPTION: str = (
@@ -67,11 +67,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     # This file contains the dataset in question. It is available as a download link from a
     # Chemarxiv paper.
     e.log('Downloading dataset...')
-    with FileDownloadSource(
-        'https://figshare.com/ndownloader/files/1503990',
-        verbose=True,
-        ssl_verify=False,
-    ) as source:
+    with FigshareSource(file_id=1503990, verbose=True) as source:
         path = source.fetch()
         df = pd.read_excel(path, sheet_name=0)
 

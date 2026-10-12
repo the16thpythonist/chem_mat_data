@@ -5,7 +5,7 @@ from rich.pretty import pprint
 from pycomex.functional.experiment import Experiment
 from pycomex.utils import folder_path, file_namespace
 
-from chem_mat_data.connectors import FileDownloadSource
+from chem_mat_data.connectors import FigshareSource
 from chem_mat_data.data import HOPV15Parser
 
 DATASET_NAME: str = 'hopv15_exp'
@@ -74,11 +74,7 @@ def load_dataset(e: Experiment) -> Dict[int, dict]:
     # This file contains the dataset in question. It is available as a download link from a
     # Chemarxiv paper.
     e.log('Downloading dataset...')
-    with FileDownloadSource(
-        'https://figshare.com/ndownloader/files/4513735',
-        verbose=True,
-        ssl_verify=False,
-    ) as source:
+    with FigshareSource(file_id=4513735, verbose=True) as source:
         path = source.fetch()
 
         parser = HOPV15Parser(path=path)

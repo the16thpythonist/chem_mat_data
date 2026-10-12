@@ -5,9 +5,15 @@ from unittest import TestCase
 import pytest
 
 import rdkit.Chem as Chem
-from chem_mat_data.connectors import FileDownloadSource
+from chem_mat_data.connectors import FigshareSource
 from chem_mat_data.data import HOPV15Parser
 
+
+# Figshare file id of the HOPV15 .data file. It goes through FigshareSource rather than a
+# plain download: the figshare.com/ndownloader host answers a browser User-Agent with 403
+# and an honest one with an endless 202 and an empty body, so only the canonical host
+# that FigshareSource uses actually serves the file.
+HOPV15_FILE_ID: int = 4513735
 
 @pytest.mark.network
 class TestHOPV15FigshareDownload(TestCase):
@@ -23,19 +29,13 @@ class TestHOPV15FigshareDownload(TestCase):
         Test downloading the HOPV15 dataset from Figshare and parsing it with the updated HOPV15Parser.
 
         This test:
-        1. Downloads the HOPV15 .data file from the official Figshare URL
+        1. Downloads the HOPV15 .data file from its Figshare record
         2. Applies the new 2-step HOPV15Parser to parse the first molecule directly
         3. Validates that molecules are correctly parsed with expected data structure
         """
-        # Figshare URL for HOPV15 dataset
-        figshare_url = 'https://figshare.com/ndownloader/files/4513735'
 
         # Use context manager for automatic cleanup
-        with FileDownloadSource(
-            figshare_url,
-            verbose=True,
-            ssl_verify=False,
-        ) as source:
+        with FigshareSource(file_id=HOPV15_FILE_ID, verbose=True) as source:
             # Download the file
             downloaded_path = source.fetch()
 
@@ -112,14 +112,7 @@ class TestHOPV15FigshareDownload(TestCase):
         This test validates that the new 2-step parsing approach can handle
         multiple molecules from the Figshare dataset.
         """
-        # Figshare URL for HOPV15 dataset
-        figshare_url = 'https://figshare.com/ndownloader/files/4513735'
-
-        with FileDownloadSource(
-            figshare_url,
-            verbose=True,
-            ssl_verify=False,
-        ) as source:
+        with FigshareSource(file_id=HOPV15_FILE_ID, verbose=True) as source:
             # Download the file
             downloaded_path = source.fetch()
 
@@ -169,13 +162,7 @@ class TestHOPV15FigshareDownload(TestCase):
         This test validates that the downloaded file contains the expected
         patterns and structure without requiring the parser to handle the full file.
         """
-        figshare_url = 'https://figshare.com/ndownloader/files/4513735'
-
-        with FileDownloadSource(
-            figshare_url,
-            verbose=True,
-            ssl_verify=False,
-        ) as source:
+        with FigshareSource(file_id=HOPV15_FILE_ID, verbose=True) as source:
             downloaded_path = source.fetch()
 
             # Analyze file content to verify expected patterns

@@ -698,6 +698,18 @@ class FileDownloadSource(AbsractOnlineSource):
         except requests.exceptions.RequestException as e:
             raise Exception(f'Failed to download file from {self.url}: {e}')
 
+        # A 202 is a success status, so raise_for_status lets it through, but it means the
+        # server accepted the request without sending the file. Figshare answers this way,
+        # indefinitely, on its figshare.com/ndownloader host. Writing the empty body out
+        # would hand the caller a 0-byte file that only fails later, somewhere unrelated.
+        if response.status_code == 202:
+            response.close()
+            hint = ' Use FigshareSource for Figshare files.' if 'figshare' in self.url else ''
+            raise Exception(
+                f'Failed to download file from {self.url}: the server answered HTTP 202 '
+                f'(accepted, not ready) without sending the file.{hint}'
+            )
+
         # Get file size from headers for progress bar
         total_size = int(response.headers.get('content-length', 0))
 
